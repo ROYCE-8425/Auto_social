@@ -67,7 +67,10 @@ services:
       - traefik.http.services.${JAVIS_NAME:-javis}.loadbalancer.server.port=7777
     volumes:
       - javis-data:/data
-      - javis-brains:/brains
+      - ./brains:/brains
+      - ./dashboard:/app/dashboard
+      - ./server:/app/server
+      - ./system:/app/system
       - claude-auth:/home/javis/.claude
       - codex-auth:/home/javis/.codex
     healthcheck:
