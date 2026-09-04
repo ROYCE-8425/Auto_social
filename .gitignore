@@ -54,11 +54,14 @@ server/capability_registry.db*.corrupt-*
 # Bổ sung 0.9.241: 6 artifact dưới đây vừa KHÔNG track vừa KHÔNG ignore, nên một cú
 # `git add -A` là commit thẳng dữ liệu chạy + trạng thái deploy vào repo.
 server/kanban.sqlite3*
+server/*.sqlite3*
 server/tg_brain.json
 server/update_state.json
 server/logs/
 server/brain-trash/
 server/tmp/
+.dataset_cache.json
+*.dataset_cache.json
 server/_selfupdate.bat
 # Bổ sung 0.12.4: kho bot Telegram của trang Chatbot (0.19.0) và nhật ký hội thoại của
 # chúng. Cả hai là dữ liệu chạy trong STATE_DIR (chatbot_store.py, chatbot_log.py) và
@@ -95,10 +98,42 @@ brain/Memory/
 # Cấu hình chạy dev preview cục bộ (đường dẫn theo máy, không thuộc sản phẩm)
 .claude/launch.json
 
-# Thư mục CHA chứa MỌI second brain (mô hình mới) - DỮ LIỆU CÁ NHÂN, không đẩy vào repo code.
-# Backup riêng lên git repo khác (xem comment bind-mount trong docker-compose.yml).
-brains/
-# Bản backup brain do server tự tạo (DỮ LIỆU CÁ NHÂN) - tuyệt đối không version.
+# Local dev & runtime tools
+/.agents/
+/.grok/
+/scratch/
+server/memory_index.db*
+server/usage-marks.jsonl*
+server/.mcp_agy_*.json
+server/*-prompt.json
+server/md_*.json
+
+# Thư mục brains: Quản lý agent, skills, brand-kits, templates, workflows
+# Chỉ bỏ qua bộ nhớ phiên chạy, cache, database sqlite và output tạm
+brains/*/memory/
+brains/*/05 - Data Cache/
+brains/*/*.md
+!brains/*/CLAUDE.md
+!brains/*/AGENTS.md
+brains/*/.agents/
+brains/*/.grok/
+brains/*/.antigravitycli/
+brains/*/.claude/
+brains/*/.javis/
+brains/*/.javis-learn.lock
+brains/*/kanban.sqlite3*
+brains/*/attachments/dataset/_xuat/*
+!brains/*/attachments/dataset/_xuat/.gitkeep
+brains/*/scratch/*
+!brains/*/scratch/.gitkeep
+!brains/*/scratch/hub_call.py
+!brains/*/scratch/kit_chan_trang.py
+!brains/*/scratch/kit_tim.py
+!brains/*/scratch/make_square_cover.py
+!brains/*/scratch/make_cover_autocad.py
+
+
+# Ban backup brain do server tu tao
 brains-backup/
 
 # Dữ liệu CÁ NHÂN trong brain mặc định CŨ (không version): bộ nhớ, cache số liệu KD,
@@ -129,3 +164,17 @@ parse_ads*.ps1
 Thumbs.db
 desktop.ini
 server/stop-last.log
+
+# Node & Ops Dashboard
+node_modules/
+ops/node_modules/
+server/ops_users.json
+server/ops_sessions.json
+tmp-video-review/
+
+# Credentials & SQLite
+**/page_tokens.json
+page_tokens.json
+!**/page_tokens.example.json
+!page_tokens.example.json
+*.sqlite3*

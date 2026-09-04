@@ -11,4 +11,4 @@ wscript //nologo start-javis.vbs
 echo.
 echo Da bat. Cho ~10 giay roi mo http://localhost:7777 va bam Ctrl+Shift+R.
 echo (Tat server: chay stop-javis.bat. Xem loi: mo file server\javis.log)
-timeout /t 4 >nul
+timeout /t 4 >nul 2>&1 || ping -n 5 127.0.0.1 >nul

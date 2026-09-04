@@ -540,8 +540,9 @@
           {"text": "Nhìn CỘT TRÁI trang app để biết giao diện nào: thấy 'Sản phẩm' là bản CŨ, thấy 'Trường hợp sử dụng' là bản MỚI. Meta đang chuyển dần nên mỗi người thấy một kiểu - hai bản đi khác đường ở bước sau.", "link": "https://developers.facebook.com/apps/", "link_label": "App của tôi"},
           {"text": "Bản CŨ: 'Sản phẩm' > 'Thêm sản phẩm' > thêm 'Đăng nhập bằng Facebook' bản THƯỜNG (KHÔNG phải bản 'cho doanh nghiệp'), rồi bấm 'Cài đặt'."},
           {"text": "Bản MỚI: cột trái 'Trường hợp sử dụng' > mở 'Xác thực và yêu cầu dữ liệu từ người dùng qua phương thức Đăng nhập bằng Facebook' > 'Tùy chỉnh' > 'Cài đặt'. Mục này thường CÓ SẴN, không phải thêm gì. Bản mới không có menu 'Sản phẩm' - tìm không thấy là bình thường."},
-          {"text": "Ô 'URI chuyển hướng OAuth hợp lệ' làm KHÁC nhau tuỳ nơi cài. Cài trên MÁY CÁ NHÂN (localhost): BỎ QUA, không điền được và cũng không cần - app ở Chế độ phát triển thì Meta tự cho phép localhost. Cài trên VPS/TÊN MIỀN RIÊNG: BẮT BUỘC bấm 'Sao chép' ở ô ngay dưới đây rồi dán NGUYÊN VĂN vào ô đó và Lưu - Facebook bắt khớp từng ký tự, lệch một chữ là báo 'URL bị chặn'. ĐỪNG vào 'Cài đặt ứng dụng > Nâng cao' - chỗ khác, không liên quan.", "copy": "redirect"},
-          {"text": "Cài trên VPS/TÊN MIỀN RIÊNG thêm một bước nữa: 'Cài đặt ứng dụng' > 'Thông tin cơ bản' > ô 'Miền ứng dụng' (App Domains) - dán tên miền ở ô ngay dưới đây (KHÔNG có https://, KHÔNG có dấu /) rồi kéo xuống cuối trang bấm 'Lưu thay đổi'. Thiếu bước này Facebook báo 'Không thể tải URL - Miền của URL này không được đưa vào miền của ứng dụng'. Cài localhost thì bỏ qua.", "copy": "domain"},
+          {"text": "Ô 'URI chuyển hướng OAuth hợp lệ' tuỳ nơi cài. Cài trên MÁY CÁ NHÂN (localhost): BỎ QUA, không điền được và không cần - app ở Dev mode Meta tự cho phép localhost. Cài trên VPS/TÊN MIỀN RIÊNG: BẮT BUỘC bấm 'Sao chép' ở ô ngay dưới, dán NGUYÊN VĂN vào ô đó rồi Lưu (phải có /connect/oauth/callback). Facebook bắt khớp từng ký tự, lệch một chữ là báo 'URL bị chặn'. ĐỪNG vào 'Cài đặt ứng dụng > Nâng cao' - chỗ khác, không liên quan.", "copy": "redirect"},
+          {"text": "Cài trên VPS/TÊN MIỀN RIÊNG thêm: 'Cài đặt ứng dụng' > 'Thông tin cơ bản' > ô 'Miền ứng dụng' (App Domains) - dán TẤT CẢ các ô ngay dưới đây (KHÔNG có https://, KHÔNG có dấu /). Có 2 ô thì dán cả subdomain lẫn miền gốc. Kéo xuống cuối trang bấm 'Lưu thay đổi'. Cài localhost thì bỏ qua.", "copy": "domain"},
+          {"text": "Cùng trang Thông tin cơ bản, kéo xuống 'Thêm nền tảng' > chọn 'Trang web' (Website) > ô 'URL trang web' dán địa chỉ ở ô dưới (CÓ https://, CÓ dấu / cuối). Thiếu nền tảng Website dù đã có Miền ứng dụng Facebook vẫn báo 'Không thể tải URL'. Rồi Lưu thay đổi. Cài localhost thì bỏ qua.", "copy": "site"},
           {"text": "GIỮ app ở Chế độ phát triển (Development) và bạn là Quản trị viên của cả app lẫn tài khoản quảng cáo - như vậy tự cấp được quyền đọc số liệu, KHÔNG cần App Review."},
           {"text": "BỎ QUA 'Xác minh doanh nghiệp' và 'Xét duyệt ứng dụng' trong bảng 'Việc cần làm'. Hai bước đó chỉ cần khi app phục vụ doanh nghiệp KHÁC; bạn tự dùng cho tài khoản của mình thì không cần, làm chỉ mất thêm nhiều ngày chờ."},
           {"text": "Nếu hiện bảng 'Invalid Scopes: ads_read, business_management' thì cứ bấm OK và ĐI TIẾP - cảnh báo này chỉ hiện cho người tạo app, KHÔNG chặn đăng nhập. Chỉ khi xong mà Javis không thấy tài khoản quảng cáo nào mới cần thêm quyền: bản MỚI 'Thêm trường hợp sử dụng' > trường hợp về quảng cáo (Marketing API) > 'Tùy chỉnh' > tab 'Quyền'; bản CŨ 'Sản phẩm' > 'Thêm sản phẩm' > 'Marketing API'."},
@@ -576,7 +577,7 @@
         "provider": "meta",
         "authorize_url": "https://www.facebook.com/v25.0/dialog/oauth",
         "token_url": "https://graph.facebook.com/v25.0/oauth/access_token",
-        "scopes": ["pages_show_list", "pages_read_engagement", "pages_manage_posts", "pages_manage_engagement"],
+        "scopes": ["pages_show_list", "pages_read_engagement", "pages_manage_posts", "pages_manage_engagement", "pages_manage_metadata", "pages_messaging"],
         "fields": [
           { "key": "client_id", "label": "App ID (Facebook)", "placeholder": "Ví dụ: 1122334455667788" },
           { "key": "client_secret", "label": "App Secret (Facebook)", "placeholder": "Ví dụ: a1b2c3d4e5f6..." }
@@ -588,8 +589,9 @@
           {"text": "Nhìn CỘT TRÁI trang app: thấy 'Sản phẩm' là bản CŨ, thấy 'Trường hợp sử dụng' là bản MỚI. Meta đang chuyển dần nên mỗi người thấy một kiểu.", "link": "https://developers.facebook.com/apps/", "link_label": "App của tôi"},
           {"text": "Mở phần Đăng nhập bằng Facebook. Bản CŨ: 'Sản phẩm' > 'Thêm sản phẩm' > 'Đăng nhập bằng Facebook' bản THƯỜNG (KHÔNG phải bản 'cho doanh nghiệp'). Bản MỚI: 'Trường hợp sử dụng' > mở trường hợp có Đăng nhập bằng Facebook > 'Tùy chỉnh'. Thường đã có sẵn."},
           {"text": "Nếu hiện bảng 'Invalid Scopes: pages_show_list, pages_read_engagement...' thì cứ bấm OK và ĐI TIẾP - cảnh báo này chỉ hiện cho người tạo app, KHÔNG chặn đăng nhập. Chỉ khi xong mà Javis không thấy Trang hoặc không đăng được mới cần thêm quyền: 'Thêm trường hợp sử dụng' > 'Quản lý mọi thứ trên Trang của bạn' > 'Tùy chỉnh' > tab 'Quyền'."},
-          {"text": "Ô 'URI chuyển hướng OAuth hợp lệ': cài trên MÁY CÁ NHÂN (localhost) thì BỎ QUA, không điền được và cũng không cần. Cài trên VPS/TÊN MIỀN RIÊNG thì BẮT BUỘC bấm 'Sao chép' ở ô ngay dưới đây rồi dán NGUYÊN VĂN vào ô đó và Lưu - Facebook bắt khớp từng ký tự, lệch một chữ là báo 'URL bị chặn'.", "copy": "redirect"},
-          {"text": "Cài trên VPS/TÊN MIỀN RIÊNG thêm một bước nữa: 'Cài đặt ứng dụng' > 'Thông tin cơ bản' > ô 'Miền ứng dụng' (App Domains) - dán tên miền ở ô ngay dưới đây (KHÔNG có https://, KHÔNG có dấu /) rồi kéo xuống cuối trang bấm 'Lưu thay đổi'. Thiếu bước này Facebook báo 'Không thể tải URL - Miền của URL này không được đưa vào miền của ứng dụng'. Cài localhost thì bỏ qua.", "copy": "domain"},
+          {"text": "Ô 'URI chuyển hướng OAuth hợp lệ': cài trên MÁY CÁ NHÂN (localhost) thì BỎ QUA, không điền được và cũng không cần. Cài trên VPS/TÊN MIỀN RIÊNG thì BẮT BUỘC bấm 'Sao chép' ở ô ngay dưới đây rồi dán NGUYÊN VĂN vào ô đó và Lưu - phải thấy đủ /connect/oauth/callback (không được cắt giữa chừng). Facebook bắt khớp từng ký tự, lệch một chữ là báo 'URL bị chặn'.", "copy": "redirect"},
+          {"text": "Cài trên VPS/TÊN MIỀN RIÊNG thêm: 'Cài đặt ứng dụng' > 'Thông tin cơ bản' > ô 'Miền ứng dụng' (App Domains) - dán TẤT CẢ các ô ngay dưới đây (KHÔNG có https://, KHÔNG có dấu /). Có 2 ô thì dán cả subdomain lẫn miền gốc. Kéo xuống cuối trang bấm 'Lưu thay đổi'. Cài localhost thì bỏ qua.", "copy": "domain"},
+          {"text": "Cùng trang Thông tin cơ bản, kéo xuống 'Thêm nền tảng' > chọn 'Trang web' (Website) > ô 'URL trang web' dán địa chỉ ở ô dưới (CÓ https://, CÓ dấu / cuối). Thiếu nền tảng Website dù đã có Miền ứng dụng Facebook vẫn báo 'Không thể tải URL - Miền của URL này không được đưa vào miền của ứng dụng'. Rồi Lưu thay đổi. Cài localhost thì bỏ qua.", "copy": "site"},
           {"text": "GIỮ app ở Chế độ phát triển (Development) và bạn là Quản trị viên của cả app lẫn các Trang muốn quản lý - như vậy tự cấp được quyền Trang, KHÔNG cần App Review. BỎ QUA 'Xác minh doanh nghiệp' và 'Xét duyệt ứng dụng'."},
           {"text": "Menu trái 'Cài đặt ứng dụng' > 'Thông tin cơ bản': copy 'ID ứng dụng' và 'Khóa bí mật của ứng dụng' (bấm Hiện), dán vào hai ô bên dưới rồi bấm 'Lưu & mở trang đăng nhập'."},
           {"text": "Khi Facebook hỏi quyền, nhớ TICK chọn các Trang muốn cho Javis quản lý. Token sống khoảng 60 ngày, Javis tự gia hạn."},
@@ -604,8 +606,8 @@
         }
       },
       "tool_meta": {
-        "read": ["fb_pages_list", "fb_page_posts", "fb_page_comments"],
-        "danger": ["fb_page_post", "fb_page_photo", "fb_page_album", "fb_page_video", "fb_page_edit", "fb_page_reply", "fb_page_delete"]
+        "read": ["fb_pages_list", "fb_page_posts", "fb_page_comments", "fb_page_inbox_comments", "fb_conversations", "fb_conversation_thread"],
+        "danger": ["fb_page_post", "fb_page_photo", "fb_page_album", "fb_page_video", "fb_page_edit", "fb_page_reply", "fb_page_delete", "fb_page_comment_hide", "fb_page_comment_like", "fb_page_comment_delete", "fb_message_send"]
       },
       "default_perm": "readonly",
       "risk": "Mức Toàn quyền cho phép Javis ĐĂNG BÀI, TRẢ LỜI BÌNH LUẬN và XOÁ BÀI trên Trang của bạn. Hành động thật, công khai.\n\nXoá bài là KHÔNG HOÀN TÁC ĐƯỢC - Trang không có thùng rác, bài xoá rồi là mất hẳn.\n\nGiữ mức Chỉ đọc thì Javis chỉ xem Trang, bài và bình luận, không đăng, không sửa, không xoá.\n\nToken chỉ thao tác được trên Trang mà chính bạn là admin."
@@ -1296,6 +1298,35 @@
       },
       "default_perm": "readonly",
       "risk": "Đây là chìa khoá vào hạ tầng website của bạn, nên mặc định để mức Chỉ đọc.\n\nMức Ghi nháp cho phép Javis SỬA thật: đổi bản ghi DNS, tạo và sửa website, subdomain, hộp thư, cron, cài plugin WordPress. Sai một bản ghi DNS là website hoặc email tắt ngay.\n\nMức Toàn quyền mở thêm nhóm nguy hiểm: XOÁ website, tên miền, hộp thư, VPS; tắt hoặc khởi động lại VPS; khôi phục và reset bản sao lưu.\nNhóm này còn có các thao tác TIÊU TIỀN: mua tên miền, mua VPS, gia hạn gói. Trừ tiền thật trong tài khoản Hostinger và không hoàn tác được.\n\nChỉ nâng quyền khi bạn thật sự muốn Javis tự tay làm những việc đó."
+    },
+    {
+      "id": "postpeer",
+      "name": "TikTok (PostPeer)",
+      "icon": "video",
+      "category": "Mạng xã hội",
+      "description": "Đăng video lên TikTok tự động qua dịch vụ PostPeer. BYO API key, quản lý kết nối TikTok OAuth trên dashboard của PostPeer. Chỉ cần URL video HTTPS và caption là đăng được.",
+      "status": "beta",
+      "transport": "http",
+      "url": "https://api.postpeer.dev",
+      "auth": {
+        "type": "apikey",
+        "fields": [
+          {
+            "key": "postpeer_key",
+            "label": "PostPeer access key",
+            "placeholder": "Ví dụ: pp_...",
+            "env": "POSTPEER_API_KEY"
+          }
+        ],
+        "guide": "1. Đăng ký postpeer.dev (20 credit free).\n2. Dashboard > Access Keys > copy key.\n3. Dán vào đây, bấm Kết nối.\n4. Vào postpeer.dev/dashboard bấm Connect TikTok (OAuth).\n5. Gọi tool postpeer_accounts để lấy accountId, ghi vào brand kit.\n\nKHÔNG dùng PostPeer để đăng Facebook - Fanpage đi Graph Javis.\nMỗi video TikTok trừ 1 credit.",
+        "guide_url": "https://docs.postpeer.dev"
+      },
+      "tool_meta": {
+        "read": ["postpeer_accounts", "postpeer_tiktok_creator", "postpeer_post_get"],
+        "danger": ["postpeer_tiktok_post", "postpeer_tiktok_photos"]
+      },
+      "default_perm": "readonly",
+      "risk": "Mức Toàn quyền cho phép Javis ĐĂNG VIDEO lên TikTok đã nối. Hành động thật, có thể công khai hoặc vào inbox TikTok (draft).\nGiữ Chỉ đọc thì chỉ liệt kê tài khoản.\nKey PostPeer = chìa mọi mạng đã nối trên tài khoản PostPeer - đừng đưa staff."
     }
   ]
 }
