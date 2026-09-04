@@ -113,3 +113,11 @@ Mỗi mục = 1 slug Fanpage. Worker bỏ các path **gốc dataset** khi chọn
 - attachments/dataset/tin-hoc _ai/290652938340154794455.jpg
 - attachments/dataset/tin-hoc _ai/z7441102482368_9ab23aa589aa55b78fc426e144f56d59.jpg
 - attachments/dataset/tin-hoc _ai/z7462399610052_3c62644219b3695fa4af25aa0f81000a.jpg
+- attachments/dataset/tin-hoc _ai/z7430943190085_37c3a68f014fe72d10df6f74ad9ec444.jpg
+- attachments/dataset/tin-hoc _ai/z7275609732536_14903c52ce671be5aa2c2c57158fe380.jpg
+- attachments/dataset/tin-hoc _ai/z5986626217957_fcc7305cb42ead123a293b48a7ea96d7.jpg
+- attachments/dataset/tin-hoc _ai/Screenshot 2024-11-11 135952.jpg
+- attachments/dataset/tin-hoc _ai/z7441102518604_f0799eb73f48cd7a524518794debf487.jpg
+- attachments/dataset/tin-hoc _ai/z7368945307967_3fc98c61a12185f79694021179ab1c2e.jpg
+- attachments/dataset/tin-hoc _ai/z6016063954673_62e0f5609549593a7f11012aa51998b2.jpg
+- attachments/dataset/tin-hoc _ai/z7381949008282_d9215a76a1964d4c7f9838062eb82146.jpg

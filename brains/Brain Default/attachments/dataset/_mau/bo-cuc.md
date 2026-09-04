@@ -29,13 +29,13 @@ Logo luon file `chung/thsv-logo-2025.png`. Khong tin logo ve trong poster.
 - Poster Zoom + giao trinh Python xanh la (logo khong phai Sao Viet).
 - Bat ky logo/hotline/web khong phai Sao Viet.
 
-## Cover = xoay 2 kieu 1:1 VUONG (y chu)
+## Cover = xoay 2 kieu 1:1 VUONG (chuan Agency 2026)
 
-**Kieu 1 - Poster mockup studio 1:1 VUONG** (nhu mau-poster-do-hoa): `image_edit` logo + `mau-poster-do-hoa.png` hoac gen banner vuong 1:1. Nguoi that / hoc vien tuoi cuoi ben ban may tinh, to roi, icon phan mem 3D bay noi khoi, chu lon ro net tren nen xanh thuong hieu, badge uu dai vang bo goc, footer hotline.
+**Kieu 1 - Studio Graphic Poster 1:1 VUONG** (Dung AI Image Generation hoac mau-poster-do-hoa): Phong cach do hoa quang cao thuong mai cao cap. Anh sang studio, background sang xanh/trang tinh te, laptop hien dai hien thi phan mem, icon 3D noi khoi bong bay phat quang, chu typography lon sac net tren goc sang hoac panel rieng, nut CTA cam bo tron chuyen doi cao, footer hotline chuan.
 
-**Kieu 2 - Gen tu anh goc khoa 1:1 VUONG**: `image_edit` [anh dataset nganh, logo, mau-A-full hoac mau-khoa-hoc]. Giu mat lop that + thanh chu duoi ro net chuan vuong 1:1.
+**Kieu 2 - Clean Classroom Bottom-Bar 1:1 VUONG** (Anh lop hoc that + khung chan trang): Giu tron 75% khong gian lop hoc sang ro ben tren. Vung thong tin nam gon o 25% chan trang duoi voi gradient navy chuyen mau muot ma, 2 the vien thuoc loi ich thanh lich, logo Sao Viet tinh te o goc tren. CAM tuyet doi de chu len mat, lung hay man hinh hoc vien. CAM ve vien vang bao quanh anh.
 
-*(Style 3 Neon viền mạch điện tối tăm đã xoá bỏ hoàn toàn do lỗi chữ đè và xấu).*
+*(DA XOA BO HOAN TOAN: Style ve hop PIL 4 nut vuong tho kech, style vien vang bang khen, style neon mach dien toi tam, va style de chu len lung hoc vien do qua xau).*
 
 Xoay: luan phien 2 kieu cover 1:1 tren. Cam 2 bai lien tiep cung 1 kieu. Cam split-navy lam mac dinh.
 

@@ -1,0 +1,10 @@
+name: Tạo ảnh (Google Gemini / Imagen 3)
+slug: image-gemini
+version: 1.0.0
+description: Tạo ảnh thương mại 3D bằng Google Imagen 3 (dùng chung API key Gemini). Ảnh lưu trực tiếp vào attachments/ của brain.
+author: Javis (bundled)
+enabled: true
+min_mode: safe
+tools:
+  - gemini_generate_image
+hooks: []

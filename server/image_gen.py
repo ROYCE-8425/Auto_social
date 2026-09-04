@@ -269,6 +269,23 @@ def save_png_b64(b64: str, vault_root: Optional[str], prefix: str = "javis-img")
     return {"ok": True, "rel_path": rel, "abs_path": str(fpath), "file": fname}
 
 
+def save_image_bytes(raw: bytes, vault_root: Optional[str], prefix: str = "javis-img", ext: str = ".jpg") -> dict:
+    """Luu bytes anh vao <vault>/attachments. Tra {ok, rel_path, abs_path, file}."""
+    if not raw:
+        return {"ok": False, "error": "Du lieu anh rong."}
+    vault = _resolve_vault(vault_root)
+    adir = _attachments_dir(vault)
+    fname = f"{prefix}-{time.strftime('%Y%m%d-%H%M%S')}-{uuid.uuid4().hex[:6]}{ext}"
+    fpath = adir / fname
+    try:
+        fpath.write_bytes(raw)
+    except Exception as e:
+        return {"ok": False, "error": f"Luu anh loi: {e}"}
+    rel = os.path.relpath(fpath, vault).replace(os.sep, "/")
+    return {"ok": True, "rel_path": rel, "abs_path": str(fpath), "file": fname}
+
+
+
 def _headers(token: str, account_id: str) -> dict:
     # KHỚP đúng bộ header engine.responses_with_mcp đã chạy được (qua Cloudflare backend Codex).
     return {
@@ -361,3 +378,135 @@ async def generate_chatgpt(prompt: str, aspect_ratio: str = "square", quality: s
     return {"ok": True, "rel_path": saved["rel_path"], "abs_path": saved["abs_path"],
             "file": saved["file"], "size": size, "quality": quality, "aspect": aspect,
             "provider": "openai-codex", "prompt": prompt, "refs": len(data_urls)}
+
+
+# ---------------------------------------------------------------------------
+# Google Gemini / Imagen 3
+# ---------------------------------------------------------------------------
+GEMINI_IMAGEN_MODEL = os.getenv("JAVIS_GEMINI_IMAGEN_MODEL", "imagen-3.0-generate-002")
+GEMINI_IMAGEN_URL = "https://generativelanguage.googleapis.com/v1beta/models/{model}:predict?key={key}"
+
+
+def get_gemini_api_key(explicit_key: Optional[str] = None) -> str:
+    """Lay API key Gemini tu doi so, settings.json hoac bien moi truong."""
+    if explicit_key and str(explicit_key).strip():
+        return str(explicit_key).strip()
+    try:
+        import config
+        s = config.read_settings()
+        k = (s.get("model") or {}).get("gemini_api_key") or ""
+        if k and not k.startswith("••••"):
+            return str(k).strip()
+    except Exception:
+        pass
+    for var in ("GEMINI_API_KEY", "GOOGLE_API_KEY", "GEMINI_KEY"):
+        val = os.getenv(var, "").strip()
+        if val:
+            return val
+    return ""
+
+
+def _resolve_gemini_aspect(aspect_ratio: Optional[str]) -> str:
+    a = (aspect_ratio or "square").strip().lower()
+    mapping = {
+        "square": "1:1",
+        "1:1": "1:1",
+        "landscape": "16:9",
+        "16:9": "16:9",
+        "4:3": "4:3",
+        "portrait": "9:16",
+        "9:16": "9:16",
+        "3:4": "3:4",
+    }
+    return mapping.get(a, "1:1")
+
+
+async def generate_gemini(
+    prompt: str,
+    aspect_ratio: str = "square",
+    vault_root: Optional[str] = None,
+    api_key: Optional[str] = None,
+    timeout_s: float = 90.0,
+    prefix: str = "gemini-img"
+) -> dict:
+    """Tao 1 anh bang Google Imagen 3 qua API key Gemini chung.
+
+    Tra ve {ok, rel_path, abs_path, file, aspect, provider, model, prompt} hoac {ok: False, error}.
+    """
+    prompt = (prompt or "").strip()
+    if not prompt:
+        return {"ok": False, "error": "Thieu mo ta anh (prompt)."}
+
+    key = get_gemini_api_key(api_key)
+    if not key:
+        return {
+            "ok": False,
+            "error": "Chua co API key Gemini. Hay luu key vao Cai dat > Models hoac dat bien moi truong GEMINI_API_KEY."
+        }
+
+    aspect = _resolve_gemini_aspect(aspect_ratio)
+    model = GEMINI_IMAGEN_MODEL
+    url = GEMINI_IMAGEN_URL.format(model=model, key=key)
+
+    payload = {
+        "instances": [
+            {"prompt": prompt}
+        ],
+        "parameters": {
+            "sampleCount": 1,
+            "aspectRatio": aspect,
+            "outputMimeType": "image/jpeg"
+        }
+    }
+
+    try:
+        timeout = httpx.Timeout(timeout_s, connect=20.0)
+        async with httpx.AsyncClient(timeout=timeout) as client:
+            resp = await client.post(
+                url,
+                json=payload,
+                headers={"Content-Type": "application/json"}
+            )
+            if resp.status_code != 200:
+                body = resp.text[:400]
+                return {
+                    "ok": False,
+                    "error": f"Google Imagen API tra ma loi {resp.status_code}: {body}"
+                }
+
+            data = resp.json()
+            predictions = data.get("predictions") or []
+            if not predictions:
+                return {
+                    "ok": False,
+                    "error": f"Google Imagen khong tra ve du lieu anh: {data}"
+                }
+
+            b64 = predictions[0].get("bytesBase64Encoded")
+            if not b64:
+                return {
+                    "ok": False,
+                    "error": "Khong tim thay du lieu bytesBase64Encoded trong phan hoi cua Google."
+                }
+
+            raw_bytes = base64.b64decode(b64)
+            saved = save_image_bytes(raw_bytes, vault_root, prefix=prefix, ext=".jpg")
+            if not saved.get("ok"):
+                return saved
+
+            return {
+                "ok": True,
+                "rel_path": saved["rel_path"],
+                "abs_path": saved["abs_path"],
+                "file": saved["file"],
+                "aspect": aspect,
+                "provider": "google-imagen-3",
+                "model": model,
+                "prompt": prompt
+            }
+    except Exception as e:
+        return {
+            "ok": False,
+            "error": f"Goi Google Imagen that bai: {type(e).__name__}: {e}"
+        }
+

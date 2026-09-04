@@ -1878,7 +1878,96 @@
           "msg": "done"
         }
       ]
+    },
+    {
+      "id": "t_18bb0a4a215e",
+      "brain_root": "C:\\Users\\199X\\OneDrive\\Máy tính\\javis\\javis-os\\brains\\Brain Default",
+      "title": "đăng khoá học văn phòng",
+      "intent": "đăng khoá học văn phòng",
+      "route": "wf:dang-bai-that-facebook",
+      "capability": "external-write",
+      "execution_mode": "full",
+      "priority": 2,
+      "status": "done",
+      "needs_approval": false,
+      "block_kind": "",
+      "block_reason": "",
+      "created_by": "user",
+      "chat_id": "",
+      "idempotency_key": "",
+      "attempts": 1,
+      "max_attempts": 3,
+      "claimed_by": "",
+      "claim_expires_at": 0.0,
+      "last_heartbeat_at": 1788501011.1051364,
+      "current_run_id": "",
+      "result": "Đang thực hiện đăng album bài viết khóa học tin học văn phòng lên Fanpage qua Facebook Graph API...\n- **Trang:** Royce Shop (https://www.facebook.com/988656934325292)\n- **Trạng thái kiểm tra:** Đã lên công khai trên Facebook\n- **Link bài viết trực tiếp:** https://www.facebook.com/122131503051221350/posts/122131605423221350\n- **Caption:**\n💻 KHÓA HỌC TIN HỌC VĂN PHÒNG TOÀN DIỆN CHO NGƯỜI ĐI LÀM TẠI TIN HỌC SAO VIỆT - TỐI ƯU HÓA TỐC ĐỘ XỬ LÝ CÔNG VIỆC VÀ TỰ TIN THĂNG TIẾN 💻\n\n❓ Bạn có từng cảm thấy áp lực khi cấp trên yêu cầu tổng hợp báo cáo doanh thu gấp trong 30 phút nhưng công thức Excel liên tục báo lỗi #N/A, #VALUE?\n❓ Bạn loay hoay cả buổi sáng chỉnh sửa hợp đồng Word mà các trang cứ nhảy định dạng lung tung, bảng biểu tràn lề?\n❓ Chuẩn bị thuyết trình trước khách hàng hoặc ban giám đốc nhưng slide PowerPoint đơn điệu, thiếu chuyên nghiệp và không truyền tải được dữ liệu thuyết phục?\n❓ Bạn mong muốn nâng cấp kỹ năng xử lý công việc hành chính, văn phòng để tự tin ứng tuyển hoặc thăng tiến lên các vị trí cao hơn?\n\n👉 Đừng để những hạn chế về thao tác vi tính văn phòng trở thành rào cản ngăn bước sự nghiệp của bạn! Khóa học Tin Học Văn Phòng Thực Chiến tại Trung Tâm Tin Học Sao Việt được thiết kế chuyên biệt để giúp bạn làm chủ hoàn toàn Word, Excel và PowerPoint từ cơ bản đến nâng cao.\n\n🚀 GIẢI PHÁP ĐÀO TẠO THỰC CHIẾN TẠI TIN HỌC SAO VIỆT:\nKhóa học tập trung 100% vào kỹ năng thực tế mà các doanh nghiệp yêu cầu hằng ngày. Không lý thuyết hàn lâm, học viên được tiếp cận trực tiếp với các tình huống văn phòng sống động, rèn luyện tư duy xử lý số liệu logic và tác phong soạn thảo chuyên nghiệp.\n\n⭐ DUY NHẤT CHỈ CÓ TẠI TIN HỌC SAO VIỆT:\n📌 Giáo viên hướng dẫn kèm 1-1, cầm tay chỉ việc sát năng lực và đặc thù công việc riêng của từng học viên.\n📌 Học đến khi làm được việc: Không giới hạn số buổi thực hành, học viên tự tin làm chủ kiến thức mới kết thúc khóa.\n📌 Lịch học linh hoạt tối đa: Ca Sáng - Chiều - Tối (từ Thứ 2 đến Thứ 7), đăng ký được xếp lịch học ngay, nghỉ được học bù không lo mất bài.\n📌 Thực hành 100% trên máy tính cấu hình cao cùng bộ tài liệu, hợp đồng, chứng từ và biểu mẫu thực tế của doanh nghiệp.\n📌 Cấp Chứng chỉ chuyên viên Tin học Văn phòng có giá trị toàn quốc sau khi hoàn thành khóa đào tạo.\n📌 Hỗ trợ giải đáp nghiệp vụ và xử lý file công việc lâu dài ngay cả khi bạn đã tốt nghiệp.\n\n📚 NỘI DUNG 6 MODULE THỰC CHIẾN TỪ CON SỐ 0 ĐẾN CHUYÊN NGHIỆP:\n1️⃣ Module 1 - Kỹ Năng Máy Tính & Quản Trị Dữ Liệu Công Sở:\n- Làm chủ phím tắt tốc độ, tổ chức thư mục khoa học, nén và giải nén dữ liệu an toàn.\n- Quản lý email, lưu trữ đám mây Google Drive/OneDrive, bảo mật tài liệu nội bộ.\n\n2️⃣ Module 2 - Soạn Thảo Văn Bản Word Chuẩn Doanh Nghiệp:\n- Chuẩn hóa thể thức văn bản hành chính theo Nghị định 30/2020/NĐ-CP.\n- Tạo mục lục tự động, ngắt section phân trang linh hoạt, vẽ bảng biểu chuẩn in ấn.\n- Kỹ thuật trộn thư Mail Merge gửi thư mời, hợp đồng và phiếu lương tự động hàng loạt.\n\n3️⃣ Module 3 - Bảng Tính Excel Xử Lý Dữ Liệu Thực Chiến:\n- Nắm vững các nhóm hàm toán học, thống kê, chuỗi và ngày tháng thông dụng.\n- Thành thạo các hàm dò tìm nâng cao: VLOOKUP, HLOOKUP, INDEX, MATCH, XLOOKUP.\n- Sử dụng hàm điều kiện đa tầng: IF, AND, OR, SUMIFS, COUNTIFS, bẫy lỗi IFERROR.\n\n4️⃣ Module 4 - Phân Tích Số Liệu & Dashboard Báo Cáo Trên Excel:\n- Tổ chức cơ sở dữ liệu lớn, xử lý lọc nâng cao Advanced Filter và loại bỏ trùng lặp.\n- Phân tích đa chiều với Pivot Table, tạo biểu đồ động tương tác với Slicer.\n- Thiết lập định dạng dữ liệu có điều kiện Conditional Formatting cảnh báo số liệu.\n\n5️⃣ Module 5 - Thiết Kế Bài Thuyết Trình PowerPoint Đẳng Cấp:\n- Tư duy thiết kế bố cục slide hiện đại, chuẩn nhận diện thương hiệu.\n- Trực quan hóa bảng biểu, số liệu kinh doanh thành Infographic dễ hiểu.\n- Sử dụng hiệu ứng chuyển trang Morph mượt mà, chuyên nghiệp thu hút người xem.\n\n6️⃣ Module 6 - Tích Hợp Kỹ Năng AI Tối Ưu Năng Suất Văn Phòng:\n- Sử dụng AI để gợi ý công thức Excel phức tạp và gỡ lỗi bảng tính tự động.\n- Ứng dụng trợ lý AI hỗ trợ soạn thảo email, biên bản cuộc họp và tóm tắt tài liệu nhanh.\n\n🎁 CHÍNH SÁCH ƯU ĐÃI HỌC PHÍ & QUÀ TẶNG KHAI GIẢNG:\n▶️ ƯU ĐÃI 30% HỌC PHÍ - KÈM 1-1 CẦM TAY CHỈ VIỆC cho học viên đăng ký giữ chỗ sớm trong tuần.\n▶️ Tặng trọn bộ 100+ biểu mẫu hành chính nhân sự, hợp đồng và file Excel quản lý mẫu trị giá 500k.\n▶️ Giảm thêm 10% học phí khi đăng ký theo nhóm từ 2 người hoặc dành cho học sinh, sinh viên.\n\n📞 LIÊN HỆ ĐĂNG KÝ VÀ XẾP LỊCH HỌC NGAY:\n- Hotline/Zalo tư vấn 24/7: 093 1144 858 - 0823 552 558\n- Nhắn tin trực tiếp cho Fanpage để nhận đề cương chi tiết và xếp lịch học thử miễn phí!\n\n---\nTRUNG TÂM TIN HỌC SAO VIỆT\nCông Ty TNHH Giáo Dục Tin Học Sao Việt\nMã số thuế: 3603708616\nHotline: 093 1144 858 - 0823 552 558\nEmail: trungtamtinhocsaoviet@gmail.com\nWebsite: https://tinhocsaoviet.com/\n\n📍 HỆ THỐNG 13 CƠ SỞ ĐÀO TẠO TIN HỌC SAO VIỆT:\nTP. HỒ CHÍ MINH:\n1. Cơ sở Bình Thạnh: 21/12 Lê Trực, Phường 7, Q. Bình Thạnh (Chung Cư Lê Trực)\n2. Cơ sở Quận 7: 515 B2/12 Lê Văn Lương, Tân Phong, Quận 7\n3. Cơ sở Quận 6: Phòng A206 số 189 Kinh Dương Vương, Phường 12, Quận 6 (Trường CĐ GTVT Trung Ương VI)\n4. Cơ sở Quận 12: 247/31 Hà Huy Giáp, Thạnh Lộc, Quận 12\n5. Cơ sở TP. Thủ Đức: 49 Đường Số 3, Tăng Nhơn Phú B, TP. Thủ Đức\n6. Cơ sở Tân Bình: 180 Phạm Văn Bạch, Phường 15, Quận Tân Bình\n\nBÌNH DƯƠNG:\n7. Cơ sở Thuận An: 1/513 KDC Tài Lực, Tổ 9, Khu phố Hòa Lân 2, Thuận An\n8. Cơ sở Dĩ An: 184/19/11 Đặng Văn Mây, KP. Đông Chiêu, P. Tân Đông Hiệp, Dĩ An\n9. Cơ sở Thủ Dầu Một: Số 107, D5, KDC Phú Hòa 1, Khu 4, Thủ Dầu Một\n10. Cơ sở Tân Uyên: 70 Đ. ĐX-03A, Tân Vĩnh Hiệp, Tân Uyên\n\nĐỒNG NAI:\n11. Cơ sở Biên Hòa: 91 Đoàn Văn Cự, P. Tam Hòa, Biên Hòa\n12. Cơ sở Long Thành: 72 Đinh Bộ Lĩnh, Lộc An, Long Thành\n\nBÀ RỊA - VŨNG TÀU:\n13. Cơ sở Vũng Tàu: 293 Bình Giã, Phường 8, TP. Vũng Tàu\n\n#TinhocSaoViet #tinhocvanphong #tinhocthuchanh #word #excel #powerpoint #khoahoctinhoc #daotaotinhoc\n\n- **Ghi chú:** Đã xoay sang Cover Kiểu 1 (Studio Mockup Poster 1:1) kèm 3 ảnh lớp học thực tế chuẩn hóa vuông 1:1, tự động loại trừ ảnh cover khỏi album và cập nhật 4 đường dẫn ảnh gốc vào `_anh-da-dung.md`.",
+      "created_at": 1788500706.555212,
+      "updated_at": 1788501011.1051364,
+      "metadata": {
+        "route": "wf:dang-bai-that-facebook",
+        "capability": "external-write"
+      },
+      "artifacts": [],
+      "deps": [],
+      "log": [
+        {
+          "ts": "2026-09-04 12:45",
+          "msg": "created by user"
+        },
+        {
+          "ts": "2026-09-04 12:45",
+          "msg": "claimed by worker:4608:865cccc9"
+        },
+        {
+          "ts": "2026-09-04 12:50",
+          "msg": "done"
+        }
+      ]
+    },
+    {
+      "id": "t_7d2ea290b2c0",
+      "brain_root": "C:\\Users\\199X\\OneDrive\\Máy tính\\javis\\javis-os\\brains\\Brain Default",
+      "title": "đăng khoá học văn phòng",
+      "intent": "đăng khoá học văn phòng",
+      "route": "wf:dang-bai-that-facebook",
+      "capability": "external-write",
+      "execution_mode": "full",
+      "priority": 2,
+      "status": "cancelled",
+      "needs_approval": false,
+      "block_kind": "cancelled",
+      "block_reason": "worker cancelled",
+      "created_by": "user",
+      "chat_id": "",
+      "idempotency_key": "",
+      "attempts": 1,
+      "max_attempts": 3,
+      "claimed_by": "",
+      "claim_expires_at": 0.0,
+      "last_heartbeat_at": 1788503109.809124,
+      "current_run_id": "",
+      "result": "",
+      "created_at": 1788503109.7930827,
+      "updated_at": 1788503131.7088914,
+      "metadata": {},
+      "artifacts": [],
+      "deps": [],
+      "log": [
+        {
+          "ts": "2026-09-04 13:25",
+          "msg": "created by user"
+        },
+        {
+          "ts": "2026-09-04 13:25",
+          "msg": "claimed by worker:4608:18aea2c4"
+        },
+        {
+          "ts": "2026-09-04 13:25",
+          "msg": "worker cancelled"
+        }
+      ]
     }
   ],
-  "updated": 1788494031.4892924
+  "updated": 1788503131.752965
 }

@@ -1,12 +1,18 @@
 # -*- coding: utf-8 -*-
 """
-Tạo Cover Poster vuông 1:1 (2000x2000) chuẩn Facebook 2026 cho các khoá học Tin học Sao Việt.
-Hỗ trợ 2 Style cốt lõi đẹp nhất (ĐÃ XOÁ STYLE 3 NEON DO LỖI CHỮ VÀ XẤU):
-- Style 1: Studio Mockup Poster 1:1 (chuẩn như mẫu đồ hoạ mau-poster-do-hoa.png):
-  Chữ to rõ trên nền xanh Sao Việt, ảnh người/lớp học trung tâm bo góc bóng mờ,
-  huy hiệu 3D nổi khối hai bên, badge ưu đãi vàng, footer hotline.
-- Style 2: Ảnh thật lớp học full khung 1:1 + Khung thương hiệu thanh dưới sắc nét.
+Bộ tạo Cover Banner Vuông 1:1 (2000x2000) chuẩn Facebook 2026 cho Tin học Sao Việt.
+
+ĐÃ XOÁ VĨNH VIỄN CÁC STYLE LỖI VÀ XẤU:
+- Xoá 100% style vẽ hộp PIL cũ (khung viền vàng bằng khen, 4 nút vuông thô kệch dán 2 bên mép, ảnh lọt thỏm giữa nền đen).
+- Xoá 100% style đè chữ lên mặt/lưng học viên và màn hình máy tính.
+
+QUY CHUẨN ĐỒ HỌA MỚI:
+- Luôn dùng Clean Classroom Bottom-Bar 1:1 (Ảnh chụp lớp học thực tế góc rộng sáng sủa)
+  Giữ trọn 75% không gian lớp học sáng rõ, không đè chữ lên người hay máy tính.
+  Vùng thông tin nằm gọn ở 25% chân trang dưới với dải gradient navy sâu lắng,
+  thẻ lợi ích viên thuốc thanh lịch, logo Sao Việt đặt tinh tế.
 """
+import os
 import sys
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
@@ -19,354 +25,369 @@ LOGO_PATH = VAULT / "attachments/dataset/chung/thsv-logo-2025.png"
 if not LOGO_PATH.exists():
     LOGO_PATH = VAULT / "attachments/dataset/chung/thsv-logo-big.png"
 
-# Font loaders
+
 def get_font(size, bold=True):
-    font_file = r"C:\Windows\Fonts\arialbd.ttf" if bold else r"C:\Windows\Fonts\arial.ttf"
-    try:
-        return ImageFont.truetype(font_file, size)
-    except Exception:
-        return ImageFont.load_default()
+    font_paths = [
+        r"C:\Windows\Fonts\arialbd.ttf" if bold else r"C:\Windows\Fonts\arial.ttf",
+        r"C:\Windows\Fonts\segoeui.ttf",
+    ]
+    for fp in font_paths:
+        if Path(fp).exists():
+            try:
+                return ImageFont.truetype(fp, size)
+            except Exception:
+                pass
+    return ImageFont.load_default()
 
-def create_square_cover_style1(
+
+def create_clean_classroom_cover(
     title: str,
     subtitle: str,
-    badge_text: str,
-    student_img_path: Path,
-    out_path: Path,
-    tools_badges=None,
-    hotline: str = "093 1144 858 - 0823 552 558",
-    website: str = "tinhocsaoviet.com"
-):
-    """Style 1: Studio Mockup Poster 1:1 vuông (2000 x 2000) chuẩn như mẫu đồ hoạ."""
-    W, H = 2000, 2000
-    base = Image.new("RGB", (W, H), "#071B36")
-    draw = ImageDraw.Draw(base)
-
-    # 1. Subtle royal blue gradient background
-    for y in range(H):
-        r = int(7 + (18 - 7) * (y / H))
-        g = int(27 + (55 - 27) * (y / H))
-        b = int(54 + (115 - 54) * (y / H))
-        draw.line([(0, y), (W, y)], fill=(r, g, b))
-
-    # Center soft ambient lighting behind photo
-    glow = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-    gd = ImageDraw.Draw(glow)
-    gd.ellipse([250, 450, 1750, 1650], fill=(0, 160, 255, 60))
-    gd.ellipse([450, 250, 1550, 1350], fill=(255, 213, 79, 25))
-    glow = glow.filter(ImageFilter.GaussianBlur(130))
-    base = Image.alpha_composite(base.convert("RGBA"), glow)
-
-    # Safe margin gold border line
-    margin = 55
-    bd_layer = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-    bdd = ImageDraw.Draw(bd_layer)
-    bdd.rounded_rectangle([margin, margin, W - margin, H - margin], radius=40, outline=(255, 213, 79, 180), width=4)
-    base = Image.alpha_composite(base, bd_layer)
-
-    # 2. Logo at Top Left
-    if LOGO_PATH.exists():
-        logo = Image.open(LOGO_PATH).convert("RGBA")
-        logo_w = 260
-        scale = logo_w / logo.width
-        logo = logo.resize((logo_w, int(logo.height * scale)), Image.Resampling.LANCZOS)
-        lw, lh = logo.size
-        lx, ly = 100, 95
-        lpill = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-        lpd = ImageDraw.Draw(lpill)
-        lpd.rounded_rectangle([lx - 25, ly - 15, lx + lw + 25, ly + lh + 15], radius=22, fill=(255, 255, 255, 245), outline=(255, 213, 79, 200), width=2)
-        base = Image.alpha_composite(base, lpill)
-        base.paste(logo, (lx, ly), logo)
-
-    # 3. Main Title & Subtitle at Top
-    txt_layer = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-    td = ImageDraw.Draw(txt_layer)
-
-    font_title = get_font(76, bold=True)
-    font_sub = get_font(42, bold=True)
-    font_badge = get_font(34, bold=True)
-    font_footer = get_font(32, bold=True)
-
-    # Title text
-    bb = td.textbbox((0, 0), title, font=font_title)
-    tw = bb[2] - bb[0]
-    tx = (W - tw) // 2
-    ty = 230
-    td.text((tx + 3, ty + 3), title, font=font_title, fill=(0, 0, 0, 180))
-    td.text((tx, ty), title, font=font_title, fill="#FFFFFF")
-
-    # Subtitle
-    sbb = td.textbbox((0, 0), subtitle, font=font_sub)
-    sw = sbb[2] - sbb[0]
-    sx = (W - sw) // 2
-    sy = ty + 95
-    td.text((sx + 2, sy + 2), subtitle, font=font_sub, fill=(0, 0, 0, 180))
-    td.text((sx, sy), subtitle, font=font_sub, fill="#FFD54F")
-
-    # Conversion Badge pill
-    bbb = td.textbbox((0, 0), badge_text, font=font_badge)
-    bw = bbb[2] - bbb[0]
-    bx = (W - bw) // 2
-    by = sy + 75
-    bpad_x, bpad_y = 40, 14
-    pill = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-    pd = ImageDraw.Draw(pill)
-    pd.rounded_rectangle([bx - bpad_x, by - bpad_y, bx + bw + bpad_x, by + (bbb[3] - bbb[1]) + bpad_y],
-                         radius=30, fill=(245, 124, 0, 240), outline=(255, 235, 59, 255), width=3)
-    base = Image.alpha_composite(base, pill)
-    td.text((bx, by), badge_text, font=font_badge, fill="#FFFFFF")
-
-    # 4. Center Classroom / Student Photo
-    if student_img_path and student_img_path.exists():
-        sim = Image.open(student_img_path).convert("RGBA")
-        card_w, card_h = 1540, 1040
-        ratio = card_w / card_h
-        if sim.width / sim.height > ratio:
-            new_w = int(sim.height * ratio)
-            cl = (sim.width - new_w) // 2
-            sim = sim.crop((cl, 0, cl + new_w, sim.height))
-        else:
-            new_h = int(sim.width / ratio)
-            ct = (sim.height - new_h) // 2
-            sim = sim.crop((0, ct, sim.width, ct + new_h))
-        sim = sim.resize((card_w, card_h), Image.Resampling.LANCZOS)
-
-        mask = Image.new("L", (card_w, card_h), 0)
-        md = ImageDraw.Draw(mask)
-        md.rounded_rectangle([0, 0, card_w, card_h], radius=36, fill=255)
-
-        card_x = (W - card_w) // 2
-        card_y = 520
-
-        shadow = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-        sd = ImageDraw.Draw(shadow)
-        sd.rounded_rectangle([card_x - 12, card_y - 6, card_x + card_w + 12, card_y + card_h + 16],
-                             radius=44, fill=(0, 0, 0, 180))
-        shadow = shadow.filter(ImageFilter.GaussianBlur(30))
-        base = Image.alpha_composite(base, shadow)
-
-        photo_layer = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-        photo_layer.paste(sim, (card_x, card_y), mask)
-        pld = ImageDraw.Draw(photo_layer)
-        pld.rounded_rectangle([card_x, card_y, card_x + card_w, card_y + card_h],
-                              radius=36, outline=(255, 255, 255, 180), width=4)
-        base = Image.alpha_composite(base, photo_layer)
-
-    # 5. Floating 3D Badges
-    if tools_badges:
-        for i, (b_name, b_col, b_bg) in enumerate(tools_badges):
-            badge_side = 95 if i % 2 == 0 else W - 235
-            badge_y = 660 + (i // 2) * 230
-            bi_layer = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-            bid = ImageDraw.Draw(bi_layer)
-            bid.rounded_rectangle([badge_side + 5, badge_y + 8, badge_side + 145, badge_y + 148], radius=32, fill=(0, 0, 0, 150))
-            bi_layer = bi_layer.filter(ImageFilter.GaussianBlur(12))
-            base = Image.alpha_composite(base, bi_layer)
-
-            b_fg = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-            bfd = ImageDraw.Draw(b_fg)
-            bfd.rounded_rectangle([badge_side, badge_y, badge_side + 140, badge_y + 140], radius=28, fill=b_bg, outline=b_col, width=4)
-            bfont = get_font(42, bold=True)
-            bbb = bfd.textbbox((0, 0), b_name, font=bfont)
-            bw = bbb[2] - bbb[0]
-            bh = bbb[3] - bbb[1]
-            bfd.text((badge_side + (140 - bw) // 2, badge_y + (140 - bh) // 2 - 4), b_name, font=bfont, fill=b_col)
-            base = Image.alpha_composite(base, b_fg)
-
-    # 6. Branded Footer Bar
-    foot_layer = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-    ftd = ImageDraw.Draw(foot_layer)
-    fy = 1710
-    ftd.rounded_rectangle([80, fy, W - 80, fy + 160], radius=30, fill=(5, 15, 30, 240), outline=(255, 213, 79, 180), width=3)
-    ft_line1 = f"TRUNG TÂM TIN HỌC SAO VIỆT  •  HOTLINE: {hotline}"
-    ft_line2 = f"ĐÀO TẠO THỰC HÀNH 100% TRÊN MÁY  •  WEBSITE: {website.upper()}"
-    
-    f1_bb = ftd.textbbox((0, 0), ft_line1, font=font_footer)
-    f1_w = f1_bb[2] - f1_bb[0]
-    ftd.text(((W - f1_w) // 2, fy + 28), ft_line1, font=font_footer, fill="#FFD54F")
-
-    font_footer_sub = get_font(26, bold=False)
-    f2_bb = ftd.textbbox((0, 0), ft_line2, font=font_footer_sub)
-    f2_w = f2_bb[2] - f2_bb[0]
-    ftd.text(((W - f2_w) // 2, fy + 88), ft_line2, font=font_footer_sub, fill="#E0E0E0")
-
-    base = Image.alpha_composite(base, foot_layer)
-    base = Image.alpha_composite(base, txt_layer)
-
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    res = base.convert("RGB")
-    res.save(out_path, "JPEG", quality=95)
-    print(f"[OK] Da tao Cover Vuong Style 1: {out_path} ({res.size})")
-    return out_path
-
-
-def create_square_cover_style2(
-    title: str,
-    subtitle: str,
-    badge_text: str,
+    benefit1: str,
+    benefit2: str,
     classroom_img_path: Path,
     out_path: Path,
+    badge_tag: str = "ƯU ĐÃI 30% HỌC PHÍ",
     hotline: str = "093 1144 858",
     website: str = "tinhocsaoviet.com"
 ):
-    """Style 2: Ảnh thật lớp học full khung 1:1 + Khung thương hiệu thanh dưới sắc nét."""
+    """
+    Cover Lớp học Thực tế Chuẩn Đồ họa 2026:
+    - Ảnh thật góc rộng sáng rõ, không co nhỏ, không viền vàng bằng khen bao quanh.
+    - Chữ nằm gọn ở 25% chân trang, tuyệt đối không đè lên lưng, mặt hay màn hình máy tính.
+    - Dải gradient chuyển màu navy êm ái, thẻ lợi ích bo tròn hiện đại.
+    """
     W, H = 2000, 2000
     if not classroom_img_path or not classroom_img_path.exists():
         raise FileNotFoundError(f"Khong tim thay anh lop hoc: {classroom_img_path}")
 
-    sim = Image.open(classroom_img_path).convert("RGBA")
-    side = min(sim.width, sim.height)
-    l = (sim.width - side) // 2
-    t = (sim.height - side) // 2
-    base = sim.crop((l, t, l + side, t + side)).resize((W, H), Image.Resampling.LANCZOS)
+    sim = Image.open(classroom_img_path).convert("RGB")
+    sw, sh = sim.size
 
-    overlay = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-    od = ImageDraw.Draw(overlay)
-    for y in range(int(H * 0.45), H):
-        factor = (y - int(H * 0.45)) / (H * 0.55)
-        alpha = int(245 * (factor ** 1.3))
-        od.line([(0, y), (W, y)], fill=(8, 20, 42, alpha))
-    base = Image.alpha_composite(base, overlay)
+    # Smart Crop 1:1
+    if sw > sh:
+        crop_w = sh
+        crop_x = int((sw - crop_w) * 0.4)
+        sim_cropped = sim.crop((crop_x, 0, crop_x + crop_w, sh))
+    else:
+        crop_h = sw
+        crop_y = 0
+        sim_cropped = sim.crop((0, crop_y, sw, crop_y + crop_h))
 
-    margin = 55
-    draw = ImageDraw.Draw(base)
-    draw.rounded_rectangle([margin, margin, W - margin, H - margin], radius=40, outline="#FFD54F", width=4)
+    base = sim_cropped.resize((W, H), Image.Resampling.LANCZOS).convert("RGBA")
 
+    # 1. Subtle Logo Ambient Vignette (Top-left)
+    top_shadow = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    tsd = ImageDraw.Draw(top_shadow)
+    tsd.ellipse([-100, -100, 650, 450], fill=(7, 21, 43, 140))
+    top_shadow = top_shadow.filter(ImageFilter.GaussianBlur(60))
+    base = Image.alpha_composite(base, top_shadow)
+
+    # 2. Logo Sao Viet Top Left - Modern Frosted Card
     if LOGO_PATH.exists():
         logo = Image.open(LOGO_PATH).convert("RGBA")
-        logo_w = 260
+        logo_w = 300
         scale = logo_w / logo.width
         logo = logo.resize((logo_w, int(logo.height * scale)), Image.Resampling.LANCZOS)
         lw, lh = logo.size
-        lx, ly = 95, 95
-        lpill = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-        lpd = ImageDraw.Draw(lpill)
-        lpd.rounded_rectangle([lx - 20, ly - 12, lx + lw + 20, ly + lh + 12], radius=20, fill=(255, 255, 255, 245), outline=(255, 213, 79, 200), width=2)
-        base = Image.alpha_composite(base, lpill)
+        lx, ly = 80, 80
+
+        glass = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+        gd = ImageDraw.Draw(glass)
+        gd.rounded_rectangle([lx - 16, ly - 10, lx + lw + 16, ly + lh + 10], radius=24, fill=(0, 0, 0, 80))
+        glass = glass.filter(ImageFilter.GaussianBlur(12))
+        base = Image.alpha_composite(base, glass)
+
+        card = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+        cd = ImageDraw.Draw(card)
+        cd.rounded_rectangle([lx - 18, ly - 12, lx + lw + 18, ly + lh + 12], radius=22, fill=(255, 255, 255, 235), outline=(255, 215, 0, 220), width=3)
+        base = Image.alpha_composite(base, card)
         base.paste(logo, (lx, ly), logo)
 
+    # 3. Top Right: Badge Uu Dai Cam Nổi Khối
+    if badge_tag:
+        b_layer = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+        bd = ImageDraw.Draw(b_layer)
+        font_tag = get_font(34, bold=True)
+        t_bb = bd.textbbox((0, 0), badge_tag, font=font_tag)
+        tw = t_bb[2] - t_bb[0]
+        th = t_bb[3] - t_bb[1]
+
+        rx = W - tw - 120
+        ry = 85
+        bd.rounded_rectangle([rx - 25, ry - 14, rx + tw + 25, ry + th + 18], radius=25, fill=(0, 0, 0, 90))
+        b_layer = b_layer.filter(ImageFilter.GaussianBlur(10))
+        base = Image.alpha_composite(base, b_layer)
+
+        b_card = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+        bcd = ImageDraw.Draw(b_card)
+        bcd.rounded_rectangle([rx - 25, ry - 14, rx + tw + 25, ry + th + 18], radius=25, fill=(245, 124, 0, 245), outline=(255, 235, 59, 255), width=3)
+        bcd.text((rx, ry), badge_tag, font=font_tag, fill="#FFFFFF")
+        base = Image.alpha_composite(base, b_card)
+
+    # 4. Deep Royal Navy Gradient Footer (Chỉ chiếm 28% phía dưới)
+    grad_layer = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    gd = ImageDraw.Draw(grad_layer)
+    fade_start = 1400
+    fade_height = H - fade_start
+    for y in range(fade_start, H):
+        t = (y - fade_start) / fade_height
+        alpha = int(255 * (t ** 1.6))
+        r = int(7 - 3 * t)
+        g = int(21 - 8 * t)
+        b = int(43 - 15 * t)
+        gd.line([(0, y), (W, y)], fill=(r, g, b, alpha))
+    base = Image.alpha_composite(base, grad_layer)
+
+    # Đường chỉ vàng ánh kim tinh tế phân cách
+    line_layer = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    ld = ImageDraw.Draw(line_layer)
+    ld.line([(120, fade_start + 65), (W - 120, fade_start + 65)], fill=(255, 213, 79, 150), width=3)
+    base = Image.alpha_composite(base, line_layer)
+
+    # 5. Khối Typography Chuyên Nghiệp
     txt_layer = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     td = ImageDraw.Draw(txt_layer)
 
-    font_title = get_font(74, bold=True)
-    font_sub = get_font(42, bold=True)
-    font_badge = get_font(34, bold=True)
-    font_footer = get_font(30, bold=True)
+    font_title = get_font(72, bold=True)
+    font_sub = get_font(38, bold=True)
+    font_pill = get_font(32, bold=True)
+    font_hotline = get_font(30, bold=True)
 
-    by = 1350
-    bbb = td.textbbox((0, 0), badge_text, font=font_badge)
-    bw = bbb[2] - bbb[0]
-    bx = (W - bw) // 2
-    bpad_x, bpad_y = 35, 12
-    td.rounded_rectangle([bx - bpad_x, by - bpad_y, bx + bw + bpad_x, by + (bbb[3] - bbb[1]) + bpad_y],
-                         radius=26, fill=(245, 124, 0, 240), outline=(255, 235, 59, 255), width=3)
-    td.text((bx, by), badge_text, font=font_badge, fill="#FFFFFF")
-
-    tbb = td.textbbox((0, 0), title, font=font_title)
-    tw = tbb[2] - tbb[0]
+    # Tiêu đề khóa học
+    t_bb = td.textbbox((0, 0), title, font=font_title)
+    tw = t_bb[2] - t_bb[0]
     tx = (W - tw) // 2
-    ty = 1460
-    td.text((tx + 3, ty + 3), title, font=font_title, fill=(0, 0, 0, 220))
+    ty = fade_start + 95
     td.text((tx, ty), title, font=font_title, fill="#FFFFFF")
 
-    sbb = td.textbbox((0, 0), subtitle, font=font_sub)
-    sw = sbb[2] - sbb[0]
+    # Mô tả phụ
+    s_bb = td.textbbox((0, 0), subtitle, font=font_sub)
+    sw = s_bb[2] - s_bb[0]
     sx = (W - sw) // 2
-    sy = 1570
-    td.text((sx + 2, sy + 2), subtitle, font=font_sub, fill=(0, 0, 0, 200))
+    sy = ty + 95
     td.text((sx, sy), subtitle, font=font_sub, fill="#FFD54F")
 
+    # 2 Thẻ lợi ích viên thuốc (Pill badges)
+    py = sy + 90
+    pill_h = 74
+
+    p1_text = f"•  {benefit1}"
+    p1_bb = td.textbbox((0, 0), p1_text, font=font_pill)
+    p1_w = p1_bb[2] - p1_bb[0] + 60
+
+    p2_text = f"•  {benefit2}"
+    p2_bb = td.textbbox((0, 0), p2_text, font=font_pill)
+    p2_w = p2_bb[2] - p2_bb[0] + 60
+
+    spacing = 40
+    total_w = p1_w + p2_w + spacing
+    p1_x = (W - total_w) // 2
+    p2_x = p1_x + p1_w + spacing
+
+    # Vẽ Pill 1
+    td.rounded_rectangle([p1_x, py, p1_x + p1_w, py + pill_h], radius=pill_h // 2,
+                         fill=(15, 34, 64, 230), outline=(255, 213, 79, 180), width=2)
+    p1_tx = p1_x + 30
+    p1_ty = py + (pill_h - (p1_bb[3] - p1_bb[1])) // 2 - 2
+    td.text((p1_tx, p1_ty), p1_text, font=font_pill, fill="#FFFFFF")
+
+    # Vẽ Pill 2
+    td.rounded_rectangle([p2_x, py, p2_x + p2_w, py + pill_h], radius=pill_h // 2,
+                         fill=(15, 34, 64, 230), outline=(255, 213, 79, 180), width=2)
+    p2_tx = p2_x + 30
+    p2_ty = py + (pill_h - (p2_bb[3] - p2_bb[1])) // 2 - 2
+    td.text((p2_tx, p2_ty), p2_text, font=font_pill, fill="#FFFFFF")
+
+    # Chân trang Hotline & Website
+    ft_y = py + 120
     ft_line = f"TRUNG TÂM TIN HỌC SAO VIỆT  •  HOTLINE: {hotline}  •  {website.upper()}"
-    fbb = td.textbbox((0, 0), ft_line, font=font_footer)
-    fw = fbb[2] - fbb[0]
+    f_bb = td.textbbox((0, 0), ft_line, font=font_hotline)
+    fw = f_bb[2] - f_bb[0]
     fx = (W - fw) // 2
-    fy = 1750
-    td.rounded_rectangle([fx - 35, fy - 12, fx + fw + 35, fy + 48], radius=22, fill=(0, 0, 0, 180), outline=(255, 213, 79, 150), width=2)
-    td.text((fx, fy), ft_line, font=font_footer, fill="#00E5FF")
+    td.text((fx, ft_y), ft_line, font=font_hotline, fill="#B0BEC5")
 
     base = Image.alpha_composite(base, txt_layer)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     res = base.convert("RGB")
     res.save(out_path, "JPEG", quality=95)
-    print(f"[OK] Da tao Cover Vuong Style 2: {out_path} ({res.size})")
+    print(f"[OK] Đã tạo Cover Lớp Học Thực Tế chuẩn: {out_path} ({res.size})")
     return out_path
 
 
+def create_gemini_ai_cover(ctype: str, out_path: Path, api_key: str = None) -> bool:
+    """Tao cover mockup 3D thuong mai bang Google Imagen 3 qua API key Gemini."""
+    import asyncio
+    import shutil
+    server_dir = str(VAULT.parent.parent / "server")
+    if server_dir not in sys.path:
+        sys.path.insert(0, server_dir)
+    try:
+        import image_gen
+    except Exception as e:
+        print(f"[WARN] Khong import duoc image_gen: {e}")
+        return False
+
+    prompts = {
+        "tinhoc": (
+            "Premium commercial 3D education poster for Modern Office Computer Skills Course (Word, Excel, PowerPoint, AI). "
+            "A friendly, confident young Vietnamese student sitting in a sleek modern workspace with a high-end laptop. "
+            "Glossy floating 3D icons of Microsoft Excel, Word, and PowerPoint with soft realistic shadows and subtle glassmorphism. "
+            "Clean professional royal blue and white studio lighting, sharp focus, 4k, balanced commercial layout."
+        ),
+        "ketoan": (
+            "Premium commercial 3D education poster for Practical Accounting & Taxation Course. "
+            "A professional Vietnamese accountant working at a modern organized desk with a sleek laptop displaying clean financial charts. "
+            "Glossy floating 3D financial icons, calculators, and tax balance sheets with soft studio lighting. "
+            "Deep navy blue and emerald accents, high-end commercial aesthetic, 4k, razor sharp."
+        ),
+        "cad": (
+            "Premium commercial 3D education poster for Mechanical & Architectural AutoCAD 2D 3D Drafting Course. "
+            "A modern designer workstation with dual monitors showing intricate blueprints and 3D architectural models. "
+            "Floating glowing technical drafting tools and 3D gears, clean studio lighting, 4k."
+        ),
+        "dohoa": (
+            "Premium commercial 3D education poster for Graphic Design Masterclass (Photoshop, Illustrator, InDesign). "
+            "An inspired young creative designer in an artistic studio with a graphics tablet and modern computer. "
+            "Floating 3D vibrant colorful design elements, color palettes, and glossy icons, dynamic and inspiring commercial lighting, 4k."
+        ),
+        "ai": (
+            "Premium commercial 3D education poster for Applied Artificial Intelligence Course (ChatGPT, Gemini, Automation). "
+            "A modern high-tech desk setup with sleek laptop, glowing neural network data visualization in the air, 3D AI glowing core. "
+            "Futuristic yet grounded commercial office environment, clean vibrant cyan and sapphire lighting, 4k."
+        )
+    }
+
+    prompt = prompts.get(ctype, prompts["tinhoc"])
+    print(f"[*] Dang tao Cover AI Gemini Imagen 3 cho khoa [{ctype}]...")
+    try:
+        res = asyncio.run(
+            image_gen.generate_gemini(
+                prompt=prompt,
+                aspect_ratio="square",
+                vault_root=str(VAULT),
+                api_key=api_key,
+                prefix=f"cover_{ctype}_ai"
+            )
+        )
+    except Exception as e:
+        print(f"[WARN] Loi goi Gemini Imagen 3: {e}")
+        return False
+
+    if res.get("ok") and res.get("abs_path"):
+        src = Path(res["abs_path"])
+        if src.exists():
+            out_path.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(src, out_path)
+            print(f"[OK] Da tao Cover AI Gemini Imagen 3: {out_path}")
+            return True
+    print(f"[INFO] Gemini Imagen khong hoan thanh ({res.get('error')}) -> chuyen ve Cover Lop hoc chuan.")
+    return False
+
+
 def main():
-    if len(sys.argv) < 3:
-        print("Usage: make_square_cover.py <course_type: tinhoc|ketoan|cad|dohoa|ai> <style: 1|2> [photo_path]")
+    if len(sys.argv) < 2:
+        print("Usage: make_square_cover.py <course_type: tinhoc|ketoan|cad|dohoa|ai> [style_or_photo] [photo_path] [--ai|--gemini]")
         return
 
     ctype = sys.argv[1].lower()
-    style = sys.argv[2]
-    custom_photo = Path(sys.argv[3]) if len(sys.argv) > 3 else None
+    use_ai = any(arg.lower() in ("--ai", "--gemini", "ai", "gemini") for arg in sys.argv[2:]) or os.getenv("USE_AI_COVER") == "1"
 
     courses = {
         "tinhoc": {
             "title": "KHÓA HỌC TIN HỌC VĂN PHÒNG",
             "subtitle": "Word • Excel • PowerPoint Thực Chiến A - Z",
-            "badge": "ƯU ĐÃI 30% HỌC PHÍ • KÈM 1-1 CẦM TAY CHỈ VIỆC",
-            "folder": "tin-hoc _ai",
-            "badges": [("Word", "#2B579A", "#0D234A"), ("Excel", "#217346", "#0B381E"), ("PPT", "#D24726", "#4A170A"), ("Cert", "#FFD54F", "#3E2723")]
+            "benefit1": "Thực hành 100% trên máy",
+            "benefit2": "Kèm 1-1 cầm tay chỉ việc",
+            "folder": "tin-hoc _ai"
         },
         "ketoan": {
             "title": "KHÓA HỌC KẾ TOÁN THỰC HÀNH",
             "subtitle": "Kế Toán Thuế • Báo Cáo Tài Chính • MISA Thực Chiến",
-            "badge": "⚡ ĐÀO TẠO TRÊN CHỨNG TỪ SỐNG • ƯU ĐÃI 30% HỌC PHÍ",
-            "folder": "ke-toan",
-            "badges": [("MISA", "#00B0FF", "#002B4A"), ("Thuế", "#00E676", "#04381A"), ("BCTC", "#FFD54F", "#3E2723"), ("Sổ Sách", "#FF5252", "#4A0808")]
+            "benefit1": "Học trên chứng từ sống",
+            "benefit2": "Kèm 1-1 đến khi thành thạo",
+            "folder": "ke-toan"
         },
         "cad": {
             "title": "KHÓA HỌC VẼ KỸ THUẬT AUTOCAD",
             "subtitle": "AutoCAD 2D & 3D • Đọc Hiểu & Bóc Tách Bản Vẽ",
-            "badge": "⚡ THỰC HÀNH 100% BẢN VẼ THỰC TẾ • GIẢM 30% HỌC PHÍ",
-            "folder": "VE KY THUAT",
-            "badges": [("CAD 2D", "#E51C24", "#4A0808"), ("CAD 3D", "#00B0FF", "#002B4A"), ("Cơ Khí", "#00E676", "#04381A"), ("Xây Dựng", "#FFD54F", "#3E2723")]
+            "benefit1": "Thực hành 100% bản vẽ thực tế",
+            "benefit2": "Học kèm trực tiếp trên máy",
+            "folder": "VE KY THUAT"
         },
         "dohoa": {
             "title": "KHÓA HỌC THIẾT KẾ ĐỒ HỌA",
             "subtitle": "Photoshop • Illustrator • CorelDRAW Thực Chiến",
-            "badge": "⚡ ƯU ĐÃI 30% HỌC PHÍ • TẶNG THƯ VIỆN 300GB",
-            "folder": "do-hoa",
-            "badges": [("Ps", "#31A8FF", "#001E36"), ("Ai", "#FF9A00", "#331E00"), ("Corel", "#2ECC71", "#0B381E"), ("In Ấn", "#FFD54F", "#3E2723")]
+            "benefit1": "Thực chiến banner - logo - in ấn",
+            "benefit2": "Tặng kho tài nguyên 300GB",
+            "folder": "do-hoa"
         },
         "ai": {
             "title": "ỨNG DỤNG TRÍ TUỆ NHÂN TẠO AI",
             "subtitle": "ChatGPT • Gemini • Tự Động Hóa Công Việc Văn Phòng",
-            "badge": "⚡ TĂNG NĂNG SUẤT X5 • ĐĂNG KÝ HỌC NGAY",
-            "folder": "ai",
-            "badges": [("GPT-4o", "#10A37F", "#042B21"), ("Gemini", "#4285F4", "#0A1D3A"), ("Midjourney", "#9C27B0", "#2E0836"), ("Auto", "#FFD54F", "#3E2723")]
+            "benefit1": "Tăng năng suất làm việc x5",
+            "benefit2": "Cầm tay chỉ việc ứng dụng thực tế",
+            "folder": "ai"
         }
     }
 
-    info = courses.get(ctype, courses["cad"])
+    info = courses.get(ctype, courses["tinhoc"])
+    out_p = VAULT / f"attachments/dataset/_xuat/cover_{ctype}_style1_square.jpg"
+    out_p2 = VAULT / f"attachments/dataset/_xuat/cover_{ctype}_style2_square.jpg"
+
+    server_dir = str(VAULT.parent.parent / "server")
+    if server_dir not in sys.path:
+        sys.path.insert(0, server_dir)
+    try:
+        import image_gen
+        has_key = bool(image_gen.get_gemini_api_key())
+    except Exception:
+        has_key = False
+
+    # Neu co yeu cau AI hoac he thong da co key Gemini -> Tu dong tao cover AI
+    if use_ai or has_key:
+        ok = create_gemini_ai_cover(ctype, out_p)
+        if ok:
+            import shutil
+            shutil.copy2(out_p, out_p2)
+            return
+
+    # Fallback ve anh chup lop hoc thuc te
+    custom_photo = None
+    for arg in sys.argv[2:]:
+        p = Path(arg)
+        if p.exists() and p.suffix.lower() in [".jpg", ".png", ".webp"]:
+            custom_photo = p
+            break
+
     folder_dir = VAULT / "attachments/dataset" / info["folder"]
     if not custom_photo or not custom_photo.exists():
-        files = [p for p in folder_dir.iterdir() if p.suffix.lower() in [".jpg", ".png", ".webp"]]
-        custom_photo = files[0] if files else None
+        if folder_dir.exists():
+            files = [p for p in folder_dir.iterdir() if p.suffix.lower() in [".jpg", ".png", ".webp"] and not p.name.startswith(".")]
+            custom_photo = files[0] if files else None
 
-    out_p = VAULT / f"attachments/dataset/_xuat/cover_{ctype}_style{style}_square.jpg"
-
-    if custom_photo:
+    if custom_photo and custom_photo.exists():
         (VAULT / "attachments/dataset/_xuat/cover_inner_photo.txt").write_text(str(custom_photo), encoding="utf-8")
-
-    if str(style) == "1":
-        create_square_cover_style1(
+        create_clean_classroom_cover(
             title=info["title"],
             subtitle=info["subtitle"],
-            badge_text=info["badge"],
-            student_img_path=custom_photo,
-            out_path=out_p,
-            tools_badges=info["badges"]
-        )
-    else:
-        create_square_cover_style2(
-            title=info["title"],
-            subtitle=info["subtitle"],
-            badge_text=info["badge"],
+            benefit1=info["benefit1"],
+            benefit2=info["benefit2"],
             classroom_img_path=custom_photo,
             out_path=out_p
         )
+        create_clean_classroom_cover(
+            title=info["title"],
+            subtitle=info["subtitle"],
+            benefit1=info["benefit1"],
+            benefit2=info["benefit2"],
+            classroom_img_path=custom_photo,
+            out_path=out_p2
+        )
+    else:
+        print(f"[WARN] Khong tim thay anh trong folder {info['folder']}. Vui long kiem tra dataset.")
+
 
 if __name__ == "__main__":
     main()
+
