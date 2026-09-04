@@ -202,6 +202,11 @@ class TasksFeature:
     ) -> str:
         root = self._ensure(brain)
         status = "todo" if deps else "triage"
+        if route == "wf:dang-bai-that-facebook":
+            if capability == "auto":
+                capability = "external-write"
+            if execution_mode == "auto":
+                execution_mode = "full"
         tid = self.store.enqueue(
             root,
             title,
@@ -382,6 +387,10 @@ class TasksFeature:
         )
         final_task: Optional[dict] = None
         try:
+            if str(task.get("route") or "") == "wf:dang-bai-that-facebook":
+                task["capability"] = "external-write"
+                task["execution_mode"] = "full"
+
             # New goals first pass through an AI specifier. This keeps raw Learn
             # suggestions out of the executable queue.
             if (task.get("capability") or "auto") == "auto":
@@ -713,8 +722,9 @@ nói rõ đã được phép tự hành động; nếu không thì để auto đ
             result = ""
             error = ""
             try:
+                wf_tools = None if slug == "dang-bai-that-facebook" else tools
                 async for event in self.deps.execute_workflow(
-                    task["brain_root"], slug, intent, tools
+                    task["brain_root"], slug, intent, wf_tools
                 ):
                     kind = event.get("type")
                     if kind == "done":

@@ -39,6 +39,7 @@
     channels: "send",
     mcp: "plug",
     plugins: "toolbox",
+    brandkits: "palette",
     logs: "scroll-text",
     account: "circle-user",
     usage: "chart-column",
@@ -80,7 +81,7 @@
   const RAIL_ITEMS = [
     "home", "chat", "settings", "workflows", "agents", "skills", "chatbots", "files",
     "terminal", "selfimprove", "learn", "kanban", "models", "channels", "mcp", "plugins",
-    "logs", "account", "usage",
+    "brandkits", "logs", "account", "usage",
   ].map(id => ({ id, icon: ICON[id], get label() { return t(`page.${id}.label`); } }));
 
   // ---- Gom rail thành nhóm theo chức năng (dễ tìm hơn danh sách phẳng 18 mục) ----
@@ -95,7 +96,7 @@
     // Thêm chức năng Code mới = thêm 1 mục vào RAIL_ITEMS + 1 id vào đây + 1 dòng trong
     // CHUC_NANG của dashboard/code-term.js.
     { get label() { return t("nav.group.code"); },        icon: GICON["Code"],     ids: ["terminal"] },
-    { get label() { return t("nav.group.nang_luc"); },    icon: GICON["Năng lực"], ids: ["agents", "chatbots", "skills", "workflows", "plugins"] },
+    { get label() { return t("nav.group.nang_luc"); },    icon: GICON["Năng lực"], ids: ["agents", "chatbots", "skills", "workflows", "plugins", "brandkits"] },
     { get label() { return t("nav.group.viec"); },        icon: GICON["Việc"],     ids: ["kanban", "selfimprove"] },
     { get label() { return t("nav.group.ket_noi"); },     icon: GICON["Kết nối"],  ids: ["mcp", "channels", "models"] },
     { get label() { return t("nav.group.he_thong"); },    icon: GICON["Hệ thống"], ids: ["usage", "settings", "logs", "account"], foot: true },
@@ -128,7 +129,7 @@
   //
   // `page.<id>.title` cho phép tiêu đề trang KHÁC nhãn trên rail khi cần (rail chật nên
   // "Việc", trang rộng nên "Việc (Kanban)"); thiếu key đó thì tự rơi về `page.<id>.label`.
-  const VIEW_META = Object.fromEntries(["home", "chat", "settings", "workflows", "agents", "skills", "files", "terminal", "selfimprove", "chatbots", "learn", "kanban", "models", "channels", "mcp", "plugins", "logs", "account", "usage"].map(id => [id, {
+  const VIEW_META = Object.fromEntries(["home", "chat", "settings", "workflows", "agents", "skills", "files", "terminal", "selfimprove", "chatbots", "learn", "kanban", "models", "channels", "mcp", "plugins", "brandkits", "logs", "account", "usage"].map(id => [id, {
     icon: VIEW_ICON[id],
     get label() {
       const rieng = t(`page.${id}.title`);
@@ -369,6 +370,11 @@
     if (id === "chatbots") return renderChatbots(el);
     if (id === "learn")    return renderLearn(el);
     if (id === "kanban")   return renderKanban(el);
+    if (id === "brandkits") {
+      if (window.JavisBrandKits && JavisBrandKits.render) return JavisBrandKits.render(el);
+      el.innerHTML = placeholder(id, "brand-kits-ui.js chưa sẵn sàng.");
+      return;
+    }
     if (id === "logs")     return renderLogs(el);
     if (id === "usage")    return renderUsage(el);
     el.innerHTML = placeholder(id);
@@ -2462,10 +2468,14 @@
     el.querySelector("#knSave").onclick = async () => {
       const title = el.querySelector("#knTitle").value.trim();
       if (!title) { alert(t("kanban.need_title")); return; }
+      const routeVal = el.querySelector("#knRoute").value;
+      const isFbPost = routeVal === "wf:dang-bai-that-facebook";
       await post("/kanban/task", {
         title, intent: el.querySelector("#knIntent").value.trim() || title,
-        route: el.querySelector("#knRoute").value, priority: el.querySelector("#knPrio").value,
+        route: routeVal, priority: el.querySelector("#knPrio").value,
         needs_approval: el.querySelector("#knApprove").checked ? "1" : "0",
+        capability: isFbPost ? "external-write" : "auto",
+        execution_mode: isFbPost ? "full" : "auto",
       });
       el.querySelector("#knTitle").value = ""; el.querySelector("#knIntent").value = "";
       el.querySelector("#knForm").style.display = "none"; load();
@@ -2557,20 +2567,20 @@
 
     async function showTask(id) {
       openDrawer();
-      drawerBody.innerHTML = esc(t("common.loading"));
+      drawerBody.innerHTML = esc(window.t ? window.t("common.loading") : "Đang tải…");
       let d = {}; try { d = await (await fetch(`/kanban/task/show?brain=${encodeURIComponent(fbrain())}&id=${encodeURIComponent(id)}`)).json(); } catch (e) {}
-      if (!d.ok) { drawerBody.innerHTML = `<span style="color:var(--red)">${esc(d.error || t("kanban.cant_load"))}</span>`; return; }
-      const t = d.task || {}, events = d.events || [], runs = d.runs || [];
-      const acts = taskActions(t);
-      drawerTitle.textContent = t.title || window.t("kanban.detail");
+      if (!d.ok) { drawerBody.innerHTML = `<span style="color:var(--red)">${esc(d.error || (window.t ? window.t("kanban.cant_load") : "Không tải được"))}</span>`; return; }
+      const taskObj = d.task || {}, events = d.events || [], runs = d.runs || [];
+      const acts = taskActions(taskObj);
+      drawerTitle.textContent = taskObj.title || (window.t ? window.t("kanban.detail") : "Chi tiết");
       drawerBody.innerHTML = `
-        <div style="color:var(--text);white-space:pre-wrap">${esc(t.intent || "")}</div>
-        <div class="kn-task-meta" style="margin-top:10px"><span>${esc(_kstatus(t.status))}</span><span>${esc(t.capability || "auto")}</span><span>mode ${esc(t.execution_mode || "auto")}</span><span>${esc(window.t("kanban.prio_lc"))} ${Number(t.priority || 2)}</span></div>
+        <div style="color:var(--text);white-space:pre-wrap">${esc(taskObj.intent || "")}</div>
+        <div class="kn-task-meta" style="margin-top:10px"><span>${esc(_kstatus(taskObj.status))}</span><span>${esc(taskObj.capability || "auto")}</span><span>mode ${esc(taskObj.execution_mode || "auto")}</span><span>${esc(window.t ? window.t("kanban.prio_lc") : "ưu tiên")} ${Number(taskObj.priority || 2)}</span></div>
         ${acts.length ? `<div class="kn-actions" style="margin-top:14px">${acts.join("")}</div>` : ""}
-        ${t.block_reason ? `<div class="kn-detail-block"><h4>${esc(window.t("kanban.blocked_reason"))}</h4><div style="color:var(--red)">${esc(t.block_reason)}</div></div>` : ""}
-        ${t.result ? `<div class="kn-detail-block"><h4>${esc(window.t("kanban.result"))}</h4><div style="white-space:pre-wrap">${esc(t.result)}</div></div>` : ""}
-        <div class="kn-detail-block"><h4>${esc(window.t("kanban.runs"))} (${runs.length})</h4>${runs.length ? runs.map(r => `<div class="kn-event"><b>${esc(r.status)}</b> · ${new Date(Number(r.started_at || 0) * 1000).toLocaleString()}${r.error ? `<div style="color:var(--red)">${esc(r.error)}</div>` : ""}</div>`).join("") : `<div class="dim">${esc(window.t("kanban.no_runs"))}</div>`}</div>
-        <div class="kn-detail-block"><h4>${esc(window.t("kanban.lifecycle"))}</h4>${events.length ? events.map(v => `<div class="kn-event"><b>${esc(v.event_type)}</b> · ${new Date(Number(v.created_at || 0) * 1000).toLocaleString()}<div>${esc(v.message || "")}</div></div>`).join("") : `<div class="dim">${esc(window.t("kanban.no_events"))}</div>`}</div>`;
+        ${taskObj.block_reason ? `<div class="kn-detail-block"><h4>${esc(window.t ? window.t("kanban.blocked_reason") : "Lý do chặn")}</h4><div style="color:var(--red)">${esc(taskObj.block_reason)}</div></div>` : ""}
+        ${taskObj.result ? `<div class="kn-detail-block"><h4>${esc(window.t ? window.t("kanban.result") : "Kết quả")}</h4><div style="white-space:pre-wrap">${esc(taskObj.result)}</div></div>` : ""}
+        <div class="kn-detail-block"><h4>${esc(window.t ? window.t("kanban.runs") : "Lượt chạy")} (${runs.length})</h4>${runs.length ? runs.map(r => `<div class="kn-event"><b>${esc(r.status)}</b> · ${new Date(Number(r.started_at || 0) * 1000).toLocaleString()}${r.error ? `<div style="color:var(--red)">${esc(r.error)}</div>` : ""}</div>`).join("") : `<div class="dim">${esc(window.t ? window.t("kanban.no_runs") : "Chưa có lượt chạy")}</div>`}</div>
+        <div class="kn-detail-block"><h4>${esc(window.t ? window.t("kanban.lifecycle") : "Vòng đời")}</h4>${events.length ? events.map(v => `<div class="kn-event"><b>${esc(v.event_type)}</b> · ${new Date(Number(v.created_at || 0) * 1000).toLocaleString()}<div>${esc(v.message || "")}</div></div>`).join("") : `<div class="dim">${esc(window.t ? window.t("kanban.no_events") : "Chưa có sự kiện")}</div>`}</div>`;
       bindActionButtons(drawerBody);
     }
 

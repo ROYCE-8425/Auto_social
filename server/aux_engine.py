@@ -649,6 +649,8 @@ def _main_fallback_engine(cli, mode, tag, settings, exclude, codex_profile=None)
             return _build_codex(sp, cli, mode, t, codex_profile)
         if prov == GROK_CLI:
             return _build_grok(sp, cli, mode, t)
+        if prov == ANTIGRAVITY:
+            return _build_antigravity(sp, cli, mode, t)
         if prov in API_PROVIDERS:
             return _build_api(sp, cli, mode, t)
     except Exception as e:
@@ -711,7 +713,10 @@ def swap(cli, mode: str = None, tag: str = None, spec: dict = None,
                 return cli
             ok, why = availability(sp, settings)
             if not ok:
-                print(f"[aux] {why} → việc full tạm dùng lại Claude.", file=sys.stderr)
+                mn = _main_fallback_engine(cli, mode, tag, settings, {prov, CLAUDE}, codex_profile)
+                if mn:
+                    return mn
+                print(f"[aux] {why} -> việc full tạm dùng lại Claude.", file=sys.stderr)
                 return cli
             if prov == CODEX:
                 return _build_codex(sp, cli, mode, tag, codex_profile)
@@ -748,10 +753,11 @@ def swap(cli, mode: str = None, tag: str = None, spec: dict = None,
             primary = _build_api(sp, cli, mode, tag)
         else:
             return cli
-        chain = [primary, cli]
         mn = _main_fallback_engine(cli, mode, tag, settings, {CLAUDE, prov}, codex_profile)
+        chain = [primary]
         if mn:
             chain.append(mn)
+        chain.append(cli)
         or_free = _openrouter_free_engine(cli, mode, tag, settings)
         # Chuỗi đã có mắt openrouter model trống (tự chọn free) thì or_free trùng hệt → khỏi thêm.
         if or_free and not _co_mat_orfree(chain):

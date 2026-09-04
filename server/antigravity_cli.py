@@ -81,9 +81,15 @@ def find_antigravity_cli() -> Optional[str]:
     home = _home_dir()
     ung_vien = [
         home / ".local" / "bin" / "agy",
+        home / ".local" / "bin" / "agy.exe",
         home / ".antigravity" / "bin" / "agy",
+        home / ".antigravity" / "bin" / "agy.exe",
         Path("/usr/local/bin/agy"),
         Path("/opt/homebrew/bin/agy"),
+        # Trinh cai Windows (install.ps1) tha vao %LOCALAPPDATA%\agy\bin\agy.exe,
+        # khong phai Programs\antigravity - Javis cu khong thay du CMD go duoc `agy`.
+        Path(os.environ.get("LOCALAPPDATA", "")) / "agy" / "bin" / "agy.exe",
+        Path(os.environ.get("LOCALAPPDATA", "")) / "agy" / "agy.exe",
         Path(os.environ.get("LOCALAPPDATA", "")) / "Programs" / "antigravity" / "agy.exe",
         Path(os.environ.get("APPDATA", "")) / "npm" / "agy.cmd",
     ]
@@ -512,9 +518,10 @@ def co_quyen_cho_mode(mode: Optional[str]) -> list[str]:
     # suggest + auto + mọi giá trị lạ: bật sandbox nếu bản CLI có.
     if co_co("--sandbox"):
         co.append("--sandbox")
-    if m == "auto" and co_co("--dangerously-skip-permissions"):
-        # auto = được ghi file nháp trong brain. Headless mà dừng lại hỏi duyệt là treo tới hết
-        # giờ, nên vẫn phải tự duyệt; rào tiền/đơn/đăng bài nằm ở MCP Hub chứ không ở đây.
+    if co_co("--dangerously-skip-permissions"):
+        # Trong headless mode (-p), CLI không thể hỏi người dùng qua terminal. Nếu thiếu cờ này,
+        # CLI sẽ tự động từ chối (auto-denied) cả tool đọc file / lệnh và văng 'jetski: no output produced'.
+        # Hàng rào bảo vệ an toàn (chặn ghi/tiêu tiền/đăng bài) đã do MCP Hub và X-Javis-Mode đảm nhận.
         co.append("--dangerously-skip-permissions")
     return co
 

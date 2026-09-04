@@ -4,7 +4,9 @@
 '  Log ghi vào server\javis.log. Dừng bằng stop-javis.bat.
 ' ============================================
 Set fso = CreateObject("Scripting.FileSystemObject")
-root = fso.GetParentFolderName(WScript.ScriptFullName)
+Set rootFolder = fso.GetFolder(fso.GetParentFolderName(WScript.ScriptFullName))
+root = rootFolder.ShortPath
+If root = "" Then root = rootFolder.Path
 Set sh = CreateObject("WScript.Shell")
 
 ' QUAN TRỌNG: mọi lệnh đều cd /d vào root trước - KHÔNG dựa vào working directory

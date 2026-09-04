@@ -95,10 +95,36 @@ brain/Memory/
 # Cấu hình chạy dev preview cục bộ (đường dẫn theo máy, không thuộc sản phẩm)
 .claude/launch.json
 
-# Thư mục CHA chứa MỌI second brain (mô hình mới) - DỮ LIỆU CÁ NHÂN, không đẩy vào repo code.
-# Backup riêng lên git repo khác (xem comment bind-mount trong docker-compose.yml).
-brains/
-# Bản backup brain do server tự tạo (DỮ LIỆU CÁ NHÂN) - tuyệt đối không version.
+# Local dev & runtime tools
+/.agents/
+/.grok/
+/scratch/
+server/memory_index.db*
+server/usage-marks.jsonl*
+server/.mcp_agy_*.json
+server/*-prompt.json
+server/md_*.json
+
+# Thư mục brains: Quản lý agent, skills, brand-kits, templates, workflows
+# Chỉ bỏ qua bộ nhớ phiên chạy, cache, database sqlite và output tạm
+brains/*/memory/
+brains/*/05 - Data Cache/
+brains/*/.agents/
+brains/*/.grok/
+brains/*/.antigravitycli/
+brains/*/.claude/
+brains/*/.javis/
+brains/*/.javis-learn.lock
+brains/*/kanban.sqlite3*
+brains/*/attachments/dataset/_xuat/*
+!brains/*/attachments/dataset/_xuat/.gitkeep
+brains/*/scratch/*
+!brains/*/scratch/.gitkeep
+!brains/*/scratch/hub_call.py
+!brains/*/scratch/make_square_cover.py
+!brains/*/scratch/make_cover_autocad.py
+
+# Ban backup brain do server tu tao
 brains-backup/
 
 # Dữ liệu CÁ NHÂN trong brain mặc định CŨ (không version): bộ nhớ, cache số liệu KD,

@@ -17,6 +17,66 @@ import hashlib
 # chúng chỉ nổ đúng lúc đã có sự cố khác, biến một lỗi lẽ ra chỉ cần ghi log thành NameError
 # phá cả luồng. Import một lần ở đây thì mọi chỗ dùng đều an toàn.
 import sys
+if sys.platform == "win32":
+    # Va loi Windows asyncio Python 3.12-3.13: khi client ngat ket noi dot ngot luc accept
+    # (WinError 64 / 121 / 10054), proactor mac dinh dong socket lang nghe lam sap cong 7777.
+    # Doan va nay giu socket lang nghe luon song de tiep tuc phuc vu request tiep theo.
+    try:
+        import asyncio.proactor_events as _pe
+        import asyncio.trsock as _trsock
+        import asyncio.exceptions as _exceptions
+
+        _orig_start_serving = _pe.BaseProactorEventLoop._start_serving
+
+        def _patched_start_serving(self, protocol_factory, sock,
+                                   sslcontext=None, server=None, backlog=100,
+                                   ssl_handshake_timeout=None,
+                                   ssl_shutdown_timeout=None):
+            def loop(f=None):
+                try:
+                    if f is not None:
+                        conn, addr = f.result()
+                        protocol = protocol_factory()
+                        if sslcontext is not None:
+                            self._make_ssl_transport(
+                                conn, protocol, sslcontext, server_side=True,
+                                extra={'peername': addr}, server=server,
+                                ssl_handshake_timeout=ssl_handshake_timeout,
+                                ssl_shutdown_timeout=ssl_shutdown_timeout)
+                        else:
+                            self._make_socket_transport(
+                                conn, protocol,
+                                extra={'peername': addr}, server=server)
+                    if self.is_closed():
+                        return
+                    f = self._proactor.accept(sock)
+                except OSError as exc:
+                    if getattr(exc, 'winerror', None) in (64, 121, 10054) and sock.fileno() != -1 and not self.is_closed():
+                        try:
+                            f = self._proactor.accept(sock)
+                            self._accept_futures[sock.fileno()] = f
+                            f.add_done_callback(loop)
+                            return
+                        except Exception:
+                            pass
+                    if sock.fileno() != -1:
+                        self.call_exception_handler({
+                            'message': 'Accept failed on a socket',
+                            'exception': exc,
+                            'socket': _trsock.TransportSocket(sock),
+                        })
+                        sock.close()
+                except _exceptions.CancelledError:
+                    sock.close()
+                else:
+                    self._accept_futures[sock.fileno()] = f
+                    f.add_done_callback(loop)
+
+            self.call_soon(loop)
+
+        _pe.BaseProactorEventLoop._start_serving = _patched_start_serving
+    except Exception:
+        pass
 import uuid
 from pathlib import Path
 import re
@@ -318,7 +378,7 @@ def _brain_memory_dir(brain: str) -> Path:
 # (~5,7k token) và tăng tuyến tính theo số ký ức - đúng cái bệnh curator vừa mắc, không có gì
 # chặn. Trần này chưa cắt gì hôm nay (18.363 < 20.000), nó biến đường dốc thành đường phẳng.
 MEMORY_INDEX_MAX = int(os.getenv("JAVIS_MEMORY_INDEX_MAX", "20000"))
-_MEM_ITEM_RE = re.compile(r'^(\s*-\s*\[[^\]]*\]\([^)]*\))\s*[-–—]?\s*(.*)$')
+_MEM_ITEM_RE = re.compile(r'^(\s*-\s*\[[^\]]*\]\([^)]*\))\s*[---]?\s*(.*)$')
 
 
 def _fit_memory_index(mem: str, cap: int = None) -> str:

@@ -156,12 +156,12 @@ S_BOTH_GEMINI = {"model": {"gemini_api_key": "g-key",
 out = aux_engine.swap(FakeEngine(), settings=S_BOTH_GEMINI)
 check("main trùng provider phụ → chuỗi chỉ [Gemini, Claude], không nhân đôi",
       type(out).__name__ == "_FallbackChain" and len(out._all()) == 2)
-# main = provider không có builder nền (antigravity-cli) → bỏ qua êm, không nổ.
-S_MAIN_AGY = {"model": {"auxiliary": {}, "main": {"provider": "antigravity-cli", "model": "x"}}}
-base_agy = FakeEngine()
-check("main không có builder nền → giữ nguyên engine Claude",
-      aux_engine.swap(base_agy, spec={"provider": "anthropic-cli", "model": ""},
-                      settings=S_MAIN_AGY) is base_agy)
+# main = provider không có builder nền (ollama) -> bỏ qua êm, không nổ.
+S_MAIN_NO_BUILDER = {"model": {"auxiliary": {}, "main": {"provider": "ollama", "model": "x"}}}
+base_no_builder = FakeEngine()
+check("main không có builder nền -> giữ nguyên engine Claude",
+      aux_engine.swap(base_no_builder, spec={"provider": "anthropic-cli", "model": ""},
+                      settings=S_MAIN_NO_BUILDER) is base_no_builder)
 
 # --- final_loi_dang_nhap: nhận đúng mẫu, không nghi oan ---
 check("bắt câu Not logged in", aux_engine.final_loi_dang_nhap("Not logged in · Please run /login"))
