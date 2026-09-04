@@ -109,6 +109,9 @@ server/md_*.json
 # Chỉ bỏ qua bộ nhớ phiên chạy, cache, database sqlite và output tạm
 brains/*/memory/
 brains/*/05 - Data Cache/
+brains/*/*.md
+!brains/*/CLAUDE.md
+!brains/*/AGENTS.md
 brains/*/.agents/
 brains/*/.grok/
 brains/*/.antigravitycli/

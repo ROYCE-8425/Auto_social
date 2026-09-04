@@ -111,3 +111,5 @@ Mỗi mục = 1 slug Fanpage. Worker bỏ các path **gốc dataset** khi chọn
 - attachments/dataset/tin-hoc _ai/264ab0c3f23b45651c2a31.jpg
 - attachments/dataset/tin-hoc _ai/4ab66e3b2cc39b9dc2d240.jpg
 - attachments/dataset/tin-hoc _ai/290652938340154794455.jpg
+- attachments/dataset/tin-hoc _ai/z7441102482368_9ab23aa589aa55b78fc426e144f56d59.jpg
+- attachments/dataset/tin-hoc _ai/z7462399610052_3c62644219b3695fa4af25aa0f81000a.jpg

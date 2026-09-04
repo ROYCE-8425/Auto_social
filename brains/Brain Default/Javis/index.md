@@ -2,7 +2,7 @@
 
 > Tự sinh từ file - ĐỪNG sửa tay. Chỉ mục mọi năng lực của Javis trong brain này để bất kỳ AI/engine đọc 1 chỗ là hiểu Javis làm được gì. Song song `wiki/index.md` (tri thức).
 
-**Tổng quan:** 1 agents · 8 skills · 2 workflows (0 bật) · 1 loops (1 bật) · 11 plugins (10 chạy)
+**Tổng quan:** 1 agents · 8 skills · 2 workflows (0 bật) · 1 loops (0 bật) · 11 plugins (10 chạy)
 
 ## Agents
 - **Biên tập Facebook** (`bien-tap-facebook`) - Soạn caption Fanpage đúng brand kit; chỉ đăng khi được yêu cầu rõ. · model gemini-3.8-flash-high · skills: dang-bai-facebook, viet-bai-facebook
@@ -25,7 +25,7 @@
 - **Soạn bài Facebook** (`soan-bai-facebook`) - True · 1 bước [bien-tap-facebook] · Kanban soạn caption Fanpage theo brand kit. Chỉ nháp, không tự đăng.
 
 ## Loops
-- **Tên: Chiến dịch 5 bài Tin học Sao Việt (5p/bài).** (`ten-chien-dich-5-bai-tin-hoc-sao-viet-5p-bai`) - bật · custom/full · mỗi 5 phút
+- **Tên: Chiến dịch 5 bài Tin học Sao Việt (5p/bài).** (`ten-chien-dich-5-bai-tin-hoc-sao-viet-5p-bai`) - tắt · custom/full · mỗi 5 phút
 
 ## Plugins (tool/hook native cho mọi engine)
 - **Thời gian & ngày** (`datetime-vn`) - bundled/chạy · tools: javis_now, javis_date_add · Xem ngày giờ hiện tại theo múi giờ đã cấu hình và tính ngày tương đối (mai, mốt, N ngày nữa, tuần trước). Thuần stdlib, chỉ đọc, không cần mạng.

@@ -2,7 +2,7 @@
 type: loop
 name: 'Tên: Chiến dịch 5 bài Tin học Sao Việt (5p/bài).'
 slug: ten-chien-dich-5-bai-tin-hoc-sao-viet-5p-bai
-enabled: true
+enabled: false
 goal: custom
 mode: full
 interval_min: 5

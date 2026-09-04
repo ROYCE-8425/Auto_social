@@ -57,6 +57,11 @@ def pick_random_album_photos(folder, cover_path=None, target_total=None):
     skip = []
     if cover_path:
         skip.append(cover_path)
+    cover_inner_file = Path(VAULT) / "attachments/dataset/_xuat/cover_inner_photo.txt"
+    if cover_inner_file.exists():
+        inner_name = cover_inner_file.read_text(encoding="utf-8").strip().replace("\\", "/").split("/")[-1].lower()
+        if inner_name:
+            skip.append(inner_name)
     all_goc = unique_dataset_photos(folder, skip_names=skip)
     if not all_goc:
         return [cover_path] if cover_path else []

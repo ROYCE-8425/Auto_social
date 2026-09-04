@@ -402,8 +402,8 @@
       '<div class="ds-toolbar"><div><div class="ds-kicker" id="dsKitKind"></div>' +
       '<div class="ds-filename" id="dsKitMeta">Chọn kit bên trái</div></div>' +
       '<div class="ds-toolbar-right"><span id="dsKitStatus" class="ds-status-text"></span>' +
-      '<button type="button" class="s-btn-ghost ds-btn-clone" id="dsCopyFromDefault" style="display:none" title="Sao chép toàn bộ nhận diện từ Default">📋 Sao chép từ Default</button>' +
-      '<button type="button" class="ds-btn-del" id="dsKitDelete" style="display:none" title="Xoá Brand Kit Page này">🗑️ Xoá Page</button>' +
+      '<button type="button" class="s-btn-ghost ds-btn-clone" id="dsCopyFromDefault" style="display:none" title="Sao chép toàn bộ nhận diện từ Default">Sao chép từ Default</button>' +
+      '<button type="button" class="ds-btn-del" id="dsKitDelete" style="display:none" title="Xoá Brand Kit Page này">Xoá Page</button>' +
       '<button type="button" class="s-btn" id="dsKitSave" disabled>Lưu Brand Kit</button></div></div>' +
       '<div id="dsKitContentArea"></div>' +
       '</section></div>';
@@ -416,7 +416,7 @@
       listEl.innerHTML = "";
 
       var groups = [
-        { "key": "default", "title": "⭐ BRAND KIT MẶC ĐỊNH (DEFAULT)", "items": [] },
+        { "key": "default", "title": "BRAND KIT MẶC ĐỊNH (DEFAULT)", "items": [] },
         { "key": "page", "title": "Fanpage Chi Nhánh (" + items.filter(function (x) { return x.kind === "page"; }).length + ")", "items": [] },
         { "key": "he-thong", "title": "Tài Liệu Hệ Thống", "items": [] }
       ];
@@ -450,7 +450,7 @@
           b.dataset.path = KIT_DIR + "/" + f.name;
           b.dataset.name = f.name;
 
-          var badgeText = isDef ? "⭐ DEFAULT" : f.kind === "page" ? "Page" : "Hệ";
+          var badgeText = isDef ? "DEFAULT" : f.kind === "page" ? "Page" : "Hệ";
           var badgeClass = isDef ? "ds-badge ds-badge-default" : ("ds-badge ds-badge-" + f.kind);
           var subText = "";
           if (isDef) {
@@ -588,7 +588,7 @@
     var path = KIT_DIR + "/" + f.name;
     var kind = f.kind;
     body.querySelector("#dsKitKind").textContent =
-      kind === "default" ? "⭐ BRAND KIT MẶC ĐỊNH (GỐC TOÀN HỆ THỐNG)" :
+      kind === "default" ? "BRAND KIT MẶC ĐỊNH (GỐC TOÀN HỆ THỐNG)" :
       kind === "page" ? ("BRAND KIT FANPAGE: " + f.displayTitle.toUpperCase()) : "TÀI LIỆU HỆ THỐNG";
     body.querySelector("#dsKitMeta").textContent = path;
 
@@ -654,7 +654,7 @@
       area.innerHTML =
         '<div class="ds-md-box">' +
         '<div class="ds-md-box-head">' +
-        '<div class="ds-md-box-title">📝 ' + esc(f.displayTitle) + '</div>' +
+        '<div class="ds-md-box-title">' + esc(f.displayTitle) + '</div>' +
         '<div class="ds-md-box-sub">' + esc(path) + '</div>' +
         '</div>' +
         '<textarea id="dsKitText" class="ds-md-editor" spellcheck="false" placeholder="Nội dung markdown kit…">' + esc(f.content) + '</textarea>' +
@@ -681,7 +681,7 @@
     var donts = p.donts || "đổi màu logo, bóp méo logo, dùng màu ngoài palette";
 
     var defaultBannerHtml = isDefault
-      ? '<div class="ds-default-banner">⭐ <b>Brand Kit Mặc Định:</b> Chứa bộ nhận diện chuẩn toàn hệ thống. Mọi Fanpage mới tạo hoặc bấm "Sao chép từ Default" sẽ kế thừa 100% cài đặt từ file này.</div>'
+      ? '<div class="ds-default-banner"><b>Brand Kit Mặc Định:</b> Chứa bộ nhận diện chuẩn toàn hệ thống. Mọi Fanpage mới tạo hoặc bấm "Sao chép từ Default" sẽ kế thừa 100% cài đặt từ file này.</div>'
       : '';
 
     area.innerHTML =
@@ -691,7 +691,7 @@
       /* CARD 1: MÀU THƯƠNG HIỆU & PHÔNG CHỮ */
       '<div class="ds-section-card">' +
       '<div class="ds-section-head">' +
-      '<div class="ds-section-title">🎨 Màu thương hiệu & 🔤 Phông chữ</div>' +
+      '<div class="ds-section-title">Màu thương hiệu &amp; Phông chữ</div>' +
       '<div class="ds-section-sub">Bảng màu và font chuẩn cho tiêu đề, nội dung, poster</div>' +
       '</div>' +
       '<div class="ds-color-grid">' +
@@ -699,48 +699,48 @@
       '<label class="ds-label" for="dsFldColorPri">Màu chính (Primary Color)</label>' +
       '<div class="ds-color-wrap">' +
       '<input type="color" class="ds-color-picker" id="dsColorPriPick" value="' + esc(cleanHex(colorPri, "#6C3BFF")) + '">' +
-      '<input type="text" class="ds-input ds-color-hex" id="dsFldColorPri" value="' + esc(colorPri) + '" placeholder="#6C3BFF">' +
+      '<input type="text" class="ds-input ds-color-hex" id="dsFldColorPri" value="' + esc(colorPri) + '" placeholder="Ví dụ: #6C3BFF">' +
       '</div>' +
       '</div>' +
       '<div class="ds-color-item">' +
       '<label class="ds-label" for="dsFldColorSec">Màu phụ (Secondary Color)</label>' +
       '<div class="ds-color-wrap">' +
       '<input type="color" class="ds-color-picker" id="dsColorSecPick" value="' + esc(cleanHex(colorSec, "#00D4FF")) + '">' +
-      '<input type="text" class="ds-input ds-color-hex" id="dsFldColorSec" value="' + esc(colorSec) + '" placeholder="#00D4FF">' +
+      '<input type="text" class="ds-input ds-color-hex" id="dsFldColorSec" value="' + esc(colorSec) + '" placeholder="Ví dụ: #00D4FF">' +
       '</div>' +
       '</div>' +
       '</div>' +
       '<div class="ds-gradient-preview" id="dsColorGradientBar" style="background:linear-gradient(135deg,' + esc(cleanHex(colorPri, "#6C3BFF")) + ',' + esc(cleanHex(colorSec, "#00D4FF")) + ')"></div>' +
       '<div class="ds-field" style="margin-top:6px">' +
       '<label class="ds-label" for="dsFldFonts">Font thương hiệu (Tiêu đề & Nội dung)</label>' +
-      '<input type="text" class="ds-input" id="dsFldFonts" value="' + esc(fonts) + '" placeholder="vd: Inter, Montserrat, Be Vietnam Pro">' +
+      '<input type="text" class="ds-input" id="dsFldFonts" value="' + esc(fonts) + '" placeholder="Ví dụ: Inter, Montserrat, Be Vietnam Pro">' +
       '</div>' +
       '</div>' +
 
       /* CARD 2: TÀI SẢN LOGO */
       '<div class="ds-section-card">' +
       '<div class="ds-section-head">' +
-      '<div class="ds-section-title">🏷️ Tài sản Logo</div>' +
+      '<div class="ds-section-title">Tài sản Logo</div>' +
       '<div class="ds-section-sub">Đường dẫn tệp và xem trước các phiên bản logo chính thống</div>' +
       '</div>' +
       '<div class="ds-logo-grid">' +
       /* Slot 1: Logo chinh */
       '<div class="ds-logo-card">' +
-      '<div class="ds-logo-label">🖼️ Logo chính</div>' +
+      '<div class="ds-logo-label">Logo chính</div>' +
       '<div class="ds-logo-thumb" id="dsThumbMain"><img src="' + esc(rawUrl(logoMain)) + '" alt="Logo chính" onerror="this.parentNode.innerHTML=\'<span class=\\\'ds-logo-thumb-empty\\\'>Chưa có ảnh</span>\'"></div>' +
-      '<input type="text" class="ds-input ds-logo-input" id="dsFldLogoMain" value="' + esc(logoMain) + '" placeholder="attachments/dataset/chung/...">' +
+      '<input type="text" class="ds-input ds-logo-input" id="dsFldLogoMain" value="' + esc(logoMain) + '" placeholder="Ví dụ: attachments/dataset/chung/...">' +
       '</div>' +
       /* Slot 2: Logo trang am ban */
       '<div class="ds-logo-card">' +
-      '<div class="ds-logo-label">⚪ Logo trắng (Âm bản)</div>' +
+      '<div class="ds-logo-label">Logo trắng (Âm bản)</div>' +
       '<div class="ds-logo-thumb dark-bg" id="dsThumbWhite"><img src="' + esc(rawUrl(logoWhite)) + '" alt="Logo trắng" onerror="this.parentNode.innerHTML=\'<span class=\\\'ds-logo-thumb-empty\\\'>Chưa có ảnh</span>\'"></div>' +
-      '<input type="text" class="ds-input ds-logo-input" id="dsFldLogoWhite" value="' + esc(logoWhite) + '" placeholder="attachments/dataset/chung/...">' +
+      '<input type="text" class="ds-input ds-logo-input" id="dsFldLogoWhite" value="' + esc(logoWhite) + '" placeholder="Ví dụ: attachments/dataset/chung/...">' +
       '</div>' +
       /* Slot 3: Icon / Watermark */
       '<div class="ds-logo-card">' +
-      '<div class="ds-logo-label">💠 Icon / Watermark</div>' +
+      '<div class="ds-logo-label">Icon / Watermark</div>' +
       '<div class="ds-logo-thumb" id="dsThumbIcon"><img src="' + esc(rawUrl(logoIcon)) + '" alt="Icon" onerror="this.parentNode.innerHTML=\'<span class=\\\'ds-logo-thumb-empty\\\'>Chưa có ảnh</span>\'"></div>' +
-      '<input type="text" class="ds-input ds-logo-input" id="dsFldLogoIcon" value="' + esc(logoIcon) + '" placeholder="attachments/dataset/chung/...">' +
+      '<input type="text" class="ds-input ds-logo-input" id="dsFldLogoIcon" value="' + esc(logoIcon) + '" placeholder="Ví dụ: attachments/dataset/chung/...">' +
       '</div>' +
       '</div>' +
       '</div>' +
@@ -748,17 +748,17 @@
       /* CARD 3: PHONG CÁCH HÌNH ẢNH & QUY TẮC BỐ CỤC */
       '<div class="ds-section-card">' +
       '<div class="ds-section-head">' +
-      '<div class="ds-section-title">🖼️ Phong cách hình ảnh & 📐 Quy tắc bố cục</div>' +
+      '<div class="ds-section-title">Phong cách hình ảnh &amp; Quy tắc bố cục</div>' +
       '<div class="ds-section-sub">Định hướng phong cách thị giác và vị trí căn chỉnh khi sinh ảnh</div>' +
       '</div>' +
       '<div class="ds-form-row">' +
       '<div class="ds-field">' +
       '<label class="ds-label" for="dsFldImageStyle">Phong cách hình ảnh</label>' +
-      '<input type="text" class="ds-input" id="dsFldImageStyle" value="' + esc(imageStyle) + '" placeholder="vd: công nghệ, tối giản, premium, học viên thực tế">' +
+      '<input type="text" class="ds-input" id="dsFldImageStyle" value="' + esc(imageStyle) + '" placeholder="Ví dụ: Công nghệ, tối giản, premium, học viên thực tế">' +
       '</div>' +
       '<div class="ds-field">' +
       '<label class="ds-label" for="dsFldLayout">Quy tắc bố cục</label>' +
-      '<input type="text" class="ds-input" id="dsFldLayout" value="' + esc(layout) + '" placeholder="vd: logo góc trên, lề an toàn 8%, cover 16:9">' +
+      '<input type="text" class="ds-input" id="dsFldLayout" value="' + esc(layout) + '" placeholder="Ví dụ: Logo góc trên, lề an toàn 8%, cover 16:9">' +
       '</div>' +
       '</div>' +
       '</div>' +
@@ -766,17 +766,17 @@
       /* CARD 4: TONE OF VOICE & ĐIỀU CẤM KỴ */
       '<div class="ds-section-card">' +
       '<div class="ds-section-head">' +
-      '<div class="ds-section-title">✍️ Tone of Voice & 🚫 Điều không được làm</div>' +
+      '<div class="ds-section-title">Tone of Voice &amp; Điều không được làm</div>' +
       '<div class="ds-section-sub">Giọng văn khi viết caption và các rào chắn tuyệt đối cấm vi phạm</div>' +
       '</div>' +
       '<div class="ds-form-row">' +
       '<div class="ds-field">' +
       '<label class="ds-label" for="dsFldVoice">Tone of voice (Giọng điệu bài viết)</label>' +
-      '<textarea class="ds-input ds-textarea-sm" id="dsFldVoice" rows="2" placeholder="vd: chuyên nghiệp, trẻ, hiện đại, thực chiến, đồng cảm">' + esc(voice) + '</textarea>' +
+      '<textarea class="ds-input ds-textarea-sm" id="dsFldVoice" rows="2" placeholder="Ví dụ: Chuyên nghiệp, trẻ, hiện đại, thực chiến, đồng cảm">' + esc(voice) + '</textarea>' +
       '</div>' +
       '<div class="ds-field">' +
       '<label class="ds-label" for="dsFldDonts" style="color:var(--red,#ef4444)">Điều không được làm (Brand Don\'ts)</label>' +
-      '<textarea class="ds-input ds-textarea-sm" id="dsFldDonts" rows="2" placeholder="vd: đổi màu logo, bóp méo logo, dùng màu ngoài palette">' + esc(donts) + '</textarea>' +
+      '<textarea class="ds-input ds-textarea-sm" id="dsFldDonts" rows="2" placeholder="Ví dụ: Đổi màu logo, bóp méo logo, dùng màu ngoài palette">' + esc(donts) + '</textarea>' +
       '</div>' +
       '</div>' +
       '</div>' +
@@ -784,7 +784,7 @@
       /* CARD 5: MARKDOWN CONTENT TRỰC TIẾP BÊN DƯỚI */
       '<div class="ds-md-box">' +
       '<div class="ds-md-box-head">' +
-      '<div class="ds-md-box-title">📝 Nội dung Markdown Brand Kit</div>' +
+      '<div class="ds-md-box-title">Nội dung Markdown Brand Kit</div>' +
       '<div class="ds-md-box-sub">Tự động đồng bộ với các trường ở trên. Bạn có thể sửa trực tiếp Markdown hoặc thêm quy tắc riêng tại đây:</div>' +
       '</div>' +
       '<textarea id="dsKitText" class="ds-md-editor" spellcheck="false">' + esc(f.content) + '</textarea>' +
