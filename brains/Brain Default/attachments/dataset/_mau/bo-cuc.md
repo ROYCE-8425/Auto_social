@@ -29,18 +29,41 @@ Logo luon file `chung/thsv-logo-2025.png`. Khong tin logo ve trong poster.
 - Poster Zoom + giao trinh Python xanh la (logo khong phai Sao Viet).
 - Bat ky logo/hotline/web khong phai Sao Viet.
 
-## Cover = 5 Layout Agency Đồ Họa Thực Chiến 1:1 VUÔNG (Chuẩn Facebook 2026)
+## Cover = 6 Layout Agency Đồ Họa Thực Chiến 1:1 VUÔNG (Chuẩn Facebook 2026)
 
-Mọi cover khóa học mặc định 100% sử dụng Deterministic Graphic Engine (banner_templates.py) kết hợp ảnh thật dataset + logo Sao Việt chuẩn vector/PNG + typography tiếng Việt chuẩn Unicode font Arial Bold:
+Mọi cover khóa học mặc định 100% sử dụng Deterministic Graphic Engine (banner_templates.py) kết hợp ảnh thật dataset hoặc ảnh 3D visual sạch + logo Sao Việt chuẩn vector/PNG + typography tiếng Việt chuẩn Unicode font Arial Bold / Segoe UI Bold:
 1. **split_right:** Cột trái (50%) là ảnh lớp học thật, cột phải (50%) là panel xanh navy thương hiệu với logo góc trên, tiêu đề lớn, gạch phân cách vàng kim, 3 điểm nổi bật và hotline.
 2. **split_left:** Đảo vị trí panel sang bên trái, ảnh thật bên phải nhằm tạo sự phong phú giữa các bài viết.
 3. **bottom_bar:** Ảnh chụp lớp học góc rộng sáng sủa chiếm 70% phía trên, dải panel thương hiệu navy chiếm 30% chân trang cùng các huy hiệu viên thuốc bo tròn hiện đại.
 4. **floating_card:** Ảnh lớp học tràn nền, một card thông tin bo góc nổi khối 3D với viền vàng ánh kim và bóng đổ mềm mại.
 5. **diagonal_slice:** Đường cắt vát chéo góc công nghệ hiện đại, tạo cảm giác chuyển động và tràn đầy năng lượng.
+6. **3d_pills:** Bố cục hiện đại cho ảnh 3D AI hoặc ảnh công sở: nhân vật thao tác ở nửa phải (50%), nửa trái là 3 thẻ viên thuốc xanh navy bo góc ôm khít chữ tiếng Việt chuẩn Unicode, logo Sao Việt trên thẻ trắng góc trên.
 
-*(TUYỆT ĐỐI CẤM: Để AI tự vẽ chữ tiếng Việt lên ảnh dẫn đến lỗi font méo dấu như KÉ TOÀN, TÀI CHINC; CẤM để AI vẽ khung rỗng mất logo; CẤM style neon mạch điện tối tăm).*
+*(TUYỆT ĐỐI CẤM: Để AI tự vẽ chữ tiếng Việt lên ảnh dẫn đến lỗi font méo dấu như KÉ TOÀN, TÀI CHINC, PHỞNG, KẾM; CẤM để AI vẽ khung rỗng mất logo; CẤM style neon mạch điện tối tăm).*
 
-Xoay luân phiên 5 kiểu cover 1:1 trên. Cấm 2 bài liên tiếp cùng 1 kiểu.
+Xoay luân phiên 6 kiểu cover 1:1 trên. Cấm 2 bài liên tiếp cùng 1 kiểu.
 Logo: Bắt buộc dùng file `attachments/dataset/chung/thsv-logo-2025.png` trên thẻ bo góc nổi khối, luôn sắc nét 100%.
 Hotline trên poster: Lấy đúng từ brand kit hoặc mặc định 0931144858 / 0823552558.
 CẤM mở `_xuat/` để tái sử dụng. Đăng xong là xóa file tạm.
+
+---
+
+## MASTER SYSTEM PROMPT - KIẾN TRÚC TẠO ẢNH CHO MỌI KHÓA HỌC (CHỐNG LỖI FONT VÀ LỆCH BỐ CỤC 100%)
+
+### 1. NGUYÊN TẮC BẤT BIẾN (IMMUTABLE RULES)
+* **Quy tắc 1 (Zero Text in AI):** Mọi mô hình AI diffusion (Imagen 3, Flux, DALL-E, Midjourney) đều không có bộ gõ Unicode tiếng Việt, chỉ phỏng đoán pixel dẫn đến sai dấu. TUYỆT ĐỐI KHÔNG để AI vẽ chữ tiếng Việt hoặc logo. Chữ tiếng Việt và Logo luôn do code (Pillow Engine) hoặc phần mềm đồ họa chèn vào.
+* **Quy tắc 2 (Strict Spatial Reservation - Chống lệch):** AI chỉ vẽ chủ thể ở nửa phải (x: 50% đến 100%). Nửa trái (x: 0% đến 50%) bắt buộc là không gian sạch (Clean Negative Space / Copy Space) với ánh sáng dịu để chèn chữ và logo.
+
+### 2. BỘ KHUNG 5 KHỐI PHỔ QUÁT (THE UNIVERSAL 5-BLOCK FRAMEWORK)
+Mọi prompt tạo ảnh cho bất kỳ ngành học nào đều cấu thành từ 5 khối:
+* **[BLOCK 1 - SUBJECT]:** Nhân vật người Việt/Châu Á công sở, giảng viên hoặc học viên tự tin, tập trung làm việc trên máy tính/laptop trong văn phòng hiện đại.
+* **[BLOCK 2 - COMPOSITION (CHỐNG LỆCH)]:** Tỷ lệ vuông 1:1 (2000x2000 px). Khóa chủ thể ở nửa bên phải (x: 50% đến 100%). Nửa bên trái (x: 0% đến 50%) là hậu cảnh văn phòng mờ sạch sẽ, hoàn toàn để trống làm copy space.
+* **[BLOCK 3 - LIGHTING & BRAND PALETTE]:** Ánh sáng Studio thương mại cao cấp. Tông màu xanh Royal Navy Blue (#0B2341), điểm xuyết ánh vàng kim (#F59E0B / #FFD700) và sắc trắng trang nhã.
+* **[BLOCK 4 - VISUAL ANCHORS (ICON 3D THEO NGÀNH)]:**
+  - Tin học văn phòng & AI: Icon 3D bóng bẩy nổi trong không khí của Word, Excel, PowerPoint hoặc biểu tượng node AI.
+  - Kế toán thực hành: Icon 3D bảng biểu tài chính MISA, biểu đồ tăng trưởng, hóa đơn điện tử.
+  - AutoCAD / Vẽ kỹ thuật: Bản vẽ kỹ thuật 2D/3D wireframe, thước đo kỹ thuật số, chi tiết máy.
+  - Thiết kế đồ họa: Icon 3D Photoshop, Illustrator, vòng tròn màu sắc palette, bút vẽ kỹ thuật số.
+* **[BLOCK 5 - STRICT NEGATIVE (CẤM CHỮ TOÀN DIỆN)]:**
+  `STRICT NEGATIVE: Absolutely NO text, NO words, NO letters, NO numbers, NO typography, NO watermark, NO logo, NO labels, NO gibberish, NO distorted anatomy, NO extra fingers, clean empty copy space on the left.`
+

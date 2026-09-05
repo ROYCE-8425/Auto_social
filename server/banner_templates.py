@@ -597,6 +597,102 @@ def render_template_diagonal_slice(
     return base.convert("RGB")
 
 
+def render_template_3d_pills(
+    classroom_img: Image.Image,
+    logo_path: Optional[Path],
+    title: str,
+    subtitle: str,
+    highlights: List[str],
+    badge_text: str = "ƯU ĐÃI 30% HỌC PHÍ",
+    footer_text: str = "TRUNG TÂM TIN HỌC SAO VIỆT",
+    hotline: str = "093 1144 858",
+    brand_color: Tuple[int, int, int] = (11, 35, 65),
+) -> Image.Image:
+    """Template 6: '3d_pills' - Chuẩn Agency 2026 cho ảnh 3D AI hoặc ảnh công nghệ hiện đại:
+    - Nửa phải: Giữ nguyên vẹn 100% nhân vật 3D / không gian thực hành.
+    - Nửa trái: Bộ 3 viên thuốc Navy bo tròn ôm khít chữ, bóng đổ 3D mềm mại, chữ chuẩn Unicode.
+    - Góc trên: Logo Sao Việt trên badge trắng bo góc sắc nét.
+    - 100% không lệch, không che mặt chủ thể, không lỗi font tiếng Việt."""
+    W, H = 2000, 2000
+    base = smart_crop_and_enhance(classroom_img, W, H).convert("RGBA")
+
+    # Dán Logo Sao Việt vào góc trên phải
+    badge_w, badge_h = 320, 115
+    paste_brand_logo(base, logo_path, (W - badge_w - 70, 70, W - 70, 70 + badge_h), bg_badge=True)
+
+    # Cột trái dành cho 3 thẻ viên thuốc: Canh lề trái tại X = 130
+    x_start = 130
+    y_start = 780
+    font_pill_title = get_font(58, bold=True)
+    font_pill_badge = get_font(52, bold=True)
+    font_pill_highlight = get_font(52, bold=True)
+
+    draw = ImageDraw.Draw(base)
+
+    def draw_single_capsule(text: str, font: ImageFont.ImageFont, y_pos: int, highlight_token: Optional[str] = None) -> int:
+        pad_x = 55
+        pad_y = 26
+        bb = draw.textbbox((0, 0), text, font=font)
+        text_w = bb[2] - bb[0]
+        text_h = bb[3] - bb[1]
+        capsule_w = text_w + pad_x * 2
+        capsule_h = text_h + pad_y * 2
+        rad = capsule_h // 2
+
+        # Đổ bóng mềm
+        sh = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+        sh_draw = ImageDraw.Draw(sh)
+        sh_draw.rounded_rectangle([x_start, y_pos + 8, x_start + capsule_w, y_pos + capsule_h + 8],
+                                  radius=rad, fill=(0, 0, 0, 120))
+        sh = sh.filter(ImageFilter.GaussianBlur(15))
+        nonlocal base
+        base = Image.alpha_composite(base, sh)
+
+        # Thân viên thuốc navy viền vàng
+        cap = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+        cap_draw = ImageDraw.Draw(cap)
+        cap_draw.rounded_rectangle([x_start, y_pos, x_start + capsule_w, y_pos + capsule_h],
+                                   radius=rad, fill=(brand_color[0], brand_color[1], brand_color[2], 252),
+                                   outline=(255, 215, 0, 180), width=3)
+
+        # Vẽ chữ với tùy chọn highlight màu vàng
+        tx = x_start + pad_x
+        ty = y_pos + pad_y - 4
+        if highlight_token and highlight_token in text:
+            parts = text.split(highlight_token, 1)
+            # Phần đầu
+            cap_draw.text((tx, ty), parts[0], font=font, fill="#FFFFFF")
+            p1_bb = cap_draw.textbbox((0, 0), parts[0], font=font)
+            tx += (p1_bb[2] - p1_bb[0])
+            # Phần highlight vàng
+            cap_draw.text((tx, ty), highlight_token, font=font, fill="#FFD54F")
+            hl_bb = cap_draw.textbbox((0, 0), highlight_token, font=font)
+            tx += (hl_bb[2] - hl_bb[0])
+            # Phần đuôi
+            cap_draw.text((tx, ty), parts[1], font=font, fill="#FFFFFF")
+        else:
+            cap_draw.text((tx, ty), text, font=font, fill="#FFFFFF")
+
+        base = Image.alpha_composite(base, cap)
+        return y_pos + capsule_h + 36
+
+    # 1. Viên thuốc 1: Tiêu đề khóa học
+    t_clean = (title or "TIN HỌC VĂN PHÒNG").upper()
+    curr_y = draw_single_capsule(t_clean, font_pill_title, y_start)
+
+    # 2. Viên thuốc 2: Ưu đãi học phí
+    b_clean = (badge_text or "ƯU ĐÃI 30% HỌC PHÍ").upper()
+    hl_token = "30%" if "30%" in b_clean else ("50%" if "50%" in b_clean else None)
+    curr_y = draw_single_capsule(b_clean, font_pill_badge, curr_y, highlight_token=hl_token)
+
+    # 3. Viên thuốc 3: Điểm nổi bật / Kèm 1-1
+    h_clean = ((highlights[0] if highlights else "DẠY KÈM 1-1") or "DẠY KÈM 1-1").upper()
+    hl_token3 = "1-1" if "1-1" in h_clean else None
+    draw_single_capsule(h_clean, font_pill_highlight, curr_y, highlight_token=hl_token3)
+
+    return base.convert("RGB")
+
+
 # ===========================================================================
 # DISPATCHER CHỌN TEMPLATE
 # ===========================================================================
@@ -607,10 +703,11 @@ TEMPLATES = {
     "bottom_bar": render_template_bottom_bar,
     "floating_card": render_template_floating_card,
     "diagonal_slice": render_template_diagonal_slice,
+    "3d_pills": render_template_3d_pills,
 }
 
-# Danh sách trọng số: ưu tiên mẫu split_right (chuẩn như ảnh user gửi) và bottom_bar
-TEMPLATE_CHOICES = ["split_right", "split_right", "split_left", "bottom_bar", "floating_card", "diagonal_slice"]
+# Danh sách trọng số: ưu tiên split_right, 3d_pills và bottom_bar
+TEMPLATE_CHOICES = ["split_right", "3d_pills", "split_left", "bottom_bar", "floating_card", "diagonal_slice"]
 
 
 def generate_authentic_banner(
