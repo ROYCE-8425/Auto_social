@@ -85,9 +85,14 @@ def first_dataset_photo(vault_root: Optional[str], folder: str = "tin-hoc _ai") 
     return ""
 
 
-def pick_dataset_photo(vault_root: Optional[str], folder: str = "tin-hoc _ai", random_choice: bool = True) -> str:
+def pick_dataset_photo(
+    vault_root: Optional[str],
+    folder: str = "tin-hoc _ai",
+    random_choice: bool = True,
+    prefer_raw: bool = True,
+) -> str:
     """Path tương đối 1 ảnh raw chất lượng trong folder ngành (bỏ file trùng (1)).
-    Nếu random_choice=True thì chọn ngẫu nhiên trong danh sách ảnh để bài đăng đa dạng."""
+    Nếu prefer_raw=True, ưu tiên chọn ảnh chụp phòng máy thật thô để ghép layout không bị lặp chữ."""
     vault = _resolve_vault(vault_root)
     folder = fix_dataset_path("attachments/dataset/" + folder).split("dataset/")[-1]
     d = vault / "attachments" / "dataset" / folder
@@ -96,12 +101,17 @@ def pick_dataset_photo(vault_root: Optional[str], folder: str = "tin-hoc _ai", r
         if not d.is_dir():
             return ""
     candidates = []
+    raw_candidates = []
+    premade_kws = ("khai-giang", "uu-dai", "poster", "banner", "thong-bao", "looker-studio", "trung-tam-dao-tao")
     for p in d.iterdir():
         if p.is_file() and p.suffix.lower() in _IMG_MIME and " (1)" not in p.name:
             candidates.append(p)
+            if not any(k in p.name.lower() for k in premade_kws):
+                raw_candidates.append(p)
     if not candidates:
         return ""
-    chosen = random.choice(candidates) if random_choice else sorted(candidates, key=lambda x: x.name.lower())[0]
+    pool = (raw_candidates if (prefer_raw and raw_candidates) else candidates)
+    chosen = random.choice(pool) if random_choice else sorted(pool, key=lambda x: x.name.lower())[0]
     return str(chosen.relative_to(vault)).replace("\\", "/")
 
 

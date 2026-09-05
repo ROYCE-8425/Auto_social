@@ -918,7 +918,33 @@ def render_template_3d_pills(
 
     h_clean = ((highlights[0] if highlights else "DẠY KÈM 1-1") or "DẠY KÈM 1-1").upper()
     hl_token3 = "1-1" if "1-1" in h_clean else None
-    draw_single_capsule(h_clean, 44, curr_y, highlight_token=hl_token3)
+    curr_y = draw_single_capsule(h_clean, 44, curr_y, highlight_token=hl_token3)
+
+    # Danh sách quyền lợi / highlights bổ sung
+    font_hl = get_font(32, bold=True)
+    curr_y += 35
+    extra_hls = (highlights[1:] if len(highlights) > 1 else []) or [
+        "Thực hành 100% trên máy tính",
+        "Kèm 1-1 đến khi thành thạo",
+        "Cấp chứng chỉ uy tín sau khóa học",
+    ]
+    for e_hl in extra_hls[:3]:
+        hl_lines = wrap_text(draw, f"•  {e_hl}", font_hl, max_allowed_w - 20)
+        for hline in hl_lines:
+            draw.text((x_start + 10, curr_y), hline, font=font_hl, fill="#E2E8F0")
+            bb = draw.textbbox((0, 0), hline, font=font_hl)
+            curr_y += (bb[3] - bb[1]) + 14
+        curr_y += 14
+
+    # Khối Hotline / Chân trang ở đáy glass panel
+    card_y = H - 260
+    draw.rounded_rectangle([x_start, card_y, glass_w - 70, card_y + 100], radius=18,
+                           fill=(20, 50, 90, 255), outline=(255, 215, 0, 180), width=2)
+    font_hotline = get_font(32, bold=True)
+    draw.text((x_start + 24, card_y + 32), f"Hotline / Zalo: {hotline}", font=font_hotline, fill="#FFEB3B")
+
+    font_ft = get_font(26, bold=True)
+    draw.text((x_start + 10, H - 90), footer_text.upper(), font=font_ft, fill="#94A3B8")
 
     return base.convert("RGB")
 
@@ -1234,6 +1260,37 @@ def generate_authentic_banner(
                 logo_p = cand
                 break
 
+    # KIỂM TRA CHẾ ĐỘ 1: Poster đồ họa đã thiết kế sẵn (có sẵn chữ/nội dung)
+    premade_kws = ("khai-giang", "uu-dai", "poster", "banner", "thong-bao", "looker-studio", "trung-tam-dao-tao")
+    is_premade = any(k in c_path.name.lower() for k in premade_kws)
+
+    # Nếu ảnh là poster thiết kế sẵn và người dùng không ép buộc template -> Chỉ dán Logo Sao Việt hoàn thiện
+    if is_premade and not template_name:
+        try:
+            raw_img = Image.open(c_path).convert("RGBA")
+            W, H = raw_img.size
+            # Nếu ảnh chưa phải hình vuông 1:1 thì crop nhẹ về vuông chuẩn Facebook
+            if abs(W - H) > 20:
+                side = min(W, H)
+                off_x = (W - side) // 2
+                off_y = (H - side) // 2
+                raw_img = raw_img.crop((off_x, off_y, off_x + side, off_y + side))
+                raw_img = raw_img.resize((2000, 2000), Image.Resampling.LANCZOS)
+                W, H = 2000, 2000
+            elif W < 1500 or H < 1500:
+                raw_img = raw_img.resize((2000, 2000), Image.Resampling.LANCZOS)
+                W, H = 2000, 2000
+
+            # Dán Logo Sao Việt nổi khối 3D góc trên trái
+            badge_w, badge_h = 420, 130
+            paste_brand_logo(raw_img, logo_p, (60, 60, 60 + badge_w, 60 + badge_h), bg_badge=True)
+            raw_img.convert("RGB").save(out_p, format="JPEG", quality=95)
+            print(f"[banner_templates] Phát hiện poster sẵn ({c_path.name}) -> Chế độ 1: Dán Logo Sao Việt chuẩn đẹp đăng ngay.")
+            return out_p
+        except Exception as e:
+            print(f"[banner_templates] Lỗi dán logo poster sẵn: {e}", file=sys.stderr)
+
+    # KIỂM TRA CHẾ ĐỘ 2: Ảnh lớp học thật thô -> Áp dụng 8 Layout Agency & 5 Bảng màu
     if not highlights:
         highlights = [
             "Kèm 1-1 đến khi thành thạo",
