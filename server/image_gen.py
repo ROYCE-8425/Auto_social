@@ -89,28 +89,53 @@ def pick_dataset_photo(
     vault_root: Optional[str],
     folder: str = "tin-hoc _ai",
     random_choice: bool = True,
-    prefer_raw: bool = True,
+    prefer_premade: bool = True,
 ) -> str:
-    """Path tương đối 1 ảnh raw chất lượng trong folder ngành (bỏ file trùng (1)).
-    Nếu prefer_raw=True, ưu tiên chọn ảnh chụp phòng máy thật thô để ghép layout không bị lặp chữ."""
+    """Path tương đối 1 ảnh chất lượng trong folder ngành hoặc _mau.
+    Nếu prefer_premade=True, ưu tiên chọn các poster đồ họa marketing có sẵn (khai giảng, ưu đãi, poster)
+    để đạt chất lượng thương mại cao nhất."""
     vault = _resolve_vault(vault_root)
-    folder = fix_dataset_path("attachments/dataset/" + folder).split("dataset/")[-1]
-    d = vault / "attachments" / "dataset" / folder
-    if not d.is_dir():
-        d = vault / "attachments" / "dataset" / "tin-hoc _ai"
-        if not d.is_dir():
-            return ""
+    clean_folder = fix_dataset_path("attachments/dataset/" + folder).split("dataset/")[-1]
+    d = vault / "attachments" / "dataset" / clean_folder
+    mau_dir = vault / "attachments" / "dataset" / "_mau"
+
+    premade_kws = ("khai-giang", "uu-dai", "poster", "banner", "thong-bao", "looker-studio", "trung-tam-dao-tao", "hoc-ung-dung")
+
     candidates = []
-    raw_candidates = []
-    premade_kws = ("khai-giang", "uu-dai", "poster", "banner", "thong-bao", "looker-studio", "trung-tam-dao-tao")
-    for p in d.iterdir():
-        if p.is_file() and p.suffix.lower() in _IMG_MIME and " (1)" not in p.name:
-            candidates.append(p)
-            if not any(k in p.name.lower() for k in premade_kws):
-                raw_candidates.append(p)
-    if not candidates:
+    premade_candidates = []
+
+    # 1. Quét trong folder ngành
+    if d.is_dir():
+        for p in d.iterdir():
+            if p.is_file() and p.suffix.lower() in _IMG_MIME and " (1)" not in p.name:
+                candidates.append(p)
+                if any(k in p.name.lower() for k in premade_kws):
+                    premade_candidates.append(p)
+
+    # 2. Quét thêm trong _mau nếu cần poster theo ngành
+    if mau_dir.is_dir():
+        for p in mau_dir.iterdir():
+            if p.is_file() and p.suffix.lower() in _IMG_MIME:
+                name_low = p.name.lower()
+                if "tre-em" in clean_folder and ("tre-em" in name_low or "scratch" in name_low):
+                    premade_candidates.append(p)
+                elif "do-hoa" in clean_folder and "do-hoa" in name_low:
+                    premade_candidates.append(p)
+                elif "tin-hoc" in clean_folder and "tin-hoc" in name_low:
+                    premade_candidates.append(p)
+
+    if not candidates and not premade_candidates:
+        d_alt = vault / "attachments" / "dataset" / "tin-hoc _ai"
+        if d_alt.is_dir():
+            candidates = [p for p in d_alt.iterdir() if p.is_file() and p.suffix.lower() in _IMG_MIME and " (1)" not in p.name]
+
+    if prefer_premade and premade_candidates:
+        pool = premade_candidates
+    elif candidates:
+        pool = candidates
+    else:
         return ""
-    pool = (raw_candidates if (prefer_raw and raw_candidates) else candidates)
+
     chosen = random.choice(pool) if random_choice else sorted(pool, key=lambda x: x.name.lower())[0]
     return str(chosen.relative_to(vault)).replace("\\", "/")
 
@@ -843,7 +868,10 @@ def generate_authentic_banner_cover(
         fname = f"{prefix}-{int(time.time())}-{uuid.uuid4().hex[:6]}.jpg"
         out_file = target_dir / fname
 
-        chosen_template = template_name or content.get("template_name")
+        # Nếu caller không chỉ định template_name, để None để banner_templates tự động
+        # nhận diện nếu là poster sẵn thì chạy Mode 1 (chỉ dán logo cực đẹp),
+        # nếu là ảnh thật thì mới bốc template ngẫu nhiên.
+        chosen_template = template_name
 
         res_path = banner_templates.generate_authentic_banner(
             classroom_img_path=raw_file,

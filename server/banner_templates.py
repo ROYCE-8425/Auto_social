@@ -1261,15 +1261,15 @@ def generate_authentic_banner(
                 break
 
     # KIỂM TRA CHẾ ĐỘ 1: Poster đồ họa đã thiết kế sẵn (có sẵn chữ/nội dung)
-    premade_kws = ("khai-giang", "uu-dai", "poster", "banner", "thong-bao", "looker-studio", "trung-tam-dao-tao")
+    premade_kws = ("khai-giang", "uu-dai", "poster", "banner", "thong-bao", "looker-studio", "trung-tam-dao-tao", "hoc-ung-dung", "mau-")
     is_premade = any(k in c_path.name.lower() for k in premade_kws)
 
-    # Nếu ảnh là poster thiết kế sẵn và người dùng không ép buộc template -> Chỉ dán Logo Sao Việt hoàn thiện
+    # Nếu ảnh là poster thiết kế sẵn và người dùng không ép buộc template -> Chế độ 1: Hoàn thiện poster chuẩn đăng ngay
     if is_premade and not template_name:
         try:
             raw_img = Image.open(c_path).convert("RGBA")
             W, H = raw_img.size
-            # Nếu ảnh chưa phải hình vuông 1:1 thì crop nhẹ về vuông chuẩn Facebook
+            # Nếu ảnh chưa phải hình vuông 1:1 thì xử lý vuông chuẩn Facebook
             if abs(W - H) > 20:
                 side = min(W, H)
                 off_x = (W - side) // 2
@@ -1281,9 +1281,12 @@ def generate_authentic_banner(
                 raw_img = raw_img.resize((2000, 2000), Image.Resampling.LANCZOS)
                 W, H = 2000, 2000
 
-            # Dán Logo Sao Việt nổi khối 3D góc trên trái
-            badge_w, badge_h = 420, 130
-            paste_brand_logo(raw_img, logo_p, (60, 60, 60 + badge_w, 60 + badge_h), bg_badge=True)
+            # Dán Logo Sao Việt nổi khối 3D góc trên trái nếu poster chưa có logo thương hiệu sẵn
+            has_built_in_logo = any(k in c_path.name.lower() for k in ("sao-viet", "do-hoa", "autocad"))
+            if not has_built_in_logo:
+                badge_w, badge_h = 420, 130
+                paste_brand_logo(raw_img, logo_p, (60, 60, 60 + badge_w, 60 + badge_h), bg_badge=True)
+
             raw_img.convert("RGB").save(out_p, format="JPEG", quality=95)
             print(f"[banner_templates] Phát hiện poster sẵn ({c_path.name}) -> Chế độ 1: Dán Logo Sao Việt chuẩn đẹp đăng ngay.")
             return out_p
