@@ -3618,7 +3618,8 @@ async def settings_set(section: str = Form(...), data: str = Form("{}")):
             import image_gen
             mid = str(patch.get("gemini_image_model") or "").strip()
             allowed = {x["id"] for x in image_gen.list_gemini_image_models()}
-            if mid in allowed:
+            invalid = getattr(image_gen, "KNOWN_INVALID_IMAGE_MODELS", set())
+            if mid in allowed or (mid.startswith("imagen-") and mid not in invalid):
                 m["gemini_image_model"] = mid
         if "auxiliary" in patch:   # model phụ cho việc nền (provider + model)
             aux_patch = patch["auxiliary"] or {}

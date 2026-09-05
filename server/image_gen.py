@@ -425,14 +425,26 @@ if GEMINI_IMAGEN_MODEL not in _IMAGE_KIND:
 GEMINI_IMAGEN_URL = "https://generativelanguage.googleapis.com/v1beta/models/{model}:predict?key={key}"
 
 
+KNOWN_INVALID_IMAGE_MODELS = {
+    "imagen-4.0-generate-001",
+    "imagen-4.0-fast-generate-001",
+    "imagen-4.0-ultra-generate-001",
+    "gemini-2.5-flash-image",
+    "gemini-3.1-flash-image",
+    "gemini-3-pro-image",
+}
+
+
 def list_gemini_image_models():
     return list(GEMINI_IMAGE_MODELS)
 
 
 def resolve_gemini_image_model(explicit: Optional[str] = None) -> str:
-    """Xác định model ảnh Gemini: luôn tuân thủ triệt để model đang chọn trong Cài đặt (settings.json).
-    Nếu settings.json lưu model ảo cũ (như imagen-4.0... hoặc gemini-...-image), tự động chuẩn hóa
-    về imagen-3.0-generate-002 để không bao giờ bị 404."""
+    """Xác định model ảnh Gemini: luôn tuân thủ triệt để model bạn đang chọn.
+    - Nếu bạn chọn model trong danh sách (imagen-3.0-generate-002 hoặc fast) -> dùng đúng model đó.
+    - Nếu bạn thử nghiệm bất kỳ model Imagen nào mới trong tương lai (imagen-*) -> cho phép chạy.
+    - Nếu model lưu trong Cài đặt là model ảo cũ -> tự động dọn sạch về imagen-3.0-generate-002.
+    - Nếu model mới gặp lỗi trên Google API, hệ thống sẽ tự động fallback về imagen-3.0-generate-002."""
     saved = ""
     try:
         import config
@@ -444,20 +456,25 @@ def resolve_gemini_image_model(explicit: Optional[str] = None) -> str:
     if saved:
         if saved in _IMAGE_KIND:
             return saved
-        # Tự động sửa model ảo cũ trong settings.json về model chuẩn
-        try:
-            import config
-            s = config.read_settings()
-            m = s.setdefault("model", {})
-            m["gemini_image_model"] = GEMINI_DEFAULT_IMAGE_MODEL
-            config.write_settings(s)
-        except Exception:
-            pass
+        if saved in KNOWN_INVALID_IMAGE_MODELS:
+            # Dọn sạch model ảo cũ về model chuẩn
+            try:
+                import config
+                s = config.read_settings()
+                m = s.setdefault("model", {})
+                m["gemini_image_model"] = GEMINI_DEFAULT_IMAGE_MODEL
+                config.write_settings(s)
+            except Exception:
+                pass
+            return GEMINI_DEFAULT_IMAGE_MODEL
+        # Cho phép bất kỳ model Imagen hợp lệ nào mà người dùng muốn đổi/thử nghiệm
+        if saved.startswith("imagen-"):
+            return saved
         return GEMINI_DEFAULT_IMAGE_MODEL
 
-    # Nếu settings chưa có, xét đối số explicit nếu hợp lệ
+    # Nếu settings chưa có, xét đối số explicit
     exp = (explicit or "").strip()
-    if exp and exp in _IMAGE_KIND:
+    if exp and (exp in _IMAGE_KIND or (exp.startswith("imagen-") and exp not in KNOWN_INVALID_IMAGE_MODELS)):
         return exp
 
     return GEMINI_IMAGEN_MODEL if GEMINI_IMAGEN_MODEL in _IMAGE_KIND else GEMINI_DEFAULT_IMAGE_MODEL
