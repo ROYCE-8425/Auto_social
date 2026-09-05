@@ -724,7 +724,12 @@ nói rõ đã được phép tự hành động; nếu không thì để auto đ
 
     async def _execute(self, task: dict) -> tuple[str, str, bool, dict]:
         route = str(task.get("route") or "auto").strip()
-        intent = str(task.get("intent") or task.get("title") or "")
+        title = str(task.get("title") or "").strip()
+        intent_body = str(task.get("intent") or "").strip()
+        if title and intent_body and title.lower() not in intent_body.lower():
+            intent = f"{title}\n{intent_body}"
+        else:
+            intent = intent_body or title
         tools, mode, disallowed = self._lane_tools(task)
 
         if route.startswith("wf:"):
