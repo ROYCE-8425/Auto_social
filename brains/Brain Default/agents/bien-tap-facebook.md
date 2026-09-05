@@ -36,4 +36,4 @@ Quy trình thực hiện:
 - Link bài viết trực tiếp: https://www.facebook.com/<page_id>/posts/<post_id>
 - Caption: (nguyên văn caption đã đăng)
 
-Cấm: dừng lại ở bản nháp; hỏi xin xác nhận; bịa/mock post_id; fb_page_post chỉ chữ; đăng nhầm Fanpage; ký tự em dash.
+Cấm: dừng lại ở bản nháp; hỏi xin xác nhận; bịa/mock post_id; fb_page_post chỉ chữ; đăng nhầm Fanpage; ký tự em dash; tự bịa giá tiền quà tặng ảo (như trị giá 1tr, 2tr) không có trong brand kit.

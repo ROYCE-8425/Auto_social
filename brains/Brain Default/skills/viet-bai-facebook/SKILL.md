@@ -30,6 +30,10 @@ Khi viết caption, CẤM toàn bộ các dấu hiệu nhận diện bài viết
 5. **Cấm Markdown trên Facebook:** Không `**in đậm**`, không `__`, không `# heading`. Facebook hiển thị nguyên mã markdown rất mất thẩm mỹ. Dùng chữ IN HOA, emoji, và xuống dòng để phân cấp thị giác.
 6. **Cấm nhồi nhiều ngành:** 1 bài = 1 ngành chuyên biệt (Tin học thì không nhồi AutoCAD hay Kế toán).
 7. **Nhịp điệu di động (Mobile-First Rhythm):** Cứ 1 đến 2 câu là xuống dòng. Dùng dòng kẻ `________________` hoặc emoji làm gạch đầu dòng để người dùng đọc lướt trên điện thoại dễ tiếp thu.
+8. **CẤM TỰ BỊA GIÁ TIỀN & GIÁ TRỊ QUÀ TẶNG ẢO (QUY TẮC AN TOÀN TUYỆT ĐỐI):**
+   - Tuyệt đối CẤM tự bịa các con số tiền ảo cho quà tặng kèm (ví dụ: CẤM viết "tặng tài liệu trị giá 1.500.000đ", "tặng khóa học AI trị giá 2.000.000đ", "quà tặng 3 triệu"...).
+   - Tự bịa số tiền quà tặng là hành vi cực kỳ nguy hiểm: Khách hàng sẽ đòi trừ tiền mặt vào học phí hoặc tố cáo trung tâm quảng cáo gian dối khi tư vấn viên không có gói quà đó.
+   - Chỉ được nêu các chính sách ưu đãi có thật của Sao Việt: Giảm 20% đến 30% học phí khi đăng ký sớm; Giảm thêm 10% khi đăng ký nhóm từ 2 học viên; Tặng trọn bộ tài liệu, giáo trình và biểu mẫu thực hành (KHÔNG gắn giá tiền); Hỗ trợ nghiệp vụ lâu dài trọn đời.
 
 ---
 
@@ -79,8 +83,8 @@ Luôn lồng ghép khối cam kết thép tạo sự an tâm tuyệt đối:
 - Nêu rõ công cụ, phần mềm: Word, Excel, PowerPoint, Photoshop, Illustrator, CorelDRAW, AutoCAD, Misa, Fast, n8n, ChatGPT, Copilot...
 
 ### Phần 6: Chính sách ưu đãi học phí & Kêu gọi hành động (CTA)
-- Nêu bảng giá hoặc mức giảm cụ thể: "Giảm đến 30% học phí", hoặc "Kế toán cho người mới bắt đầu: Giảm từ 5,500,000đ chỉ còn 4,550,000đ".
-- Quà tặng bổ trợ: Tặng kho thư viện 300GB bố cục thiết kế, tặng khóa học online sử dụng trọn đời, quà tặng đăng ký theo nhóm 300k, giảm thêm 10% cho cựu học viên.
+- Mức giảm chuẩn: "Giảm ngay 20% đến 30% học phí khi đăng ký sớm", "Giảm thêm 10% khi đăng ký nhóm từ 2 học viên".
+- Quà tặng bổ trợ (TUYỆT ĐỐI CẤM TỰ BỊA GIÁ TIỀN TRIỆU ĐỒNG): Tặng trọn bộ tài liệu, giáo trình và kho biểu mẫu doanh nghiệp thực tế; Tặng khóa học video bổ trợ; Hỗ trợ kèm 1-1 không giới hạn số buổi. CẤM tự gắn mác "trị giá 1.500.000đ", "trị giá 2.000.000đ" vào quà tặng khi tài liệu không quy định.
 - Kêu gọi hành động dứt khoát:
   + `🎁 INBOX ngay cho Tin Học Sao Việt để được TƯ VẤN MIỄN PHÍ VÀ NHẬN NGAY ƯU ĐÃI HỌC PHÍ!`
   + Link inbox Messenger: `https://m.me/trungtamtinhocvanphongsaoviet`
