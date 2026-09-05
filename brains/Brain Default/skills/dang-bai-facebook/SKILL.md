@@ -9,7 +9,7 @@ group: Marketing
 Doc `wiki/brand-kits/_y-chu-dang-bai.md` va `_quy-trinh-dang-bai.md` truoc. Moi bai = dung 1 kit page (logo/mau/font/giong/chan trang). Khong dung kit page khac. Engine viec nen: **Gemini API key** (khong Antigravity/`agy`, khong Gemini CLI, khong bat ChatGPT).
 
 **Album 7/3.** Anh 1 = banner quang cao: gen tu 1 raw dung the + logo kit, HOAC gen AI full van kem logo kit. Toi da 3 gen. Con lai anh raw dataset. Cover `_xuat/`.
-Cover mac dinh = gen 1 lan tu **1 anh raw dataset + logo kit** (file `attachments/dataset/chung/thsv-logo-2025.png` hoac logo trong kit page). Tool: `javis_search_tools` roi `javis_run_tool` `gemini_generate_image` (Nano Banana). **Bat buoc** dua 2 anh tham chieu: (1) anh lop/raw, (2) file logo — khong gen logo bang tri nho. Luu `_xuat/`. Anh 2..N = anh goc dataset (qua `pick_photos`). Cấm gen 2+ poster. Cấm `agy`. Facebook: `fb_page_album` / `fb_page_photo`.
+Cover mac dinh = gen 1 lan tu **1 anh raw dataset + logo kit** (file `attachments/dataset/chung/thsv-logo-2025.png` hoac logo trong kit page). Tool: `javis_search_tools` roi `javis_run_tool` `gemini_generate_image` (Google Imagen 3). **Bat buoc** dua 2 anh tham chieu: (1) anh lop/raw, (2) file logo - khong gen logo bang tri nho. Luu `_xuat/`. Anh 2..N = anh goc dataset (qua `pick_photos`). Cấm gen 2+ poster. Cấm `agy`. Facebook: `fb_page_album` / `fb_page_photo`.
 
 ## 1. Chọn folder dataset theo brief (Luật A)
 

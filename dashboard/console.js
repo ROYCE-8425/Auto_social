@@ -3488,7 +3488,7 @@
       }
       const masked = (m[KEYFIELD[p.id]] || "").slice(-4);
       const imgPick = (p.id === "gemini" && on)
-        ? `<div class="prov-note" style="margin-top:8px">Model gen ảnh (Imagen / Nano Banana) — chat Gemini bị chặn GenerateContent thì thử Imagen; key Google phải mở API ảnh.</div>
+        ? `<div class="prov-note" style="margin-top:8px">Model gen ảnh (Google Imagen 3) - bấm chọn là lưu ngay; key Google phải mở API ảnh.</div>
            <div class="prov-action" style="margin-top:6px"><label class="gcard-meta" style="margin-right:8px">Ảnh</label>
            <select class="js-input" id="geminiImgModel" style="max-width:320px"><option>Đang tải…</option></select></div>`
         : "";
@@ -4068,7 +4068,7 @@
                 : (loadingProv === selProv ? '<div class="mp-empty">' + esc(t("models.mp_loading")) + '</div>'
                     : '<div class="mp-empty">' + esc((liveCache[selProv] && liveCache[selProv].error)
                         || t("models.mp_empty")) + '</div>')}
-              ${selProv === "gemini" ? `<div class="mp-img-head">Gen ảnh · Imagen / Nano Banana — bấm là lưu, đổi lại bất cứ lúc nào</div>
+              ${selProv === "gemini" ? `<div class="mp-img-head">Gen ảnh · Google Imagen 3 - bấm là lưu, đổi lại bất cứ lúc nào</div>
                 ${imgLoading ? '<div class="mp-empty">Đang tải model ảnh…</div>' : (imgModels.map(im =>
                   `<button type="button" class="mp-model mp-img ${im.id === imgCurrent ? "sel" : ""}" data-img="${esc(im.id)}">${esc(im.label)} <span class="mp-cur">${im.id === imgCurrent ? "ĐANG DÙNG · " : ""}${esc(im.id)}</span></button>`
                 ).join("") || '<div class="mp-empty">Không tải được danh sách Imagen.</div>')}` : ""}
@@ -4076,7 +4076,7 @@
           </div>
           <div class="mp-foot">
             <span class="mp-note">${esc(imgSaveMsg || (selProv === "gemini"
-              ? "Chat: chọn dòng trên rồi Switch. Ảnh: bấm Nano Banana / Imagen là lưu ngay (không cần Switch)."
+              ? "Chat: chọn dòng trên rồi Switch. Ảnh: bấm model Imagen 3 là lưu ngay (không cần Switch)."
               : (opts.note || t("models.mp_note"))))}</span>
             <div><button class="mp-btn" data-act="close">${esc(t("common.cancel"))}</button><button class="mp-btn primary" data-act="switch" ${selModel ? "" : "disabled"}>${esc(opts.title ? t("models.mp_pick") : "Switch")}</button></div>
           </div>
@@ -4096,7 +4096,7 @@
         draw();
         try {
           await saveSetting("model", { gemini_image_model: id });
-          imgSaveMsg = "Đã lưu ảnh: " + id + " — đổi lại bất cứ lúc nào trong hộp này.";
+          imgSaveMsg = "Đã lưu ảnh: " + id + " - đổi lại bất cứ lúc nào trong hộp này.";
         } catch (e) {
           imgSaveMsg = "Lưu model ảnh thất bại.";
         }

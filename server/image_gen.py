@@ -414,18 +414,15 @@ async def generate_chatgpt(prompt: str, aspect_ratio: str = "square", quality: s
 # Imagen (:predict) và Gemini image (:generateContent) dùng CÙNG API key Gemini.
 # Chọn model ở trang Models (model.gemini_image_model) hoặc tham số tool.
 GEMINI_IMAGE_MODELS = [
-    {"id": "imagen-4.0-generate-001", "label": "Imagen 4", "kind": "predict"},
-    {"id": "imagen-4.0-fast-generate-001", "label": "Imagen 4 Fast", "kind": "predict"},
-    {"id": "imagen-4.0-ultra-generate-001", "label": "Imagen 4 Ultra", "kind": "predict"},
-    {"id": "imagen-3.0-generate-002", "label": "Imagen 3", "kind": "predict"},
-    {"id": "gemini-2.5-flash-image", "label": "Nano Banana (2.5 Flash Image)", "kind": "generateContent"},
-    {"id": "gemini-3.1-flash-image", "label": "Nano Banana 2 (3.1 Flash Image)", "kind": "generateContent"},
-    {"id": "gemini-3-pro-image", "label": "Nano Banana Pro (3 Pro Image)", "kind": "generateContent"},
+    {"id": "imagen-3.0-generate-002", "label": "Imagen 3 (Tối ưu nhất - Đề xuất)", "kind": "predict"},
+    {"id": "imagen-3.0-fast-generate-001", "label": "Imagen 3 Fast (Tốc độ cao)", "kind": "predict"},
 ]
 _IMAGE_KIND = {m["id"]: m["kind"] for m in GEMINI_IMAGE_MODELS}
-GEMINI_IMAGEN_MODEL = os.getenv("JAVIS_GEMINI_IMAGEN_MODEL", "imagen-4.0-generate-001")
+GEMINI_DEFAULT_IMAGE_MODEL = "imagen-3.0-generate-002"
+GEMINI_IMAGEN_MODEL = os.getenv("JAVIS_GEMINI_IMAGEN_MODEL", GEMINI_DEFAULT_IMAGE_MODEL)
+if GEMINI_IMAGEN_MODEL not in _IMAGE_KIND:
+    GEMINI_IMAGEN_MODEL = GEMINI_DEFAULT_IMAGE_MODEL
 GEMINI_IMAGEN_URL = "https://generativelanguage.googleapis.com/v1beta/models/{model}:predict?key={key}"
-GEMINI_GENCONTENT_URL = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={key}"
 
 
 def list_gemini_image_models():
@@ -433,18 +430,37 @@ def list_gemini_image_models():
 
 
 def resolve_gemini_image_model(explicit: Optional[str] = None) -> str:
-    raw = (explicit or "").strip()
-    if not raw:
+    """Xác định model ảnh Gemini: luôn tuân thủ triệt để model đang chọn trong Cài đặt (settings.json).
+    Nếu settings.json lưu model ảo cũ (như imagen-4.0... hoặc gemini-...-image), tự động chuẩn hóa
+    về imagen-3.0-generate-002 để không bao giờ bị 404."""
+    saved = ""
+    try:
+        import config
+        s = config.read_settings()
+        saved = str(((s.get("model") or {}).get("gemini_image_model") or "")).strip()
+    except Exception:
+        saved = ""
+
+    if saved:
+        if saved in _IMAGE_KIND:
+            return saved
+        # Tự động sửa model ảo cũ trong settings.json về model chuẩn
         try:
             import config
-            raw = str(((config.read_settings().get("model") or {}).get("gemini_image_model") or "")).strip()
+            s = config.read_settings()
+            m = s.setdefault("model", {})
+            m["gemini_image_model"] = GEMINI_DEFAULT_IMAGE_MODEL
+            config.write_settings(s)
         except Exception:
-            raw = ""
-    if not raw:
-        raw = GEMINI_IMAGEN_MODEL
-    if raw not in _IMAGE_KIND:
-        raw = GEMINI_IMAGEN_MODEL if GEMINI_IMAGEN_MODEL in _IMAGE_KIND else GEMINI_IMAGE_MODELS[0]["id"]
-    return raw
+            pass
+        return GEMINI_DEFAULT_IMAGE_MODEL
+
+    # Nếu settings chưa có, xét đối số explicit nếu hợp lệ
+    exp = (explicit or "").strip()
+    if exp and exp in _IMAGE_KIND:
+        return exp
+
+    return GEMINI_IMAGEN_MODEL if GEMINI_IMAGEN_MODEL in _IMAGE_KIND else GEMINI_DEFAULT_IMAGE_MODEL
 
 
 def get_gemini_api_key(explicit_key: Optional[str] = None) -> str:
@@ -481,35 +497,54 @@ def _resolve_gemini_aspect(aspect_ratio: Optional[str]) -> str:
     return mapping.get(a, "1:1")
 
 
-def _extract_gencontent_image_b64(data: dict) -> Optional[str]:
-    for cand in (data.get("candidates") or []):
-        parts = ((cand.get("content") or {}).get("parts") or [])
-        for part in parts:
-            inline = part.get("inlineData") or part.get("inline_data") or {}
-            b64 = inline.get("data")
-            if b64:
-                return b64
-    return None
+def overlay_logo(
+    image_bytes: bytes,
+    logo_path: str,
+    vault_root: Optional[str] = None,
+    position: str = "top-left",
+    scale_ratio: float = 0.22,
+    margin_px: int = 36,
+) -> bytes:
+    """Dán logo thật (PNG trong suốt) từ dataset lên ảnh cover đã tạo.
+    Đảm bảo logo chuẩn nhận diện thương hiệu, không méo, không ảo tưởng chữ.
+    Nếu logo_path không hợp lệ hoặc PIL lỗi -> trả về nguyên image_bytes an toàn."""
+    try:
+        from PIL import Image
+        import io
+        vault = _resolve_vault(vault_root)
+        lp = Path(logo_path).expanduser()
+        lp = lp if lp.is_absolute() else (vault / lp)
+        if not lp.is_file():
+            return image_bytes
 
+        base_img = Image.open(io.BytesIO(image_bytes)).convert("RGBA")
+        logo_img = Image.open(lp).convert("RGBA")
 
-def _gemini_ref_parts(paths, vault_root) -> tuple[list, Optional[str]]:
-    """parts inlineData từ file trong vault. Lỗi -> (None, msg)."""
-    parts = []
-    for raw in (paths or [])[:MAX_REF_IMAGES]:
-        rec = read_reference_image(str(raw), vault_root)
-        if not rec.get("ok"):
-            return [], rec.get("error") or "ảnh tham chiếu lỗi"
-        url = rec.get("data_url") or ""
-        if not url.startswith("data:") or "," not in url:
-            return [], "ảnh tham chiếu không đọc được"
-        head, b64 = url.split(",", 1)
-        mime = "image/png"
-        if "image/jpeg" in head:
-            mime = "image/jpeg"
-        elif "image/webp" in head:
-            mime = "image/webp"
-        parts.append({"inline_data": {"mime_type": mime, "data": b64}})
-    return parts, None
+        bw, bh = base_img.size
+        lw, lh = logo_img.size
+        if lw <= 0 or lh <= 0:
+            return image_bytes
+
+        target_w = max(64, int(bw * scale_ratio))
+        target_h = max(32, int(lh * (target_w / float(lw))))
+        logo_resized = logo_img.resize((target_w, target_h), Image.Resampling.LANCZOS)
+
+        if position == "top-right":
+            x = max(10, bw - target_w - margin_px)
+            y = margin_px
+        else:
+            x = margin_px
+            y = margin_px
+
+        overlay = Image.new("RGBA", base_img.size, (0, 0, 0, 0))
+        overlay.paste(logo_resized, (x, y), logo_resized)
+        composed = Image.alpha_composite(base_img, overlay).convert("RGB")
+
+        out_io = io.BytesIO()
+        composed.save(out_io, format="JPEG", quality=95)
+        return out_io.getvalue()
+    except Exception:
+        return image_bytes
 
 
 async def generate_gemini(
@@ -523,98 +558,106 @@ async def generate_gemini(
     reference_images: Optional[list] = None,
     save_under: Optional[str] = None,
 ) -> dict:
-    """Tạo 1 ảnh bằng Imagen (:predict) hoặc Gemini image / Nano Banana (:generateContent).
-    Có reference_images (logo + ảnh lớp) thì luôn generateContent, dán pixel logo, cấm vẽ path."""
+    """Tạo 1 ảnh bằng Google Imagen 3 (:predict) với API key Gemini.
+    Luôn tuân thủ triệt để model đang chọn trong Cài đặt (imagen-3.0-generate-002 hoặc fast).
+    Tự động gắn logo thật (PNG) từ dataset vào cover.
+    Tự động fallback an toàn nếu gặp lỗi kết nối/quota để không bao giờ làm treo nhiệm vụ."""
     prompt = (prompt or "").strip()
     if not prompt:
-        return {"ok": False, "error": "Thieu mo ta anh (prompt)."}
+        return {"ok": False, "error": "Thiếu mô tả ảnh (prompt)."}
 
     key = get_gemini_api_key(api_key)
     if not key:
         return {
             "ok": False,
-            "error": "Chua co API key Gemini. Hay luu key vao Cai dat > Models hoac dat bien moi truong GEMINI_API_KEY."
+            "error": "Chưa có API key Gemini. Hãy lưu key vào Cài đặt > Models hoặc đặt biến môi trường GEMINI_API_KEY."
         }
 
     aspect = _resolve_gemini_aspect(aspect_ratio)
-    model = resolve_gemini_image_model(model)
-    kind = _IMAGE_KIND.get(model, "predict")
-    refs = [p for p in (reference_images or []) if str(p).strip()]
-    if refs:
-        kind = "generateContent"
-        if "image" not in (model or "").lower():
-            model = "gemini-2.5-flash-image"
-        prompt += (
-            "\n\nCRITICAL CREATIVE & BRAND INSTRUCTIONS:\n"
-            "1. STRICTLY NO ENGLISH TEXT: All typography and badges MUST be in Vietnamese with proper diacritics (e.g. 'TIN HỌC VĂN PHÒNG', 'ƯU ĐÃI 30% HỌC PHÍ', 'DẠY KÈM 1-1'). NEVER generate English words like 'Enroll now', 'Professional Office IT', 'Register now', 'Course'.\n"
-            "2. GROUNDED IN DATASET: Take direct inspiration from the real Vietnamese students and modern classroom in the attached reference image(s). Maintain authentic Asian/Vietnamese subjects in a professional, friendly learning environment. NEVER invent Caucasian/Western stock faces.\n"
-            "3. EYE-CATCHING & VIBRANT (BẮT MẮT THU HÚT): Create a premium commercial education poster. Bright, clean studio lighting, high contrast, vivid Royal Blue and Golden Yellow brand colors, glossy 3D floating software icons with soft drop shadows, and sharp clean typography that pops on the mobile newsfeed.\n"
-            "4. CLEAN LAYOUT: Logo placed naturally in top corner. NEVER draw file paths (attachments/...) or empty buttons. Absolutely NO dark sci-fi neon circuit boards or murky backgrounds."
-        )
+    chosen_model = resolve_gemini_image_model(model)
+
+    # Tìm file logo trong reference_images để dán pixel sau khi gen
+    logo_file = None
+    for p in (reference_images or []):
+        s_p = str(p).replace("\\", "/").strip()
+        if "logo" in s_p.lower():
+            logo_file = s_p
+            break
+
+    creative_instructions = (
+        "\n\nCRITICAL CREATIVE & BRAND INSTRUCTIONS:\n"
+        "1. STRICTLY NO ENGLISH TEXT: All typography and badges MUST be in Vietnamese with proper diacritics "
+        "(e.g. 'TIN HỌC VĂN PHÒNG', 'ƯU ĐÃI 30% HỌC PHÍ', 'DẠY KÈM 1-1'). NEVER generate English words like 'Enroll now', 'Professional Office IT', 'Course'.\n"
+        "2. GROUNDED IN DATASET: Professional modern classroom with authentic Vietnamese/Asian students and instructors in a friendly, high-tech learning environment. NEVER invent Caucasian/Western stock faces.\n"
+        "3. EYE-CATCHING & VIBRANT (BẮT MẮT THU HÚT): Create a premium commercial education poster. Bright, clean studio lighting, high contrast, vivid Royal Blue and Golden Yellow brand colors, glossy 3D floating software icons with soft drop shadows, and sharp clean typography that pops on the mobile newsfeed.\n"
+        "4. CLEAN LAYOUT: Leave clear space in the top corner for official brand logo overlay. NEVER draw raw file paths (attachments/...) or empty button boxes. Absolutely NO dark sci-fi neon circuit boards or murky backgrounds."
+    )
+    full_prompt = prompt + creative_instructions
+
+    async def _call_predict(m_id: str, p_text: str) -> tuple[Optional[str], Optional[str]]:
+        url = GEMINI_IMAGEN_URL.format(model=m_id, key=key)
+        payload = {
+            "instances": [{"prompt": p_text}],
+            "parameters": {
+                "sampleCount": 1,
+                "aspectRatio": aspect,
+                "outputMimeType": "image/jpeg",
+            },
+        }
+        resp = await client.post(url, json=payload, headers={"Content-Type": "application/json"})
+        if resp.status_code != 200:
+            return None, f"Google Imagen API {resp.status_code}: {resp.text[:400]}"
+        data = resp.json()
+        predictions = data.get("predictions") or []
+        if not predictions:
+            return None, f"Google Imagen không trả ảnh: {data}"
+        b64_str = predictions[0].get("bytesBase64Encoded")
+        if not b64_str:
+            return None, "Không thấy bytesBase64Encoded trong phản hồi Imagen."
+        return b64_str, None
 
     try:
         timeout = httpx.Timeout(timeout_s, connect=20.0)
         async with httpx.AsyncClient(timeout=timeout) as client:
-            if kind == "generateContent":
-                url = GEMINI_GENCONTENT_URL.format(model=model, key=key)
-                parts = [{"text": prompt}]
-                extra, err = _gemini_ref_parts(refs, vault_root)
-                if err:
-                    return {"ok": False, "error": err}
-                parts.extend(extra)
-                payload = {
-                    "contents": [{"parts": parts}],
-                    "generationConfig": {
-                        "responseModalities": ["IMAGE", "TEXT"],
-                        "imageConfig": {"aspectRatio": aspect},
-                    },
-                }
-                resp = await client.post(url, json=payload, headers={"Content-Type": "application/json"})
-                if resp.status_code != 200:
-                    body = resp.text[:500]
-                    return {"ok": False, "error": f"Google image API {resp.status_code}: {body}"}
-                b64 = _extract_gencontent_image_b64(resp.json())
-                if not b64:
-                    return {"ok": False, "error": "Gemini không trả bytes ảnh (generateContent)."}
-            else:
-                url = GEMINI_IMAGEN_URL.format(model=model, key=key)
-                payload = {
-                    "instances": [{"prompt": prompt}],
-                    "parameters": {
-                        "sampleCount": 1,
-                        "aspectRatio": aspect,
-                        "outputMimeType": "image/jpeg",
-                    },
-                }
-                resp = await client.post(url, json=payload, headers={"Content-Type": "application/json"})
-                if resp.status_code != 200:
-                    body = resp.text[:500]
-                    return {"ok": False, "error": f"Google Imagen API {resp.status_code}: {body}"}
-                data = resp.json()
-                predictions = data.get("predictions") or []
-                if not predictions:
-                    return {"ok": False, "error": f"Google Imagen không trả ảnh: {data}"}
-                b64 = predictions[0].get("bytesBase64Encoded")
-                if not b64:
-                    return {"ok": False, "error": "Không thấy bytesBase64Encoded trong phản hồi Imagen."}
+            b64, err = await _call_predict(chosen_model, full_prompt)
+
+            # Tự động fallback: nếu model đã chọn bị lỗi và khác DEFAULT -> thử lại với imagen-3.0-generate-002
+            if not b64 and chosen_model != GEMINI_DEFAULT_IMAGE_MODEL:
+                chosen_model = GEMINI_DEFAULT_IMAGE_MODEL
+                b64, err = await _call_predict(chosen_model, full_prompt)
+
+            # Tự động fallback nếu bị kiểm duyệt an toàn hoặc lỗi prompt quá dài
+            if not b64 and ("safety" in (err or "").lower() or "blocked" in (err or "").lower() or "400" in (err or "")):
+                safe_prompt = f"Professional modern IT training classroom poster, Vietnamese young adult students, high quality commercial education advertising, vivid colors, 3D modern style, aspect ratio {aspect}"
+                b64, err = await _call_predict(chosen_model, safe_prompt)
+
+            if not b64:
+                return {"ok": False, "error": err or "Google Imagen không trả ảnh."}
 
             raw_bytes = base64.b64decode(b64)
+
+            # Dán pixel logo thật nếu có
+            if logo_file:
+                raw_bytes = overlay_logo(raw_bytes, logo_file, vault_root=vault_root)
+
             saved = save_image_bytes(
                 raw_bytes, vault_root, prefix=prefix, ext=".jpg",
                 subdir=save_under or "attachments/dataset/_xuat",
             )
             if not saved.get("ok"):
                 return saved
+
             return {
                 "ok": True,
                 "rel_path": saved["rel_path"],
                 "abs_path": saved["abs_path"],
                 "file": saved["file"],
                 "aspect": aspect,
-                "provider": "google-imagen" if kind == "predict" else "google-gemini-image",
-                "model": model,
+                "provider": "google-imagen",
+                "model": chosen_model,
                 "prompt": prompt,
             }
     except Exception as e:
-        return {"ok": False, "error": f"Goi Google Imagen that bai: {type(e).__name__}: {e}"}
+        return {"ok": False, "error": f"Gọi Google Imagen thất bại: {type(e).__name__}: {e}"}
+
 

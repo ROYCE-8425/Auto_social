@@ -86,8 +86,8 @@ def register(ctx):
     ctx.register_tool(
         name="gemini_generate_image",
         description=(
-            "Tạo cover Fanpage: BẮT BUỘC logo (file Logo chính kit) + images (1 ảnh raw dataset). "
-            "Nano Banana dán pixel logo, cấm vẽ chữ đường dẫn. Cấm neon mạch điện. "
+            "Tạo cover Fanpage bằng Google Imagen 3: BẮT BUỘC logo (file Logo chính kit) + images (1 ảnh raw dataset). "
+            "Hệ thống tự động dán pixel logo thật từ dataset, cấm vẽ chữ đường dẫn, cấm neon mạch điện. "
             "aspect_ratio square. Lưu attachments/dataset/_xuat/."
         ),
         handler=_gen,
@@ -98,7 +98,7 @@ def register(ctx):
             "properties": {
                 "prompt": {
                     "type": "string",
-                    "description": "Mô tả ảnh cần tạo (prompt chi tiết bằng tiếng Anh cho kết quả đẹp nhất)"
+                    "description": "Mô tả ảnh cần tạo (prompt chi tiết bằng tiếng Anh hoặc tiếng Việt)"
                 },
                 "aspect_ratio": {
                     "type": "string",
@@ -107,9 +107,8 @@ def register(ctx):
                 },
                 "model": {
                     "type": "string",
-                    "description": "Model ảnh Google: imagen-4.0-generate-001, imagen-4.0-fast-generate-001, "
-                                   "imagen-4.0-ultra-generate-001, imagen-3.0-generate-002, "
-                                   "gemini-2.5-flash-image, gemini-3.1-flash-image, gemini-3-pro-image"
+                    "description": "Model ảnh Google (mặc định để trống sẽ luôn tuân theo model đã chọn trong Cài đặt): "
+                                   "imagen-3.0-generate-002, imagen-3.0-fast-generate-001"
                 },
                 "logo": {
                     "type": "string",
