@@ -1001,18 +1001,19 @@ async def generate_gemini(
             return banner_res
         # Nếu Kiểu 2 lỗi thì tiếp tục thử Kiểu 1 bên dưới
 
-    has_quote_text = '"' in prompt or "“" in prompt or any(k in p_lower for k in ("vẽ chữ", "ghi chữ", "with text", "featuring text"))
-    if has_quote_text:
-        block_5 = (
-            "[BLOCK 5 - VIETNAMESE TYPOGRAPHY GUARDRAIL]: Use clean sans-serif typography like Inter, Roboto or Arial. "
-            "Render text with full Unicode support. Keep all Vietnamese diacritics strictly attached to their base letters (ă, â, ê, ô, ơ, ư, đ), "
-            "do not separate accents from characters. Use advanced high-quality font rendering, text must be horizontal, sharp, correctly spelled, and perfectly readable without any distortion.\n"
-            "STRICT NEGATIVE: Absolutely NO gibberish text, NO misspelled words, NO detached accents, NO duplicate faces, NO distorted hands, NO dark neon circuit lines."
-        )
-    else:
-        block_5 = (
-            "[BLOCK 5 - STRICT NEGATIVE]: Absolutely NO text, NO letters, NO words, NO typography, NO watermark, NO distorted hands, NO duplicate faces, NO dark neon circuit lines."
-        )
+    # BẢO VỆ TUYỆT ĐỐI CHỐNG ĐÁ NHAU:
+    # Lọc bỏ toàn bộ chuỗi text trong ngoặc kép để Google Imagen CHỈ vẽ nền visual sạch,
+    # tuyệt đối không để AI tự vẽ chữ dẫn đến lỗi chính tả (PoweProont, HỌY KỂM) và đè lên nhau.
+    clean_prompt = re.sub(r'["“][^"”]+["”]', '', prompt)
+    for kw in ("hiển thị chữ", "vẽ chữ", "ghi chữ", "with text", "featuring text"):
+        clean_prompt = re.sub(re.escape(kw), '', clean_prompt, flags=re.IGNORECASE)
+    clean_prompt = " ".join(clean_prompt.split())
+    if not clean_prompt:
+        clean_prompt = "Commercial advertising photography, professional tech classroom, confident Vietnamese learner working on laptop, modern corporate office"
+
+    block_5 = (
+        "[BLOCK 5 - STRICT NEGATIVE]: Absolutely NO text, NO words, NO letters, NO numbers, NO alphabet, NO typography, NO watermark, NO logo, NO banner, NO buttons, NO distorted hands, NO duplicate faces, NO dark neon circuit lines, clean smooth empty left side reserved as copy space."
+    )
 
     creative_instructions = (
         "\n\nCRITICAL CREATIVE DIRECTOR & BRAND RULES:\n"
@@ -1022,7 +1023,7 @@ async def generate_gemini(
         "[BLOCK 4 - STYLE]: Commercial education advertising photography, 8k resolution, crisp focus, natural skin texture, realistic, no uncanny valley.\n"
         + block_5
     )
-    full_prompt = prompt + creative_instructions
+    full_prompt = clean_prompt + creative_instructions
 
     key = get_gemini_api_key(api_key)
 

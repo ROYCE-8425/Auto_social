@@ -69,17 +69,15 @@ Mọi prompt tạo ảnh cho bất kỳ ngành học nào đều cấu thành t�
 
 ---
 
-### 3. CÔNG THỨC PROMPT BẮT BUỘC KHI CẦN AI GEMINI RENDER CHỮ TRỰC TIẾP (BÍ KÍP KHÓA DẤU UNICODE)
+### 3. NGUYÊN TẮC ĐỘC QUYỀN 1 TẦNG CHỮ (CHỐNG ĐÁ NHAU VÀ SAI CHÍNH TẢ 100%)
 
-Nếu muốn AI tự vẽ chữ trực tiếp trong poster, BẮT BUỘC phải áp dụng 4 nguyên tắc kỹ thuật sau:
-1. **Chỉ định font chuẩn Unicode:** Sử dụng Inter hoặc Roboto (2 font quốc dân ít lỗi dấu nhất đối với AI).
-2. **Kích hoạt chế độ render chất lượng cao:** Yêu cầu advanced text renderer, full Unicode support.
-3. **Khóa dấu không cho tách rời:** Đặt chữ trong ngoặc kép "..." và kèm chỉ thị: "Keep all Vietnamese diacritics strictly attached to their base letters (ă, â, ê, ô, ơ, ư, đ), do not separate accents from characters".
-4. **Định dạng hiển thị:** Chữ nằm ngang (horizontal), sắc nét, không bị méo mó (without distortion).
+TUYỆT ĐỐI KHÔNG BAO GIỜ vừa yêu cầu AI vẽ chữ, vừa dùng code chèn thẻ chữ lên cùng một ảnh.
+Thực tế đã chứng minh: Các mô hình AI diffusion luôn bị hallucinate sai chính tả tiếng Việt (như 'PoweProont', 'HỌY KỂM', mất dấu) và gây ra thảm họa 2 tầng chữ đè lên nhau.
 
-#### Cú pháp Prompt chuẩn mẫu (Copy dùng ngay):
-```text
-A clear, high-resolution commercial graphic poster, featuring the exact text inside the quotation marks: "[NỘI DUNG TIẾNG VIỆT CẦN VIẾT]". Use clean sans-serif typography like Inter, Roboto or Arial. Render text with full Unicode support. Keep all Vietnamese diacritics strictly attached to their base letters (ă, â, ê, ô, ơ, ư, đ), do not separate accents from characters. The text must be horizontal, sharp, correctly spelled, and perfectly readable without any distortion. Advanced high-quality text rendering.
-```
+QUY TRÌNH CHUẨN DUY NHẤT ÁP DỤNG TRÊN TOÀN HỆ THỐNG:
+1. **AI (Google Imagen):** Chỉ vẽ nền visual sạch (nhân vật, bàn làm việc, laptop). Nửa bên trái bắt buộc là nền navy trơn/mờ sạch sẽ, cấm vẽ chữ 100%.
+2. **Engine Đồ Họa (Pillow):** Là đơn vị duy nhất chịu trách nhiệm dán chữ (tiêu đề, ưu đãi, kèm 1-1) và dán logo Sao Việt chuẩn Unicode lên ảnh.
+
+Nhờ vậy, bức ảnh chỉ có DUY NHẤT 1 tầng chữ sắc nét, 0% rủi ro sai chính tả, và 0% rủi ro bị đè/đá nhau!
 
 
