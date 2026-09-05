@@ -564,19 +564,28 @@ def overlay_logo(
         if lw <= 0 or lh <= 0:
             return image_bytes
 
-        target_w = max(64, int(bw * scale_ratio))
-        target_h = max(32, int(lh * (target_w / float(lw))))
+        from PIL import ImageDraw
+        target_w = max(140, int(bw * scale_ratio))
+        target_h = max(40, int(lh * (target_w / float(lw))))
         logo_resized = logo_img.resize((target_w, target_h), Image.Resampling.LANCZOS)
 
+        pad_x = 16
+        pad_y = 10
+        card_w = target_w + pad_x * 2
+        card_h = target_h + pad_y * 2
+
         if position == "top-right":
-            x = max(10, bw - target_w - margin_px)
+            x = max(10, bw - card_w - margin_px)
             y = margin_px
         else:
             x = margin_px
             y = margin_px
 
         overlay = Image.new("RGBA", base_img.size, (0, 0, 0, 0))
-        overlay.paste(logo_resized, (x, y), logo_resized)
+        draw_ov = ImageDraw.Draw(overlay)
+        # Thẻ nền trắng bo góc viền vàng kim bảo vệ logo sắc nét 100% trên mọi nền ảnh
+        draw_ov.rounded_rectangle([x, y, x + card_w, y + card_h], radius=16, fill=(255, 255, 255, 250), outline=(255, 215, 0, 220), width=2)
+        overlay.paste(logo_resized, (x + pad_x, y + pad_y), logo_resized)
         composed = Image.alpha_composite(base_img, overlay).convert("RGB")
 
         out_io = io.BytesIO()
@@ -949,6 +958,7 @@ async def generate_gemini(
     aspect = _resolve_gemini_aspect(aspect_ratio)
     chosen_model = resolve_gemini_image_model(model)
 
+    v_root = _resolve_vault(vault_root)
     logo_file = None
     raw_photo_file = None
     for p in (reference_images or []):
@@ -958,20 +968,27 @@ async def generate_gemini(
         elif not raw_photo_file and s_p.endswith((".jpg", ".png", ".jpeg", ".webp")):
             raw_photo_file = s_p
 
-    # QUY TẮC TỶ LỆ 7 / 3:
+    if not logo_file:
+        for cand in [
+            "attachments/dataset/chung/thsv-logo-2025.png",
+            "attachments/dataset/chung/thsv-logo-big.png",
+        ]:
+            if (v_root / cand).is_file():
+                logo_file = cand
+                break
+
     p_lower = prompt.lower()
-    force_kieu_1 = (
-        (style_preference == "kieu_1") or
-        any(k in p_lower for k in ("kiểu 1", "kieu 1", "3d poster", "3d render", "mockup", "studio lighting", "ai pure"))
-    )
-    force_kieu_2 = (
-        (style_preference == "kieu_2") or
-        any(k in p_lower for k in ("kiểu 2", "kieu 2", "ảnh thật", "anh that", "real photo", "dataset", "banner", "poster layout"))
+    # HƯỚNG TIẾP CẬN MỚI TRIỆT ĐỂ:
+    # 1. Toàn bộ Cover/Banner khóa học mặc định 100% sử dụng Deterministic Graphic Engine (banner_templates)
+    #    để đảm bảo: 100% tiếng Việt Unicode chuẩn không lỗi font, 100% giữ logo sắc nét, 100% layout chuẩn agency.
+    # 2. Tuyệt đối không để AI (Google Imagen) tự vẽ chữ tiếng Việt ("KÉ TOÀN", "TÀI CHINC") hay vẽ hộp rỗng mất logo.
+    # 3. Chỉ khi yêu cầu rõ ràng "ai pure" / "chỉ vẽ ảnh ai không dùng ảnh thật" mới gọi Google Imagen.
+    is_pure_ai = (
+        style_preference == "ai_pure" or
+        any(k in p_lower for k in ("ai pure", "chi ve anh ai", "không dùng ảnh thật", "khong dung anh that", "pure ai"))
     )
 
-    should_use_kieu_2 = force_kieu_2 or (not force_kieu_1 and (random.random() < 0.70))
-
-    if should_use_kieu_2:
+    if not is_pure_ai:
         banner_res = generate_authentic_banner_cover(
             vault_root=vault_root,
             logo_path=logo_file,
