@@ -17,7 +17,7 @@ Ke hoach van hanh dang bai tu dong moi ngay 1 bai tren he thong 30 Fanpage ve ti
 2. Xoay vong noi dung va nganh dao tao theo folder dataset:
    - Tin hoc van phong: `tin-hoc _ai`
    - Ke toan thuc hanh: `ke-toan`
-   - Ve ky thuat AutoCAD / Co khi: `VE KY THUAT` hoac `co-khi`
+   - Ve ky thuat AutoCAD / Co khi: `ve-ky-thuat` hoac `co-khi`
    - Thiet ke do hoa: `do-hoa`
    - Ung dung AI van phong: `ai`
    - Marketing thuc chien: `marketing`
@@ -46,9 +46,9 @@ Ke hoach van hanh dang bai tu dong moi ngay 1 bai tren he thong 30 Fanpage ve ti
 - [ ] Page 19: Ke toan Thuc hanh Sao Viet TP.HCM - nganh: ke-toan
 - [ ] Page 20: Ke toan Thuc hanh Sao Viet Binh Duong - nganh: ke-toan
 - [ ] Page 21: Ke toan Thuc hanh Sao Viet Dong Nai - nganh: ke-toan
-- [ ] Page 22: Dao tao AutoCAD Sao Viet Bien Hoa - nganh: VE KY THUAT
-- [ ] Page 23: Dao tao AutoCAD Sao Viet Binh Duong - nganh: VE KY THUAT
-- [ ] Page 24: Dao tao AutoCAD Sao Viet Thu Duc - nganh: VE KY THUAT
+- [ ] Page 22: Dao tao AutoCAD Sao Viet Bien Hoa - nganh: ve-ky-thuat
+- [ ] Page 23: Dao tao AutoCAD Sao Viet Binh Duong - nganh: ve-ky-thuat
+- [ ] Page 24: Dao tao AutoCAD Sao Viet Thu Duc - nganh: ve-ky-thuat
 - [ ] Page 25: Thiet ke Do hoa Sao Viet TP.HCM - nganh: do-hoa
 - [ ] Page 26: Thiet ke Do hoa Sao Viet Binh Duong - nganh: do-hoa
 - [ ] Page 27: Dao tao AI Van phong Sao Viet - nganh: ai

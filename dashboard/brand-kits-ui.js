@@ -240,7 +240,10 @@
         out.folders = [];
       } else {
         var parts = raw.split(/[,;|/]+/).map(function (s) { return s.trim(); }).filter(Boolean);
-        out.folders = parts;
+        out.folders = parts.map(function (id) {
+          if (/^ve[\s_-]*ky[\s_-]*thuat$/i.test(id) || id === "VE KY THUAT") return "ve-ky-thuat";
+          return id;
+        });
         out.folder = parts[0] || "";
       }
     }
@@ -298,6 +301,7 @@
 
   var FOLDER_KW = {
     "tin-hoc _ai": ["tin hoc", "word", "excel", "van phong", "mos", "powerpoint", "ai ", "chatgpt"],
+    "ve-ky-thuat": ["autocad", "cad", "solidworks", "co khi", "ve ky thuat", "noi that", "ve ky thuat"],
     "VE KY THUAT": ["autocad", "cad", "solidworks", "co khi", "ve ky thuat", "noi that"],
     "ke-toan": ["ke toan", "chung tu", "so sach", "thue", "misa"],
     "do-hoa": ["do hoa", "photoshop", "illustrator", "corel"]

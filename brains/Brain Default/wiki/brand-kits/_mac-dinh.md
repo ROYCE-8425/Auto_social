@@ -51,24 +51,29 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Vẽ kỹ th
 - Điều khoản sử dụng, Chính sách bảo mật, Xử lý khiếu nại
 - Bản đồ các cơ sở, Sitemap
 
-## Hệ thống 12 cơ sở đào tạo chuẩn (nguồn chốt từ user 2026-09-04)
-### Trung Tâm Đào Tạo TP HCM
-- Bình Thạnh: Số 16, 21/12 Lê Trực, Phường 7, Q. Bình Thạnh (Chung Cư Lê Trực)
-- Quận 7: Số 515 B2/12, Lê Văn Lương, Tân Phong, Quận 7
-- Quận 6: Phòng A206 số 189 Kinh Dương Vương, Phường 12, Quận 6 (Trường CĐ GTVT Trung Ương VI)
-- Quận 12: 247/31 Hà Huy Giáp, Thạnh Lộc, Quận 12
-- Quận 9 - Thủ Đức: 49 Đường Số 3, Tăng Nhơn Phú B, Tp. Thủ Đức
-- Tân Bình: 180 Phạm Văn Bạch, Phường 15, Tân Bình, Thành phố Hồ Chí Minh
+## Hệ thống cơ sở: địa chỉ MỚI (Fanpage) và CŨ (list _mac-dinh trước 2026-09-05)
 
-### Đào Tạo Tại Bình Dương
-- Thuận An: 1/513 KDC TÀI LỰC, Tổ 9, Khu phố Hòa Lân 2, Thuận An - Bình Dương
-- Dĩ An: 184/19/11 Đặng Văn Mây, KP. Đông Chiêu, P. Tân Đông Hiệp, Dĩ An - Bình Dương
-- Thủ Dầu Một: Số 107, D5, KDC Phú Hòa 1, Khu 4, Thủ Dầu Một, Bình Dương
-- Tân Uyên: 70 Đ. ĐX-03A, Tân Vĩnh Hiệp, Tân Uyên, Bình Dương
+Đăng bài / chân trang: dùng cột **Mới**. Cột Cũ chỉ để biết chỗ chuyển cơ sở.
 
-### Đào Tạo Tại Đồng Nai
-- Biên Hòa: 91 Đoàn Văn Cự, P. Tam Hòa, Biên Hòa, Đồng Nai
-- Long Thành: 72 Đinh Bộ Lĩnh, Lộc An, Long Thành, Đồng Nai
+| Chi nhánh | Mới (Fanpage, đăng bài) | Cũ (list trước đây) | Đổi? |
+|---|---|---|---|
+| Bình Thạnh | 193 Nguyễn Xí, phường Bình Thạnh, TP.HCM | Số 16, 21/12 Lê Trực, Phường 7, Q. Bình Thạnh (Chung Cư Lê Trực) | Có |
+| Quận 7 | TM-20 Sảnh B, Chung cư Florita, KĐT Him Lam, P. Tân Hưng, TP.HCM | Số 515 B2/12, Lê Văn Lương, Tân Phong, Quận 7 | Có |
+| Quận 6 / Bình Tân | Căn TM-0.39, Moonlight Boulevard, 510 Kinh Dương Vương, P. An Lạc A, Quận Bình Tân, TP.HCM | Phòng A206 số 189 Kinh Dương Vương, Phường 12, Quận 6 (Trường CĐ GTVT Trung Ương VI) | Có (page tên Q6, địa chỉ mới Bình Tân) |
+| Quận 12 | A23 KDC Thới An, Đường Lê Thị Riêng, P. Thới An, Quận 12, TP.HCM | 247/31 Hà Huy Giáp, Thạnh Lộc, Quận 12 | Có |
+| Thủ Đức | 133/2 Đỗ Xuân Hợp, P. Phước Long, Thủ Đức, TP.HCM | 49 Đường Số 3, Tăng Nhơn Phú B, Tp. Thủ Đức | Có |
+| Tân Bình | 180 Phạm Văn Bạch, Phường 15, Tân Bình, TP.HCM | 180 Phạm Văn Bạch, Phường 15, Tân Bình, Thành phố Hồ Chí Minh | Không |
+| Thuận An | 69 D32, Làng chuyên gia Oasis, phường An Phú, TP.HCM (Thuận An, Bình Dương cũ) | 1/513 KDC TÀI LỰC, Tổ 9, Khu phố Hòa Lân 2, Thuận An - Bình Dương | Có |
+| Dĩ An | 184/19/11 Đặng Văn Mây, KP. Đông Chiêu, P. Tân Đông Hiệp, Dĩ An, Bình Dương | 184/19/11 Đặng Văn Mây, KP. Đông Chiêu, P. Tân Đông Hiệp, Dĩ An - Bình Dương | Không |
+| Thủ Dầu Một | Số 107, D5, KDC Phú Hòa 1, Khu 4, Thủ Dầu Một, Bình Dương | Số 107, D5, KDC Phú Hòa 1, Khu 4, Thủ Dầu Một, Bình Dương | Không |
+| Tân Uyên | Số 20 Đường ĐX 12, Phường Tân Khánh (Tân Uyên, Bình Dương cũ) | 70 Đ. ĐX-03A, Tân Vĩnh Hiệp, Tân Uyên, Bình Dương | Có |
+| Biên Hòa | 91 Đoàn Văn Cự, P. Tam Hòa, Biên Hòa, Đồng Nai (một số page Autocad ghi 93) | 91 Đoàn Văn Cự, P. Tam Hòa, Biên Hòa, Đồng Nai | Hầu như không |
+| Long Thành | 72 Đinh Bộ Lĩnh, Lộc An, Long Thành, Đồng Nai | 72 Đinh Bộ Lĩnh, Lộc An, Long Thành, Đồng Nai | Không (page Tin học Long Thành Fanpage còn ghi Tổ 36 Ấp Hàng Gòn) |
+| Vũng Tàu (Sao Việt) | 293 Bình Giã, Phường 8, TP. Vũng Tàu | (thêm sau list 12; cùng 293 Bình Giã) | Không |
+| Trung Tâm Tin Học Vũng Tàu | 1596 Đ. 30 Tháng 4, Phường 12, Vũng Tàu | không có trong list 12 | Page riêng |
+| Bà Rịa | 70-96 Hai Mươi Bảy Tháng Tư, Phước Hiệp, TP. Bà Rịa | không có trong list 12 | Page riêng |
+| Trí Việt | 968 Phạm Văn Thuận, Biên Hòa, Đồng Nai | không có trong list 12 | Page riêng |
+
 
 ## USP chuẩn từ Fanpage thực tế
 - Học thực hành 100% trên máy tính và chứng từ thực tế của doanh nghiệp
@@ -79,15 +84,15 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Vẽ kỹ th
 
 ## Logo và dataset ảnh
 - Logo: attachments/dataset/chung/ (chỉ dùng làm watermark hoặc tham chiếu, không đăng logo trần)
-- Thư mục ảnh theo ngành: đúng id trong `wiki/brand-kits/_the-khoa-hoc.md` (folder `attachments/dataset/<id>/`). Không khớp chủ đề thì không lấy ngành khác cho có.
+- Thư mục ảnh theo ngành: đúng id trong `wiki/brand-kits/_the-khoa-hoc.md` (folder `attachments/dataset/<id>/`). Không khớp chủ đề thì không lấy ngành khác cho có
 - Hai kiểu ảnh bắt buộc bám mẫu:
   + Kiểu A (có ảnh ngành): bám mẫu attachments/dataset/_mau/mau-khoa-hoc-co-anh-goc.png (ảnh thật lớp học + panel xanh/vàng tóm tắt 3-5 ý chính + logo Sao Việt góc trên).
   + Kiểu B (không có ảnh ngành, lịch lễ): bám mẫu attachments/dataset/_mau/mau-lich-le-tu-gen.png (poster đủ họa tiết đỏ vàng lễ hội, đèn lồng, trăng, 2 khối lịch nghỉ và học lại, logo Sao Việt; cấm vẽ poster tối giản).
-- Album tối ưu phí: tối đa 3 gen/bài. Mặc định 1 cover gen + 4-5 ảnh gốc dataset (hướng 3/7). Cover luôn _xuat. Kiểu B: 1 poster gen. Goal ngắn (Trung thu, kế toán ca tối) tự bung luật skill.
-- Nơi lưu ảnh gen: attachments/dataset/_xuat/.
-- Gen ảnh bằng tool của engine đang chạy (Grok: image_gen / image_edit). Không bắt ChatGPT.
-- Đối chiếu số liệu: caption và chữ trên ảnh bắt buộc cùng ngày/giờ và số liệu. Nếu lệch phải sửa caption trước khi đăng, không đăng lệch.
-- Đăng đúng 1 lần: chỉ gọi fb_page_photo hoặc fb_page_post 1 lần. CẤM gọi fb_page_delete trừ khi user bảo xóa đúng post_id.
+- Album tối ưu phí: tối đa 3 gen/bài. Mặc định 1 cover gen + 4-5 ảnh gốc dataset (hướng 3/7). Cover luôn _xuat. Kiểu B: 1 poster gen. Goal ngắn (Trung thu, kế toán ca tối) tự bung luật skill
+- Nơi lưu ảnh gen: attachments/dataset/_xuat/
+- Gen ảnh bằng tool của engine đang chạy (Grok: image_gen / image_edit). Không bắt ChatGPT
+- Đối chiếu số liệu: caption và chữ trên ảnh bắt buộc cùng ngày/giờ và số liệu. Nếu lệch phải sửa caption trước khi đăng, không đăng lệch
+- Đăng đúng 1 lần: chỉ gọi fb_page_photo hoặc fb_page_post 1 lần. CẤM gọi fb_page_delete trừ khi user bảo xóa đúng post_id
 
 ## Khách và giọng (học từ Fanpage Sao Việt)
 - Khách: người đi làm, người trái ngành muốn học nghề thực chiến, sinh viên cần kỹ năng việc làm, phụ huynh và doanh nghiệp
@@ -97,7 +102,7 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Vẽ kỹ th
 - CTA: Nhắn tin Fanpage hoặc liên hệ Hotline/Zalo: 0931144858 / 0823 552 558 để được tư vấn lộ trình và xếp lịch học
 
 ## Quy chuẩn thống nhất độ dài
-- Toàn bộ các Fanpage (kể cả page chính lẫn page test Royce Shop) đều áp dụng chuẩn bài viết chuyển đổi thực chiến 60-120 dòng, đầy đủ 7 phần (Tiêu đề, nỗi đau, giải pháp, cam kết vàng, chi tiết module, ưu đãi và hệ thống 12-13 cơ sở). Người dùng xem và duyệt bài trên Royce Shop cần thấy bài viết hoàn chỉnh đúng như đăng thật trên hệ thống.
+- Toàn bộ các Fanpage (kể cả page chính lẫn page test Royce Shop) đều áp dụng chuẩn bài viết chuyển đổi thực chiến 60-120 dòng, đầy đủ 7 phần (Tiêu đề, nỗi đau, giải pháp, cam kết vàng, chi tiết module, ưu đãi và hệ thống 12-13 cơ sở). Người dùng xem và duyệt bài trên Royce Shop cần thấy bài viết hoàn chỉnh đúng như đăng thật trên hệ thống
 
 ## Cấm
 - Viết bài ngắn cụt lủn tóm tắt (dưới 30 dòng)

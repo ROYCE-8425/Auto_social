@@ -20,8 +20,8 @@ Page chuyên đồ họa: chỉ thẻ `do-hoa` → bài kế toán **không** l�
 
 ## Hai cửa
 
-- **Soạn bài Facebook** → nháp `sources/facebook-nhap/<slug>/YYYY-MM-DD.md`, không lên tường.
-- **Đăng Facebook** → lên tường, phải có `post_id`.
+- **Soạn bài Facebook** → nháp `sources/facebook-nhap/<slug>/YYYY-MM-DD.md`, không lên tường
+- **Đăng Facebook** → lên tường, phải có `post_id`
 
 ## Luật 1 chủ đề → nhiều page (lọc thẻ)
 
@@ -36,7 +36,7 @@ Khi user bảo “1 ngày 1 bài cho toàn bộ page”:
 ### Map chữ brief → thẻ (folder trên đĩa)
 
 - Word, Excel, văn phòng, MOS, AI văn phòng → `tin-hoc _ai`
-- AutoCAD, SolidWorks, cơ khí, vẽ kỹ thuật, nội thất CAD → `VE KY THUAT`
+- AutoCAD, SolidWorks, cơ khí, vẽ kỹ thuật, nội thất CAD → `ve-ky-thuat`
 - Kế toán, chứng từ, sổ sách, Misa → `ke-toan`
 - Photoshop, Illustrator, đồ họa → `do-hoa`
 - Thẻ mới: đúng `id` trong `_the-khoa-hoc.md`

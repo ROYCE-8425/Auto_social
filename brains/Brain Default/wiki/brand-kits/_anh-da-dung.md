@@ -83,9 +83,9 @@ Mỗi mục = 1 slug Fanpage. Worker bỏ các path **gốc dataset** khi chọn
 - attachments/dataset/ke-toan/z7313180134843_0d3dc0c9863ac6f6f0ab7702a8a6a7e0.jpg
 - attachments/dataset/ke-toan/9a09cd481acc9692cfdd.jpg
 - attachments/dataset/ke-toan/9931c75b10df9c81c5ce.jpg
-- attachments/dataset/VE KY THUAT/z7447269430279_adad2be0a7cdd885340dcddc6f58c23d.jpg
-- attachments/dataset/VE KY THUAT/z7381961034297_a8e7320d7c06df9a9c00be2252e01f1a.jpg
-- attachments/dataset/VE KY THUAT/hoc-ung-dung-ai-trong-thiet-ke-ban-ve-ky-thuat-autocad.jpg
+- attachments/dataset/ve-ky-thuat/z7447269430279_adad2be0a7cdd885340dcddc6f58c23d.jpg
+- attachments/dataset/ve-ky-thuat/z7381961034297_a8e7320d7c06df9a9c00be2252e01f1a.jpg
+- attachments/dataset/ve-ky-thuat/hoc-ung-dung-ai-trong-thiet-ke-ban-ve-ky-thuat-autocad.jpg
 - attachments/dataset/do-hoa/z7400314059576_bdc2e98973c8341ee3aeb533843d74ae.jpg
 - attachments/dataset/do-hoa/z7414475729796_c283a8d232470658ce1ec6f3e4f3a929.jpg
 - attachments/dataset/do-hoa/z6016063954673_62e0f5609549593a7f11012aa51998b2.jpg

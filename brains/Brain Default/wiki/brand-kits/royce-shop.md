@@ -40,12 +40,12 @@ Trung tâm Tin học Sao Việt là một trong những Trung tâm Tin học hà
 
 Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Vẽ kỹ thuật AutoCAD, Kế toán thực hành, Thiết kế đồ họa, Tin học quốc tế MOS.
 
-## Liên hệ (chân trang mọi bài)
-- Hotline mặc định: 0823 552 558
+## Liên hệ (chân trang mọi bài — số/mail/web CỦA ĐÚNG Fanpage này)
+- Hotline / Zalo: 0823 552 558
 - Email: trungtamtinhocsaoviet@gmail.com
-- Web: https://tinhocsaoviet.com/
-- Blog: https://blogdaytinhoc.com/
-- Hotline phụ/Zalo: 0931144858
+- Web: https://trannhuy.online
+- Fanpage: https://www.facebook.com/988656934325292
+
 
 ## Liên kết (chỉ khi brief cần, không nhét hết vào caption)
 - Điều khoản sử dụng, Chính sách bảo mật, Xử lý khiếu nại
@@ -58,7 +58,7 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Vẽ kỹ th
 - Quận 6: Phòng A206 số 189 Kinh Dương Vương, Phường 12, Quận 6 (Trường CĐ GTVT Trung Ương VI)
 - Quận 12: 247/31 Hà Huy Giáp, Thạnh Lộc, Quận 12
 - Quận 9 - Thủ Đức: 49 Đường Số 3, Tăng Nhơn Phú B, Tp. Thủ Đức
-- Tân Bình: 180 Phạm Văn Bạch, Phường 15, Tân Bình, Thành phố Hồ Chí Minh
+- Tân Bình: 180 Phạm Văn Bạch, Phường 15, Tân Bình, TP.HCM
 
 ### Đào Tạo Tại Bình Dương
 - Thuận An: 1/513 KDC TÀI LỰC, Tổ 9, Khu phố Hòa Lân 2, Thuận An - Bình Dương
@@ -69,6 +69,9 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Vẽ kỹ th
 ### Đào Tạo Tại Đồng Nai
 - Biên Hòa: 91 Đoàn Văn Cự, P. Tam Hòa, Biên Hòa, Đồng Nai
 - Long Thành: 72 Đinh Bộ Lĩnh, Lộc An, Long Thành, Đồng Nai
+### Đào Tạo Tại Bà Rịa - Vũng Tàu
+- Vũng Tàu: 293 Bình Giã, Phường 8, TP. Vũng Tàu, Bà Rịa - Vũng Tàu
+- Bà Rịa: 70-96 Hai Mươi Bảy Tháng Tư, Phước Hiệp, TP. Bà Rịa, Bà Rịa - Vũng Tàu (địa chỉ Fanpage Trung Tâm Tin Học Bà Rịa)
 
 ## USP chuẩn từ Fanpage thực tế
 - Học thực hành 100% trên máy tính và chứng từ thực tế của doanh nghiệp
@@ -79,25 +82,25 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Vẽ kỹ th
 
 ## Logo và dataset ảnh
 - Logo: attachments/dataset/chung/ (chỉ dùng làm watermark hoặc tham chiếu, không đăng logo trần)
-- Thư mục ảnh theo ngành: tin-hoc, co-khi, ke-toan, do-hoa, marketing, ai, tre-em, tieng-han. Không khớp chủ đề (lịch lễ, thông báo) thì không lấy ảnh ngành khác cho có.
+- Thư mục ảnh theo ngành: tin-hoc, co-khi, ke-toan, do-hoa, marketing, ai, tre-em, tieng-han. Không khớp chủ đề (lịch lễ, thông báo) thì không lấy ảnh ngành khác cho có
 - Hai kiểu ảnh bắt buộc bám mẫu:
   + Kiểu A (có ảnh ngành): bám mẫu attachments/dataset/_mau/mau-khoa-hoc-co-anh-goc.png (ảnh thật lớp học + panel xanh/vàng tóm tắt 3-5 ý chính + logo Sao Việt góc trên).
   + Kiểu B (không có ảnh ngành, lịch lễ): bám mẫu attachments/dataset/_mau/mau-lich-le-tu-gen.png (poster đủ họa tiết đỏ vàng lễ hội, đèn lồng, trăng, 2 khối lịch nghỉ và học lại, logo Sao Việt; cấm vẽ poster tối giản).
-- Album tối ưu phí: tối đa 3 gen/bài. Mặc định 1 cover gen + 4-5 ảnh gốc dataset (hướng 3/7). Cover luôn _xuat. Kiểu B: 1 poster gen. Goal ngắn (Trung thu, kế toán ca tối) tự bung luật skill.
-- Nơi lưu ảnh gen: attachments/dataset/_xuat/.
-- Gen ảnh bằng tool của engine đang chạy (Grok: image_gen / image_edit). Không bắt ChatGPT.
-- Đối chiếu số liệu: caption và chữ trên ảnh bắt buộc cùng ngày/giờ và số liệu. Nếu lệch phải sửa caption trước khi đăng, không đăng lệch.
-- Đăng đúng 1 lần: chỉ gọi fb_page_photo hoặc fb_page_post 1 lần. CẤM gọi fb_page_delete trừ khi user bảo xóa đúng post_id.
+- Album tối ưu phí: tối đa 3 gen/bài. Mặc định 1 cover gen + 4-5 ảnh gốc dataset (hướng 3/7). Cover luôn _xuat. Kiểu B: 1 poster gen. Goal ngắn (Trung thu, kế toán ca tối) tự bung luật skill
+- Nơi lưu ảnh gen: attachments/dataset/_xuat/
+- Gen ảnh bằng tool của engine đang chạy (Grok: image_gen / image_edit). Không bắt ChatGPT
+- Đối chiếu số liệu: caption và chữ trên ảnh bắt buộc cùng ngày/giờ và số liệu. Nếu lệch phải sửa caption trước khi đăng, không đăng lệch
+- Đăng đúng 1 lần: chỉ gọi fb_page_photo hoặc fb_page_post 1 lần. CẤM gọi fb_page_delete trừ khi user bảo xóa đúng post_id
 
 ## Khách và giọng (học từ Fanpage Sao Việt)
 - Khách: người đi làm, người trái ngành muốn học nghề thực chiến, sinh viên cần kỹ năng việc làm, phụ huynh và doanh nghiệp
 - Giọng văn: Thực tế, tận tâm, chuyên nghiệp, rõ ràng từng module, không nói chung chung sáo rỗng
 - Bố cục: Tiêu đề IN HOA kèm icon nổi bật, thân bài chia gạch đầu dòng rõ ràng, cam kết đào tạo thực chiến ("DUY NHẤT CHỈ CÓ TẠI TIN HỌC SAO VIỆT"), lộ trình module chi tiết, ưu đãi học phí và hệ thống 12-13 cơ sở
 - Độ dài: 60 đến 120 dòng (chuẩn bài chuyển đổi cao đầm tay, đầy đủ giá trị)
-- CTA: Nhắn tin Fanpage hoặc liên hệ Hotline/Zalo: 0931144858 / 0823 552 558 để được tư vấn lộ trình và xếp lịch học
+- CTA: Nhắn tin Fanpage hoặc liên hệ Hotline/Zalo: 0823 552 558 để được tư vấn lộ trình và xếp lịch học
 
 ## Quy chuẩn thống nhất độ dài
-- Toàn bộ các Fanpage (kể cả page chính lẫn page test Royce Shop) đều áp dụng chuẩn bài viết chuyển đổi thực chiến 60-120 dòng, đầy đủ 7 phần (Tiêu đề, nỗi đau, giải pháp, cam kết vàng, chi tiết module, ưu đãi và hệ thống 12-13 cơ sở). Người dùng xem và duyệt bài trên Royce Shop cần thấy bài viết hoàn chỉnh đúng như đăng thật trên hệ thống.
+- Toàn bộ các Fanpage (kể cả page chính lẫn page test Royce Shop) đều áp dụng chuẩn bài viết chuyển đổi thực chiến 60-120 dòng, đầy đủ 7 phần (Tiêu đề, nỗi đau, giải pháp, cam kết vàng, chi tiết module, ưu đãi và hệ thống 12-13 cơ sở). Người dùng xem và duyệt bài trên Royce Shop cần thấy bài viết hoàn chỉnh đúng như đăng thật trên hệ thống
 
 ## Cấm
 - Viết bài ngắn cụt lủn tóm tắt (dưới 30 dòng)
@@ -115,14 +118,17 @@ Trung Tâm Đào Tạo Kế Toán Sao Việt (hoặc Trung Tâm Tin Học Sao Vi
 [địa chỉ cơ sở của ĐÚNG Fanpage hoặc hệ thống 12 cơ sở]
 Hotline: 0823 552 558
 Email: trungtamtinhocsaoviet@gmail.com
-Web: https://tinhocsaoviet.com/
+Web: https://trannhuy.online
 
 ## Tuỳ biến trang (trống ở file này)
 - Tên Fanpage: Royce Shop
 - slug: royce-shop
 - Page ID: 988656934325292
 - Cơ sở / địa chỉ:
-- Hotline riêng:
+- Hotline / Zalo: 0823 552 558
+- Email Fanpage: trungtamtinhocsaoviet@gmail.com
+- Web Fanpage: https://trannhuy.online
+- Link Fanpage: https://www.facebook.com/988656934325292
 - Khoá thế mạnh:
 - Góc địa phương:
 - Thẻ khoá học: all

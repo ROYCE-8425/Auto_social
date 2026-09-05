@@ -302,6 +302,35 @@ async def handler_tests():
     check("_fmt: lỗi Graph → ERROR message",
           plug._fmt({"error": {"message": "boom"}}).startswith("ERROR: Facebook API: boom"))
 
+    # Chân trang bắt buộc theo Brand Kit
+    kit_dir = Path(tempfile.mkdtemp(prefix="javis-kit-")) / "wiki" / "brand-kits"
+    kit_dir.mkdir(parents=True)
+    (kit_dir / "page-q7.md").write_text(
+        "- Tên Fanpage: Autocad Q7\n- Page ID: P1\n"
+        "- Cơ sở / địa chỉ: TM-20 Sảnh B, Chung cư Florita, Tân Hưng\n"
+        "- Hotline / Zalo: 0935 946 407\n"
+        "- Email Fanpage: q7@example.com\n",
+        encoding="utf-8",
+    )
+
+    class _Vault:
+        vault_root = str(kit_dir.parents[1])
+
+    bad = plug._caption_kit_err("Hotline 0823 552 558\nLê Văn Lương", "P1", _Vault())
+    check("kit: caption sai hotline/địa chỉ → chan-trang-sai-kit",
+          bad and "chan-trang-sai-kit" in bad and "0935 946 407" in bad)
+    good_msg = (
+        "Học AutoCAD\nTM-20 Sảnh B, Chung cư Florita\n"
+        "Hotline/Zalo: 0935 946 407\nEmail: q7@example.com\n"
+    )
+    check("kit: caption đủ địa chỉ+hotline+email → ok",
+          plug._caption_kit_err(good_msg, "P1", _Vault()) is None)
+    miss_page = plug._caption_kit_err("x", "999", _Vault())
+    check("kit: page chưa có file kit → chua-co-brand-kit",
+          miss_page and "chua-co-brand-kit" in miss_page)
+    check("kit: không vault → không chặn (test/ctx trống)",
+          plug._caption_kit_err("x", "P1", None) is None)
+
 asyncio.run(handler_tests())
 
 if _fails:

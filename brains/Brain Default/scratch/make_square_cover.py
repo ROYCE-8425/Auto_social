@@ -313,7 +313,7 @@ def main():
             "subtitle": "AutoCAD 2D & 3D • Đọc Hiểu & Bóc Tách Bản Vẽ",
             "benefit1": "Thực hành 100% bản vẽ thực tế",
             "benefit2": "Học kèm trực tiếp trên máy",
-            "folder": "VE KY THUAT"
+            "folder": "ve-ky-thuat"
         },
         "dohoa": {
             "title": "KHÓA HỌC THIẾT KẾ ĐỒ HỌA",

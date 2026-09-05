@@ -13,4 +13,4 @@ Không có thẻ khớp chủ đề bài → không đăng page đó.
 | do-hoa | Thiết kế đồ họa |
 | ke-toan | Kế toán thực hành |
 | tin-hoc _ai | Tin học / AI |
-| VE KY THUAT | Vẽ kỹ thuật |
+| ve-ky-thuat | Vẽ kỹ thuật |

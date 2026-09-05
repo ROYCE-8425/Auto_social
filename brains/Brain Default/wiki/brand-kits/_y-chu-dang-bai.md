@@ -14,16 +14,17 @@ updated: 2026-09-04
 
 ## Nội dung (chuẩn chuyển đổi)
 
-- Độ dài 60–120 dòng. Cấm tóm tắt 10–15 dòng.
-- Tiêu đề IN HOA + emoji ngành ở dòng 1.
-- 7 phần: tiêu đề, nỗi đau, giải pháp Sao Việt, cam kết vàng, module, ưu đãi, CTA + 12–13 cơ sở.
-- Đúng ngành theo thẻ. Cấm "thời đại 4.0", "bạn có biết", em dash.
+- Độ dài 60–120 dòng. Cấm tóm tắt 10–15 dòng
+- Tiêu đề IN HOA + emoji ngành ở dòng 1
+- 7 phần: tiêu đề, nỗi đau, giải pháp Sao Việt, cam kết vàng, module, ưu đãi, CTA + **chân trang đúng kit page** (địa chỉ / hotline / email / web). Không dán 12 cơ sở khi kit chỉ 1 chi nhánh.
+- Đúng ngành theo thẻ. Cấm "thời đại 4.0", "bạn có biết", em dash
+- Trước đăng: `python scratch/kit_chan_trang.py <Page ID>` rồi dán khối CHAN_TRANG. Plugin từ chối caption sai kit.
 
 ## Ảnh & album
 
-- Cover VUÔNG 1:1 (2000x2000 hoặc 1200x1200). Safe margin 15–18%.
-- Album 4 / 6 / 7 / 8 ảnh. Cấm banner ngang 16:9 trong album.
-- Logo: `chung/thsv-logo-2025.png`. Cấm brand khác.
+- Cover VUÔNG 1:1 (2000x2000 hoặc 1200x1200). Safe margin 15–18%
+- Album 4 / 6 / 7 / 8 ảnh. Cấm banner ngang 16:9 trong album
+- Logo: `chung/thsv-logo-2025.png`. Cấm brand khác
 
 ## Lệnh ngắn
 

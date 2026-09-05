@@ -15,11 +15,102 @@ host graph-video riêng của Meta, Meta xử lý nền vài phút mới hiện 
 from __future__ import annotations
 
 import json
+import re
+from pathlib import Path
 
 GRAPH = "https://graph.facebook.com/v25.0"
 # Upload video phải đi host riêng của Meta (graph thường từ chối file video)
 GRAPH_VIDEO = "https://graph-video.facebook.com/v25.0"
 CONNECTOR_ID = "facebook-pages"
+
+
+def _digits(s):
+    return re.sub(r"\D", "", s or "")
+
+
+def _kit_field(md, *labels):
+    for lab in labels:
+        m = re.search(r"^[ \t]*[-*][ \t]*" + re.escape(lab) + r":[ \t]*(.*)$", md, re.M)
+        if m and m.group(1).strip():
+            return m.group(1).strip()
+    return ""
+
+
+def _load_page_kit(vault_root, page_id):
+    """Kit wiki/brand-kits/*.md có Page ID khớp. None nếu chưa có kit."""
+    pid = str(page_id or "").strip()
+    if not pid or not vault_root:
+        return None
+    d = Path(vault_root) / "wiki" / "brand-kits"
+    if not d.is_dir():
+        return None
+    for p in d.glob("*.md"):
+        if p.name.startswith("_"):
+            continue
+        try:
+            md = p.read_text(encoding="utf-8")
+        except OSError:
+            continue
+        got = _kit_field(md, "Page ID", "page_id", "ID Fanpage", "ID Trang")
+        if got == pid:
+            return {
+                "file": p.name,
+                "name": _kit_field(md, "Tên Fanpage") or p.stem,
+                "address": _kit_field(md, "Cơ sở / địa chỉ"),
+                "hotline": _kit_field(md, "Hotline / Zalo", "Hotline riêng", "Hotline"),
+                "email": _kit_field(md, "Email Fanpage", "Email"),
+                "web": _kit_field(md, "Web Fanpage", "Web"),
+                "md": md,
+            }
+    return None
+
+
+def _addr_needles(addr):
+    """Mẩu địa chỉ bắt buộc có trong caption (từng chi nhánh nếu kit liệt kê nhiều)."""
+    out = []
+    for part in (addr or "").split("|"):
+        part = part.strip()
+        if not part:
+            continue
+        if ":" in part[:48]:
+            part = part.split(":", 1)[1].strip()
+        bit = part.split(",")[0].strip()
+        bit = re.sub(r"\s+", " ", bit)
+        if len(bit) >= 6:
+            out.append(bit)
+    return out
+
+
+def _caption_kit_err(msg, page_id, cctx):
+    """Chặn đăng nếu caption không mang hotline/địa chỉ/email của ĐÚNG kit page."""
+    vault = getattr(cctx, "vault_root", None) if cctx is not None else None
+    if not vault:
+        return None
+    kit = _load_page_kit(vault, page_id)
+    if not kit:
+        return ("ERROR: POST_SKIP ly-do=chua-co-brand-kit. "
+                f"Page ID {page_id} chưa có file wiki/brand-kits. Không đăng.")
+    body = msg or ""
+    fold = re.sub(r"\s+", " ", body).lower()
+    miss = []
+    phone = kit.get("hotline") or ""
+    pd = _digits(phone)
+    if len(pd) >= 9 and pd not in _digits(body):
+        miss.append("hotline " + phone)
+    for needle in _addr_needles(kit.get("address") or ""):
+        if needle.lower() not in fold:
+            miss.append("địa chỉ «" + needle + "»")
+    em = (kit.get("email") or "").strip()
+    if em and "@" in em and em.lower() not in fold:
+        miss.append("email " + em)
+    if not miss:
+        return None
+    return (
+        "ERROR: POST_SKIP ly-do=chan-trang-sai-kit. Caption không khớp Brand Kit "
+        f"{kit['file']} ({kit['name']}). Thiếu: " + "; ".join(miss) +
+        ". Dán đúng khối Liên hệ / Tuỳ biến của kit trang này "
+        "(không dùng hotline mặc định 0931 144 858 hay list 12 cơ sở nếu kit không ghi vậy)."
+    )
 
 
 def _connected_ids():
@@ -232,6 +323,9 @@ async def _publish(args, ctx):
     pid, ptok, pname, err = await _resolve_page(args, token)
     if err:
         return err
+    kit_err = _caption_kit_err(msg, pid, ctx)
+    if kit_err:
+        return kit_err
     data = {}
     if msg:
         data["message"] = msg
@@ -328,6 +422,9 @@ async def _publish_photo(args, cctx):
     if perr:
         return perr
     caption = str(args.get("message") or args.get("caption") or "").strip()
+    kit_err = _caption_kit_err(caption, pid, cctx)
+    if kit_err:
+        return kit_err
     data = {"caption": caption} if caption else {}
     if url:
         d = await _post(f"{pid}/photos", {**data, "url": url}, ptok)
@@ -388,6 +485,9 @@ async def _publish_album(args, cctx):
     pid, ptok, pname, perr = await _resolve_page(args, token)
     if perr:
         return perr
+    kit_err = _caption_kit_err(str(args.get("message") or ""), pid, cctx)
+    if kit_err:
+        return kit_err
     media_ids = []
     for i, ref in enumerate(photos):
         url, path, err = _resolve_media(ref, cctx)
@@ -436,6 +536,9 @@ async def _edit_post(args, cctx):
     pid, ptok, pname, err = await _resolve_page(args, token)
     if err:
         return err
+    kit_err = _caption_kit_err(msg, pid, cctx)
+    if kit_err:
+        return kit_err
     d = await _post(post_id, {"message": msg}, ptok)
     if isinstance(d, dict) and d.get("error"):
         return _fmt(d)
