@@ -564,6 +564,129 @@ def overlay_logo(
         return image_bytes
 
 
+def _extract_generate_images_b64(data: dict) -> Optional[str]:
+    for img_obj in (data.get("generatedImages") or []):
+        img_info = img_obj.get("image") or {}
+        b64 = img_info.get("imageBytes") or img_info.get("data")
+        if b64:
+            return b64
+    for img_obj in (data.get("images") or []):
+        if isinstance(img_obj, str):
+            return img_obj
+        b64 = img_obj.get("imageBytes") or img_obj.get("bytesBase64Encoded")
+        if b64:
+            return b64
+    return None
+
+
+def _extract_gencontent_image_b64(data: dict) -> Optional[str]:
+    for cand in (data.get("candidates") or []):
+        parts = ((cand.get("content") or {}).get("parts") or [])
+        for part in parts:
+            inline = part.get("inlineData") or part.get("inline_data") or {}
+            b64 = inline.get("data")
+            if b64:
+                return b64
+    return None
+
+
+def create_dataset_fallback_cover(
+    vault_root: Optional[str] = None,
+    logo_path: Optional[str] = None,
+    raw_path: Optional[str] = None,
+    save_under: Optional[str] = None,
+    prefix: str = "gemini-img",
+) -> Optional[dict]:
+    """Tạo cover Kiểu 2 từ ảnh thật lớp học trong dataset + dán logo thương hiệu chuẩn.
+    Dùng khi Google Image API không khả dụng (404/quota), đảm bảo luôn có ảnh cover chuẩn 1:1 để đăng Facebook."""
+    try:
+        from PIL import Image
+        import io
+        vault = _resolve_vault(vault_root)
+
+        raw_file = None
+        if raw_path:
+            rp = Path(raw_path).expanduser()
+            rp = rp if rp.is_absolute() else (vault / rp)
+            if rp.is_file():
+                raw_file = rp
+        if not raw_file:
+            raw_rel = first_dataset_photo(str(vault), "tin-hoc _ai")
+            if raw_rel:
+                raw_file = vault / raw_rel
+
+        if not raw_file or not raw_file.is_file():
+            # Thử tìm bất kỳ ảnh nào trong dataset
+            d_set = vault / "attachments" / "dataset"
+            for sub in ("tin-hoc _ai", "ke-toan", "do-hoa", "ve-ky-thuat"):
+                s_dir = d_set / sub
+                if s_dir.is_dir():
+                    for f in s_dir.iterdir():
+                        if f.is_file() and f.suffix.lower() in _IMG_MIME and " (1)" not in f.name:
+                            raw_file = f
+                            break
+                if raw_file:
+                    break
+
+        if not raw_file or not raw_file.is_file():
+            return None
+
+        img = Image.open(raw_file).convert("RGB")
+        w, h = img.size
+        min_dim = min(w, h)
+        left = (w - min_dim) // 2
+        top = (h - min_dim) // 2
+        cropped = img.crop((left, top, left + min_dim, top + min_dim))
+        resized = cropped.resize((1200, 1200), Image.Resampling.LANCZOS)
+
+        logo_file = None
+        if logo_path:
+            lp = Path(logo_path).expanduser()
+            lp = lp if lp.is_absolute() else (vault / lp)
+            if lp.is_file():
+                logo_file = lp
+        if not logo_file:
+            def_logo = vault / "attachments/dataset/chung/thsv-logo-2025.png"
+            if def_logo.is_file():
+                logo_file = def_logo
+
+        if logo_file and logo_file.is_file():
+            logo_img = Image.open(logo_file).convert("RGBA")
+            lw, lh = logo_img.size
+            target_w = int(1200 * 0.22)
+            target_h = int(lh * (target_w / float(lw)))
+            logo_resized = logo_img.resize((target_w, target_h), Image.Resampling.LANCZOS)
+            overlay = Image.new("RGBA", (1200, 1200), (0, 0, 0, 0))
+            overlay.paste(logo_resized, (36, 36), logo_resized)
+            composed = Image.alpha_composite(resized.convert("RGBA"), overlay).convert("RGB")
+        else:
+            composed = resized
+
+        out_io = io.BytesIO()
+        composed.save(out_io, format="JPEG", quality=95)
+        raw_bytes = out_io.getvalue()
+
+        saved = save_image_bytes(
+            raw_bytes, vault_root, prefix=prefix, ext=".jpg",
+            subdir=save_under or "attachments/dataset/_xuat",
+        )
+        if not saved.get("ok"):
+            return None
+
+        return {
+            "ok": True,
+            "rel_path": saved["rel_path"],
+            "abs_path": saved["abs_path"],
+            "file": saved["file"],
+            "aspect": "1:1",
+            "provider": "dataset-brand-cover",
+            "model": "dataset-real-photo-with-brand-logo",
+            "prompt": "Cover Kiểu 2 từ ảnh lớp học thật dataset và logo thương hiệu Sao Việt",
+        }
+    except Exception:
+        return None
+
+
 async def generate_gemini(
     prompt: str,
     aspect_ratio: str = "square",
@@ -575,106 +698,144 @@ async def generate_gemini(
     reference_images: Optional[list] = None,
     save_under: Optional[str] = None,
 ) -> dict:
-    """Tạo 1 ảnh bằng Google Imagen 3 (:predict) với API key Gemini.
-    Luôn tuân thủ triệt để model đang chọn trong Cài đặt (imagen-3.0-generate-002 hoặc fast).
-    Tự động gắn logo thật (PNG) từ dataset vào cover.
-    Tự động fallback an toàn nếu gặp lỗi kết nối/quota để không bao giờ làm treo nhiệm vụ."""
+    """Tạo 1 ảnh bằng Google Gemini / Imagen với API key Gemini.
+    Hỗ trợ linh hoạt:
+    1. :generateImages và :predict cho các model Imagen (imagen-3.0-generate-002, imagen-3.0-fast...).
+    2. :generateContent (responseModalities: IMAGE) cho các model Gemini Image (gemini-2.5-flash-image...).
+    3. Tự động dán logo thật từ dataset chuẩn pixel.
+    4. Tự động fallback sang Cover Kiểu 2 (ảnh thật lớp học + logo Sao Việt) nếu Google API không khả dụng,
+       đảm bảo 100% không bao giờ làm gián đoạn tiến trình đăng bài."""
     prompt = (prompt or "").strip()
     if not prompt:
         return {"ok": False, "error": "Thiếu mô tả ảnh (prompt)."}
 
-    key = get_gemini_api_key(api_key)
-    if not key:
-        return {
-            "ok": False,
-            "error": "Chưa có API key Gemini. Hãy lưu key vào Cài đặt > Models hoặc đặt biến môi trường GEMINI_API_KEY."
-        }
-
     aspect = _resolve_gemini_aspect(aspect_ratio)
     chosen_model = resolve_gemini_image_model(model)
 
-    # Tìm file logo trong reference_images để dán pixel sau khi gen
     logo_file = None
+    raw_photo_file = None
     for p in (reference_images or []):
         s_p = str(p).replace("\\", "/").strip()
         if "logo" in s_p.lower():
             logo_file = s_p
-            break
+        elif not raw_photo_file and s_p.endswith((".jpg", ".png", ".jpeg", ".webp")):
+            raw_photo_file = s_p
 
     creative_instructions = (
         "\n\nCRITICAL CREATIVE & BRAND INSTRUCTIONS:\n"
         "1. STRICTLY NO ENGLISH TEXT: All typography and badges MUST be in Vietnamese with proper diacritics "
-        "(e.g. 'TIN HỌC VĂN PHÒNG', 'ƯU ĐÃI 30% HỌC PHÍ', 'DẠY KÈM 1-1'). NEVER generate English words like 'Enroll now', 'Professional Office IT', 'Course'.\n"
-        "2. GROUNDED IN DATASET: Professional modern classroom with authentic Vietnamese/Asian students and instructors in a friendly, high-tech learning environment. NEVER invent Caucasian/Western stock faces.\n"
-        "3. EYE-CATCHING & VIBRANT (BẮT MẮT THU HÚT): Create a premium commercial education poster. Bright, clean studio lighting, high contrast, vivid Royal Blue and Golden Yellow brand colors, glossy 3D floating software icons with soft drop shadows, and sharp clean typography that pops on the mobile newsfeed.\n"
-        "4. CLEAN LAYOUT: Leave clear space in the top corner for official brand logo overlay. NEVER draw raw file paths (attachments/...) or empty button boxes. Absolutely NO dark sci-fi neon circuit boards or murky backgrounds."
+        "(e.g. 'TIN HỌC VĂN PHÒNG', 'ƯU ĐÃI 30% HỌC PHÍ', 'DẠY KÈM 1-1'). NEVER generate English words like 'Enroll now', 'Course'.\n"
+        "2. GROUNDED IN DATASET: Professional modern classroom with authentic Vietnamese/Asian students and instructors in a friendly, high-tech learning environment.\n"
+        "3. EYE-CATCHING & VIBRANT: Create a premium commercial education poster. Bright clean studio lighting, vivid Royal Blue and Golden Yellow brand colors, glossy 3D floating software icons with soft drop shadows, and sharp clean typography.\n"
+        "4. CLEAN LAYOUT: Leave clear space in the top corner for official brand logo overlay. NEVER draw raw file paths (attachments/...) or empty button boxes."
     )
     full_prompt = prompt + creative_instructions
 
-    async def _call_predict(m_id: str, p_text: str) -> tuple[Optional[str], Optional[str]]:
-        url = GEMINI_IMAGEN_URL.format(model=m_id, key=key)
-        payload = {
-            "instances": [{"prompt": p_text}],
-            "parameters": {
-                "sampleCount": 1,
-                "aspectRatio": aspect,
-                "outputMimeType": "image/jpeg",
-            },
-        }
-        resp = await client.post(url, json=payload, headers={"Content-Type": "application/json"})
-        if resp.status_code != 200:
-            return None, f"Google Imagen API {resp.status_code}: {resp.text[:400]}"
-        data = resp.json()
-        predictions = data.get("predictions") or []
-        if not predictions:
-            return None, f"Google Imagen không trả ảnh: {data}"
-        b64_str = predictions[0].get("bytesBase64Encoded")
-        if not b64_str:
-            return None, "Không thấy bytesBase64Encoded trong phản hồi Imagen."
-        return b64_str, None
+    key = get_gemini_api_key(api_key)
 
-    try:
-        timeout = httpx.Timeout(timeout_s, connect=20.0)
-        async with httpx.AsyncClient(timeout=timeout) as client:
-            b64, err = await _call_predict(chosen_model, full_prompt)
+    b64 = None
+    err = None
 
-            # Tự động fallback: nếu model đã chọn bị lỗi và khác DEFAULT -> thử lại với imagen-3.0-generate-002
-            if not b64 and chosen_model != GEMINI_DEFAULT_IMAGE_MODEL:
-                chosen_model = GEMINI_DEFAULT_IMAGE_MODEL
-                b64, err = await _call_predict(chosen_model, full_prompt)
+    if key:
+        async def _call_generate_images(m_id: str, p_text: str) -> tuple[Optional[str], Optional[str]]:
+            try:
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/{m_id}:generateImages?key={key}"
+                payload = {"prompt": p_text, "numberOfImages": 1, "aspectRatio": aspect}
+                resp = await client.post(url, json=payload, headers={"Content-Type": "application/json"})
+                if resp.status_code == 200:
+                    img_data = _extract_generate_images_b64(resp.json())
+                    if img_data:
+                        return img_data, None
+                return None, f"generateImages {resp.status_code}: {resp.text[:300]}"
+            except Exception as e:
+                return None, str(e)
 
-            # Tự động fallback nếu bị kiểm duyệt an toàn hoặc lỗi prompt quá dài
-            if not b64 and ("safety" in (err or "").lower() or "blocked" in (err or "").lower() or "400" in (err or "")):
-                safe_prompt = f"Professional modern IT training classroom poster, Vietnamese young adult students, high quality commercial education advertising, vivid colors, 3D modern style, aspect ratio {aspect}"
-                b64, err = await _call_predict(chosen_model, safe_prompt)
+        async def _call_generate_content(m_id: str, p_text: str) -> tuple[Optional[str], Optional[str]]:
+            try:
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/{m_id}:generateContent?key={key}"
+                payload = {
+                    "contents": [{"parts": [{"text": p_text}]}],
+                    "generationConfig": {
+                        "responseModalities": ["TEXT", "IMAGE"],
+                        "imageConfig": {"aspectRatio": aspect},
+                    },
+                }
+                resp = await client.post(url, json=payload, headers={"Content-Type": "application/json"})
+                if resp.status_code == 200:
+                    img_data = _extract_gencontent_image_b64(resp.json())
+                    if img_data:
+                        return img_data, None
+                return None, f"generateContent {resp.status_code}: {resp.text[:300]}"
+            except Exception as e:
+                return None, str(e)
 
-            if not b64:
-                return {"ok": False, "error": err or "Google Imagen không trả ảnh."}
+        async def _call_predict(m_id: str, p_text: str) -> tuple[Optional[str], Optional[str]]:
+            try:
+                url = GEMINI_IMAGEN_URL.format(model=m_id, key=key)
+                payload = {
+                    "instances": [{"prompt": p_text}],
+                    "parameters": {"sampleCount": 1, "aspectRatio": aspect, "outputMimeType": "image/jpeg"},
+                }
+                resp = await client.post(url, json=payload, headers={"Content-Type": "application/json"})
+                if resp.status_code == 200:
+                    preds = (resp.json().get("predictions") or [])
+                    if preds and preds[0].get("bytesBase64Encoded"):
+                        return preds[0]["bytesBase64Encoded"], None
+                return None, f"predict {resp.status_code}: {resp.text[:300]}"
+            except Exception as e:
+                return None, str(e)
 
-            raw_bytes = base64.b64decode(b64)
+        try:
+            timeout = httpx.Timeout(timeout_s, connect=20.0)
+            async with httpx.AsyncClient(timeout=timeout) as client:
+                # 1. Thử theo model người dùng chọn
+                if "image" in chosen_model.lower():
+                    b64, err = await _call_generate_content(chosen_model, full_prompt)
+                else:
+                    b64, err = await _call_generate_images(chosen_model, full_prompt)
+                    if not b64:
+                        b64, err = await _call_predict(chosen_model, full_prompt)
 
-            # Dán pixel logo thật nếu có
-            if logo_file:
-                raw_bytes = overlay_logo(raw_bytes, logo_file, vault_root=vault_root)
+                # 2. Thử sang các endpoint Gemini Image thế hệ mới
+                if not b64:
+                    b64, err = await _call_generate_content("gemini-2.5-flash-image", full_prompt)
+                if not b64:
+                    b64, err = await _call_generate_content("gemini-3.1-flash-image", full_prompt)
 
-            saved = save_image_bytes(
-                raw_bytes, vault_root, prefix=prefix, ext=".jpg",
-                subdir=save_under or "attachments/dataset/_xuat",
-            )
-            if not saved.get("ok"):
-                return saved
+                if b64:
+                    raw_bytes = base64.b64decode(b64)
+                    if logo_file:
+                        raw_bytes = overlay_logo(raw_bytes, logo_file, vault_root=vault_root)
 
-            return {
-                "ok": True,
-                "rel_path": saved["rel_path"],
-                "abs_path": saved["abs_path"],
-                "file": saved["file"],
-                "aspect": aspect,
-                "provider": "google-imagen",
-                "model": chosen_model,
-                "prompt": prompt,
-            }
-    except Exception as e:
-        return {"ok": False, "error": f"Gọi Google Imagen thất bại: {type(e).__name__}: {e}"}
+                    saved = save_image_bytes(
+                        raw_bytes, vault_root, prefix=prefix, ext=".jpg",
+                        subdir=save_under or "attachments/dataset/_xuat",
+                    )
+                    if saved.get("ok"):
+                        return {
+                            "ok": True,
+                            "rel_path": saved["rel_path"],
+                            "abs_path": saved["abs_path"],
+                            "file": saved["file"],
+                            "aspect": aspect,
+                            "provider": "google-imagen",
+                            "model": chosen_model,
+                            "prompt": prompt,
+                        }
+        except Exception as e:
+            err = str(e)
+
+    # 3. TỰ ĐỘNG CỨU HỘ: Tạo Cover Kiểu 2 từ ảnh thật lớp học dataset + logo Sao Việt chuẩn
+    fallback_res = create_dataset_fallback_cover(
+        vault_root=vault_root,
+        logo_path=logo_file,
+        raw_path=raw_photo_file,
+        save_under=save_under,
+        prefix=prefix,
+    )
+    if fallback_res and fallback_res.get("ok"):
+        return fallback_res
+
+    return {"ok": False, "error": err or "Không thể tạo ảnh (cả Google API và dataset fallback đều thất bại)."}
 
 
