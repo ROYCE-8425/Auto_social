@@ -35,9 +35,11 @@ def register(ctx):
         aspect = str(args.get("aspect_ratio") or "square")
         api_key = args.get("api_key")
         model = str(args.get("model") or "").strip() or None
-        refs = args.get("images") or args.get("reference_images") or []
+        refs = args.get("images") or args.get("image") or args.get("reference_images") or []
         if isinstance(refs, str):
             refs = [p.strip() for p in refs.split(",") if p.strip()]
+        elif isinstance(refs, list):
+            refs = [str(p).strip() for p in refs if str(p).strip()]
         logo = str(args.get("logo") or "").strip()
         refs = [image_gen.fix_dataset_path(p) for p in refs]
         logo = image_gen.fix_dataset_path(logo)
@@ -115,8 +117,13 @@ def register(ctx):
                     "description": "File Logo chính trong kit, vd attachments/dataset/chung/thsv-logo-2025.png"
                 },
                 "images": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "1 ảnh raw dataset (mảng đường dẫn trong vault, vd: [\"attachments/dataset/tin-hoc _ai/raw.jpg\"])"
+                },
+                "image": {
                     "type": "string",
-                    "description": "1 ảnh raw dataset (path trong vault), cách nhau dấu phẩy nếu nhiều"
+                    "description": "1 ảnh raw dataset (chuỗi đường dẫn trong vault)"
                 }
             },
             "required": ["prompt"]

@@ -1123,10 +1123,11 @@ def _gemini_schema(node, is_root=True):
         props = {}
         for k, v in list((raw_props or {}).items())[:12]:
             props[str(k)] = _gemini_schema(v, is_root=False) if isinstance(v, dict) else {"type": "string"}
-        out["properties"] = props
-        req = [r for r in (node.get("required") or []) if r in props][:8]
-        if req:
-            out["required"] = req
+        if props:
+            out["properties"] = props
+            req = [r for r in (node.get("required") or []) if r in props][:8]
+            if req:
+                out["required"] = req
     return out
 
 
@@ -1595,6 +1596,8 @@ async def _cc_tool_loop(url, headers, model, messages, mcp_tools, mcp_route, rea
         # rồi trả message.content rỗng → Kanban "Gemini trả về rỗng".
         if "generativelanguage.googleapis.com" in (url or ""):
             payload.setdefault("max_tokens", 8192)
+            if tools:
+                payload.setdefault("temperature", 0.2)
         # Bỏ hẳn khoá "tools" khi rỗng: vài endpoint OpenAI-compat từ chối mảng rỗng, và
         # nhánh cứu hộ ở dưới (model vấp cú pháp gọi tool) dựa vào đúng chỗ này.
         if tools:
@@ -1695,19 +1698,18 @@ async def _cc_tool_loop(url, headers, model, messages, mcp_tools, mcp_route, rea
         finish = ((data.get("choices") or [{}])[0]).get("finish_reason") or ""
         if (not content) and (not tcs) and (
                 "MALFORMED" in finish or "function_call_filter" in finish):
-            if malformed_retries < 2:
+            if malformed_retries < 3:
                 malformed_retries += 1
-                print(f"[{label}] {finish} - thu hoi phuc lan {malformed_retries}/2",
+                print(f"[{label}] {finish} - thu hoi phuc lan {malformed_retries}/3",
                       file=__import__("sys").stderr)
                 msgs.append({
                     "role": "user",
                     "content": (
-                        f"Lượt gọi tool vừa rồi bị lỗi cú pháp ({finish}). "
-                        "QUY TẮC BẮT BUỘC: "
-                        "1. Gọi trực tiếp các tool có sẵn (gemini_generate_image, fb_page_album, fb_page_photo, fb_pages_list). "
-                        "2. Tham số 'photos' của fb_page_album BẮT BUỘC là mảng JSON: [\"path1\", \"path2\"], TUYỆT ĐỐI KHÔNG bọc thành chuỗi string '[\"...\", \"...\"]'. "
-                        "3. Điền đúng định dạng JSON và đầy đủ tham số yêu cầu. "
-                        "Hãy gọi lại tool ngay bây giờ."
+                        f"Lượt gọi tool vừa rồi bị Google Gemini từ chối vì sai định dạng ({finish}). "
+                        "HƯỚNG DẪN SỬA ĐÚNG: "
+                        "1. gemini_generate_image: prompt (chuỗi text), aspect_ratio (square hoặc 1:1), logo (chuỗi đường dẫn), images (mảng [\"đường_dẫn\"] hoặc chuỗi đường dẫn). "
+                        "2. fb_page_album: photos (mảng JSON [\"path1\", \"path2\"]), message (caption text). Mọi ký tự xuống dòng trong text BẮT BUỘC escape là \\n (không để dòng thô). "
+                        "3. TUYỆT ĐỐI TUÂN THỦ JSON chuẩn. Hãy thực hiện lại cuộc gọi tool ngay."
                     )
                 })
                 continue
@@ -1715,7 +1717,7 @@ async def _cc_tool_loop(url, headers, model, messages, mcp_tools, mcp_route, rea
                   file=__import__("sys").stderr)
             yield {"type": "error", "content": (
                 f"{label} gọi tool hỏng ({finish}) sau {malformed_retries} lần thử. "
-                "Gọi thẳng gemini_generate_image / fb_page_album, tham số photos là mảng JSON."
+                "Gọi thẳng gemini_generate_image / fb_page_album với JSON hợp lệ."
             )}
             return
         if (not content) and (not tcs) and empty_retries < 1:

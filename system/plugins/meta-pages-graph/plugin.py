@@ -579,6 +579,14 @@ async def _publish_photo(args, cctx):
     if perr:
         return perr
     caption = _fb_plain_caption(str(args.get("message") or args.get("caption") or "").strip())
+    if caption.endswith((".txt", ".md")) and cctx and getattr(cctx, "vault_root", None):
+        try:
+            from pathlib import Path
+            cp = Path(cctx.vault_root) / caption
+            if cp.is_file():
+                caption = _fb_plain_caption(cp.read_text(encoding="utf-8", errors="replace").strip())
+        except Exception:
+            pass
     kit_err = _caption_kit_err(caption, pid, cctx)
     if kit_err:
         return kit_err
@@ -649,6 +657,14 @@ async def _publish_album(args, cctx):
     if perr:
         return perr
     msg = _fb_plain_caption(str(args.get("message") or "").strip())
+    if msg.endswith((".txt", ".md")) and cctx and getattr(cctx, "vault_root", None):
+        try:
+            from pathlib import Path
+            cp = Path(cctx.vault_root) / msg
+            if cp.is_file():
+                msg = _fb_plain_caption(cp.read_text(encoding="utf-8", errors="replace").strip())
+        except Exception:
+            pass
     kit_err = _caption_kit_err(msg, pid, cctx)
     if kit_err:
         return kit_err
@@ -771,7 +787,9 @@ def register(ctx):
         name="fb_pages_list", min_mode="readonly", check_fn=_check, handler=_list,
         description=("Liệt kê các Trang/Fanpage Facebook bạn quản lý (id, tên, hạng mục, quyền). Gọi đầu "
                      "tiên để lấy id/tên Trang cho các tool khác. KHÔNG lộ token của Trang."),
-        schema={"type": "object", "properties": {}},
+        schema={"type": "object", "properties": {
+            "query": {"type": "string", "description": "Từ khoá lọc tên hoặc id Trang (tuỳ chọn)"}
+        }},
     )
     ctx.register_tool(
         name="fb_page_posts", min_mode="readonly", check_fn=_check, handler=_posts,
