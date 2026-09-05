@@ -19,6 +19,9 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+
 TZ = ZoneInfo("Asia/Ho_Chi_Minh")
 VAULT = Path(__file__).resolve().parents[3]
 if VAULT.name != "Brain Default" and not (VAULT / "wiki" / "brand-kits").is_dir():
@@ -124,6 +127,11 @@ def main(argv):
     now = datetime.now(TZ)
     today = now.strftime("%Y-%m-%d")
     include_royce = "--include-royce" in argv
+    specific_page = None
+    if "--page" in argv:
+        i = argv.index("--page")
+        specific_page = argv[i + 1] if i + 1 < len(argv) else ""
+
     mark_ok = None
     mark_fail = None
     reason = ""
@@ -134,8 +142,73 @@ def main(argv):
         i = argv.index("--fail")
         mark_fail = argv[i + 1] if i + 1 < len(argv) else ""
         reason = " ".join(argv[i + 2 :]) if i + 2 < len(argv) else "POST_SKIP"
+
+    if specific_page:
+        all_pages = load_pages(include_royce=True)
+        row = None
+        try:
+            sys.path.insert(0, str(Path(VAULT) / "scratch"))
+            import kit_tim
+            best = kit_tim.resolve_kit(specific_page)
+            if best:
+                row = next((p for p in all_pages if p["file"] == best["filename"]), None)
+        except Exception:
+            pass
+        if not row:
+            q_clean = specific_page.lower().strip()
+            row = next((p for p in all_pages if q_clean in p["name"].lower() or q_clean in p["slug"].lower() or q_clean in p["file"].lower() or q_clean == p["page_id"]), None)
+        if not row:
+            print(f"ERROR: khong-tim-thay-page query={specific_page}")
+            return 1
+        tag = random.choice(row["tags"]) if row.get("tags") else "tin-hoc _ai"
+        print("NEXT=1")
+        print("page_id=" + row["page_id"])
+        print("ten=" + row["name"])
+        print("slug=" + row["slug"])
+        print("kit=" + row["file"])
+        print("the=" + tag)
+        print("hotline=" + (row["hotline"] or ""))
+        print("email=" + (row["email"] or ""))
+        print("web=" + (row["web"] or ""))
+        print("dia_chi=" + (row["address"] or ""))
+        print("folder=attachments/dataset/" + tag + "/")
+        print("luat_anh=7/3 banner=photos[0] gen-tu-raw-hoac-ai-full toi-da-3-gen con-lai-raw")
+        print("doc_he_thong=wiki/brand-kits/_y-chu-dang-bai.md,_quy-trinh-dang-bai.md,_the-khoa-hoc.md")
+        print("logo=" + (row.get("logo") or ""))
+        print("logo_white=" + (row.get("logo_white") or ""))
+        print("mau_chinh=" + (row.get("color_pri") or ""))
+        print("mau_phu=" + (row.get("color_sec") or ""))
+        print("font=" + (row.get("fonts") or ""))
+        print("giong=" + (row.get("voice") or ""))
+        print("bo_cuc=" + (row.get("layout") or ""))
+        print("phong_cach_anh=" + (row.get("image_style") or ""))
+        print("cam=" + (row.get("donts") or ""))
+        print("KIT_VISUAL")
+        print("Dung dung logo file: " + (row.get("logo") or ""))
+        print("Mau poster: " + (row.get("color_pri") or "") + " + " + (row.get("color_sec") or ""))
+        print("Font: " + (row.get("fonts") or ""))
+        print("Giong caption: " + (row.get("voice") or ""))
+        print("Bo cuc: " + (row.get("layout") or ""))
+        print("Phong cach anh: " + (row.get("image_style") or ""))
+        print("Cam: " + (row.get("donts") or ""))
+        print("HET_KIT_VISUAL")
+        print("CHAN_TRANG")
+        print(row["name"])
+        if row.get("address"):
+            for part in [p.strip() for p in row["address"].replace("|", "\n").splitlines() if p.strip()]:
+                print(part)
+        if row.get("hotline"):
+            print("Hotline/Zalo: " + row["hotline"])
+        if row.get("email"):
+            print("Email: " + row["email"])
+        if row.get("web"):
+            print("Web: " + row["web"])
+        print("HET_CHAN_TRANG")
+        return 0
+
     pages = load_pages(include_royce=include_royce)
     st = load_state(today)
+
     if mark_ok:
         if mark_ok not in st["ok"]:
             st["ok"].append(mark_ok)

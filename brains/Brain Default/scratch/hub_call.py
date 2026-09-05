@@ -270,6 +270,17 @@ def tool(name, arguments=None):
 
 def main():
     cmd = sys.argv[1] if len(sys.argv) > 1 else "list"
+
+    if cmd == "kit":
+        import kit_tim
+        args = ["kit_tim.py"] + sys.argv[2:]
+        sys.exit(kit_tim.main(args))
+
+    if cmd == "kit_footer":
+        import kit_chan_trang
+        args = ["kit_chan_trang.py"] + sys.argv[2:]
+        sys.exit(kit_chan_trang.main(args))
+
     rpc(
         "initialize",
         {
@@ -284,6 +295,7 @@ def main():
         pass
 
     if cmd == "list":
+
         tools = rpc("tools/list", {})
         tls = (tools.get("result") or {}).get("tools") or []
         names = [t.get("name") for t in tls]
@@ -469,9 +481,10 @@ def main():
         print(tool("javis_run_tool", {"name": "fb_page_album", "args": args}))
         return
 
-    print("usage: list | search <q> | run <tool> '<json>' | fb <tool> [@args.json] | check [post_id_or_keyword] | used_photos <slug> | append_used <slug> <path1>... | list_imgs <folder> | album_folder <page> <folder> [@caption.txt]")
+    print("usage: list | search <q> | run <tool> '<json>' | fb <tool> [@args.json] | check [post_id_or_keyword] | kit <q> | kit_footer <q> | used_photos <slug> | append_used <slug> <path1>... | list_imgs <folder> | album_folder <page> <folder> [@caption.txt]")
 
 
 if __name__ == "__main__":
     main()
+
 

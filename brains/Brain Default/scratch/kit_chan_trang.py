@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 """In chân trang bắt buộc cho 1 Fanpage (lấy từ Brand Kit).
 
+Hỗ trợ tìm kiếm thông minh bằng Page ID, slug, tên Fanpage hoặc từ khóa mờ.
+
 Dùng trước khi đăng:
-  python "brains/Brain Default/scratch/kit_chan_trang.py" <page_id>
+  python "brains/Brain Default/scratch/kit_chan_trang.py" <page_id_hoac_ten_page>
 Dán nguyên khối CHAN_TRANG vào cuối caption. Không thay hotline/địa chỉ mặc định.
 """
 from __future__ import annotations
@@ -10,6 +12,9 @@ from __future__ import annotations
 import re
 import sys
 from pathlib import Path
+
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
 
 VAULT = Path(__file__).resolve().parents[1]
 KITS = VAULT / "wiki" / "brand-kits"
@@ -23,14 +28,31 @@ def field(md, *labels):
     return ""
 
 
-def load(page_id):
-    pid = str(page_id or "").strip()
+def load(query):
+    pid = str(query or "").strip()
+    if not pid:
+        return None, None
+
+    # 1. Tìm chính xác theo Page ID
     for p in sorted(KITS.glob("*.md")):
         if p.name.startswith("_"):
             continue
-        md = p.read_text(encoding="utf-8")
+        try:
+            md = p.read_text(encoding="utf-8")
+        except Exception:
+            continue
         if field(md, "Page ID", "page_id") == pid:
             return p, md
+
+    # 2. Tìm thông minh qua kit_tim nếu không phải số Page ID hoặc chưa tìm thấy
+    try:
+        from kit_tim import resolve_kit
+        best = resolve_kit(pid)
+        if best and best.get("path") and best.get("md"):
+            return best["path"], best["md"]
+    except Exception:
+        pass
+
     return None, None
 
 
@@ -58,11 +80,12 @@ def footer_block(md, name):
 
 def main(argv):
     if len(argv) < 2:
-        print("USAGE: kit_chan_trang.py <page_id>", file=sys.stderr)
+        print("USAGE: kit_chan_trang.py <page_id_hoac_tu_khoa>", file=sys.stderr)
         return 2
-    path, md = load(argv[1])
+    query = argv[1]
+    path, md = load(query)
     if not md:
-        print("ERROR: chua-co-brand-kit page_id=" + argv[1])
+        print("ERROR: chua-co-brand-kit page=" + query)
         return 1
     name = field(md, "Tên Fanpage") or path.stem
     print("kit=" + path.name)

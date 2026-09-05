@@ -92,7 +92,23 @@ CẤM gọi `fb_page_delete` trừ khi người dùng ra lệnh rõ ràng kèm �
 Kết nối Graph API không đủ.
 
 User chỉ cần 1 dòng chỉ định Fanpage hoặc chọn theo task checklist chiến dịch (ví dụ: Tin học Sao Việt Thủ Đức, Kế toán Sao Việt Bình Dương, AutoCAD Sao Việt Biên Hòa, Royce Shop...).
-Thiếu page: tự động lấy target page từ task checklist của chiến dịch đang chạy (30+ Fanpage) **trong số page đã có kit**. Map ngành và chủ đề -> folder + kiểu A/B + kit + chân trang + album Luật C. Không bắt user dán luật.
+
+**TỰ ĐỘNG KHỚP MỜ (FUZZY MATCH) BRAND KIT & TRANG:**
+- Khi brief hoặc user chỉ định tên Trang (ví dụ: "page royce", "thủ đức", "cad biên hòa", "kế toán quận 7"):
+  + BẮT BUỘC tự động khớp mờ (fuzzy match) tìm file kit tương ứng trong `wiki/brand-kits/` (ví dụ: `royce` -> `royce-shop.md`, `thủ đức` -> kit Thủ Đức).
+  + Khớp theo ngành học: nếu brief chỉ ghi địa danh chung chung (vd "quận 7"), đối chiếu ngành trong brief (tin học / kế toán / autocad / đồ họa) để chọn đúng cơ sở.
+  + Chạy ngay lệnh tìm tự động:
+    ```
+    python "brains/Brain Default/scratch/kit_tim.py" "<tên_page_hoặc_từ_khóa>"
+    ```
+    hoặc:
+    ```
+    python "brains/Brain Default/skills/dang-bai-facebook/scripts/pick_next_fanpage.py" --page "<tên_page_hoặc_từ_khóa>"
+    ```
+    Lệnh này sẽ tự động phân giải, trả về đúng Page ID, slug, file kit và toàn bộ khối CHAN_TRANG chuẩn.
+  + **TUYỆT ĐỐI CẤM HỎI LẠI TRONG KANBAN WORKER:** Kanban là hệ thống worker chạy ngầm (headless). Người dùng không ngồi trực chat. Nghiêm cấm hỏi các câu như "Tôi không tìm thấy royce.md, bạn có muốn dùng royce-shop.md không?". Hỏi thay vì làm sẽ bị hệ thống phát hiện và BLOCK ngay lập tức. Hãy tự động chọn kit điểm cao nhất, ghi log lý do và tiến hành đăng luôn.
+
+Thiếu page: tự động lấy target page từ task checklist của chiến dịch đang chạy (30+ Fanpage) **trong số page đã có kit** hoặc chạy `python "brains/Brain Default/skills/dang-bai-facebook/scripts/pick_next_fanpage.py"`. Map ngành và chủ đề -> folder + kiểu A/B + kit + chân trang + album Luật C. Không bắt user dán luật.
 
 Trung thu 2026 nếu user không ghi ngày: nghỉ Thứ Sáu 25/09/2026, học lại Thứ Bảy 26/09/2026.
 
@@ -100,15 +116,16 @@ Trung thu 2026 nếu user không ghi ngày: nghỉ Thứ Sáu 25/09/2026, học 
 
 **Chân trang = đúng kit của page đang đăng.** Trước khi gọi `fb_page_*`:
 ```
-python "brains/Brain Default/scratch/kit_chan_trang.py" <Page ID>
+python "brains/Brain Default/scratch/kit_chan_trang.py" <Page ID hoặc từ khóa page>
 ```
-Dán nguyên khối `CHAN_TRANG` (script đã tách **mỗi cơ sở một dòng**). CẤM copy chuỗi `A | B | C` vào caption. Plugin chặn `dia-chi-mot-dong`.
+Dán nguyên khối `CHAN_TRANG` (script đã tự tách **mỗi cơ sở một dòng** và hỗ trợ cả từ khóa mờ). CẤM copy chuỗi `A | B | C` vào caption. Plugin chặn `dia-chi-mot-dong`.
 
 CẤM dán hotline mặc định `0931 144 858` / `0823 552 558` nếu kit page khác số.
 CẤM dán list 12-13 cơ sở nếu kit chỉ 1 chi nhánh (hoặc chỉ Đồng Nai / chỉ Bình Dương).
 Plugin chặn khi **thiếu hẳn** hotline (9 số cuối) hoặc **không có 1 mẩu địa chỉ nào** của kit. Sai dấu/viết tắt/thiếu 1 cụm thì vẫn đăng. Email không bắt. Royce Shop = page test, **vẫn** chặn caption cụt và địa chỉ một dòng `|`.
 
 `chan-trang-sai-kit` / `khong-retry=1`: POST_SKIP **1 lần rồi DỪNG**. CẤM sửa caption 20 lần, CẤM `[[NEEDS_INPUT]]`, CẤM rollback, CẤM gọi `fb_page_*` lại.
+
 
 ## 7. Tự duyệt rồi mới đăng, cấm đốt token (Luật G)
 

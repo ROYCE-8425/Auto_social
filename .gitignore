@@ -124,8 +124,11 @@ brains/*/attachments/dataset/_xuat/*
 brains/*/scratch/*
 !brains/*/scratch/.gitkeep
 !brains/*/scratch/hub_call.py
+!brains/*/scratch/kit_chan_trang.py
+!brains/*/scratch/kit_tim.py
 !brains/*/scratch/make_square_cover.py
 !brains/*/scratch/make_cover_autocad.py
+
 
 # Ban backup brain do server tu tao
 brains-backup/

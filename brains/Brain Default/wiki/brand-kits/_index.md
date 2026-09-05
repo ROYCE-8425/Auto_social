@@ -83,3 +83,12 @@ Liệt kê file `wiki/brand-kits/*.md` không bắt đầu `_`. Không dùng pag
 - [[brand-kits/trung-tam-tin-hoc-vung-tau]] Trung Tâm Tin Học Vũng Tàu
 - [[brand-kits/trung-tam-tin-hoc-ba-ria]] Trung Tâm Tin Học Bà Rịa
 - [[brand-kits/trung-tam-ao-tao-autocad-quan-7-tphcm]] Trung Tâm Đào Tạo Autocad Quận 7 - TPHCM
+- [[brand-kits/royce-shop]] Royce Shop (Page ID: 988656934325292, bí danh: royce.md)
+
+## Bảng tra cứu bí danh nhanh (Alias Mapping)
+| Từ khóa gọi tắt | File Brand Kit chính thức | Page ID |
+|---|---|---|
+| royce, royce shop | `royce-shop.md` / `royce.md` | 988656934325292 |
+| thsv, tin hoc thu duc | `trung-tam-tin-hoc-sao-viet-tp-thu-uc-tphcm.md` | 109280655477819 |
+| cad bien hoa | `trung-tam-ao-tao-autocad-bien-hoa-ong-nai.md` | 284859368039913 |
+| ke toan quan 7 | `trung-tam-ao-tao-ke-toan-quan-7-tphcm.md` | 136020516272405 |
