@@ -24,7 +24,7 @@ Cover mac dinh = gen 1 lan tu **1 anh raw dataset + logo kit** (file `attachment
 | Photoshop, Illustrator, đồ họa | `attachments/dataset/do-hoa/` |
 | Logo only | `attachments/dataset/chung/` (chỉ watermark) |
 
-CẤM tìm folder cũ `tin-hoc/`, `co-khi/`, `ai/`, `marketing/`, `tre-em/`, `tieng-han/` — đã gộp/xoá. Không có folder → chọn thẻ khác trong kit, **không** `[[NEEDS_INPUT]]`. Caption tự viết từ skill `viet-bai-facebook`; không cần file giáo trình trong brain.
+CẤM tìm folder cũ `tin-hoc/`, `co-khi/`, `ai/`, `marketing/`, `tre-em/`, `tieng-han/` - đã gộp/xoá. Không có folder → chọn thẻ khác trong kit, **không** `[[NEEDS_INPUT]]`. Caption tự viết từ skill `viet-bai-facebook`; không cần file giáo trình trong brain.
 
 Kit page có **nhiều ngành**: dòng `Folder anh (dataset): tin-hoc, ke-toan, co-khi`. Brief chọn 1 ngành trong list đó. Không khóa 1 folder/page.
 
@@ -149,4 +149,36 @@ Thiếu 1 ô: sửa **tối đa 1 lần** (đổi caption hoặc gen lại 1 cov
 - Tool ERROR hoặc không có post_id: `POST_SKIP ly-do=loi-facebook`. CẤM gọi lại tool đăng. CẤM gen thêm. Kết thúc vòng.
 - `khong-retry=1` / `chan-trang-sai-kit`: dừng task (blocked 1 lần). CẤM 20 lần chạy. CẤM NEEDS_INPUT.
 
-CẤM đăng thử nhiều lần. Có `NEXT=1` thì đọc **đúng 1 kit** `wiki/brand-kits/<kit>` (địa chỉ/hotline page đó), không đọc 56 kit, không `fb_pages_list`. **Bắt buộc** soạn theo `viet-bai-facebook` đủ 7 phần **60–120 dòng** — cấm cắt caption để tiết kiệm token. Plugin chặn bài dưới 45 dòng (`caption-ngan`). Ngành = `_the-khoa-hoc.md`. Ảnh 1 = poster gen `_xuat/`. CẤM `fb_page_post`.
+CẤM đăng thử nhiều lần. Có `NEXT=1` thì đọc **đúng 1 kit** `wiki/brand-kits/<kit>` (địa chỉ/hotline page đó), không đọc 56 kit, không `fb_pages_list`. **Bắt buộc** soạn theo `viet-bai-facebook` đủ 7 phần **60-120 dòng** - cấm cắt caption để tiết kiệm token. Plugin chặn bài dưới 45 dòng (`caption-ngan`). Ngành = `_the-khoa-hoc.md`. Ảnh 1 = poster gen `_xuat/`. CẤM `fb_page_post`.
+
+
+## 8. Quy chuẩn Cover Banner & Tỷ lệ sinh ảnh 7 / 3
+
+Nhằm đảm bảo hình ảnh chân thực, thu hút người xem và đạt tỷ lệ chuyển đổi cao nhất cho các khóa học Tin học Sao Việt, hệ thống áp dụng cơ chế sinh Cover tỷ lệ **7 / 3**:
+
+### Tỷ lệ phân bổ khi tạo Cover
+- **70% Kiểu 2 (Authentic Classroom Banner - Khuyên dùng & Mặc định chiếm đa số):**
+  + Sử dụng ảnh chụp lớp học thật 100% từ kho dataset (`attachments/dataset/<ngành>/`).
+  + Kết hợp dải đồ họa thương hiệu Solid Deep Navy (`#0B2341`), logo Sao Việt đặt trên thẻ bo góc nổi khối 3D, tiêu đề và điểm nổi bật in hoa sắc nét (màu trắng và vàng hoàng gia).
+  + Tuyệt đối không bao giờ đè chữ lên mặt/lưng học viên hoặc màn hình máy tính.
+  + Font chữ 100% TrueType Unicode (Arial Bold / Segoe UI), tự động ngắt dòng và co dãn thông minh, không lỗi font, không lệch khung hay tràn viền.
+- **30% Kiểu 1 (AI 3D Poster):**
+  + Dựng poster giáo dục 3D hiện đại sinh qua Google Imagen / Gemini API, có dán logo Sao Việt chuẩn pixel.
+  + Nếu Google API gặp lỗi hạn mức, hết quota hoặc model không phản hồi: Hệ thống **tự động cứu hộ 100% về Kiểu 2**, đảm bảo tiến trình đăng bài không bao giờ bị gián đoạn.
+
+### 5 Mẫu Layout Agency Đồ Họa Đa Dạng (Kiểu 2)
+1. `split_right` (Chuẩn theo ảnh mẫu tham chiếu): Cột trái (50%) là ảnh lớp học thật, cột phải (50%) là panel xanh thương hiệu với logo góc trên, tiêu đề lớn, gạch phân cách vàng kim, 3 điểm nổi bật và hotline.
+2. `split_left`: Đảo vị trí panel sang bên trái, ảnh thật bên phải nhằm tạo sự phong phú giữa các bài viết trên cùng 1 Fanpage.
+3. `bottom_bar`: Ảnh chụp lớp học góc rộng sáng sủa chiếm 62% phía trên, dải panel thương hiệu solid navy chiếm 38% chân trang cùng các huy hiệu viên thuốc bo tròn hiện đại.
+4. `floating_card`: Ảnh lớp học tràn nền, một card thông tin bo góc nổi khối 3D với viền vàng ánh kim và bóng đổ mềm mại.
+5. `diagonal_slice`: Đường cắt vát chéo góc công nghệ hiện đại, tạo cảm giác chuyển động và tràn đầy năng lượng.
+
+### Cách gọi lệnh và cấu hình
+- Tự động trong tool `gemini_generate_image`: Mặc định quay xác suất 70% Kiểu 2 và 30% Kiểu 1.
+- Nếu prompt chứa `"kiểu 2"`, `"kieu 2"`, `"ảnh thật"`, `"dataset"`, `"banner"`: Hệ thống sinh 100% Kiểu 2.
+- Nếu prompt chứa `"kiểu 1"`, `"kieu 1"`, `"3d"`, `"mockup"`, `"studio"`: Hệ thống sinh Kiểu 1 (fallback Kiểu 2 nếu lỗi mạng/quota).
+- Sinh thủ công qua script:
+  ```bash
+  python "brains/Brain Default/scratch/make_square_cover.py" tinhoc --kieu2
+  python "brains/Brain Default/scratch/make_square_cover.py" ketoan --kieu2 --template split_right
+  ```

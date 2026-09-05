@@ -18,7 +18,9 @@ from __future__ import annotations
 import base64
 import json
 import os
+import random
 import re
+import sys
 import time
 import uuid
 from pathlib import Path
@@ -77,6 +79,26 @@ def first_dataset_photo(vault_root: Optional[str], folder: str = "tin-hoc _ai") 
         if p.is_file() and p.suffix.lower() in _IMG_MIME and " (1)" not in p.name:
             return str(p.relative_to(vault)).replace("\\", "/")
     return ""
+
+
+def pick_dataset_photo(vault_root: Optional[str], folder: str = "tin-hoc _ai", random_choice: bool = True) -> str:
+    """Path tương đối 1 ảnh raw chất lượng trong folder ngành (bỏ file trùng (1)).
+    Nếu random_choice=True thì chọn ngẫu nhiên trong danh sách ảnh để bài đăng đa dạng."""
+    vault = _resolve_vault(vault_root)
+    folder = fix_dataset_path("attachments/dataset/" + folder).split("dataset/")[-1]
+    d = vault / "attachments" / "dataset" / folder
+    if not d.is_dir():
+        d = vault / "attachments" / "dataset" / "tin-hoc _ai"
+        if not d.is_dir():
+            return ""
+    candidates = []
+    for p in d.iterdir():
+        if p.is_file() and p.suffix.lower() in _IMG_MIME and " (1)" not in p.name:
+            candidates.append(p)
+    if not candidates:
+        return ""
+    chosen = random.choice(candidates) if random_choice else sorted(candidates, key=lambda x: x.name.lower())[0]
+    return str(chosen.relative_to(vault)).replace("\\", "/")
 
 
 def read_reference_image(path: str, vault_root: Optional[str] = None) -> dict:
@@ -590,15 +612,229 @@ def _extract_gencontent_image_b64(data: dict) -> Optional[str]:
     return None
 
 
+def parse_banner_content(prompt: str) -> dict:
+    """Trích xuất tiêu đề, phụ đề, điểm nổi bật, huy hiệu và thư mục ảnh từ prompt.
+    Tự động chuẩn hóa theo từng khóa học đặc trưng của Tin học Sao Việt."""
+    p_lower = (prompt or "").lower()
+
+    # Mặc định: Tin học văn phòng
+    title = "TIN HỌC VĂN PHÒNG CẤP TỐC"
+    subtitle = "Thành Thạo Sau 1 Khóa Học"
+    highlights = [
+        "Kèm 1-1 đến khi thành thạo",
+        "Thực hành 100% trên máy tính",
+        "Lịch học linh hoạt sáng - tối",
+    ]
+    badge_text = "ƯU ĐÃI 30% HỌC PHÍ"
+    folder = "tin-hoc _ai"
+
+    if any(k in p_lower for k in ("ai", "chatgpt", "copilot", "vibe coding", "n8n", "tự động hóa", "tu dong hoa")):
+        title = "AI ỨNG DỤNG VĂN PHÒNG"
+        subtitle = "ChatGPT / Copilot Thực Chiến"
+        highlights = [
+            "Tối ưu Word Excel mỗi ngày",
+            "Tăng 5x hiệu suất làm việc",
+            "Dạy kèm 1-1 thực hành",
+        ]
+        badge_text = "CÔNG NGHỆ MỚI 2026"
+        folder = "tin-hoc _ai"
+    elif any(k in p_lower for k in ("kế toán", "ke toan", "thuế", "thue", "misa", "báo cáo tài chính", "bctc")):
+        title = "KHÓA HỌC KẾ TOÁN THỰC HÀNH"
+        subtitle = "Báo Cáo Tài Chính - Quyết Toán Thuế"
+        highlights = [
+            "Thực hành chứng từ thực tế",
+            "Kèm 1-1 cầm tay chỉ việc",
+            "Thành thạo phần mềm MISA",
+        ]
+        badge_text = "ƯU ĐÃI 30% HỌC PHÍ"
+        folder = "ke-toan"
+    elif any(k in p_lower for k in ("autocad", "cad", "bản vẽ", "ban ve", "cơ khí", "xây dựng", "solidworks")):
+        title = "KHÓA HỌC AUTOCAD THỰC CHIẾN"
+        subtitle = "Bản Vẽ Kỹ Thuật 2D & 3D"
+        highlights = [
+            "Thực hành 100% dự án thực tế",
+            "Đọc hiểu & bóc tách bản vẽ nhanh",
+            "Giảng viên kỹ sư giàu kinh nghiệm",
+        ]
+        badge_text = "ƯU ĐÃI 30% HỌC PHÍ"
+        folder = "ve-ky-thuat"
+    elif any(k in p_lower for k in ("đồ họa", "do hoa", "photoshop", "illustrator", "corel", "indesign")):
+        title = "THIẾT KẾ ĐỒ HỌA CHUYÊN NGHIỆP"
+        subtitle = "Photoshop & Illustrator Thực Chiến"
+        highlights = [
+            "Thiết kế banner poster chuyên nghiệp",
+            "Tư duy bố cục & màu sắc chuẩn in",
+            "Thực hành đồ án doanh nghiệp thực tế",
+        ]
+        badge_text = "ƯU ĐÃI 30% HỌC PHÍ"
+        folder = "do-hoa"
+    elif any(k in p_lower for k in ("trẻ em", "tre em", "bé", "học sinh", "khóa hè", "mua he")):
+        title = "TIN HỌC QUỐC TẾ CHO TRẺ EM"
+        subtitle = "Đánh Thức Tiềm Năng Công Nghệ"
+        highlights = [
+            "Phương pháp trực quan sinh động",
+            "Rèn luyện tư duy logic & sáng tạo",
+            "Giáo viên kiên nhẫn thân thiện",
+        ]
+        badge_text = "ƯU ĐÃI 30% HỌC PHÍ"
+        folder = "tin-hoc _ai"
+
+    # Trích xuất tiêu đề nếu prompt chỉ định: "Tiêu đề: ...", "Title: ..."
+    m_title = re.search(r"(?:tiêu đề|title)\s*:\s*([^\n\r,.;]+)", prompt, re.IGNORECASE)
+    if m_title:
+        val = m_title.group(1).strip().strip('"\'')
+        if len(val) >= 4:
+            title = val.upper()
+
+    m_sub = re.search(r"(?:phụ đề|subtitle)\s*:\s*([^\n\r,.;]+)", prompt, re.IGNORECASE)
+    if m_sub:
+        val = m_sub.group(1).strip().strip('"\'')
+        if len(val) >= 4:
+            subtitle = val
+
+    tpl = None
+    for cand in ("split_right", "split_left", "bottom_bar", "floating_card", "diagonal_slice"):
+        if cand in p_lower:
+            tpl = cand
+            break
+
+    return {
+        "title": title,
+        "subtitle": subtitle,
+        "highlights": highlights,
+        "badge_text": badge_text,
+        "folder": folder,
+        "template_name": tpl,
+    }
+
+
+def generate_authentic_banner_cover(
+    vault_root: Optional[str] = None,
+    logo_path: Optional[str] = None,
+    raw_path: Optional[str] = None,
+    prompt: str = "",
+    template_name: Optional[str] = None,
+    save_under: Optional[str] = None,
+    prefix: str = "banner-cover",
+    hotline: str = "093 1144 858",
+) -> Optional[dict]:
+    """Tạo cover Kiểu 2: Ảnh thật lớp học từ dataset kết hợp layout đồ họa Agency 2026.
+    5 Layouts đa dạng: split_right, split_left, bottom_bar, floating_card, diagonal_slice.
+    Font tiếng Việt Unicode chuẩn không lỗi dấu, tự động ngắt dòng thông minh, không lệch khung."""
+    try:
+        import banner_templates
+        vault = _resolve_vault(vault_root)
+        content = parse_banner_content(prompt)
+
+        # 1. Xác định ảnh thật lớp học
+        raw_file = None
+        if raw_path:
+            rp = Path(raw_path).expanduser()
+            rp = rp if rp.is_absolute() else (vault / rp)
+            if rp.is_file():
+                raw_file = rp
+
+        if not raw_file:
+            chosen_rel = pick_dataset_photo(str(vault), folder=content["folder"], random_choice=True)
+            if chosen_rel:
+                raw_file = vault / chosen_rel
+
+        if not raw_file or not raw_file.is_file():
+            for fld in (content["folder"], "tin-hoc _ai", "ke-toan", "do-hoa", "ve-ky-thuat"):
+                d_set = vault / "attachments" / "dataset" / fld
+                if d_set.is_dir():
+                    for f in d_set.iterdir():
+                        if f.is_file() and f.suffix.lower() in _IMG_MIME and " (1)" not in f.name:
+                            raw_file = f
+                            break
+                if raw_file:
+                    break
+
+        if not raw_file or not raw_file.is_file():
+            return None
+
+        # 2. Xác định logo thương hiệu
+        logo_file = None
+        if logo_path:
+            lp = Path(logo_path).expanduser()
+            lp = lp if lp.is_absolute() else (vault / lp)
+            if lp.is_file():
+                logo_file = lp
+        if not logo_file:
+            for def_l in [
+                vault / "attachments" / "dataset" / "chung" / "thsv-logo-2025.png",
+                vault / "attachments" / "dataset" / "chung" / "thsv-logo-big.png",
+            ]:
+                if def_l.is_file():
+                    logo_file = def_l
+                    break
+
+        # 3. Chuẩn bị đường dẫn lưu
+        sub = save_under or "attachments/dataset/_xuat"
+        target_dir = (vault / sub).resolve()
+        target_dir.mkdir(parents=True, exist_ok=True)
+        fname = f"{prefix}-{int(time.time())}-{uuid.uuid4().hex[:6]}.jpg"
+        out_file = target_dir / fname
+
+        chosen_template = template_name or content.get("template_name")
+
+        res_path = banner_templates.generate_authentic_banner(
+            classroom_img_path=raw_file,
+            out_path=out_file,
+            logo_path=logo_file,
+            title=content["title"],
+            subtitle=content["subtitle"],
+            highlights=content["highlights"],
+            badge_text=content["badge_text"],
+            footer_text="TRUNG TÂM TIN HỌC SAO VIỆT",
+            hotline=hotline,
+            template_name=chosen_template,
+        )
+
+        if not res_path or not out_file.is_file():
+            return None
+
+        rel_path = str(out_file.relative_to(vault)).replace("\\", "/")
+        return {
+            "ok": True,
+            "rel_path": rel_path,
+            "abs_path": str(out_file),
+            "file": fname,
+            "aspect": "1:1",
+            "provider": "authentic-classroom-banner",
+            "model": f"banner-layout-{chosen_template or 'random'}",
+            "prompt": prompt or content["title"],
+        }
+    except Exception as e:
+        print(f"[image_gen] Lỗi tạo authentic banner: {e}", file=sys.stderr)
+        return None
+
+
 def create_dataset_fallback_cover(
     vault_root: Optional[str] = None,
     logo_path: Optional[str] = None,
     raw_path: Optional[str] = None,
     save_under: Optional[str] = None,
     prefix: str = "gemini-img",
+    prompt: str = "",
+    template_name: Optional[str] = None,
 ) -> Optional[dict]:
-    """Tạo cover Kiểu 2 từ ảnh thật lớp học trong dataset + dán logo thương hiệu chuẩn.
+    """Tạo cover Kiểu 2 từ ảnh thật lớp học trong dataset + dán layout đồ họa thương hiệu chuẩn.
     Dùng khi Google Image API không khả dụng (404/quota), đảm bảo luôn có ảnh cover chuẩn 1:1 để đăng Facebook."""
+    # Ưu tiên tạo banner đồ họa hoàn chỉnh với 5 layouts chuẩn Agency
+    res = generate_authentic_banner_cover(
+        vault_root=vault_root,
+        logo_path=logo_path,
+        raw_path=raw_path,
+        prompt=prompt,
+        template_name=template_name,
+        save_under=save_under,
+        prefix=prefix,
+    )
+    if res and res.get("ok"):
+        return res
+
+    # Fallback tối hậu nếu vì lý do gì đó banner_templates không sinh được
     try:
         from PIL import Image
         import io
@@ -616,7 +852,6 @@ def create_dataset_fallback_cover(
                 raw_file = vault / raw_rel
 
         if not raw_file or not raw_file.is_file():
-            # Thử tìm bất kỳ ảnh nào trong dataset
             d_set = vault / "attachments" / "dataset"
             for sub in ("tin-hoc _ai", "ke-toan", "do-hoa", "ve-ky-thuat"):
                 s_dir = d_set / sub
@@ -681,7 +916,7 @@ def create_dataset_fallback_cover(
             "aspect": "1:1",
             "provider": "dataset-brand-cover",
             "model": "dataset-real-photo-with-brand-logo",
-            "prompt": "Cover Kiểu 2 từ ảnh lớp học thật dataset và logo thương hiệu Sao Việt",
+            "prompt": prompt or "Cover Kiểu 2 từ ảnh lớp học thật dataset và logo thương hiệu Sao Việt",
         }
     except Exception:
         return None
@@ -697,14 +932,16 @@ async def generate_gemini(
     model: Optional[str] = None,
     reference_images: Optional[list] = None,
     save_under: Optional[str] = None,
+    style_preference: Optional[str] = None,
 ) -> dict:
-    """Tạo 1 ảnh bằng Google Gemini / Imagen với API key Gemini.
-    Hỗ trợ linh hoạt:
-    1. :generateImages và :predict cho các model Imagen (imagen-3.0-generate-002, imagen-3.0-fast...).
-    2. :generateContent (responseModalities: IMAGE) cho các model Gemini Image (gemini-2.5-flash-image...).
-    3. Tự động dán logo thật từ dataset chuẩn pixel.
-    4. Tự động fallback sang Cover Kiểu 2 (ảnh thật lớp học + logo Sao Việt) nếu Google API không khả dụng,
-       đảm bảo 100% không bao giờ làm gián đoạn tiến trình đăng bài."""
+    """Tạo 1 ảnh cover Fanpage chuẩn Facebook với tỷ lệ 7/3:
+    1. 70% Tỷ lệ: Sinh Kiểu 2 (Ảnh thật lớp học dataset + Layout đồ họa Agency 2026).
+    2. 30% Tỷ lệ: Sinh Kiểu 1 (AI 3D Poster sinh từ prompt qua Google Imagen / Gemini).
+    3. Nếu prompt hoặc style_preference yêu cầu cụ thể:
+       - 'kiểu 2' / 'ảnh thật' / 'dataset' / 'banner' -> 100% Kiểu 2.
+       - 'kiểu 1' / '3d' / 'mockup' / 'studio' -> Ưu tiên Kiểu 1, tự động cứu hộ về Kiểu 2 nếu lỗi Google API.
+    4. Tự động dán logo thật từ dataset chuẩn pixel.
+    5. Đa dạng 5 mẫu layout Agency không lỗi font, không lệch khung, không đè chữ lên học viên."""
     prompt = (prompt or "").strip()
     if not prompt:
         return {"ok": False, "error": "Thiếu mô tả ảnh (prompt)."}
@@ -720,6 +957,32 @@ async def generate_gemini(
             logo_file = s_p
         elif not raw_photo_file and s_p.endswith((".jpg", ".png", ".jpeg", ".webp")):
             raw_photo_file = s_p
+
+    # QUY TẮC TỶ LỆ 7 / 3:
+    p_lower = prompt.lower()
+    force_kieu_1 = (
+        (style_preference == "kieu_1") or
+        any(k in p_lower for k in ("kiểu 1", "kieu 1", "3d poster", "3d render", "mockup", "studio lighting", "ai pure"))
+    )
+    force_kieu_2 = (
+        (style_preference == "kieu_2") or
+        any(k in p_lower for k in ("kiểu 2", "kieu 2", "ảnh thật", "anh that", "real photo", "dataset", "banner", "poster layout"))
+    )
+
+    should_use_kieu_2 = force_kieu_2 or (not force_kieu_1 and (random.random() < 0.70))
+
+    if should_use_kieu_2:
+        banner_res = generate_authentic_banner_cover(
+            vault_root=vault_root,
+            logo_path=logo_file,
+            raw_path=raw_photo_file,
+            prompt=prompt,
+            save_under=save_under,
+            prefix=prefix,
+        )
+        if banner_res and banner_res.get("ok"):
+            return banner_res
+        # Nếu Kiểu 2 lỗi thì tiếp tục thử Kiểu 1 bên dưới
 
     creative_instructions = (
         "\n\nCRITICAL CREATIVE & BRAND INSTRUCTIONS:\n"
@@ -832,6 +1095,7 @@ async def generate_gemini(
         raw_path=raw_photo_file,
         save_under=save_under,
         prefix=prefix,
+        prompt=prompt,
     )
     if fallback_res and fallback_res.get("ok"):
         return fallback_res

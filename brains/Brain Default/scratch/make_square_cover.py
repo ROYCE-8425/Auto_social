@@ -287,23 +287,40 @@ def create_gemini_ai_cover(ctype: str, out_path: Path, api_key: str = None) -> b
 
 def main():
     if len(sys.argv) < 2:
-        print("Usage: make_square_cover.py <course_type: tinhoc|ketoan|cad|dohoa|ai> [style_or_photo] [photo_path] [--ai|--gemini]")
+        print("Usage: make_square_cover.py <course_type: tinhoc|ketoan|cad|dohoa|ai> [style_or_photo] [photo_path] [--kieu1|--kieu2|--template <name>]")
         return
 
     ctype = sys.argv[1].lower()
-    use_ai = any(arg.lower() in ("--ai", "--gemini", "ai", "gemini") for arg in sys.argv[2:]) or os.getenv("USE_AI_COVER") == "1"
+    
+    server_dir = str(VAULT.parent.parent / "server")
+    if server_dir not in sys.path:
+        sys.path.insert(0, server_dir)
+
+    import random
+    force_kieu_1 = any(arg.lower() in ("--kieu1", "--ai", "--gemini", "kieu1", "ai", "gemini") for arg in sys.argv[2:])
+    force_kieu_2 = any(arg.lower() in ("--kieu2", "kieu2", "--banner") for arg in sys.argv[2:])
+    
+    # 7/3 Ratio: 70% Kiểu 2 (Authentic Banner), 30% Kiểu 1 (AI 3D Poster)
+    use_kieu_2 = force_kieu_2 or (not force_kieu_1 and (random.random() < 0.70))
+
+    chosen_template = None
+    for i, arg in enumerate(sys.argv[2:]):
+        if arg.lower() in ("--template", "-t") and i + 1 < len(sys.argv[2:]):
+            chosen_template = sys.argv[2:][i + 1].strip()
 
     courses = {
         "tinhoc": {
             "title": "KHÓA HỌC TIN HỌC VĂN PHÒNG",
             "subtitle": "Word • Excel • PowerPoint Thực Chiến A - Z",
+            "highlights": ["Thực hành 100% trên máy tính", "Kèm 1-1 cầm tay chỉ việc", "Thời gian học linh hoạt sáng - tối"],
             "benefit1": "Thực hành 100% trên máy",
             "benefit2": "Kèm 1-1 cầm tay chỉ việc",
             "folder": "tin-hoc _ai"
         },
         "ketoan": {
             "title": "KHÓA HỌC KẾ TOÁN THỰC HÀNH",
-            "subtitle": "Kế Toán Thuế • Báo Cáo Tài Chính • MISA Thực Chiến",
+            "subtitle": "Kế Toán Thuế • Báo Cáo Tài Chính • MISA",
+            "highlights": ["Học trên chứng từ thực tế", "Kèm 1-1 đến khi thành thạo", "Thành thạo phần mềm MISA"],
             "benefit1": "Học trên chứng từ sống",
             "benefit2": "Kèm 1-1 đến khi thành thạo",
             "folder": "ke-toan"
@@ -311,6 +328,7 @@ def main():
         "cad": {
             "title": "KHÓA HỌC VẼ KỸ THUẬT AUTOCAD",
             "subtitle": "AutoCAD 2D & 3D • Đọc Hiểu & Bóc Tách Bản Vẽ",
+            "highlights": ["Thực hành 100% bản vẽ thực tế", "Đọc hiểu bóc tách bản vẽ nhanh", "Giảng viên kỹ sư giàu kinh nghiệm"],
             "benefit1": "Thực hành 100% bản vẽ thực tế",
             "benefit2": "Học kèm trực tiếp trên máy",
             "folder": "ve-ky-thuat"
@@ -318,16 +336,18 @@ def main():
         "dohoa": {
             "title": "KHÓA HỌC THIẾT KẾ ĐỒ HỌA",
             "subtitle": "Photoshop • Illustrator • CorelDRAW Thực Chiến",
+            "highlights": ["Thiết kế banner poster chuyên nghiệp", "Tư duy bố cục và màu sắc chuẩn in", "Thực hành đồ án doanh nghiệp thực tế"],
             "benefit1": "Thực chiến banner - logo - in ấn",
             "benefit2": "Tặng kho tài nguyên 300GB",
             "folder": "do-hoa"
         },
         "ai": {
-            "title": "ỨNG DỤNG TRÍ TUỆ NHÂN TẠO AI",
-            "subtitle": "ChatGPT • Gemini • Tự Động Hóa Công Việc Văn Phòng",
+            "title": "AI ỨNG DỤNG VĂN PHÒNG",
+            "subtitle": "ChatGPT • Copilot • Tự Động Hóa Công Việc",
+            "highlights": ["Tối ưu Word Excel mỗi ngày", "Tăng 5x hiệu suất làm việc", "Dạy kèm 1-1 thực hành"],
             "benefit1": "Tăng năng suất làm việc x5",
             "benefit2": "Cầm tay chỉ việc ứng dụng thực tế",
-            "folder": "ai"
+            "folder": "tin-hoc _ai"
         }
     }
 
@@ -335,24 +355,21 @@ def main():
     out_p = VAULT / f"attachments/dataset/_xuat/cover_{ctype}_style1_square.jpg"
     out_p2 = VAULT / f"attachments/dataset/_xuat/cover_{ctype}_style2_square.jpg"
 
-    server_dir = str(VAULT.parent.parent / "server")
-    if server_dir not in sys.path:
-        sys.path.insert(0, server_dir)
-    try:
-        import image_gen
-        has_key = bool(image_gen.get_gemini_api_key())
-    except Exception:
-        has_key = False
+    # Neu ty le chon Kieu 1 (AI 3D Poster qua Gemini Imagen 3)
+    if not use_kieu_2:
+        try:
+            import image_gen
+            has_key = bool(image_gen.get_gemini_api_key())
+            if has_key:
+                ok = create_gemini_ai_cover(ctype, out_p)
+                if ok:
+                    import shutil
+                    shutil.copy2(out_p, out_p2)
+                    return
+        except Exception:
+            pass
 
-    # Neu co yeu cau AI hoac he thong da co key Gemini -> Tu dong tao cover AI
-    if use_ai or has_key:
-        ok = create_gemini_ai_cover(ctype, out_p)
-        if ok:
-            import shutil
-            shutil.copy2(out_p, out_p2)
-            return
-
-    # Fallback ve anh chup lop hoc thuc te
+    # Kieu 2 (70%): Sinh Banner thuc chien tu anh lop hoc that + 5 layout Agency
     custom_photo = None
     for arg in sys.argv[2:]:
         p = Path(arg)
@@ -363,27 +380,55 @@ def main():
     folder_dir = VAULT / "attachments/dataset" / info["folder"]
     if not custom_photo or not custom_photo.exists():
         if folder_dir.exists():
-            files = [p for p in folder_dir.iterdir() if p.suffix.lower() in [".jpg", ".png", ".webp"] and not p.name.startswith(".")]
-            custom_photo = files[0] if files else None
+            files = [p for p in folder_dir.iterdir() if p.suffix.lower() in [".jpg", ".png", ".webp"] and " (1)" not in p.name and not p.name.startswith(".")]
+            if files:
+                custom_photo = random.choice(files)
 
     if custom_photo and custom_photo.exists():
         (VAULT / "attachments/dataset/_xuat/cover_inner_photo.txt").write_text(str(custom_photo), encoding="utf-8")
-        create_clean_classroom_cover(
-            title=info["title"],
-            subtitle=info["subtitle"],
-            benefit1=info["benefit1"],
-            benefit2=info["benefit2"],
-            classroom_img_path=custom_photo,
-            out_path=out_p
-        )
-        create_clean_classroom_cover(
-            title=info["title"],
-            subtitle=info["subtitle"],
-            benefit1=info["benefit1"],
-            benefit2=info["benefit2"],
-            classroom_img_path=custom_photo,
-            out_path=out_p2
-        )
+        try:
+            import banner_templates
+            tpl1 = chosen_template or random.choice(banner_templates.TEMPLATE_CHOICES)
+            tpl2 = "split_left" if tpl1 == "split_right" else "split_right"
+
+            banner_templates.generate_authentic_banner(
+                classroom_img_path=custom_photo,
+                out_path=out_p,
+                logo_path=LOGO_PATH,
+                title=info["title"],
+                subtitle=info["subtitle"],
+                highlights=info["highlights"],
+                template_name=tpl1,
+            )
+            banner_templates.generate_authentic_banner(
+                classroom_img_path=custom_photo,
+                out_path=out_p2,
+                logo_path=LOGO_PATH,
+                title=info["title"],
+                subtitle=info["subtitle"],
+                highlights=info["highlights"],
+                template_name=tpl2,
+            )
+            print(f"[OK] Da tao 2 Cover Kieu 2 (Agency Banner: {tpl1}, {tpl2}): {out_p.name}, {out_p2.name}")
+            return
+        except Exception as e:
+            print(f"[WARN] Banner templates loi ({e}), fallback sang PIL cu: {e}")
+            create_clean_classroom_cover(
+                title=info["title"],
+                subtitle=info["subtitle"],
+                benefit1=info["benefit1"],
+                benefit2=info["benefit2"],
+                classroom_img_path=custom_photo,
+                out_path=out_p
+            )
+            create_clean_classroom_cover(
+                title=info["title"],
+                subtitle=info["subtitle"],
+                benefit1=info["benefit1"],
+                benefit2=info["benefit2"],
+                classroom_img_path=custom_photo,
+                out_path=out_p2
+            )
     else:
         print(f"[WARN] Khong tim thay anh trong folder {info['folder']}. Vui long kiem tra dataset.")
 
