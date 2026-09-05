@@ -113,34 +113,34 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Vẽ kỹ th
 - Đăng trùng rồi tự ý gọi `fb_page_delete` để xóa bài
 - Dùng ký tự em dash
 
-## Chân trang caption (bắt buộc — mỗi cơ sở MỘT DÒNG, cấm dấu |)
+## Chân trang caption (bắt buộc - mỗi cơ sở MỘT DÒNG, cấm dấu |)
 Trung Tâm Đào Tạo Tin Học Sao Việt
-193 Nguyễn Xí, Bình Thạnh
-Florita TM-20, Quận 7
-Moonlight 510 Kinh Dương Vương, Bình Tân
-A23 Lê Thị Riêng, Quận 12
-133/2 Đỗ Xuân Hợp, Thủ Đức
-180 Phạm Văn Bạch, Tân Bình
-69 D32 Oasis, Thuận An
-184/19/11 Đặng Văn Mây, Dĩ An
-107 D5 Phú Hòa, Thủ Dầu Một
-20 ĐX 12, Tân Uyên
-91 Đoàn Văn Cự, Biên Hòa
-72 Đinh Bộ Lĩnh, Long Thành
-293 Bình Giã, Vũng Tàu
-Hotline: 0823 552 558
-Email: trungtamtinhocsaoviet@gmail.com
-Web: https://trannhuy.online
+🏫 Bình Thạnh: 193 Nguyễn Xí, phường Bình Thạnh, Hồ Chí Minh (Tầng 1)
+🏫 Quận 7: Căn hộ Florita, KĐT Him Lam, Tân Hưng, Hồ Chí Minh
+🏫 Bình Tân: 510 Kinh Dương Vương, An Lạc, Bình Tân
+🏫 Quận 12: A23 Lê Thị Riêng, KDC Thới An
+🏫 TP. Thủ Đức: 133/2 Đỗ Xuân Hợp, Phước Long B
+🏫 CN Tây Thạnh (Q. Tân Phú): 11/23 Hồ Đắc Di, P. Tây Thạnh, TP. Hồ Chí Minh
+🏫 Biên Hòa: 91 Đoàn Văn Cự, Tam Hòa
+🏫 Long Thành: 72 Đinh Bộ Lĩnh, Lộc An
+🏫 Dĩ An: 184/19/11 Đặng Văn Mây
+🏫 Thuận An: 69 D32, Làng chuyên gia Oasis, phường An Phú, Thuận An
+🏫 Thủ Dầu Một: 107 D5, KDC Phú Hòa 1
+🏫 Tân Uyên: 20 Đường ĐX12, Tân Vĩnh Hiệp
+🏫 Vũng Tàu: 293 Bình Giã, P.8
+📞 Hotline/Zalo: 0823 552 558 - 093 11 44 858
+📩 Email: trungtamtinhocsaoviet@gmail.com
+🌐 Website: https://tinhocsaoviet.com
 
 ## Tuỳ biến trang (trống ở file này)
 - Tên Fanpage: Royce Shop
 - slug: royce-shop
 - Page ID: 988656934325292
 - Page test: true
-- Cơ sở / địa chỉ: 193 Nguyễn Xí, Bình Thạnh | Florita TM-20, Quận 7 | Moonlight 510 Kinh Dương Vương, Bình Tân | A23 Lê Thị Riêng, Quận 12 | 133/2 Đỗ Xuân Hợp, Thủ Đức | 180 Phạm Văn Bạch, Tân Bình | 69 D32 Oasis, Thuận An | 184/19/11 Đặng Văn Mây, Dĩ An | 107 D5 Phú Hòa, Thủ Dầu Một | 20 ĐX 12, Tân Uyên | 91 Đoàn Văn Cự, Biên Hòa | 72 Đinh Bộ Lĩnh, Long Thành | 293 Bình Giã, Vũng Tàu
-- Hotline / Zalo: 0823 552 558
+- Cơ sở / địa chỉ: 🏫 Bình Thạnh: 193 Nguyễn Xí, phường Bình Thạnh, Hồ Chí Minh (Tầng 1) | 🏫 Quận 7: Căn hộ Florita, KĐT Him Lam, Tân Hưng, Hồ Chí Minh | 🏫 Bình Tân: 510 Kinh Dương Vương, An Lạc, Bình Tân | 🏫 Quận 12: A23 Lê Thị Riêng, KDC Thới An | 🏫 TP. Thủ Đức: 133/2 Đỗ Xuân Hợp, Phước Long B | 🏫 CN Tây Thạnh (Q. Tân Phú): 11/23 Hồ Đắc Di, P. Tây Thạnh, TP. Hồ Chí Minh | 🏫 Biên Hòa: 91 Đoàn Văn Cự, Tam Hòa | 🏫 Long Thành: 72 Đinh Bộ Lĩnh, Lộc An | 🏫 Dĩ An: 184/19/11 Đặng Văn Mây | 🏫 Thuận An: 69 D32, Làng chuyên gia Oasis, phường An Phú, Thuận An | 🏫 Thủ Dầu Một: 107 D5, KDC Phú Hòa 1 | 🏫 Tân Uyên: 20 Đường ĐX12, Tân Vĩnh Hiệp | 🏫 Vũng Tàu: 293 Bình Giã, P.8
+- Hotline / Zalo: 0823 552 558 - 093 11 44 858
 - Email Fanpage: trungtamtinhocsaoviet@gmail.com
-- Web Fanpage: trungtamtinhocsaoviet@gmail.com
+- Web Fanpage: https://tinhocsaoviet.com
 - Link Fanpage: https://www.facebook.com/988656934325292
 - Khoá thế mạnh:
 - Góc địa phương:
