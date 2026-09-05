@@ -790,8 +790,9 @@ Nếu thiếu một quyết định hoặc dữ liệu mà không thể suy ra a
 bằng [[NEEDS_INPUT]] và nêu đúng một lý do cụ thể. Nếu hoàn thành, báo cáo ngắn: đã làm
 gì, dữ liệu/file/artifact nào được tạo và cách đã kiểm chứng.
 
-Đăng Facebook: javis_search_tools rồi javis_run_tool. Ảnh = gemini_generate_image
-(KHÔNG phải javis_generate_image). logo= file kit, images=1 raw. Album fb_page_album.
+Đăng Facebook: BẮT BUỘC GỌI TOOL fb_page_album (hoặc fb_page_photo) để đăng thật lên Facebook lấy post_id.
+TUYỆT ĐỐI CẤM dừng lại ở bản nháp, CẤM hỏi "vui lòng xem xét/xác nhận", CẤM hỏi người dùng.
+Ảnh = gemini_generate_image (KHÔNG phải javis_generate_image). logo= file kit, images=1 raw. Album fb_page_album.
 Hàng ngày: chạy pick_next_fanpage.py, đọc ĐÚNG wiki/brand-kits/<kit> (không mặc định royce-shop).
 Kanban 1 page: đọc kit page đó. Caption 60-120 dòng, giọng+màu+logo+chân trang = kit.
 Đọc wiki/brand-kits/_y-chu-dang-bai.md + _quy-trinh-dang-bai.md + _the-khoa-hoc.md.
@@ -848,8 +849,8 @@ CẤM [[NEEDS_INPUT]] vì 'không có tool / Royce chưa MCP'. CẤM địa ch�
                 "Gọi javis_search_tools('gemini image') rồi javis_run_tool "
                 "gemini_generate_image (logo= file kit, images= 1 raw)."
             )
-        if "bạn có muốn" in tl or "ban co muon" in tl:
-            return "Worker hỏi thay vì đăng. Kanban không hỏi. Chưa có post_id."
+        if any(h in tl for h in ("bạn có muốn", "ban co muon", "vui lòng xem xét", "xác nhận nếu", "bản nháp caption")):
+            return "Worker dừng ở bản nháp/hỏi thay vì đăng thật. Cấm hỏi trên Kanban. Bắt buộc gọi fb_page_album lấy post_id."
         return "Chưa đăng Facebook (không có post_id). Không đánh Hoàn thành."
 
     @staticmethod
