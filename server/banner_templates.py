@@ -126,10 +126,10 @@ def paste_brand_logo(base: Image.Image, logo_path: Optional[Path], box: Tuple[in
 
         draw = ImageDraw.Draw(base)
         if bg_badge:
-            draw.rounded_rectangle([x1, y1, x2, y2], radius=18, fill=(255, 255, 255, 250), outline=(255, 215, 0, 200), width=2)
+            draw.rounded_rectangle([x1, y1, x2, y2], radius=22, fill=(255, 255, 255, 252), outline=(255, 215, 0, 220), width=2)
 
-        pad_x = 18
-        pad_y = 10
+        pad_x = 24
+        pad_y = 14
         max_lw = bw - (pad_x * 2)
         max_lh = bh - (pad_y * 2)
 

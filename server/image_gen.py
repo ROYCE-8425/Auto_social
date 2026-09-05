@@ -1018,7 +1018,7 @@ async def generate_gemini(
         "\n\nCRITICAL CREATIVE DIRECTOR & BRAND RULES:\n"
         "[BLOCK 1 - SUBJECT]: Authentic Vietnamese/Asian learner or professional in a modern, well-lit tech classroom or corporate office, confident and focused expression, grounded in the attached reference dataset.\n"
         "[BLOCK 2 - COMPOSITION]: Square 1:1 framing (2000x2000 px). Position subject at lower-third or golden ratio. Leave generous, clean negative space at the top third or left side for official brand logo and graphic overlay.\n"
-        "[BLOCK 3 - LIGHTING & BRAND COLORS]: Commercial advertising studio key lighting, warm and bright atmosphere. Deep Royal Navy Blue (#0B2341) palette with vibrant Golden Yellow (#F59E0B) accents.\n"
+        "[BLOCK 3 - LIGHTING & BRAND COLORS]: Commercial advertising studio key lighting, warm and bright atmosphere. Deep Royal Navy Blue palette with vibrant Golden Yellow accents.\n"
         "[BLOCK 4 - STYLE]: Commercial education advertising photography, 8k resolution, crisp focus, natural skin texture, realistic, no uncanny valley.\n"
         + block_5
     )
