@@ -792,6 +792,7 @@ gì, dữ liệu/file/artifact nào được tạo và cách đã kiểm chứng
 
 Đăng Facebook: BẮT BUỘC GỌI TOOL fb_page_album (hoặc fb_page_photo) để đăng thật lên Facebook lấy post_id.
 TUYỆT ĐỐI CẤM dừng lại ở bản nháp, CẤM hỏi "vui lòng xem xét/xác nhận", CẤM hỏi người dùng.
+TUYỆT ĐỐI CẤM BỊA HOẶC MOCK post_id hoặc link post (cấm 87654321..., cấm số mẫu). Phải thực sự gọi tool đăng bài.
 Ảnh = gemini_generate_image (KHÔNG phải javis_generate_image). logo= file kit, images=1 raw. Album fb_page_album (photos BẮT BUỘC là mảng list ["path1", "path2"], KHÔNG bọc thành chuỗi string).
 Hàng ngày: chạy pick_next_fanpage.py, đọc ĐÚNG wiki/brand-kits/<kit> (không mặc định royce-shop).
 Kanban 1 page: đọc kit page đó. Caption 60-120 dòng, giọng+màu+logo+chân trang = kit.
@@ -821,26 +822,34 @@ CẤM [[NEEDS_INPUT]] vì 'không có tool / Royce chưa MCP'. CẤM địa ch�
             return ""
         t = result or ""
         tl = t.lower()
+        # Chặn ngay các mã post_id giả / mock dạng đếm lùi, lặp số, hoặc mẫu ví dụ
+        if re.search(r"87654321|12345678|11111111|99999999|00000000", t):
+            return "Phát hiện post_id hoặc link bài viết giả lập / mock do AI tự bịa (dãy số mẫu). Bắt buộc gọi tool fb_page_album thật để lấy post_id từ Facebook Graph API."
         # Graph thật: "post_id": "9886..._1221..." hoặc POST_OK post_id=...
         # pfbid / permalink bịa (ca Royce 2026-09-05) không tính.
         graph_id = re.search(
             r'post_id["\s:=]+(\d{8,}_\d{5,}|\d{14,})', t, re.I
         )
         if graph_id and "ERROR" not in t[:80]:
-            return ""
+            gid = graph_id.group(1)
+            if not any(dummy in gid for dummy in ("87654321", "12345678", "0000000", "1111111", "9999999")):
+                return ""
         if "POST_OK" in t and re.search(r"\d{8,}_\d{5,}|\d{14,}", t):
             return ""
         # New Page Experience: /posts/122131674009221350 (số thuần, không pfbid)
-        if re.search(r"facebook\.com/.+/posts/(\d{14,})", tl):
-            return ""
+        m_posts = re.search(r"facebook\.com/.+/posts/(\d{14,})", tl)
+        if m_posts:
+            pid = m_posts.group(1)
+            if not any(dummy in pid for dummy in ("87654321", "12345678", "0000000", "1111111", "9999999")):
+                return ""
         if "pfbid" in tl and not re.search(r"/posts/\d{14,}", tl):
             return (
                 "Link pfbid do model bịa. Tool fb_page_album/photo phải trả "
-                "post_id số dạng PAGEID_POSTID hoặc /posts/1221…. Chưa đăng lên tường."
+                "post_id số dạng PAGEID_POSTID hoặc /posts/1221... Chưa đăng lên tường."
             )
         if "facebook.com" in tl and "/posts/" in tl:
             return (
-                "Chỉ có URL, không có post_id Graph. Chưa đăng. "
+                "Chỉ có URL hoặc post_id giả, không có post_id Graph thật. Chưa đăng. "
                 "Gọi fb_page_album rồi dán nguyên JSON tool (ok, post_id)."
             )
         if "javis_generate_image" in tl:

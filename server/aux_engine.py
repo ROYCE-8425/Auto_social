@@ -714,24 +714,26 @@ def swap(cli, mode: str = None, tag: str = None, spec: dict = None,
     try:
         sp = spec if spec is not None else read_spec(settings)
         prov = sp.get("provider", CLAUDE)
-        # Vận hành dùng Gemini API key: không dựng agy. Agent/workflow còn ghi
-        # antigravity-cli thì đổi sang gemini (cùng model flash nếu tên model là agy).
         if prov == ANTIGRAVITY:
-            s = settings if settings is not None else cfgmod.read_settings()
-            if api_key_for("gemini", s):
-                m = (sp.get("model") or "").strip()
-                if not m or "gemini" not in m.lower():
-                    m = (s.get("model") or {}).get("auxiliary", {}).get("model") or "gemini-2.5-flash"
-                    if "gemini" not in str(m).lower():
-                        m = "gemini-2.5-flash"
-                sp = dict(sp)
-                sp["provider"] = "gemini"
-                sp["model"] = m
-                prov = "gemini"
-                print("[aux] antigravity-cli → Gemini API (có API key).", file=sys.stderr)
-            else:
-                print("[aux] bỏ antigravity-cli (không agy); chưa có Gemini key.",
-                      file=sys.stderr)
+            import antigravity_cli as _a
+            agy_bin = _a.find_antigravity_cli()
+            agy_conn = _a.auth_status().get("connected") if agy_bin else False
+            if not agy_conn:
+                s = settings if settings is not None else cfgmod.read_settings()
+                if api_key_for("gemini", s):
+                    m = (sp.get("model") or "").strip()
+                    if not m or "gemini" not in m.lower():
+                        m = (s.get("model") or {}).get("auxiliary", {}).get("model") or "gemini-2.5-flash"
+                        if "gemini" not in str(m).lower():
+                            m = "gemini-2.5-flash"
+                    sp = dict(sp)
+                    sp["provider"] = "gemini"
+                    sp["model"] = m
+                    prov = "gemini"
+                    print("[aux] agy chua san sang -> dung Gemini API (co API key).", file=sys.stderr)
+                else:
+                    print("[aux] bo antigravity-cli (khong agy hoac chua login); chua co Gemini key.",
+                          file=sys.stderr)
         # MỨC FULL KHÔNG CÓ CHUỖI DỰ PHÒNG. Đây là quyết định có chủ ý, không phải bỏ sót.
         #
         # Việc ở mức full thường là hành động RA NGOÀI: đăng bài, gửi tin, tạo đơn, đặt lịch.

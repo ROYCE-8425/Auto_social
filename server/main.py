@@ -1483,9 +1483,6 @@ def _agent_model_provider(model: str, provider: str = "") -> str:
     Agent CŨ chưa có trường đó thì suy đúng như trước: gpt*/-codex = Codex, còn lại = Claude.
     """
     p = (provider or "").strip()
-    # Máy này chạy Gemini API key: agent/workflow không được dựng agy.
-    if p == "antigravity-cli":
-        return "gemini"
     if p in AGENT_PROVIDERS:
         return p
     return "openai-oauth" if _is_codex_model(model) else "anthropic-cli"
