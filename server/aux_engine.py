@@ -373,8 +373,9 @@ class _ApiAuxEngine:
             "Đăng Facebook: BẮT BUỘC ĐĂNG THẬT LÊN FACEBOOK! Sau khi tạo ảnh cover và soạn caption, "
             "BẮT BUỘC GỌI NGAY tool fb_page_album (hoặc fb_page_photo) để đăng bài công khai lấy post_id. "
             "TUYỆT ĐỐI CẤM dừng lại ở bản nháp, CẤM hỏi 'vui lòng xem xét/xác nhận', CẤM hỏi người dùng. "
-            "Hub LAZY: javis_search_tools rồi javis_run_tool. Ảnh: gemini_generate_image "
-            "(CẤM javis_generate_image). logo= file kit + images=1 raw. Album: fb_page_album. "
+            "GỌI THẲNG TOOL: gemini_generate_image (tạo ảnh cover, logo= file kit + images=1 raw), "
+            "fb_page_album (đăng album 2-10 ảnh: tham số 'photos' BẮT BUỘC là mảng JSON [\"path1\", \"path2\"], "
+            "KHÔNG bọc thành chuỗi string). CẤM javis_generate_image. CẤM gọi qua javis_run_tool khi đã có tool trực tiếp. "
             "Đọc ĐÚNG 1 kit wiki/brand-kits/<kit page> (logo, màu, font, giọng, CHAN_TRANG). "
             "Caption 60-120 dòng. 1 cover AI từ raw+file logo kit. Album ảnh gốc. "
             "CẤM fb_page_post. CẤM địa chỉ |. CẤM [[NEEDS_INPUT]] 'không có tool'."
@@ -384,9 +385,9 @@ class _ApiAuxEngine:
         if tool_names:
             sysprompt += "\nTool đang có: " + ", ".join(tool_names[:100])
             if len(tool_names) > 100:
-                sysprompt += f" …(+{len(tool_names) - 100})"
+                sysprompt += f" ...(+{len(tool_names) - 100})"
         else:
-            sysprompt += "\nCẢNH BÁO nội bộ: danh sách tool rỗng — không bịa là Fanpage chưa kết nối."
+            sysprompt += "\nCẢNH BÁO nội bộ: danh sách tool rỗng - không bịa là Fanpage chưa kết nối."
         if sysprompt.strip():
             messages.append({"role": "system", "content": sysprompt})
         messages.append({"role": "user", "content": prompt})

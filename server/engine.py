@@ -1096,9 +1096,8 @@ def _mcp_to_openai_tools(mcp_tools):
     }} for t in mcp_tools]
 
 
-def _gemini_schema(node):
-    """JSON Schema Gemini 2.5 chịu được. title / additionalProperties / $ref
-    → MALFORMED_FUNCTION_CALL (ca Royce 2026-09-05)."""
+def _gemini_schema(node, is_root=True):
+    """JSON Schema Gemini 2.5 chịu được. Loại bỏ title / additionalProperties / $ref."""
     if not isinstance(node, dict):
         return {"type": "string"}
     out = {}
@@ -1112,15 +1111,18 @@ def _gemini_schema(node):
         out["enum"] = [str(x) for x in node["enum"][:12]]
     if typ == "array":
         items = node.get("items")
-        out["items"] = _gemini_schema(items) if isinstance(items, dict) else {"type": "string"}
+        out["items"] = _gemini_schema(items, is_root=False) if isinstance(items, dict) else {"type": "string"}
         return out
     if typ == "object" or node.get("properties"):
+        raw_props = node.get("properties")
+        if not is_root and not raw_props:
+            # Nested freeform object (như args của javis_run_tool): Gemini OpenAPI không hỗ trợ
+            # object tự do không khai properties. Chuyển sang string để nhận chuỗi JSON an toàn.
+            return {"type": "string", "description": (str(node.get("description") or "JSON string"))[:180]}
         out["type"] = "object"
         props = {}
-        for k, v in list((node.get("properties") or {}).items())[:12]:
-            props[str(k)] = _gemini_schema(v) if isinstance(v, dict) else {"type": "string"}
-        if not props:
-            props = {"note": {"type": "string"}}
+        for k, v in list((raw_props or {}).items())[:12]:
+            props[str(k)] = _gemini_schema(v, is_root=False) if isinstance(v, dict) else {"type": "string"}
         out["properties"] = props
         req = [r for r in (node.get("required") or []) if r in props][:8]
         if req:
@@ -1129,15 +1131,41 @@ def _gemini_schema(node):
 
 
 def _mcp_to_gemini_tools(mcp_tools):
-    """Tối đa 8 tool, schema đã gỡ title/additionalProperties."""
+    """Tối đa 8 tool, schema đã loại bỏ title/additionalProperties.
+    Ưu tiên các tool hành động trực tiếp, loại bỏ meta-tool lazy khi đã có tool trực tiếp."""
+    raw = list(mcp_tools or [])
+    priority_order = [
+        "gemini_generate_image",
+        "fb_page_album",
+        "fb_page_photo",
+        "fb_pages_list",
+        "javis_read_file",
+        "javis_write_file",
+        "javis_list_dir",
+    ]
+
+    def _rank(t):
+        fn = t.get("fn", "")
+        if fn in priority_order:
+            return priority_order.index(fn)
+        if fn.startswith("fb_page_"):
+            return 20
+        if fn in ("javis_search_tools", "javis_run_tool"):
+            return 90
+        return 50
+
+    sorted_tools = sorted(raw, key=_rank)
+    has_direct = any(t.get("fn") in ("gemini_generate_image", "fb_page_album", "fb_page_photo") for t in sorted_tools)
+    if has_direct:
+        sorted_tools = [t for t in sorted_tools if t.get("fn") not in ("javis_search_tools", "javis_run_tool")]
     out = []
-    for t in (mcp_tools or [])[:8]:
+    for t in sorted_tools[:8]:
         out.append({
             "type": "function",
             "function": {
                 "name": t["fn"][:64],
                 "description": (t.get("description") or t["fn"])[:240],
-                "parameters": _gemini_schema(t.get("schema") or {"type": "object", "properties": {}}),
+                "parameters": _gemini_schema(t.get("schema") or {"type": "object", "properties": {}}, is_root=True),
             },
         })
     return out
@@ -1560,6 +1588,7 @@ async def _cc_tool_loop(url, headers, model, messages, mcp_tools, mcp_route, rea
         })
         requirement_pending = False
     empty_retries = 0
+    malformed_retries = 0
     for _ in range(_max_tool_rounds()):
         payload = {"model": model, "messages": msgs, "stream": False}
         # Gemini OpenAI-compat: không max_tokens thì 2.5-flash hay nghĩ hết ngân sách
@@ -1666,11 +1695,27 @@ async def _cc_tool_loop(url, headers, model, messages, mcp_tools, mcp_route, rea
         finish = ((data.get("choices") or [{}])[0]).get("finish_reason") or ""
         if (not content) and (not tcs) and (
                 "MALFORMED" in finish or "function_call_filter" in finish):
-            print(f"[{label}] {finish} — dừng, không retry vòng tool.",
+            if malformed_retries < 2:
+                malformed_retries += 1
+                print(f"[{label}] {finish} - thu hoi phuc lan {malformed_retries}/2",
+                      file=__import__("sys").stderr)
+                msgs.append({
+                    "role": "user",
+                    "content": (
+                        f"Lượt gọi tool vừa rồi bị lỗi cú pháp ({finish}). "
+                        "QUY TẮC BẮT BUỘC: "
+                        "1. Gọi trực tiếp các tool có sẵn (gemini_generate_image, fb_page_album, fb_page_photo, fb_pages_list). "
+                        "2. Tham số 'photos' của fb_page_album BẮT BUỘC là mảng JSON: [\"path1\", \"path2\"], TUYỆT ĐỐI KHÔNG bọc thành chuỗi string '[\"...\", \"...\"]'. "
+                        "3. Điền đúng định dạng JSON và đầy đủ tham số yêu cầu. "
+                        "Hãy gọi lại tool ngay bây giờ."
+                    )
+                })
+                continue
+            print(f"[{label}] {finish} - da het {malformed_retries} lan thu, dung lai.",
                   file=__import__("sys").stderr)
             yield {"type": "error", "content": (
-                f"{label} gọi tool hỏng ({finish}). "
-                "Gọi thẳng gemini_generate_image / fb_page_album, không JSON rỗng."
+                f"{label} gọi tool hỏng ({finish}) sau {malformed_retries} lần thử. "
+                "Gọi thẳng gemini_generate_image / fb_page_album, tham số photos là mảng JSON."
             )}
             return
         if (not content) and (not tcs) and empty_retries < 1:

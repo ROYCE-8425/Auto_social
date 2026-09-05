@@ -22,7 +22,7 @@ Quy trình chuẩn:
 3. Soạn caption 7 phần (60-120 dòng). Chân trang = khối CHAN_TRANG của kit/script. CẤM 12 cơ sở khi kit 1 chi nhánh. CẤM bài dưới 30 dòng.
 4. Tạo cover 1:1 qua `gemini_generate_image`.
 5. Đăng thật ngay lập tức bằng `fb_page_album` (hoặc `fb_page_photo`):
-   - Ảnh 1 = cover vừa tạo, lưu `_xuat/`. Bố cục Album (4, 6, 7, 8 ảnh): Banner cover BẮT BUỘC VUÔNG 1:1 (2000x2000 hoặc 1200x1200 px). Ảnh 2 VUÔNG 1:1 (lớp học chính), Ảnh 3..N NGANG 3:2. Dùng lệnh `python "brains/Brain Default/scratch/hub_call.py" pick_photos <folder> <cover_path> random` để tự động chuẩn hóa khít Facebook.
+   - Ảnh 1 = cover vừa tạo, lưu `_xuat/`. Bố cục Album (4, 6, 7, 8 ảnh): Banner cover BẮT BUỘC VUÔNG 1:1 (2000x2000 hoặc 1200x1200 px). Ảnh 2 VUÔNG 1:1 (lớp học chính), Ảnh 3..N NGANG 3:2. Dùng lệnh `python "brains/Brain Default/scratch/hub_call.py" pick_photos <folder> <cover_path> random` để tự động chuẩn hóa khít Facebook. LƯU Ý: Tham số photos của fb_page_album BẮT BUỘC là mảng JSON `["path1", "path2"]`, TUYỆT ĐỐI KHÔNG bọc thành chuỗi string `'["...", "..."]'`.
    - BẮT BUỘC GỌI TOOL ĐĂNG NGAY: CẤM dừng lại ở bản nháp, CẤM hỏi "vui lòng xem xét và xác nhận", CẤM hỏi "bạn có muốn tôi đăng không".
    - Đăng đúng 1 lần. Nhận `post_id` từ Graph API là hoàn thành. Đăng xong xóa cover gen trong `_xuat/`.
 
