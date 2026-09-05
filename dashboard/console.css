@@ -250,6 +250,7 @@ body.in-console .hud-actions { display: none; }
 .mp-model:hover { background: var(--surface-2); }
 .mp-model.sel { background: var(--accent-wash-2); border-color: var(--accent); }
 .mp-cur { float: right; font-size: 11px; color: var(--accent2); letter-spacing: 1px; }
+.mp-img-head { margin: 14px 0 8px; padding-top: 12px; border-top: 1px solid var(--hairline); font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; opacity: .75; }
 .mp-empty { color: var(--text3); font-size: 14px; padding: 16px; }
 .mp-foot { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-top: 1px solid var(--glass-brd); }
 .mp-foot .mp-note { max-height: 84px; overflow-y: auto; }   /* lỗi dài không làm footer phình đẩy nút ra ngoài */
@@ -910,8 +911,8 @@ body.has-rail .hud { margin-left: var(--rail-w); width: calc(100% - var(--rail-w
 .wiz-links { display: flex; flex-wrap: wrap; gap: 8px; }
 .wiz-links .wiz-open { margin-left: 0; font-size: 13px; padding: 7px 12px; }
 .wiz-copy { display: flex; gap: 8px; align-items: stretch; }
-.wiz-copy input { flex: 1 1 auto; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12.5px; }
-.wiz-copy .wiz-copy-btn { margin-left: 0; white-space: nowrap; }
+.wiz-copy input, .wiz-copy textarea { flex: 1 1 auto; min-width: 0; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12.5px; overflow-wrap: anywhere; resize: none; }
+.wiz-copy .wiz-copy-btn { margin-left: 0; white-space: nowrap; align-self: stretch; }
 .conn-ok { font-size: 14.5px; padding: 8px 2px; color: var(--green); }
 .conn-hint { margin-top: 8px; font-size: 13px; color: var(--warn-ink); }
 .qr-img { width: 240px; height: 240px; border-radius: 10px; background: #fff; padding: 8px;
@@ -1084,6 +1085,28 @@ body.has-rail .hud { margin-left: var(--rail-w); width: calc(100% - var(--rail-w
 .ds-badge-page{background:var(--info-wash, var(--accent-wash));color:var(--accent)}
 .ds-badge-he-thong{background:var(--surface-3);color:var(--text2)}
 .ds-new{width:100%;justify-content:center}
+.ds-pick-overlay{position:absolute;inset:0;z-index:20;background:rgba(8,10,18,.72);display:flex;align-items:center;justify-content:center;padding:18px;border-radius:14px}
+.ds-pick-box{width:min(560px,100%);max-height:min(78vh,640px);overflow:hidden;display:flex;flex-direction:column;gap:10px;background:var(--bg, #161822);border:1px solid var(--hairline);border-radius:14px;padding:16px 18px;box-shadow:0 18px 50px rgba(0,0,0,.45)}
+.ds-pick-box h3{margin:0;font-size:16px}
+.ds-pick-lead{margin:0;font-size:13px;line-height:1.45;color:var(--text3);opacity:.95}
+.ds-pick-all{display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer}
+.ds-pick-list{flex:1;overflow:auto;display:flex;flex-direction:column;gap:6px;padding:4px 2px;scrollbar-width:thin}
+.ds-pick-row{display:flex;align-items:flex-start;gap:10px;padding:9px 10px;border:1px solid var(--hairline);border-radius:10px;background:var(--glass);font-size:13.5px}
+.ds-pick-row.has-kit{opacity:.55}
+.ds-pick-row input{margin-top:3px}
+.ds-pick-name{font-weight:650}
+.ds-pick-id{font-size:12px;opacity:.7;font-family:ui-monospace,Consolas,monospace}
+.ds-pick-badge{margin-left:auto;font-size:11px;border:1px solid var(--hairline);border-radius:999px;padding:1px 8px;white-space:nowrap}
+.ds-pick-foot{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+.ds-tag-list{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.ds-tag{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--hairline);border-radius:999px;padding:5px 10px;font-size:12.5px;cursor:pointer;background:var(--glass)}
+.ds-tag.on{border-color:var(--accent,#7c5cff);background:rgba(124,92,255,.14)}
+.ds-tag input{margin:0}
+.ds-tag-id{opacity:.55;font-size:11px;font-family:ui-monospace,Consolas,monospace}
+.ds-tag-x{margin-left:2px;border:0;background:transparent;color:inherit;opacity:.45;cursor:pointer;font-size:16px;line-height:1;padding:0 2px}
+.ds-tag-x:hover{opacity:1;color:var(--red,#ef4444)}
+.ds-tag-add{display:flex;gap:8px;align-items:center}
+.ds-tag-add .ds-input{flex:1}
 .ds-main{display:flex;flex-direction:column;gap:10px;min-width:0;border:1px solid var(--hairline);border-radius:14px;padding:12px 14px;background:var(--glass);min-height:0}
 .ds-toolbar{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}
 .ds-toolbar-right{display:flex;gap:10px;align-items:center}

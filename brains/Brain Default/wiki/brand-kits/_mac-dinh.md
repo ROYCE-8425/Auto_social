@@ -79,7 +79,7 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Vẽ kỹ th
 
 ## Logo và dataset ảnh
 - Logo: attachments/dataset/chung/ (chỉ dùng làm watermark hoặc tham chiếu, không đăng logo trần)
-- Thư mục ảnh theo ngành: tin-hoc, co-khi, ke-toan, do-hoa, marketing, ai, tre-em, tieng-han. Không khớp chủ đề (lịch lễ, thông báo) thì không lấy ảnh ngành khác cho có.
+- Thư mục ảnh theo ngành: đúng id trong `wiki/brand-kits/_the-khoa-hoc.md` (folder `attachments/dataset/<id>/`). Không khớp chủ đề thì không lấy ngành khác cho có.
 - Hai kiểu ảnh bắt buộc bám mẫu:
   + Kiểu A (có ảnh ngành): bám mẫu attachments/dataset/_mau/mau-khoa-hoc-co-anh-goc.png (ảnh thật lớp học + panel xanh/vàng tóm tắt 3-5 ý chính + logo Sao Việt góc trên).
   + Kiểu B (không có ảnh ngành, lịch lễ): bám mẫu attachments/dataset/_mau/mau-lich-le-tu-gen.png (poster đủ họa tiết đỏ vàng lễ hội, đèn lồng, trăng, 2 khối lịch nghỉ và học lại, logo Sao Việt; cấm vẽ poster tối giản).
@@ -120,6 +120,8 @@ Web: https://tinhocsaoviet.com/
 ## Tuỳ biến trang (trống ở file này)
 - Tên Fanpage:
 - slug:
+- Page ID:
+- Thẻ khoá học: all
 - Cơ sở / địa chỉ:
 - Hotline riêng:
 - Khoá thế mạnh:

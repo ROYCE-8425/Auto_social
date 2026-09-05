@@ -709,6 +709,24 @@ def swap(cli, mode: str = None, tag: str = None, spec: dict = None,
         # Thà dừng và nói đúng "Claude gãy vì X" để chủ xử lý, hơn là làm nửa vời trong im lặng.
         if str(mode or "").strip().lower() == "full":
             if prov == CLAUDE:
+                # Claude chưa đăng nhập (máy chỉ có Gemini API): trả Claude là việc full
+                # "Hoàn thành" sau 2s với "Not logged in · Please run /login" — không đăng
+                # Facebook, không fallback. Chỉ dùng Claude khi CLI thật sự đang login;
+                # unknown/stale thì giữ Claude (đừng nhảy engine vì hỏi auth hỏng).
+                try:
+                    import claude_cli as _cc
+                    st = _cc.auth_status()
+                    claude_ok = bool(st.get("connected") or st.get("unknown") or st.get("stale"))
+                except Exception:
+                    claude_ok = True
+                if claude_ok:
+                    cli.model = sp.get("model") or None
+                    return cli
+                mn = _main_fallback_engine(cli, mode, tag, settings, {CLAUDE}, codex_profile)
+                if mn:
+                    print("[aux] Claude chưa đăng nhập → việc full dùng bộ não chính "
+                          f"({getattr(mn, 'provider', '?')}).", file=sys.stderr)
+                    return mn
                 cli.model = sp.get("model") or None
                 return cli
             ok, why = availability(sp, settings)

@@ -4,44 +4,14 @@
 
   var KIT_DIR = "wiki/brand-kits";
   var IMG_DIR = "attachments/dataset";
+  var TAGS_FILE = "wiki/brand-kits/_the-khoa-hoc.md";
   var IMG_RE = /\.(png|jpe?g|webp|gif|svg)$/i;
+  var SYSTEM_DIRS = { chung: 1, _mau: 1, _xuat: 1 };
 
-  var FOLDER_LABEL = {
-    "chung": "Chung (logo)",
-    "tin-hoc": "Tin hoc van phong",
-    "co-khi": "Co khi / CAD / SolidWorks",
-    "ke-toan": "Ke toan thuc hanh",
-    "do-hoa": "Thiet ke do hoa",
-    "marketing": "Digital Marketing",
-    "ai": "Khoa hoc AI ung dung",
-    "tre-em": "Lap trinh tre em",
-    "tieng-han": "Tieng Han",
-    "_mau": "Anh mau chuan (A / B)",
-    "_xuat": "Anh da xuat (san sang dang)"
-  };
-
-  /* 8 folder nganh hop le cho bai dang (cam chon chung/_mau/_xuat) */
-  var COURSE_FOLDERS = [
-    { "id": "tin-hoc", "label": "Tin hoc van phong" },
-    { "id": "co-khi", "label": "Co khi / CAD / SolidWorks" },
-    { "id": "ke-toan", "label": "Ke toan thuc hanh" },
-    { "id": "do-hoa", "label": "Thiet ke do hoa" },
-    { "id": "marketing", "label": "Digital Marketing" },
-    { "id": "ai", "label": "Khoa hoc AI ung dung" },
-    { "id": "tre-em", "label": "Lap trinh tre em" },
-    { "id": "tieng-han", "label": "Tieng Han" }
-  ];
-
-  var COURSE_FOLDER_MAP = {
-    "tin-hoc": "Tin hoc",
-    "co-khi": "Co khi / CAD",
-    "ke-toan": "Ke toan",
-    "do-hoa": "Do hoa",
-    "marketing": "Marketing",
-    "ai": "AI",
-    "tre-em": "Tre em",
-    "tieng-han": "Tieng Han"
-  };
+  var FOLDER_LABEL = { "chung": "chung", "_mau": "_mau", "_xuat": "_xuat" };
+  var COURSE_FOLDERS = [];
+  var COURSE_FOLDER_MAP = {};
+  var courseTagsCache = null;
 
   function esc(s) {
     return String(s == null ? "" : s)
@@ -84,12 +54,134 @@
     return "/files/raw?brain=" + encodeURIComponent(brain()) + "&path=" + encodeURIComponent(path);
   }
 
+  async function fetchFbPages() {
+    try {
+      var r = await fetch("/connect/facebook/pages");
+      var d = r.ok ? await r.json() : {};
+      return (d && d.ok && Array.isArray(d.pages)) ? d.pages : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
   async function listPath(path) {
     var home = await getHome(brain());
     var full = ceilPath(home, path);
     var res = await fetch("/files/list?brain=" + encodeURIComponent(brain()) + "&path=" + encodeURIComponent(full));
     var d = await res.json();
     return d.items || [];
+  }
+
+  function parseTagTable(md) {
+    var tags = [];
+    String(md || "").split("\n").forEach(function (line) {
+      var m = line.match(/^\|\s*([^|]+)\s*\|\s*([^|]+)\s*\|/);
+      if (!m) return;
+      var id = m[1].trim();
+      var label = m[2].trim();
+      if (!id || /^id$/i.test(id) || /^-+$/.test(id.replace(/\s/g, ""))) return;
+      tags.push({ id: id, label: label || id });
+    });
+    return tags;
+  }
+
+  function tagRegistryMarkdown(tags) {
+    var today = new Date().toISOString().slice(0, 10);
+    var rows = (tags || []).map(function (t) {
+      return "| " + t.id + " | " + (t.label || t.id) + " |";
+    }).join("\n");
+    return "---\ntype: wiki\nupdated: " + today + "\n---\n" +
+      "# Thẻ khoá học\n\n" +
+      "Mỗi thẻ = 1 thư mục `attachments/dataset/<id>/`.\n" +
+      "Default kit: `Thẻ khoá học: all`. Page kit liệt kê id, dấu phẩy.\n" +
+      "Không có thẻ khớp chủ đề bài → không đăng page đó.\n\n" +
+      "| id | Tên |\n| --- | --- |\n" + rows + "\n";
+  }
+
+  async function writeTextFile(rel, content) {
+    var home = await getHome(brain());
+    var fd = new FormData();
+    fd.append("brain", brain());
+    fd.append("path", ceilPath(home, rel));
+    fd.append("content", content);
+    var res = await fetch("/files/write", { method: "POST", body: fd });
+    return res.json();
+  }
+
+  async function mkdirDataset(name) {
+    var fd = new FormData();
+    fd.append("brain", brain());
+    fd.append("path", IMG_DIR);
+    fd.append("name", name);
+    try { await fetch("/files/mkdir", { method: "POST", body: fd }); } catch (e) {}
+  }
+
+  async function deleteDataset(name) {
+    if (!name || SYSTEM_DIRS[name]) return { ok: false };
+    var home = await getHome(brain());
+    var fd = new FormData();
+    fd.append("brain", brain());
+    fd.append("path", ceilPath(home, IMG_DIR + "/" + name));
+    try {
+      var res = await fetch("/files/delete", { method: "POST", body: fd });
+      return await res.json();
+    } catch (e) {
+      return { ok: false, error: String(e) };
+    }
+  }
+
+  function applyCourseTags(tags) {
+    COURSE_FOLDERS = tags.slice();
+    COURSE_FOLDER_MAP = {};
+    tags.forEach(function (t) {
+      COURSE_FOLDER_MAP[t.id] = t.label;
+      COURSE_FOLDER_MAP[String(t.id).toLowerCase()] = t.label;
+    });
+    courseTagsCache = tags;
+    return tags;
+  }
+
+  async function loadCourseTags(force) {
+    if (courseTagsCache && !force) return courseTagsCache;
+    var tags = [];
+    try {
+      var home = await getHome(brain());
+      var full = ceilPath(home, TAGS_FILE);
+      var res = await fetch("/files/read?brain=" + encodeURIComponent(brain()) + "&path=" + encodeURIComponent(full));
+      var d = await res.json();
+      tags = parseTagTable(d.content || "");
+    } catch (e) {}
+    var dirs = [];
+    try {
+      dirs = (await listPath(IMG_DIR)).filter(function (f) {
+        return f.type === "dir" && !SYSTEM_DIRS[f.name];
+      });
+    } catch (e2) {}
+    var dirSet = {};
+    dirs.forEach(function (f) { dirSet[f.name] = true; });
+    var have = {};
+    var kept = [];
+    tags.forEach(function (t) {
+      if (!dirSet[t.id]) return;
+      kept.push(t);
+      have[t.id] = true;
+    });
+    dirs.forEach(function (f) {
+      if (!have[f.name]) {
+        kept.push({ id: f.name, label: f.name });
+        have[f.name] = true;
+      }
+    });
+    applyCourseTags(kept);
+    if (kept.length !== tags.length) {
+      try { await saveCourseTags(kept); } catch (e3) {}
+    }
+    return courseTagsCache;
+  }
+
+  async function saveCourseTags(tags) {
+    applyCourseTags(tags);
+    await writeTextFile(TAGS_FILE, tagRegistryMarkdown(tags));
   }
 
   function kitKind(name) {
@@ -109,8 +201,9 @@
       hotline: "",
       strengths: "",
       localAngle: "",
-      folder: "tin-hoc",
-      folders: ["tin-hoc"],
+      folder: "",
+      folders: [],
+      tagsAll: false,
       hashtag: "",
       url: "",
       note: ""
@@ -139,16 +232,16 @@
     var mLoc = md.match(/^[ \t]*[-*][ \t]*Góc địa phương:[ \t]*(.*)$/m);
     if (mLoc && mLoc[1]) out.localAngle = mLoc[1].trim();
 
-    var mFold = md.match(/^[ \t]*[-*][ \t]*Folder anh[^:]*:[ \t]*(.*)$/m);
+    var mFold = md.match(/^[ \t]*[-*][ \t]*(?:Thẻ khoá học|The khoa hoc|Folder anh[^:]*)[ \t]*:[ \t]*(.*)$/m);
     if (mFold && mFold[1]) {
-      var parts = mFold[1].split(/[,;|/]+/).map(function (s) { return s.trim().toLowerCase(); });
-      var ok = [];
-      parts.forEach(function (rawFold) {
-        if (COURSE_FOLDER_MAP[rawFold] && ok.indexOf(rawFold) < 0) ok.push(rawFold);
-      });
-      if (ok.length) {
-        out.folders = ok;
-        out.folder = ok[0];
+      var raw = mFold[1].trim();
+      if (/^(all|\*|full)$/i.test(raw)) {
+        out.tagsAll = true;
+        out.folders = [];
+      } else {
+        var parts = raw.split(/[,;|/]+/).map(function (s) { return s.trim(); }).filter(Boolean);
+        out.folders = parts;
+        out.folder = parts[0] || "";
       }
     }
 
@@ -157,6 +250,10 @@
 
     var mUrl = md.match(/^[ \t]*[-*][ \t]*URL Fanpage:[ \t]*(.*)$/m);
     if (mUrl && mUrl[1]) out.url = mUrl[1].trim();
+
+    var mPid = md.match(/^[ \t]*[-*][ \t]*(?:Page ID|page_id|ID Fanpage|ID Trang)[ \t]*:[ \t]*(.*)$/mi);
+    if (mPid && mPid[1]) out.pageId = mPid[1].trim();
+    else out.pageId = "";
 
     var mNote = md.match(/^[ \t]*[-*][ \t]*Ghi chú:[ \t]*(.*)$/m);
     if (mNote && mNote[1]) out.note = mNote[1].trim();
@@ -189,6 +286,7 @@
     if (stem === "_index") return "Muc luc he thong";
     if (stem === "_van-hanh") return "Quy tac van hanh";
     if (stem === "_anh-da-dung") return "Anh da dung khi dang";
+    if (stem === "_the-khoa-hoc") return "The khoa hoc";
     if (!rawName) return stem.replace(/^thsv-/, "").replace(/-/g, " ");
     var clean = rawName.split(/\s*\(hoặc/i)[0].trim();
     return clean || rawName;
@@ -199,14 +297,10 @@
   }
 
   var FOLDER_KW = {
-    "tin-hoc": ["tin hoc", "word", "excel", "van phong", "mos", "powerpoint", "ic3", "may tinh"],
-    "co-khi": ["autocad", "auto cad", "cad ", "solidworks", "cnc", "co khi", "ban ve", "ve ky thuat"],
-    "ke-toan": ["ke toan", "chung tu", "so sach", "thue", "bao cao tai chinh"],
-    "do-hoa": ["do hoa", "photoshop", "illustrator", "corel", "thiet ke"],
-    "marketing": ["ads", "quang cao", "marketing", "facebook ads", "google ads"],
-    "ai": ["dao tao ai", "ung dung ai", "chatgpt", "copilot", "khoa hoc ai"],
-    "tre-em": ["tre em", "scratch", "lap trinh tre"],
-    "tieng-han": ["tieng han", "topik"]
+    "tin-hoc _ai": ["tin hoc", "word", "excel", "van phong", "mos", "powerpoint", "ai ", "chatgpt"],
+    "VE KY THUAT": ["autocad", "cad", "solidworks", "co khi", "ve ky thuat", "noi that"],
+    "ke-toan": ["ke toan", "chung tu", "so sach", "thue", "misa"],
+    "do-hoa": ["do hoa", "photoshop", "illustrator", "corel"]
   };
 
   var PLACE_HINT = [
@@ -224,15 +318,14 @@
     var hay = " " + foldDiacritic(text) + " ";
     var hit = [];
     COURSE_FOLDERS.forEach(function (opt) {
-      var kws = FOLDER_KW[opt.id] || [];
+      var kws = (FOLDER_KW[opt.id] || []).concat([foldDiacritic(opt.id), foldDiacritic(opt.label)]);
       for (var i = 0; i < kws.length; i++) {
-        if (hay.indexOf(kws[i]) >= 0) {
+        if (kws[i] && hay.indexOf(kws[i]) >= 0) {
           hit.push(opt.id);
           return;
         }
       }
     });
-    if (!hit.length) hit = ["tin-hoc", "ke-toan", "do-hoa"];
     return hit;
   }
 
@@ -296,12 +389,21 @@
       });
     }
 
-    setField(/^[ \t]*[-*][ \t]*Cơ sở \/ địa chỉ[^:]*:[^\r\n]*/m, "- Cơ sở / địa chỉ: " + (formVals.address || ""), /^[ \t]*[-*][ \t]*slug:[^\r\n]*/m);
+    if (formVals.pageId != null) {
+      setField(/^[ \t]*[-*][ \t]*(?:Page ID|page_id|ID Fanpage|ID Trang)[ \t]*:[^\r\n]*/mi,
+        "- Page ID: " + (formVals.pageId || ""),
+        /^[ \t]*[-*][ \t]*slug:[^\r\n]*/m);
+    }
+    if (formVals.tagsLine != null) {
+      setField(/^[ \t]*[-*][ \t]*(?:Thẻ khoá học|The khoa hoc|Folder anh[^:]*)[ \t]*:[^\r\n]*/m,
+        "- Thẻ khoá học: " + formVals.tagsLine,
+        /^[ \t]*[-*][ \t]*(?:Page ID|slug):[^\r\n]*/m);
+    }
+    setField(/^[ \t]*[-*][ \t]*Cơ sở \/ địa chỉ[^:]*:[^\r\n]*/m, "- Cơ sở / địa chỉ: " + (formVals.address || ""), /^[ \t]*[-*][ \t]*(?:Page ID|slug|Thẻ khoá học):[^\r\n]*/m);
     setField(/^[ \t]*[-*][ \t]*Hotline[^:]*:[^\r\n]*/m, "- Hotline / Zalo: " + (formVals.hotline || ""), /^[ \t]*[-*][ \t]*Cơ sở \/ địa chỉ[^:]*:[^\r\n]*/m);
     setField(/^[ \t]*[-*][ \t]*Khoá thế mạnh[^:]*:[^\r\n]*/m, "- Khoá thế mạnh của page: " + (formVals.strengths || ""), /^[ \t]*[-*][ \t]*Hotline[^:]*:[^\r\n]*/m);
     setField(/^[ \t]*[-*][ \t]*Góc địa phương:[^\r\n]*/m, "- Góc địa phương: " + (formVals.localAngle || ""), /^[ \t]*[-*][ \t]*Khoá thế mạnh[^:]*:[^\r\n]*/m);
-    setField(/^[ \t]*[-*][ \t]*Folder anh[^:]*:[^\r\n]*/m, "- Folder anh (dataset): " + (formVals.folders || formVals.folder || "tin-hoc"), /^[ \t]*[-*][ \t]*Góc địa phương:[^\r\n]*/m);
-    setField(/^[ \t]*[-*][ \t]*Hashtag thêm:[^\r\n]*/m, "- Hashtag thêm: " + (formVals.hashtag || ""), /^[ \t]*[-*][ \t]*Folder anh[^:]*:[^\r\n]*/m);
+    setField(/^[ \t]*[-*][ \t]*Hashtag thêm:[^\r\n]*/m, "- Hashtag thêm: " + (formVals.hashtag || ""), /^[ \t]*[-*][ \t]*Góc địa phương:[^\r\n]*/m);
 
     if (md.indexOf("## Nhận diện thương hiệu") < 0 && md.indexOf("## Nhan dien thuong hieu") < 0) {
       md = md.replace(/^# .*$/m, function (h) {
@@ -349,6 +451,7 @@
      ============================================================ */
   async function renderKit(body) {
     body.innerHTML = '<p class="dim" style="padding:14px">Đang tải danh sách brand kit…</p>';
+    await loadCourseTags(true);
     var rawItems = [];
     try {
       rawItems = (await listPath(KIT_DIR)).filter(function (f) {
@@ -396,7 +499,7 @@
       '<aside class="ds-side">' +
       '<input class="ds-search" id="dsKitQ" placeholder="Tìm Brand Kit, Fanpage, slug…">' +
       '<div class="ds-side-scroll" id="dsKitList"></div>' +
-      '<button type="button" class="s-btn ds-new" id="dsNewKit">+ Tạo Brand Kit Page Mới</button>' +
+      '<button type="button" class="s-btn ds-new" id="dsNewKit" title="Chọn Fanpage đã kết nối để tạo Brand Kit">Tạo kit từ Fanpage đã kết nối</button>' +
       '</aside>' +
       '<section class="ds-main" id="dsMainPanel">' +
       '<div class="ds-toolbar"><div><div class="ds-kicker" id="dsKitKind"></div>' +
@@ -456,7 +559,9 @@
           if (isDef) {
             subText = (f.parsed.colorPrimary || "#6C3BFF") + ", " + (f.parsed.colorSecondary || "#00D4FF") + " · " + (f.parsed.fonts || "Inter, Montserrat");
           } else if (f.kind === "page") {
-            subText = f.parsed.slug + " · " + (f.parsed.colorPrimary || "#6C3BFF") + ", " + (f.parsed.colorSecondary || "#00D4FF");
+            var tagTxt = f.parsed.tagsAll ? "thẻ all" : ((f.parsed.folders || []).length ? (f.parsed.folders.length + " thẻ") : "chưa thẻ");
+            subText = (f.parsed.slug || "") + (f.parsed.pageId ? " · ID " + f.parsed.pageId : " · chưa Page ID")
+              + " · " + tagTxt;
           } else {
             subText = f.name;
           }
@@ -544,31 +649,31 @@
       grad.style.background = "linear-gradient(135deg, " + cleanHex(dp.colorPrimary, "#6C3BFF") + ", " + cleanHex(dp.colorSecondary, "#00D4FF") + ")";
     }
 
-    /* Cap nhat textarea markdown */
     var ta = area.querySelector("#dsKitText");
+    var nameInp = area.querySelector("#dsFldPageName");
+    var idInp = area.querySelector("#dsFldPageId");
+    var ten = (nameInp && nameInp.value.trim()) || f.displayTitle || "";
+    var pageId = (idInp && idInp.value.trim()) || (f.parsed && f.parsed.pageId) || "";
+    var slug = (f.parsed && f.parsed.slug) || String(f.name || "").replace(/\.md$/i, "");
     if (ta) {
-      var defaultVals = {
-        colorPrimary: dp.colorPrimary || "#6C3BFF",
-        colorSecondary: dp.colorSecondary || "#00D4FF",
-        fonts: dp.fonts || "Inter, Montserrat",
-        logoMain: dp.logoMain || "attachments/dataset/chung/thsv-logo-2025.png",
-        logoWhite: dp.logoWhite || "attachments/dataset/chung/thsv-logo-big.png",
-        logoIcon: dp.logoIcon || "attachments/dataset/chung/thsv-logo-2025.png",
-        imageStyle: dp.imageStyle || "công nghệ, tối giản, premium",
-        voice: dp.voice || "chuyên nghiệp, trẻ, hiện đại",
-        layout: dp.layout || "logo góc trên, lề an toàn 8%, cover 16:9, không che mặt học viên",
-        donts: dp.donts || "đổi màu logo, bóp méo logo, dùng màu ngoài palette"
-      };
-      ta.value = updatePageKitMarkdown(ta.value, defaultVals);
+      var tagsLine = "all";
+      if (f.kind !== "default") {
+        var ids = [];
+        area.querySelectorAll("#dsTagList input[data-tag]").forEach(function (c) {
+          if (c.checked) ids.push(c.getAttribute("data-tag"));
+        });
+        tagsLine = ids.join(", ");
+      }
+      ta.value = cloneDefaultMarkdown(def.content || "", { ten: ten, slug: slug, pageId: pageId, tagsLine: tagsLine });
     }
 
     var st = body.querySelector("#dsKitStatus");
     if (st) {
-      st.textContent = "Đã sao chép nhận diện từ Default! Bấm 'Lưu Brand Kit' để hoàn tất.";
+      st.textContent = "Đã copy TOÀN BỘ markdown Default (pháp nhân, khóa học, cấm, chân trang…). Bấm Lưu Brand Kit.";
       st.className = "ds-status-text ds-ok";
       setTimeout(function () {
-        if (st.textContent.indexOf("Đã sao chép nhận diện") >= 0) st.textContent = "";
-      }, 4000);
+        if (st.textContent.indexOf("Đã copy TOÀN BỘ") >= 0) st.textContent = "";
+      }, 5000);
     }
   }
 
@@ -648,6 +753,7 @@
 
     save.disabled = false;
     if (kind === "page" || kind === "default") {
+      await loadCourseTags();
       renderPageForm(body, f, items);
       save.onclick = function () { savePageKit(body, f, items); };
     } else {
@@ -684,9 +790,74 @@
       ? '<div class="ds-default-banner"><b>Brand Kit Mặc Định:</b> Chứa bộ nhận diện chuẩn toàn hệ thống. Mọi Fanpage mới tạo hoặc bấm "Sao chép từ Default" sẽ kế thừa 100% cài đặt từ file này.</div>'
       : '';
 
+    var pageId = p.pageId || "";
+    var pageName = p.name || f.displayTitle || "";
+    var pageSlug = p.slug || f.name.replace(/\.md$/i, "");
+    var fbCard = isDefault ? "" :
+      '<div class="ds-section-card">' +
+      '<div class="ds-section-head">' +
+      '<div class="ds-section-title">Fanpage Facebook (để đăng bài)</div>' +
+      '<div class="ds-section-sub">Chọn Trang đã tick lúc kết nối Graph API — Javis dùng Page ID này khi đăng, không dùng slug</div>' +
+      '</div>' +
+      '<div class="ds-field" style="margin-bottom:10px">' +
+      '<label class="ds-label" for="dsFldFbPick">Trang đã kết nối</label>' +
+      '<select class="ds-input" id="dsFldFbPick"><option value="">Đang tải danh sách Trang…</option></select>' +
+      '</div>' +
+      '<div class="ds-form-row">' +
+      '<div class="ds-field">' +
+      '<label class="ds-label" for="dsFldPageName">Tên Fanpage</label>' +
+      '<input type="text" class="ds-input" id="dsFldPageName" value="' + esc(pageName) + '" placeholder="Ví dụ: Royce Shop">' +
+      '</div>' +
+      '<div class="ds-field">' +
+      '<label class="ds-label" for="dsFldPageId">Page ID</label>' +
+      '<input type="text" class="ds-input" id="dsFldPageId" value="' + esc(pageId) + '" placeholder="Số ID, ví dụ 988656934325292" inputmode="numeric">' +
+      '</div>' +
+      '</div>' +
+      '<div class="ds-field" style="margin-top:8px">' +
+      '<label class="ds-label">Slug (tên file kit, không phải ID Facebook)</label>' +
+      '<input type="text" class="ds-input" value="' + esc(pageSlug) + '" disabled>' +
+      '</div>' +
+      '</div>';
+
+    var tags = COURSE_FOLDERS.slice();
+    var selected = {};
+    if (isDefault || p.tagsAll) {
+      tags.forEach(function (t) { selected[t.id] = true; });
+    } else {
+      (p.folders || []).forEach(function (id) { selected[id] = true; });
+    }
+    var tagCard =
+      '<div class="ds-section-card">' +
+      '<div class="ds-section-head">' +
+      '<div class="ds-section-title">Thẻ khoá học</div>' +
+      '<div class="ds-section-sub">' +
+      (isDefault
+        ? "Default = FULL mọi thẻ. Thẻ mới thêm tự có trên Default. 1 ngày 1 bài: chỉ page có thẻ khớp mới được đăng."
+        : "Tick ngành page này được đăng. Page đồ họa không nhận bài kế toán. Không thẻ → không đăng.") +
+      "</div></div>" +
+      (isDefault
+        ? '<div class="ds-notice ds-notice-info" style="margin-bottom:10px">Default đang ở chế độ <b>all</b> — không bỏ thẻ từng cái. Dùng <b>Thêm thẻ</b> khi có khoá mới.</div>'
+        : "") +
+      '<div class="ds-tag-list" id="dsTagList">' +
+      tags.map(function (t) {
+        var on = !!selected[t.id];
+        return '<label class="ds-tag' + (on ? " on" : "") + '">' +
+          '<input type="checkbox" data-tag="' + esc(t.id) + '"' + (on ? " checked" : "") +
+          (isDefault ? " disabled" : "") + ">" +
+          esc(t.label) + " <span class=\"ds-tag-id\">" + esc(t.id) + "</span>" +
+          '<button type="button" class="ds-tag-x" data-del-tag="' + esc(t.id) + '" title="Xoá thẻ và thư mục ảnh">×</button></label>';
+      }).join("") +
+      "</div>" +
+      '<div class="ds-tag-add">' +
+      '<input type="text" class="ds-input" id="dsNewTagName" placeholder="Thẻ mới, vd: Marketing">' +
+      '<button type="button" class="s-btn-ghost" id="dsAddTag">Thêm thẻ</button>' +
+      "</div></div>";
+
     area.innerHTML =
       '<div class="ds-form">' +
       defaultBannerHtml +
+      fbCard +
+      tagCard +
 
       /* CARD 1: MÀU THƯƠNG HIỆU & PHÔNG CHỮ */
       '<div class="ds-section-card">' +
@@ -807,6 +978,16 @@
 
     function getFormVals() {
       return {
+        name: (area.querySelector("#dsFldPageName") || {}).value || "",
+        pageId: (area.querySelector("#dsFldPageId") || {}).value || "",
+        tagsLine: (function () {
+          if (f.kind === "default") return "all";
+          var ids = [];
+          area.querySelectorAll("#dsTagList input[data-tag]").forEach(function (c) {
+            if (c.checked) ids.push(c.getAttribute("data-tag"));
+          });
+          return ids.join(", ");
+        })(),
         colorPrimary: (area.querySelector("#dsFldColorPri") || {}).value || "",
         colorSecondary: (area.querySelector("#dsFldColorSec") || {}).value || "",
         fonts: (area.querySelector("#dsFldFonts") || {}).value || "",
@@ -862,6 +1043,94 @@
     bindSyncInput("dsFldLayout");
     bindSyncInput("dsFldVoice");
     bindSyncInput("dsFldDonts");
+    bindSyncInput("dsFldPageName");
+    bindSyncInput("dsFldPageId");
+    area.querySelectorAll("#dsTagList input[data-tag]").forEach(function (c) {
+      c.onchange = function () {
+        var lab = c.closest(".ds-tag");
+        if (lab) lab.classList.toggle("on", c.checked);
+        syncFormToMarkdown();
+      };
+    });
+    var addTagBtn = area.querySelector("#dsAddTag");
+    if (addTagBtn) {
+      addTagBtn.onclick = async function () {
+        var inp = area.querySelector("#dsNewTagName");
+        var label = ((inp && inp.value) || "").trim();
+        if (!label) {
+          window.alert("Nhập tên thẻ (vd: Marketing). Sẽ tạo folder attachments/dataset/<id>/ và ghi vào _the-khoa-hoc.md");
+          return;
+        }
+        var id = slugFromPageName(label).replace(/-/g, "-");
+        if (!id) id = "the-" + Date.now();
+        var exists = COURSE_FOLDERS.some(function (t) {
+          return t.id === id || foldDiacritic(t.label) === foldDiacritic(label);
+        });
+        if (exists) {
+          window.alert("Thẻ này đã có.");
+          return;
+        }
+        addTagBtn.disabled = true;
+        await mkdirDataset(id);
+        var next = COURSE_FOLDERS.concat([{ id: id, label: label }]);
+        await saveCourseTags(next);
+        if (inp) inp.value = "";
+        addTagBtn.disabled = false;
+        renderPageForm(body, f, items);
+        var st2 = body.querySelector("#dsKitStatus");
+        if (st2) {
+          st2.textContent = "Đã thêm thẻ \"" + label + "\" → folder " + IMG_DIR + "/" + id + ". Default (all) tự có thẻ này. Lưu kit page nếu cần tick thẻ.";
+          st2.className = "ds-status-text ds-ok";
+        }
+      };
+    }
+    area.querySelectorAll("[data-del-tag]").forEach(function (xbtn) {
+      xbtn.onclick = async function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var id = xbtn.getAttribute("data-del-tag");
+        if (!id || SYSTEM_DIRS[id]) return;
+        if (!window.confirm('Xoá thẻ "' + id + '"?\nSẽ xoá thư mục ' + IMG_DIR + "/" + id + " và gỡ thẻ khỏi danh sách. Ảnh trong folder (nếu còn) cũng mất.")) return;
+        xbtn.disabled = true;
+        await deleteDataset(id);
+        var next = COURSE_FOLDERS.filter(function (t) { return t.id !== id; });
+        await saveCourseTags(next);
+        courseTagsCache = next;
+        renderPageForm(body, f, items);
+        var st3 = body.querySelector("#dsKitStatus");
+        if (st3) {
+          st3.textContent = "Đã xoá thẻ " + id + ".";
+          st3.className = "ds-status-text ds-ok";
+        }
+      };
+    });
+
+    var pick = area.querySelector("#dsFldFbPick");
+    var idInp = area.querySelector("#dsFldPageId");
+    var nameInp = area.querySelector("#dsFldPageName");
+    if (pick) {
+      fetchFbPages().then(function (pages) {
+        if (!pick.parentNode) return;
+        if (!pages.length) {
+          pick.innerHTML = '<option value="">Chưa có Trang — vào Kết nối Facebook, tick Trang rồi mở lại kit</option>';
+          return;
+        }
+        var cur = (idInp && idInp.value) ? String(idInp.value).trim() : "";
+        pick.innerHTML = '<option value="">— Chọn Trang đã kết nối —</option>' +
+          pages.map(function (pg) {
+            var sel = String(pg.id) === cur ? " selected" : "";
+            return '<option value="' + esc(pg.id) + '" data-name="' + esc(pg.name) + '"' + sel + ">"
+              + esc(pg.name) + " · " + esc(pg.id) + "</option>";
+          }).join("");
+      });
+      pick.onchange = function () {
+        var opt = pick.options[pick.selectedIndex];
+        if (!opt || !opt.value) return;
+        if (idInp) idInp.value = opt.value;
+        if (nameInp && opt.getAttribute("data-name")) nameInp.value = opt.getAttribute("data-name");
+        syncFormToMarkdown();
+      };
+    }
 
     function syncLogo(inputSel, thumbSel) {
       var inp = area.querySelector(inputSel);
@@ -921,7 +1190,8 @@
             if (f.kind === "default") {
               sub.textContent = (f.parsed.colorPrimary || "#6C3BFF") + ", " + (f.parsed.colorSecondary || "#00D4FF") + " · " + (f.parsed.fonts || "Inter, Montserrat");
             } else {
-              sub.textContent = f.parsed.slug + " · " + (f.parsed.colorPrimary || "#6C3BFF") + ", " + (f.parsed.colorSecondary || "#00D4FF");
+              sub.textContent = (f.parsed.slug || "") + (f.parsed.pageId ? " · ID " + f.parsed.pageId : " · chưa có Page ID")
+                + " · " + (f.parsed.colorPrimary || "#6C3BFF") + ", " + (f.parsed.colorSecondary || "#00D4FF");
             }
           }
         }
@@ -1073,38 +1343,16 @@
     }
   }
 
-  /* Tao Brand Kit Page moi ke thua 100% tu Default */
-  async function newKit(body, items, paintList) {
-    var ten = window.prompt("Tên Fanpage mới (vd: Tin Học Sao Việt | Cần Thơ):");
-    if (!ten || !ten.trim()) return;
-    ten = ten.trim();
-
-    var slugSuggest = ten.toLowerCase()
-      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "");
-    if (slugSuggest.indexOf("thsv-") !== 0) slugSuggest = "thsv-" + slugSuggest;
-
-    var name = window.prompt("Mã slug file (vd: " + slugSuggest + "):", slugSuggest);
-    if (!name || !name.trim()) return;
-    name = name.trim().toLowerCase().replace(/\.md$/i, "");
-
-    var path = KIT_DIR + "/" + name + ".md";
-    var exists = items.some(function (x) { return x.name.toLowerCase() === (name + ".md").toLowerCase(); });
-    if (exists) {
-      window.alert("Kit '" + name + ".md' đã tồn tại!");
-      return;
+  function defaultItemFromItems(items) {
+    for (var i = 0; i < (items || []).length; i++) {
+      if (items[i].kind === "default" || items[i].name === "_mac-dinh.md") return items[i];
     }
+    return null;
+  }
 
-    /* Lay gia tri nhan dien tu Default kit */
-    var defItem = null;
-    for (var i = 0; i < items.length; i++) {
-      if (items[i].kind === "default" || items[i].name === "_mac-dinh.md") {
-        defItem = items[i];
-        break;
-      }
-    }
-    var defP = (defItem && defItem.parsed) ? defItem.parsed : {
+  function defaultParsedFromItems(items) {
+    var defItem = defaultItemFromItems(items);
+    return (defItem && defItem.parsed) ? defItem.parsed : {
       colorPrimary: "#6C3BFF",
       colorSecondary: "#00D4FF",
       fonts: "Inter, Montserrat",
@@ -1116,83 +1364,217 @@
       layout: "logo góc trên, lề an toàn 8%, cover 16:9, không che mặt học viên",
       donts: "đổi màu logo, bóp méo logo, dùng màu ngoài palette"
     };
+  }
 
+  function slugFromPageName(ten) {
+    var s = String(ten || "").toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+    return s || "fanpage";
+  }
+
+  function uniqueKitSlug(base, items) {
+    var name = base;
+    var n = 2;
+    function taken(s) {
+      return items.some(function (x) {
+        return (x.name || "").toLowerCase() === (s + ".md").toLowerCase();
+      });
+    }
+    while (taken(name)) {
+      name = base + "-" + n;
+      n++;
+    }
+    return name;
+  }
+
+  function setMdLine(md, labels, replacement, insertAfter) {
+    var pattern = new RegExp("^[ \\t]*[-*][ \\t]*(?:" + labels.join("|") + ")[ \\t]*:[^\\r\\n]*", "mi");
+    if (pattern.test(md)) return md.replace(pattern, replacement);
+    if (insertAfter && insertAfter.test(md)) {
+      return md.replace(insertAfter, function (m) { return m + "\n" + replacement; });
+    }
+    return md + "\n" + replacement;
+  }
+
+  function cloneDefaultMarkdown(defMd, opts) {
+    var ten = opts.ten || "";
+    var slug = opts.slug || "";
+    var pageId = opts.pageId || "";
+    var md = String(defMd || "").replace(/\r\n/g, "\n");
     var today = new Date().toISOString().slice(0, 10);
-    var tpl =
-      "---\n" +
-      "type: wiki\n" +
-      "updated: " + today + "\n" +
-      "---\n" +
-      "# Kit trang: " + ten + "\n\n" +
-      "Kế thừa `_mac-dinh.md`. Đã sao chép toàn bộ nhận diện từ Brand Kit Default.\n\n" +
-      "## Nhận diện thương hiệu\n" +
-      "- Màu chính: " + (defP.colorPrimary || "#6C3BFF") + "\n" +
-      "- Màu phụ: " + (defP.colorSecondary || "#00D4FF") + "\n" +
-      "- Font: " + (defP.fonts || "Inter, Montserrat") + "\n" +
-      "- Logo chính: " + (defP.logoMain || "attachments/dataset/chung/thsv-logo-2025.png") + "\n" +
-      "- Logo trắng: " + (defP.logoWhite || "attachments/dataset/chung/thsv-logo-big.png") + "\n" +
-      "- Icon: " + (defP.logoIcon || "attachments/dataset/chung/thsv-logo-2025.png") + "\n" +
-      "- Phong cách hình ảnh: " + (defP.imageStyle || "công nghệ, tối giản, premium") + "\n" +
-      "- Tone of voice: " + (defP.voice || "chuyên nghiệp, trẻ, hiện đại") + "\n" +
-      "- Quy tắc bố cục: " + (defP.layout || "logo góc trên, lề an toàn 8%, cover 16:9, không che mặt học viên") + "\n" +
-      "- Điều không được làm: " + (defP.donts || "đổi màu logo, bóp méo logo, dùng màu ngoài palette") + "\n\n" +
-      "## Tuỳ biến trang\n" +
-      "- Tên Fanpage: " + ten + "\n" +
-      "- slug: " + name + "\n" +
-      "- Ghi chú riêng: \n";
+    if (!md.trim()) {
+      return "---\ntype: wiki\nupdated: " + today + "\n---\n# Kit trang: " + ten +
+        "\n\n## Tuỳ biến trang\n- Tên Fanpage: " + ten + "\n- slug: " + slug + "\n- Page ID: " + pageId + "\n";
+    }
+    md = md.replace(/^updated:[^\n]*/m, "updated: " + today);
+    md = md.replace(/^# .*$/m, "# Kit trang: " + ten);
+    md = md.replace(
+      /(^# Kit trang:[^\n]*\n+)[^\n#][^\n]*/,
+      "$1Kế thừa `_mac-dinh.md`. Bản sao TOÀN BỘ markdown Default; chỉ đổi tên Fanpage, slug và Page ID."
+    );
+    md = setMdLine(md, ["Tên Fanpage"], "- Tên Fanpage: " + ten, /^## Tuỳ biến trang[^\n]*/m);
+    md = setMdLine(md, ["slug"], "- slug: " + slug, /^[ \t]*[-*][ \t]*Tên Fanpage:[^\n]*/m);
+    md = setMdLine(md, ["Page ID", "page_id", "ID Fanpage", "ID Trang"], "- Page ID: " + pageId, /^[ \t]*[-*][ \t]*slug:[^\n]*/m);
+    var tagsLine = opts.tagsLine != null ? opts.tagsLine : "";
+    md = setMdLine(md, ["Thẻ khoá học", "The khoa hoc", "Folder anh[^:]*"], "- Thẻ khoá học: " + tagsLine, /^[ \t]*[-*][ \t]*Page ID:[^\n]*/m);
+    return md;
+  }
 
+  async function writePageKitFile(name, ten, tpl, items) {
     var home = await getHome(brain());
-    var ceil = ceilPath(home, path);
+    var ceil = ceilPath(home, KIT_DIR + "/" + name + ".md");
     var fd = new FormData();
     fd.append("brain", brain());
     fd.append("path", ceil);
     fd.append("content", tpl);
-
+    var res = await fetch("/files/write", { method: "POST", body: fd });
+    var d = await res.json();
+    if (!d.ok) return d;
     try {
-      var res = await fetch("/files/write", { method: "POST", body: fd });
-      var d = await res.json();
-      if (!d.ok) {
-        window.alert(d.error || "Không thể tạo file kit mới");
+      var idxPath = ceilPath(home, "wiki/brand-kits/_index.md");
+      var idxRes = await fetch("/files/read?brain=" + encodeURIComponent(brain()) + "&path=" + encodeURIComponent(idxPath));
+      var idxData = await idxRes.json();
+      if (idxData && idxData.content) {
+        var idxContent = idxData.content;
+        var linkStr = "[[brand-kits/" + name + "]]";
+        if (idxContent.indexOf(linkStr) < 0) {
+          var idxFd = new FormData();
+          idxFd.append("brain", brain());
+          idxFd.append("path", idxPath);
+          idxFd.append("content", idxContent.trimEnd() + "\n- " + linkStr + " " + ten + "\n");
+          await fetch("/files/write", { method: "POST", body: idxFd });
+        }
+      }
+    } catch (idxErr) {}
+    items.push({
+      name: name + ".md",
+      type: "file",
+      content: tpl,
+      kind: "page",
+      parsed: parsePageKit(tpl, name + ".md"),
+      displayTitle: ten
+    });
+    return { ok: true };
+  }
+
+  function kitHasFacebookPage(items, pg) {
+    var pid = String(pg.id || "");
+    var nm = foldDiacritic(pg.name || "");
+    return items.some(function (x) {
+      if (x.kind !== "page") return false;
+      var haveId = String((x.parsed && x.parsed.pageId) || "").trim();
+      if (pid && haveId && haveId === pid) return true;
+      if (!haveId && nm && foldDiacritic(x.displayTitle || x.parsed.name || "") === nm) return true;
+      return false;
+    });
+  }
+
+  function closePagePicker(body) {
+    var ov = body.querySelector("#dsPickFb");
+    if (ov && ov.parentNode) ov.parentNode.removeChild(ov);
+  }
+
+  async function createKitsForPages(body, items, paintList, selected) {
+    var st = body.querySelector("#dsKitStatus");
+    var btn = body.querySelector("#dsNewKit");
+    if (btn) btn.disabled = true;
+    if (st) {
+      st.textContent = "Đang tạo " + selected.length + " Brand Kit…";
+      st.className = "ds-status-text dim";
+    }
+    var defItem = defaultItemFromItems(items);
+    var defMd = (defItem && defItem.content) || "";
+    var made = 0;
+    for (var i = 0; i < selected.length; i++) {
+      var pg = selected[i];
+      if (kitHasFacebookPage(items, pg)) continue;
+      var ten = String(pg.name || "").trim() || ("Fanpage " + pg.id);
+      var slug = uniqueKitSlug(slugFromPageName(ten), items);
+      var tpl = cloneDefaultMarkdown(defMd, { ten: ten, slug: slug, pageId: pg.id });
+      var wr = await writePageKitFile(slug, ten, tpl, items);
+      if (wr && wr.ok) made++;
+    }
+    if (btn) btn.disabled = false;
+    paintList((body.querySelector("#dsKitQ") || {}).value || "");
+    if (st) {
+      st.textContent = made ? ("Đã tạo " + made + " Brand Kit (tên = tên Fanpage). Page không có kit sẽ không được đăng bài.") : "Không tạo được kit.";
+      st.className = made ? "ds-status-text ds-ok" : "ds-status-text ds-err";
+    }
+  }
+
+  async function openPagePicker(body, items, paintList) {
+    closePagePicker(body);
+    var st = body.querySelector("#dsKitStatus");
+    if (st) {
+      st.textContent = "Đang tải danh sách Fanpage đã kết nối…";
+      st.className = "ds-status-text dim";
+    }
+    var pages = await fetchFbPages();
+    if (st) st.textContent = "";
+    if (!pages.length) {
+      window.alert("Chưa lấy được Fanpage từ Kết nối Facebook. Kết nối lại, tick Trang, rồi bấm nút này.");
+      return;
+    }
+    var host = body.querySelector(".ds-split") || body;
+    host.style.position = host.style.position || "relative";
+    var ov = document.createElement("div");
+    ov.className = "ds-pick-overlay";
+    ov.id = "dsPickFb";
+    var rows = pages.map(function (pg, i) {
+      var has = kitHasFacebookPage(items, pg);
+      return '<label class="ds-pick-row' + (has ? " has-kit" : "") + '">' +
+        '<input type="checkbox" data-i="' + i + '"' + (has ? " disabled" : " checked") + '>' +
+        '<div><div class="ds-pick-name">' + esc(pg.name || "(không tên)") + '</div>' +
+        '<div class="ds-pick-id">Page ID ' + esc(pg.id) + (pg.category ? " · " + esc(pg.category) : "") + "</div></div>" +
+        (has ? '<span class="ds-pick-badge">Đã có kit — không tạo lại</span>' : "") +
+        "</label>";
+    }).join("");
+    ov.innerHTML =
+      '<div class="ds-pick-box">' +
+      "<h3>Chọn Fanpage để tạo Brand Kit</h3>" +
+      '<p class="ds-pick-lead">Tên kit = <b>đúng tên Fanpage</b>. Nội dung copy từ Default. ' +
+      "<b>Page không có Brand Kit thì Javis không đăng bài lên page đó.</b></p>" +
+      '<label class="ds-pick-all"><input type="checkbox" id="dsPickAll" checked> Chọn tất cả page chưa có kit</label>' +
+      '<div class="ds-pick-list">' + rows + "</div>" +
+      '<div class="ds-pick-foot">' +
+      '<button type="button" class="s-btn-ghost" id="dsPickCancel">Hủy</button>' +
+      '<button type="button" class="s-btn" id="dsPickGo">Tạo kit cho page đã chọn</button>' +
+      "</div></div>";
+    host.appendChild(ov);
+
+    function enabledBoxes() {
+      return Array.prototype.slice.call(ov.querySelectorAll('.ds-pick-row input[type="checkbox"]:not([disabled])'));
+    }
+    var all = ov.querySelector("#dsPickAll");
+    all.onchange = function () {
+      enabledBoxes().forEach(function (c) { c.checked = all.checked; });
+    };
+    enabledBoxes().forEach(function (c) {
+      c.onchange = function () {
+        var boxes = enabledBoxes();
+        all.checked = boxes.length && boxes.every(function (x) { return x.checked; });
+      };
+    });
+    ov.querySelector("#dsPickCancel").onclick = function () { closePagePicker(body); };
+    ov.onclick = function (e) { if (e.target === ov) closePagePicker(body); };
+    ov.querySelector("#dsPickGo").onclick = async function () {
+      var selected = [];
+      enabledBoxes().forEach(function (c) {
+        if (c.checked) selected.push(pages[parseInt(c.getAttribute("data-i"), 10)]);
+      });
+      if (!selected.length) {
+        window.alert("Chưa chọn page nào. Tick các Fanpage muốn tạo Brand Kit.");
         return;
       }
+      closePagePicker(body);
+      await createKitsForPages(body, items, paintList, selected);
+    };
+  }
 
-      /* Tu dong them muc vao _index.md */
-      try {
-        var idxPath = ceilPath(home, "wiki/brand-kits/_index.md");
-        var idxRes = await fetch("/files/read?brain=" + encodeURIComponent(brain()) + "&path=" + encodeURIComponent(idxPath));
-        var idxData = await idxRes.json();
-        if (idxData && idxData.content) {
-          var idxContent = idxData.content;
-          var linkStr = "[[brand-kits/" + name + "]]";
-          if (idxContent.indexOf(linkStr) < 0) {
-            var newLine = "- " + linkStr + " " + ten + "\n";
-            var updatedIdx = idxContent.trimEnd() + "\n" + newLine;
-            var idxFd = new FormData();
-            idxFd.append("brain", brain());
-            idxFd.append("path", idxPath);
-            idxFd.append("content", updatedIdx);
-            await fetch("/files/write", { method: "POST", body: idxFd });
-          }
-        }
-      } catch (idxErr) {
-        console.warn("[brand-kits] Cập nhật _index.md thất bại:", idxErr);
-      }
-
-      var newItem = {
-        name: name + ".md",
-        type: "file",
-        content: tpl,
-        kind: "page",
-        parsed: parsePageKit(tpl, name + ".md"),
-        displayTitle: ten
-      };
-      items.push(newItem);
-      paintList(body.querySelector("#dsKitQ").value);
-      var btn = body.querySelector('.ds-row[data-name="' + name + '.md"]');
-      if (btn) btn.click();
-    } catch (e) {
-      window.alert("Lỗi mạng khi tạo kit mới: " + (e.message || e));
-    }
+  async function newKit(body, items, paintList) {
+    return openPagePicker(body, items, paintList);
   }
 
   /* ============================================================
@@ -1247,7 +1629,7 @@
       b.type = "button";
       b.className = "ds-row";
       b.dataset.name = f.name;
-      b.innerHTML = '<span class="ds-row-label">' + esc(FOLDER_LABEL[f.name] || f.name) + '</span>';
+      b.innerHTML = '<span class="ds-row-label">' + esc(f.name) + '</span>';
       b.onclick = function () { openFolder(body, f.name, b); };
       foldEl.appendChild(b);
       if (i === 0) current = f.name;
@@ -1289,13 +1671,10 @@
   }
 
   async function ensureFolders() {
-    var names = Object.keys(FOLDER_LABEL);
+    await loadCourseTags();
+    var names = ["chung", "_mau", "_xuat"].concat(COURSE_FOLDERS.map(function (t) { return t.id; }));
     for (var i = 0; i < names.length; i++) {
-      var fd = new FormData();
-      fd.append("brain", brain());
-      fd.append("path", IMG_DIR);
-      fd.append("name", names[i]);
-      try { await fetch("/files/mkdir", { method: "POST", body: fd }); } catch (e) {}
+      await mkdirDataset(names[i]);
     }
   }
 
@@ -1304,8 +1683,7 @@
     if (btn) btn.classList.add("sel");
     if (body._dsSetFolder) body._dsSetFolder(name);
 
-    var label = FOLDER_LABEL[name] || name;
-    body.querySelector("#dsFoldKind").textContent = label;
+    body.querySelector("#dsFoldKind").textContent = name;
     body.querySelector("#dsFoldMeta").textContent = IMG_DIR + "/" + name;
 
     var noticeEl = body.querySelector("#dsFoldNotice");
@@ -1327,7 +1705,7 @@
     } else {
       noticeEl.innerHTML =
         '<div class="ds-notice ds-notice-info">' +
-        'Ảnh bài đăng cho chuyên ngành <strong>' + esc(label) + '</strong>. Khi đăng bài, AI sẽ tự động lấy ảnh trong thư mục này khớp với chủ đề.' +
+        'Ảnh bài đăng trong thư mục <strong>' + esc(name) + '</strong> (<code>attachments/dataset/' + esc(name) + '</code>). Khi đăng bài, AI lấy ảnh trong thư mục này khớp chủ đề.' +
         '</div>';
     }
 
@@ -1501,6 +1879,10 @@
       if (d && d.error) {
         window.alert(d.error);
         return;
+      }
+      await loadCourseTags();
+      if (!COURSE_FOLDERS.some(function (t) { return t.id === slug; })) {
+        await saveCourseTags(COURSE_FOLDERS.concat([{ id: slug, label: rawSlug.trim() }]));
       }
       renderAnh(body);
     } catch (e) {

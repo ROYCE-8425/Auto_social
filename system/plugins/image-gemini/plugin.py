@@ -32,18 +32,20 @@ def register(ctx):
             return "ERROR: thiếu 'prompt' (mô tả ảnh cần tạo)."
         aspect = str(args.get("aspect_ratio") or "square")
         api_key = args.get("api_key")
+        model = str(args.get("model") or "").strip() or None
 
         res = await image_gen.generate_gemini(
             prompt=prompt,
             aspect_ratio=aspect,
             vault_root=cctx.vault_root,
             api_key=api_key,
+            model=model,
         )
         if not res.get("ok"):
             return "ERROR: " + str(res.get("error") or "tạo ảnh thất bại")
         rel = res["rel_path"]
         return (
-            f"Đã tạo ảnh Google Imagen 3 ({res.get('aspect')}, model {res.get('model')}), lưu tại {rel}. "
+            f"Đã tạo ảnh Google ({res.get('aspect')}, model {res.get('model')}), lưu tại {rel}. "
             f"HÃY NHÚNG ngay vào câu trả lời cho người dùng bằng cú pháp markdown: "
             f"![{prompt[:40]}]({rel})"
         )
@@ -51,10 +53,11 @@ def register(ctx):
     ctx.register_tool(
         name="gemini_generate_image",
         description=(
-            "Tạo ảnh thương mại 3D chất lượng cao bằng Google Imagen 3 (dùng chung API key Gemini). "
-            "Tham số: prompt (mô tả chi tiết ảnh cần tạo bằng tiếng Anh hoặc tiếng Việt), "
-            "aspect_ratio (square|landscape|portrait, mặc định square 1:1). "
-            "Sau khi gọi, NHÚNG ![](đường-dẫn) trả về vào câu trả lời."
+            "Tạo ảnh bằng Google Imagen hoặc Gemini image (Nano Banana), dùng API key Gemini. "
+            "Tham số: prompt, aspect_ratio (square|landscape|portrait), "
+            "model (imagen-4.0-generate-001 | imagen-4.0-fast-generate-001 | imagen-4.0-ultra-generate-001 | "
+            "imagen-3.0-generate-002 | gemini-2.5-flash-image | gemini-3.1-flash-image | gemini-3-pro-image). "
+            "Bỏ trống model thì lấy lựa chọn ở trang Models. Sau khi gọi, NHÚNG ![](đường-dẫn)."
         ),
         handler=_gen,
         min_mode="safe",
@@ -70,6 +73,12 @@ def register(ctx):
                     "type": "string",
                     "enum": ["square", "landscape", "portrait", "1:1", "16:9", "9:16", "4:3", "3:4"],
                     "description": "Tỉ lệ khung ảnh, mặc định square (1:1)"
+                },
+                "model": {
+                    "type": "string",
+                    "description": "Model ảnh Google: imagen-4.0-generate-001, imagen-4.0-fast-generate-001, "
+                                   "imagen-4.0-ultra-generate-001, imagen-3.0-generate-002, "
+                                   "gemini-2.5-flash-image, gemini-3.1-flash-image, gemini-3-pro-image"
                 },
                 "api_key": {
                     "type": "string",

@@ -2,24 +2,29 @@
 type: wiki
 updated: 2026-09-04
 ---
-# Mục lục brand kit Fanpage Sao Việt
+# Mục lục brand kit Fanpage
 
-Luật nạp khi soạn bài:
-1. Luôn đọc `_mac-dinh.md`
-2. Đọc file kit của ĐÚNG Fanpage nếu có
-3. Field trang **đè** field mặc định (địa chỉ, hotline, khoá thế mạnh, hashtag thêm)
-4. Chưa có file trang: dùng mặc định + ghi rõ "chưa có kit riêng, đang dùng mặc định" rồi nhân bản khi user bảo tạo
+## Nạp khi soạn / đăng
+1. Đọc `_mac-dinh.md` (pháp nhân, giọng, cấm).
+2. Đọc kit ĐÚNG Fanpage (`Page ID` khớp page Facebook).
+3. Đọc `_the-khoa-hoc.md` (thẻ = ngành = folder ảnh).
+4. Field trang đè mặc định. Default có `Thẻ khoá học: all`.
 
-## Cách nhân bản
-Copy `_mac-dinh.md` thành `<slug>.md`. Chỉ sửa khối **Tuỳ biến trang**. Giữ nguyên Thương hiệu / Giọng / Cấm.
+**Không có file kit + Page ID → không đăng page đó.**
+**Chủ đề bài không nằm trong thẻ của page → bỏ page đó** (vd 1 ngày 1 bài đồ họa: chỉ page có thẻ `do-hoa`).
 
-slug = ASCII, gạch nối, không dấu. Ví dụ Fanpage `Trung Tâm Tin Học Sao Việt Vũng Tàu` → `thsv-vung-tau.md`
+## Thẻ khoá học
+[[brand-kits/_the-khoa-hoc]] — nguồn sự thật. Thêm thẻ trên UI Brand Kit, không bịa folder.
 
-Cách chạy nhiều page: [[brand-kits/_van-hanh]]
+## Nhân bản page
+Nút **Tạo kit từ Fanpage đã kết nối** → tick page → tên kit = tên Fanpage, markdown copy Default, gắn Page ID. Rồi **tick thẻ ngành** cho page.
 
-## Trang đã có kit
-- [[brand-kits/_mac-dinh]] mặc định hệ thống (pháp nhân + footer thật)
-- [[brand-kits/royce-shop]] Royce Shop (page TEST đăng)
-- [[brand-kits/thsv-vung-tau]] Trung Tâm Tin Học Sao Việt Vũng Tàu
-- [[brand-kits/thsv-long-thanh]] Trung Tâm Tin Học Long Thành
-- [[brand-kits/thsv-hi]] hi
+## Tài liệu hệ thống
+- [[brand-kits/_mac-dinh]] nhận diện + pháp nhân
+- [[brand-kits/_the-khoa-hoc]] thẻ / folder ảnh
+- [[brand-kits/_van-hanh]] vận hành nhiều page
+- [[brand-kits/_y-chu-dang-bai]] chuẩn caption + album
+- [[brand-kits/_anh-da-dung]] ảnh gốc đã dùng
+
+## Page đã có kit
+Liệt kê file `wiki/brand-kits/*.md` không bắt đầu `_`. Không dùng page test làm mẫu vận hành cả hệ.

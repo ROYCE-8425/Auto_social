@@ -86,8 +86,8 @@ check("mọi connector đều có guide: " + (", ".join(guide_rong) or "đạt")
 # callback rồi bị Facebook chặn "URL bị chặn". Text hứa hộp copy mà không khai copy là bug.
 # Trigger: nhắc nút 'Sao chép', hoặc bảo dán/thêm MỘT ĐỊA CHỈ/TÊN MIỀN (thứ chỉ UI sinh ra
 # được). "dán vào hai ô bên dưới" (form App ID/Secret) không dính vì không phải địa chỉ.
-# Giá trị copy hợp lệ khớp với stepsHtml() trong console.js: redirect | domain.
-COPY_HOP_LE = {"redirect", "domain"}
+# Giá trị copy hợp lệ khớp với stepsHtml() trong console.js: redirect | domain | site.
+COPY_HOP_LE = {"redirect", "domain", "site"}
 HUA_O_COPY = re.compile(r"Sao chép|(?:dán|thêm)\s+(?:địa chỉ|tên miền)")
 hua_ma_khong_co = []
 copy_la = []

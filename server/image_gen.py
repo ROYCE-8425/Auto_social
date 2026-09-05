@@ -381,10 +381,42 @@ async def generate_chatgpt(prompt: str, aspect_ratio: str = "square", quality: s
 
 
 # ---------------------------------------------------------------------------
-# Google Gemini / Imagen 3
+# Google Gemini / Imagen + Nano Banana (generateContent)
 # ---------------------------------------------------------------------------
-GEMINI_IMAGEN_MODEL = os.getenv("JAVIS_GEMINI_IMAGEN_MODEL", "imagen-3.0-generate-002")
+# Imagen (:predict) và Gemini image (:generateContent) dùng CÙNG API key Gemini.
+# Chọn model ở trang Models (model.gemini_image_model) hoặc tham số tool.
+GEMINI_IMAGE_MODELS = [
+    {"id": "imagen-4.0-generate-001", "label": "Imagen 4", "kind": "predict"},
+    {"id": "imagen-4.0-fast-generate-001", "label": "Imagen 4 Fast", "kind": "predict"},
+    {"id": "imagen-4.0-ultra-generate-001", "label": "Imagen 4 Ultra", "kind": "predict"},
+    {"id": "imagen-3.0-generate-002", "label": "Imagen 3", "kind": "predict"},
+    {"id": "gemini-2.5-flash-image", "label": "Nano Banana (2.5 Flash Image)", "kind": "generateContent"},
+    {"id": "gemini-3.1-flash-image", "label": "Nano Banana 2 (3.1 Flash Image)", "kind": "generateContent"},
+    {"id": "gemini-3-pro-image", "label": "Nano Banana Pro (3 Pro Image)", "kind": "generateContent"},
+]
+_IMAGE_KIND = {m["id"]: m["kind"] for m in GEMINI_IMAGE_MODELS}
+GEMINI_IMAGEN_MODEL = os.getenv("JAVIS_GEMINI_IMAGEN_MODEL", "imagen-4.0-generate-001")
 GEMINI_IMAGEN_URL = "https://generativelanguage.googleapis.com/v1beta/models/{model}:predict?key={key}"
+GEMINI_GENCONTENT_URL = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={key}"
+
+
+def list_gemini_image_models():
+    return list(GEMINI_IMAGE_MODELS)
+
+
+def resolve_gemini_image_model(explicit: Optional[str] = None) -> str:
+    raw = (explicit or "").strip()
+    if not raw:
+        try:
+            import config
+            raw = str(((config.read_settings().get("model") or {}).get("gemini_image_model") or "")).strip()
+        except Exception:
+            raw = ""
+    if not raw:
+        raw = GEMINI_IMAGEN_MODEL
+    if raw not in _IMAGE_KIND:
+        raw = GEMINI_IMAGEN_MODEL if GEMINI_IMAGEN_MODEL in _IMAGE_KIND else GEMINI_IMAGE_MODELS[0]["id"]
+    return raw
 
 
 def get_gemini_api_key(explicit_key: Optional[str] = None) -> str:
@@ -421,18 +453,27 @@ def _resolve_gemini_aspect(aspect_ratio: Optional[str]) -> str:
     return mapping.get(a, "1:1")
 
 
+def _extract_gencontent_image_b64(data: dict) -> Optional[str]:
+    for cand in (data.get("candidates") or []):
+        parts = ((cand.get("content") or {}).get("parts") or [])
+        for part in parts:
+            inline = part.get("inlineData") or part.get("inline_data") or {}
+            b64 = inline.get("data")
+            if b64:
+                return b64
+    return None
+
+
 async def generate_gemini(
     prompt: str,
     aspect_ratio: str = "square",
     vault_root: Optional[str] = None,
     api_key: Optional[str] = None,
     timeout_s: float = 90.0,
-    prefix: str = "gemini-img"
+    prefix: str = "gemini-img",
+    model: Optional[str] = None,
 ) -> dict:
-    """Tao 1 anh bang Google Imagen 3 qua API key Gemini chung.
-
-    Tra ve {ok, rel_path, abs_path, file, aspect, provider, model, prompt} hoac {ok: False, error}.
-    """
+    """Tạo 1 ảnh bằng Imagen (:predict) hoặc Gemini image / Nano Banana (:generateContent)."""
     prompt = (prompt or "").strip()
     if not prompt:
         return {"ok": False, "error": "Thieu mo ta anh (prompt)."}
@@ -445,68 +486,64 @@ async def generate_gemini(
         }
 
     aspect = _resolve_gemini_aspect(aspect_ratio)
-    model = GEMINI_IMAGEN_MODEL
-    url = GEMINI_IMAGEN_URL.format(model=model, key=key)
-
-    payload = {
-        "instances": [
-            {"prompt": prompt}
-        ],
-        "parameters": {
-            "sampleCount": 1,
-            "aspectRatio": aspect,
-            "outputMimeType": "image/jpeg"
-        }
-    }
+    model = resolve_gemini_image_model(model)
+    kind = _IMAGE_KIND.get(model, "predict")
 
     try:
         timeout = httpx.Timeout(timeout_s, connect=20.0)
         async with httpx.AsyncClient(timeout=timeout) as client:
-            resp = await client.post(
-                url,
-                json=payload,
-                headers={"Content-Type": "application/json"}
-            )
-            if resp.status_code != 200:
-                body = resp.text[:400]
-                return {
-                    "ok": False,
-                    "error": f"Google Imagen API tra ma loi {resp.status_code}: {body}"
+            if kind == "generateContent":
+                url = GEMINI_GENCONTENT_URL.format(model=model, key=key)
+                payload = {
+                    "contents": [{"parts": [{"text": prompt}]}],
+                    "generationConfig": {
+                        "responseModalities": ["IMAGE", "TEXT"],
+                        "imageConfig": {"aspectRatio": aspect},
+                    },
                 }
-
-            data = resp.json()
-            predictions = data.get("predictions") or []
-            if not predictions:
-                return {
-                    "ok": False,
-                    "error": f"Google Imagen khong tra ve du lieu anh: {data}"
+                resp = await client.post(url, json=payload, headers={"Content-Type": "application/json"})
+                if resp.status_code != 200:
+                    body = resp.text[:500]
+                    return {"ok": False, "error": f"Google image API {resp.status_code}: {body}"}
+                b64 = _extract_gencontent_image_b64(resp.json())
+                if not b64:
+                    return {"ok": False, "error": "Gemini không trả bytes ảnh (generateContent)."}
+            else:
+                url = GEMINI_IMAGEN_URL.format(model=model, key=key)
+                payload = {
+                    "instances": [{"prompt": prompt}],
+                    "parameters": {
+                        "sampleCount": 1,
+                        "aspectRatio": aspect,
+                        "outputMimeType": "image/jpeg",
+                    },
                 }
-
-            b64 = predictions[0].get("bytesBase64Encoded")
-            if not b64:
-                return {
-                    "ok": False,
-                    "error": "Khong tim thay du lieu bytesBase64Encoded trong phan hoi cua Google."
-                }
+                resp = await client.post(url, json=payload, headers={"Content-Type": "application/json"})
+                if resp.status_code != 200:
+                    body = resp.text[:500]
+                    return {"ok": False, "error": f"Google Imagen API {resp.status_code}: {body}"}
+                data = resp.json()
+                predictions = data.get("predictions") or []
+                if not predictions:
+                    return {"ok": False, "error": f"Google Imagen không trả ảnh: {data}"}
+                b64 = predictions[0].get("bytesBase64Encoded")
+                if not b64:
+                    return {"ok": False, "error": "Không thấy bytesBase64Encoded trong phản hồi Imagen."}
 
             raw_bytes = base64.b64decode(b64)
             saved = save_image_bytes(raw_bytes, vault_root, prefix=prefix, ext=".jpg")
             if not saved.get("ok"):
                 return saved
-
             return {
                 "ok": True,
                 "rel_path": saved["rel_path"],
                 "abs_path": saved["abs_path"],
                 "file": saved["file"],
                 "aspect": aspect,
-                "provider": "google-imagen-3",
+                "provider": "google-imagen" if kind == "predict" else "google-gemini-image",
                 "model": model,
-                "prompt": prompt
+                "prompt": prompt,
             }
     except Exception as e:
-        return {
-            "ok": False,
-            "error": f"Goi Google Imagen that bai: {type(e).__name__}: {e}"
-        }
+        return {"ok": False, "error": f"Goi Google Imagen that bai: {type(e).__name__}: {e}"}
 

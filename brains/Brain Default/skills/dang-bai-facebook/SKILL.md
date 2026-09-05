@@ -88,8 +88,14 @@ CẤM gọi `fb_page_delete` trừ khi người dùng ra lệnh rõ ràng kèm �
 
 ## 6. Goal ngắn, tự bung (Luật F)
 
+**CẤM đăng page chưa có Brand Kit.** Trước khi gọi `fb_page_*`: đọc `wiki/brand-kits/*.md`, chỉ đăng page có file kit và dòng `Page ID:` khớp. Không có kit → `POST_SKIP ly-do=chua-co-brand-kit`.
+
+**CẤM đăng sai thẻ.** Đọc `_the-khoa-hoc.md` + dòng `Thẻ khoá học:` của kit. Default `all` = mọi ngành. Page chỉ nhận brief đúng thẻ (đồ họa → `do-hoa`). 1 bài cho “toàn bộ page” = chỉ page có thẻ khớp. Sai thẻ → `POST_SKIP ly-do=khong-dung-the`. Ảnh chỉ lấy `attachments/dataset/<id-the>/`.
+
+Kết nối Graph API không đủ.
+
 User chỉ cần 1 dòng chỉ định Fanpage hoặc chọn theo task checklist chiến dịch (ví dụ: Tin học Sao Việt Thủ Đức, Kế toán Sao Việt Bình Dương, AutoCAD Sao Việt Biên Hòa, Royce Shop...).
-Thiếu page: tự động lấy target page từ task checklist của chiến dịch đang chạy (30+ Fanpage). Map ngành và chủ đề -> folder + kiểu A/B + kit + chân trang + album Luật C. Không bắt user dán luật.
+Thiếu page: tự động lấy target page từ task checklist của chiến dịch đang chạy (30+ Fanpage) **trong số page đã có kit**. Map ngành và chủ đề -> folder + kiểu A/B + kit + chân trang + album Luật C. Không bắt user dán luật.
 
 Trung thu 2026 nếu user không ghi ngày: nghỉ Thứ Sáu 25/09/2026, học lại Thứ Bảy 26/09/2026.
 

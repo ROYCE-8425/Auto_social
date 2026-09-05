@@ -3191,6 +3191,52 @@ async def connect_catalog():
             "strict": bool(cfgmod.read_settings().get("mcp", {}).get("strict")), "hub": _hub_enabled()}
 
 
+@app.get("/connect/facebook/pages")
+async def connect_facebook_pages():
+    """Fanpage đã tick lúc OAuth — gộp MỌI kết nối facebook-pages. Không lộ page token."""
+    try:
+        import oauth_mcp
+        import httpx
+    except Exception:
+        return {"ok": False, "pages": [], "error": "oauth chưa sẵn"}
+    tokens = []
+    for c in mcp_store.list_connections():
+        if c.get("connector_id") != "facebook-pages":
+            continue
+        if not oauth_mcp.status(c["id"]).get("connected"):
+            continue
+        hdr = await oauth_mcp.auth_headers(c["id"])
+        tok = (hdr.get("Authorization") or "").replace("Bearer ", "").strip()
+        if tok and tok not in tokens:
+            tokens.append(tok)
+    if not tokens:
+        return {"ok": False, "pages": [], "error": "Chưa kết nối Facebook Trang"}
+    by_id = {}
+    last_err = ""
+    try:
+        async with httpx.AsyncClient(timeout=20) as client:
+            for token in tokens:
+                r = await client.get(
+                    "https://graph.facebook.com/v25.0/me/accounts",
+                    params={"fields": "id,name,category", "limit": 200, "access_token": token})
+                d = r.json()
+                if isinstance(d, dict) and d.get("error"):
+                    err = d["error"]
+                    last_err = err.get("message") if isinstance(err, dict) else str(err)
+                    continue
+                for p in (d.get("data") or []):
+                    pid = str(p.get("id") or "")
+                    if pid:
+                        by_id[pid] = {"id": pid, "name": p.get("name") or "",
+                                      "category": p.get("category") or ""}
+    except Exception as e:
+        return {"ok": False, "pages": [], "error": f"{type(e).__name__}: {e}"}
+    pages = list(by_id.values())
+    if not pages and last_err:
+        return {"ok": False, "pages": [], "error": last_err}
+    return {"ok": True, "pages": pages}
+
+
 @app.post("/connect/add")
 async def connect_add(request: Request):
     """Thêm tài khoản cho 1 connector trong kho: lưu tạm → VALIDATE ngay (gọi tool xác minh,
@@ -3565,6 +3611,12 @@ async def settings_set(section: str = Form(...), data: str = Form("{}")):
             m["claude_auth"] = (claude_auth.API_KEY
                                 if str(patch["claude_auth"] or "").strip().lower() == claude_auth.API_KEY
                                 else claude_auth.SUBSCRIPTION)
+        if "gemini_image_model" in patch:
+            import image_gen
+            mid = str(patch.get("gemini_image_model") or "").strip()
+            allowed = {x["id"] for x in image_gen.list_gemini_image_models()}
+            if mid in allowed:
+                m["gemini_image_model"] = mid
         if "auxiliary" in patch:   # model phụ cho việc nền (provider + model)
             aux_patch = patch["auxiliary"] or {}
             aux = m.setdefault("auxiliary", {})
@@ -4003,6 +4055,19 @@ async def provider_models_index(provider: str, refresh: bool = False) -> dict:
 async def provider_models(provider: str = Query(...), refresh: bool = Query(False)):
     """Model động cho 1 provider. ``refresh=1`` bỏ cache để picker hỏi Codex ngay."""
     return await provider_models_index(provider, refresh=refresh)
+
+
+@app.get("/provider/image-models")
+async def provider_image_models(provider: str = Query("gemini")):
+    """Danh sách model gen ảnh (Imagen / Nano Banana) + model đang chọn."""
+    if provider != "gemini":
+        return {"ok": False, "models": [], "current": ""}
+    import image_gen
+    s = cfgmod.read_settings()
+    cur = str(((s.get("model") or {}).get("gemini_image_model") or "")).strip()
+    if not cur:
+        cur = image_gen.resolve_gemini_image_model()
+    return {"ok": True, "models": image_gen.list_gemini_image_models(), "current": cur}
 
 
 @app.get("/memory/stats")

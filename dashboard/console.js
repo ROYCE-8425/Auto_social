@@ -3487,11 +3487,17 @@
         </div>`;
       }
       const masked = (m[KEYFIELD[p.id]] || "").slice(-4);
+      const imgPick = (p.id === "gemini" && on)
+        ? `<div class="prov-note" style="margin-top:8px">Model gen ảnh (Imagen / Nano Banana) — chat Gemini bị chặn GenerateContent thì thử Imagen; key Google phải mở API ảnh.</div>
+           <div class="prov-action" style="margin-top:6px"><label class="gcard-meta" style="margin-right:8px">Ảnh</label>
+           <select class="js-input" id="geminiImgModel" style="max-width:320px"><option>Đang tải…</option></select></div>`
+        : "";
       return `<div class="prov-card ${p.is_main ? "main" : ""}">
         ${provHead(p, on, p.kind === "cli" ? "MCP/skill" : "MCP Javis", (on ? t("models.st_connected") : t("models.st_not_connected")) + " · " + p.models.length + " model")}
         ${p.needs_key
           ? `<div class="prov-action"><input class="js-input" id="pk-${p.id}" type="password" placeholder="${on ? esc(t("models.key_change_ph", { duoi: masked })) : esc(t("models.key_ph"))}"><button class="gcard-btn" data-pk="${p.id}">${on ? esc(t("models.key_change")) : esc(t("models.connect"))}</button>${on ? `<button class="gcard-btn ghost" data-disc="${p.id}">${esc(t("models.disconnect"))}</button>` : ""}</div>`
           : `<div class="prov-note">${esc(t("models.no_key_note"))}</div>`}
+        ${imgPick}
       </div>`;
     };
 
@@ -3612,6 +3618,25 @@
         renderModelsCloudTab(el);
       };
     });
+    const imgSel = el.querySelector("#geminiImgModel");
+    if (imgSel) {
+      (async () => {
+        let d = { models: [], current: "" };
+        try { d = await (await fetch("/provider/image-models?provider=gemini")).json(); } catch (e) {}
+        const mods = d.models || [];
+        const cur = d.current || "";
+        imgSel.innerHTML = mods.map(x =>
+          `<option value="${esc(x.id)}" ${x.id === cur ? "selected" : ""}>${esc(x.label)} · ${esc(x.id)}</option>`
+        ).join("") || `<option value="">(không có model)</option>`;
+        imgSel.onchange = async () => {
+          const v = imgSel.value;
+          if (!v) return;
+          imgSel.disabled = true;
+          await saveSetting("model", { gemini_image_model: v });
+          imgSel.disabled = false;
+        };
+      })();
+    }
     const ol = el.querySelector("[data-oauth-login]");
     if (ol) ol.onclick = () => startOauthLogin(el);
     const ob = el.querySelector("[data-oauth-browser]");
@@ -3971,6 +3996,9 @@
     let selModel = (selProv === main.provider) ? (main.model || null) : null;
     const liveCache = {};      // pid -> {models:[], live:bool} - model load động từ API provider
     let loadingProv = null;
+    let imgModels = [];
+    let imgCurrent = "";
+    let imgLoading = false;
 
     const modelsFor = (pid) => (liveCache[pid] && liveCache[pid].models) || (providers.find(x => x.id === pid) || {}).models || [];
     const tagFor = (pid) => {
@@ -3999,6 +4027,19 @@
         if (!selModel || ms.indexOf(selModel) < 0)
           selModel = (pid === main.provider && ms.indexOf(main.model) >= 0) ? main.model : (ms[0] || null);
       }
+      if (pid === "gemini") ensureImageModels();
+      draw();
+    }
+
+    async function ensureImageModels() {
+      if (imgModels.length || imgLoading) { draw(); return; }
+      imgLoading = true; draw();
+      try {
+        const d = await (await fetch("/provider/image-models?provider=gemini")).json();
+        imgModels = d.models || [];
+        imgCurrent = d.current || "";
+      } catch (e) { imgModels = []; }
+      imgLoading = false;
       draw();
     }
 
@@ -4021,7 +4062,12 @@
               <button class="mp-model ${mod === selModel ? "sel" : ""}" data-mod="${esc(mod)}">${esc(mod)}${(selProv === main.provider && mod === main.model) ? ` <span class="mp-cur">${esc(t("models.mp_using"))}</span>` : ""}</button>`).join("")
                 : (loadingProv === selProv ? '<div class="mp-empty">' + esc(t("models.mp_loading")) + '</div>'
                     : '<div class="mp-empty">' + esc((liveCache[selProv] && liveCache[selProv].error)
-                        || t("models.mp_empty")) + '</div>')}</div>
+                        || t("models.mp_empty")) + '</div>')}
+              ${selProv === "gemini" ? `<div class="mp-img-head">Gen ảnh · Imagen / Nano Banana (không phải model chat)</div>
+                ${imgLoading ? '<div class="mp-empty">Đang tải model ảnh…</div>' : (imgModels.map(im =>
+                  `<button class="mp-model ${im.id === imgCurrent ? "sel" : ""}" data-img="${esc(im.id)}">${esc(im.label)} <span class="mp-cur">${esc(im.id)}</span></button>`
+                ).join("") || '<div class="mp-empty">Không tải được danh sách Imagen.</div>')}` : ""}
+            </div>
           </div>
           <div class="mp-foot">
             <span class="mp-note">${esc(opts.note || t("models.mp_note"))}</span>
@@ -4034,7 +4080,14 @@
         selModel = (selProv === main.provider && ms.indexOf(main.model) >= 0) ? main.model : (liveCache[selProv] ? (ms[0] || null) : null);
         ensureModels(selProv);
       });
-      modal.querySelectorAll(".mp-model").forEach(b => b.onclick = () => { selModel = b.dataset.mod; draw(); });
+      modal.querySelectorAll(".mp-model[data-mod]").forEach(b => b.onclick = () => { selModel = b.dataset.mod; draw(); });
+      modal.querySelectorAll(".mp-model[data-img]").forEach(b => b.onclick = async () => {
+        const id = b.dataset.img;
+        if (!id) return;
+        imgCurrent = id;
+        draw();
+        await saveSetting("model", { gemini_image_model: id });
+      });
       modal.querySelectorAll('[data-act="close"]').forEach(b => b.onclick = () => modal.classList.remove("open"));
       const applyFilter = () => {
         const q = filterQ.toLowerCase();
@@ -4420,17 +4473,36 @@
     // localhost vì Meta chỉ miễn HTTP cho host 'localhost'.
     return location.origin.replace("://127.0.0.1", "://localhost") + "/connect/oauth/callback";
   }
-  function redirectCopyBox() {
-    const uri = _redirectUri();
-    return '<div class="wiz-copy"><input class="js-input" readonly value="' + esc(uri) + '">'
+  function _copyBox(val) {
+    // textarea 2 dòng: URL dài không bị cắt giữa chừng như input 1 dòng (Facebook
+    // khớp từng ký tự — copy thiếu /callback hoặc thiếu chữ h là đăng nhập chết).
+    return '<div class="wiz-copy"><textarea class="js-input" readonly rows="2">' + esc(val) + '</textarea>'
       + '<button type="button" class="mp-btn wiz-copy-btn">Sao chép</button></div>';
+  }
+  function redirectCopyBox() {
+    return _copyBox(_redirectUri());
+  }
+  // Site URL cho nền tảng Website trong Facebook App (https://tên-miền/).
+  function siteCopyBox() {
+    const origin = location.origin.replace("://127.0.0.1", "://localhost");
+    return _copyBox(origin + "/");
   }
   // Ô sao chép TÊN MIỀN trần (không https, không /) - cho ô "Miền ứng dụng"
   // (App Domains) của Facebook. Cũng động theo địa chỉ đang mở như redirect.
-  function domainCopyBox() {
+  // Subdomain (vd javissocial.aisaoviet.com) Facebook hay bắt THÊM miền gốc
+  // aisaoviet.com — thiếu là báo "Không thể tải URL" dù đã dán subdomain.
+  function _appDomains() {
     const host = location.hostname === "127.0.0.1" ? "localhost" : location.hostname;
-    return '<div class="wiz-copy"><input class="js-input" readonly value="' + esc(host) + '">'
-      + '<button type="button" class="mp-btn wiz-copy-btn">Sao chép</button></div>';
+    const out = [host];
+    const parts = host.split(".");
+    if (parts.length >= 3 && host !== "localhost") {
+      const root = parts.slice(-2).join(".");
+      if (root && root !== host) out.push(root);
+    }
+    return out;
+  }
+  function domainCopyBox() {
+    return _appDomains().map(h => _copyBox(h)).join("");
   }
   function stepsHtml(con) {
     const st = con.steps || [];
@@ -4438,13 +4510,15 @@
     return '<ol class="conn-steps">' + st.map(s =>
       '<li>' + esc(s.text)
       + (s.link ? ' <button type="button" class="mp-btn wiz-open step-link" data-url="' + esc(s.link) + '">' + esc(s.link_label || "Mở trang") + ' ↗</button>' : "")
-      + (s.copy === "redirect" ? redirectCopyBox() : s.copy === "domain" ? domainCopyBox() : "")
+      + (s.copy === "redirect" ? redirectCopyBox()
+        : s.copy === "domain" ? domainCopyBox()
+        : s.copy === "site" ? siteCopyBox() : "")
       + '</li>').join("") + '</ol>';
   }
   function wireWizCommon(m) {
     m.querySelectorAll(".wiz-open").forEach(b => { b.onclick = () => window.open(b.dataset.url, "_blank", "noopener"); });
     m.querySelectorAll(".wiz-copy-btn").forEach(btn => btn.onclick = async () => {
-      const inp = btn.parentElement.querySelector("input");
+      const inp = btn.parentElement.querySelector("input, textarea");
       if (!inp) return;
       try { await navigator.clipboard.writeText(inp.value); }
       catch (e) { inp.select(); try { document.execCommand("copy"); } catch (_) {} }

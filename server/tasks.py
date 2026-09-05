@@ -540,6 +540,9 @@ class TasksFeature:
         except Exception as exc:
             error = f"{type(exc).__name__}: {exc}"
         out = final.strip() or "\n".join(v for v in narration if v).strip()
+        if not error and aux_engine.final_loi_dang_nhap(out):
+            error = out
+            out = ""
         return out, error, tool_calls
 
     async def _specify(self, task: dict) -> tuple[dict, str]:

@@ -22,21 +22,27 @@ GRAPH_VIDEO = "https://graph-video.facebook.com/v25.0"
 CONNECTOR_ID = "facebook-pages"
 
 
-def _connected_id():
-    """id kết nối facebook-pages ĐÃ đăng nhập (None nếu chưa). Import lười để load không phụ thuộc."""
+def _connected_ids():
+    """Mọi kết nối facebook-pages đã có token (nhiều tài khoản Facebook)."""
     try:
         import mcp_store
         import oauth_mcp
     except Exception:
-        return None
+        return []
+    out = []
     for c in mcp_store.list_connections():
         if c.get("connector_id") == CONNECTOR_ID and oauth_mcp.status(c["id"]).get("connected"):
-            return c["id"]
-    return None
+            out.append(c["id"])
+    return out
+
+
+def _connected_id():
+    ids = _connected_ids()
+    return ids[0] if ids else None
 
 
 def _check():
-    if not _connected_id():
+    if not _connected_ids():
         return ("Chưa kết nối Facebook Trang. Vào trang Kết nối, chọn 'Facebook Trang (tự tạo app - "
                 "Graph API)', làm theo hướng dẫn tạo Facebook App rồi đăng nhập (nhớ tick chọn Trang). "
                 "Sau đó gọi lại tool này.")
@@ -48,8 +54,20 @@ async def _token():
     cid = _connected_id()
     if not cid:
         return None
-    hdr = await oauth_mcp.auth_headers(cid)      # tự refresh token ~60 ngày khi sắp hết hạn
+    hdr = await oauth_mcp.auth_headers(cid)
     return (hdr.get("Authorization", "") or "").replace("Bearer ", "").strip() or None
+
+
+async def _tokens():
+    import oauth_mcp
+    seen, out = set(), []
+    for cid in _connected_ids():
+        hdr = await oauth_mcp.auth_headers(cid)
+        tok = (hdr.get("Authorization", "") or "").replace("Bearer ", "").strip()
+        if tok and tok not in seen:
+            seen.add(tok)
+            out.append(tok)
+    return out
 
 
 async def _get(path, params, token):
@@ -100,12 +118,26 @@ def _fmt(d):
     return json.dumps(d, ensure_ascii=False, default=str)
 
 
-async def _pages(user_token):
-    """Danh sách Trang user quản lý, mỗi Trang kèm access_token RIÊNG. Trả (list, err)."""
-    d = await _get("me/accounts", {"fields": "id,name,category,access_token,tasks", "limit": 200}, user_token)
-    if isinstance(d, dict) and d.get("error"):
-        return None, _fmt(d)
-    return (d or {}).get("data") or [], None
+async def _pages(user_token=None):
+    """Gộp Trang từ MỌI kết nối facebook-pages. Trả (list, err). Không lộ trùng page."""
+    toks = await _tokens()
+    if user_token and user_token not in toks:
+        toks = [user_token] + toks
+    if not toks:
+        return None, "ERROR: Chưa kết nối Facebook Trang."
+    by_id, last_err = {}, None
+    for tok in toks:
+        d = await _get("me/accounts", {"fields": "id,name,category,access_token,tasks", "limit": 200}, tok)
+        if isinstance(d, dict) and d.get("error"):
+            last_err = _fmt(d)
+            continue
+        for p in (d or {}).get("data") or []:
+            pid = str(p.get("id") or "")
+            if pid:
+                by_id[pid] = p
+    if not by_id:
+        return None, last_err or "ERROR: Không thấy Trang nào."
+    return list(by_id.values()), None
 
 
 async def _resolve_page(args, user_token):
