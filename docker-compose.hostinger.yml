@@ -73,6 +73,7 @@ services:
       - ./system:/app/system
       - claude-auth:/home/javis/.claude
       - codex-auth:/home/javis/.codex
+      - antigravity-auth:/home/javis/.gemini
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request,os,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:'+os.getenv('JAVIS_PORT','7777')+'/health',timeout=4).status==200 else 1)"]
       interval: 30s
@@ -105,3 +106,4 @@ volumes:
   javis-brains:
   claude-auth:
   codex-auth:
+  antigravity-auth:

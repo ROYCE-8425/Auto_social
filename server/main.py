@@ -1318,6 +1318,7 @@ def _providers_view(cfg):
             _a = antigravity_cli.auth_status_nen()   # cùng lý do nhánh `configured` ở trên
             item["cli_found"] = bool(antigravity_cli.find_antigravity_cli())
             item["auth_method"] = _a.get("method", "")
+            item["account"] = _a.get("email", "")
             item["auth_error"] = _a.get("error", "")
             item["cai_lenh"] = antigravity_cli.lenh_cai()
             # Không có nút Ngắt: token nằm trong keyring của hệ điều hành, Javis không giữ nên

@@ -86,6 +86,8 @@ def find_antigravity_cli() -> Optional[str]:
         home / ".antigravity" / "bin" / "agy.exe",
         Path("/usr/local/bin/agy"),
         Path("/opt/homebrew/bin/agy"),
+        Path("/root/.local/bin/agy"),
+        Path("/root/.antigravity/bin/agy"),
         # Trinh cai Windows (install.ps1) tha vao %LOCALAPPDATA%\agy\bin\agy.exe,
         # khong phai Programs\antigravity - Javis cu khong thay du CMD go duoc `agy`.
         Path(os.environ.get("LOCALAPPDATA", "")) / "agy" / "bin" / "agy.exe",
@@ -649,7 +651,25 @@ def auth_status(bo_qua_cache: bool = False) -> dict:
         return dict(_AUTH_CACHE["val"])
     ds = list_models()
     if ds:
-        d = {"connected": True, "method": "google (keyring của máy)", "email": "", "error": ""}
+        email = ""
+        ung_vien_acc = [
+            _home_dir() / ".gemini" / "google_accounts.json",
+            Path("/root/.gemini/google_accounts.json"),
+            Path(os.environ.get("USERPROFILE", "")) / ".gemini" / "google_accounts.json",
+            Path(os.environ.get("LOCALAPPDATA", "")) / "Gemini" / "google_accounts.json",
+        ]
+        for p in ung_vien_acc:
+            try:
+                if p.is_file():
+                    acc_data = json.loads(p.read_text(encoding="utf-8", errors="replace"))
+                    act = str(acc_data.get("active") or "").strip()
+                    if act and "@" in act:
+                        email = act
+                        break
+            except Exception:
+                pass
+        method = f"{email} (Google AI Pro)" if email else "Google Antigravity"
+        d = {"connected": True, "method": method, "email": email, "error": ""}
     else:
         # Nói rõ chuyện ĐÚNG USER (16/08): nhiều người đã đăng nhập agy thành công qua SSH
         # nhưng bằng user khác (vd root), còn Javis chạy bằng user riêng nên không thấy gì -
