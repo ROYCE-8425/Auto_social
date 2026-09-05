@@ -115,21 +115,31 @@ def smart_crop_and_enhance(img: Image.Image, target_w: int, target_h: int) -> Im
 
 
 def paste_brand_logo(base: Image.Image, logo_path: Optional[Path], box: Tuple[int, int, int, int], bg_badge: bool = True) -> None:
-    """Dán logo thương hiệu vào vùng chỉ định, tùy chọn đặt trên badge trắng bo góc sắc nét."""
+    """Dán logo thương hiệu to rõ, nổi khối 3D với viền vàng ánh kim và bóng đổ mềm mại."""
     if not logo_path or not logo_path.is_file():
         return
     try:
-        logo_img = Image.open(logo_path).convert("RGBA")
         x1, y1, x2, y2 = box
         bw = x2 - x1
         bh = y2 - y1
+        W, H = base.size
 
-        draw = ImageDraw.Draw(base)
         if bg_badge:
-            draw.rounded_rectangle([x1, y1, x2, y2], radius=22, fill=(255, 255, 255, 252), outline=(255, 215, 0, 220), width=2)
+            # 1. Đổ bóng mềm sau thẻ logo
+            sh = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+            sd = ImageDraw.Draw(sh)
+            sd.rounded_rectangle([x1 + 4, y1 + 6, x2 + 4, y2 + 6], radius=22, fill=(0, 0, 0, 130))
+            sh = sh.filter(ImageFilter.GaussianBlur(14))
+            base.paste(Image.alpha_composite(base.convert("RGBA"), sh))
 
-        pad_x = 24
-        pad_y = 14
+            # 2. Thân thẻ trắng bo góc viền vàng
+            draw = ImageDraw.Draw(base)
+            draw.rounded_rectangle([x1, y1, x2, y2], radius=22, fill=(255, 255, 255, 252),
+                                   outline=(255, 215, 0, 230), width=3)
+
+        logo_img = Image.open(logo_path).convert("RGBA")
+        pad_x = 26
+        pad_y = 16
         max_lw = bw - (pad_x * 2)
         max_lh = bh - (pad_y * 2)
 
@@ -162,7 +172,74 @@ def draw_pill_badge(draw: ImageDraw.ImageDraw, text: str, x: int, y: int, font: 
 
 
 # ===========================================================================
-# 5 TEMPLATES ĐỒ HỌA THỰC CHIẾN CHUẨN FACEBOOK 1:1 (2000x2000)
+# 5 BẢNG MÀU THƯƠNG HIỆU ĐA DẠNG (COLOR MOOD PALETTES)
+# ===========================================================================
+COLOR_PALETTES = {
+    "royal_sapphire": {
+        "name": "Royal Sapphire (Sao Việt Classic)",
+        "bg_primary": (11, 35, 65),       # Deep Navy
+        "bg_secondary": (18, 56, 102),    # Mid Navy
+        "card_bg": (14, 42, 78, 235),
+        "accent_gold": (255, 215, 0),     # Gold
+        "accent_cyan": (0, 212, 255),     # Cyan
+        "badge_bg": (230, 81, 0),         # Orange
+        "text_main": "#FFFFFF",
+        "text_sub": "#FFD54F",
+        "text_muted": "#CBD5E1",
+    },
+    "ruby_urgency": {
+        "name": "Ruby Urgency (Cấp Tốc / Ưu Đãi Lớn)",
+        "bg_primary": (64, 10, 20),       # Deep Ruby
+        "bg_secondary": (96, 16, 32),     # Mid Ruby
+        "card_bg": (80, 14, 28, 235),
+        "accent_gold": (255, 204, 0),     # Bright Gold
+        "accent_cyan": (255, 112, 67),    # Coral Orange
+        "badge_bg": (213, 0, 0),          # Pure Ruby Red
+        "text_main": "#FFFFFF",
+        "text_sub": "#FFE082",
+        "text_muted": "#F1F5F9",
+    },
+    "cosmic_violet": {
+        "name": "Cosmic Violet (Công Nghệ AI & Tương Lai)",
+        "bg_primary": (24, 14, 48),       # Deep Cosmic Violet
+        "bg_secondary": (44, 24, 86),     # Mid Violet
+        "card_bg": (38, 20, 75, 235),
+        "accent_gold": (255, 215, 0),     # Gold
+        "accent_cyan": (0, 242, 254),     # Neon Aqua
+        "badge_bg": (124, 58, 237),       # Royal Purple
+        "text_main": "#FFFFFF",
+        "text_sub": "#A7F3D0",
+        "text_muted": "#E0E7FF",
+    },
+    "emerald_growth": {
+        "name": "Emerald Growth (Kỹ Năng & Thăng Tiến)",
+        "bg_primary": (8, 42, 34),        # Deep Emerald
+        "bg_secondary": (16, 72, 58),     # Mid Emerald
+        "card_bg": (12, 58, 46, 235),
+        "accent_gold": (255, 215, 0),     # Gold
+        "accent_cyan": (0, 230, 118),     # Mint Green
+        "badge_bg": (230, 81, 0),         # Amber Orange
+        "text_main": "#FFFFFF",
+        "text_sub": "#69F0AE",
+        "text_muted": "#E2E8F0",
+    },
+    "warm_editorial": {
+        "name": "Warm Editorial (Thanh Lịch / Doanh Nhân)",
+        "bg_primary": (36, 26, 22),       # Deep Espresso
+        "bg_secondary": (64, 44, 36),     # Warm Mocha
+        "card_bg": (52, 36, 28, 235),
+        "accent_gold": (255, 183, 77),    # Amber
+        "accent_cyan": (255, 138, 101),   # Warm Terra
+        "badge_bg": (194, 65, 12),        # Rust Orange
+        "text_main": "#FFFFFF",
+        "text_sub": "#FEF3C7",
+        "text_muted": "#F5F5F4",
+    },
+}
+
+
+# ===========================================================================
+# CÁC TEMPLATES ĐỒ HỌA THỰC CHIẾN CHUẨN FACEBOOK 1:1 (2000x2000)
 # ===========================================================================
 
 def render_template_split_right(
@@ -517,84 +594,239 @@ def render_template_floating_card(
 def render_template_diagonal_slice(
     classroom_img: Image.Image,
     logo_path: Optional[Path],
-    title: str,
-    subtitle: str,
-    highlights: List[str],
+    title: str = "TIN HỌC VĂN PHÒNG & ỨNG DỤNG AI",
+    subtitle: str = "Nâng Tầm Hiệu Suất - Đi Làm Ngay",
+    highlights: Optional[List[str]] = None,
     badge_text: str = "ƯU ĐÃI 30% HỌC PHÍ",
     footer_text: str = "TRUNG TÂM TIN HỌC SAO VIỆT",
     hotline: str = "093 1144 858",
-    brand_color: Tuple[int, int, int] = (11, 35, 65),
+    brand_color: Tuple[int, int, int] = (8, 22, 45),
 ) -> Image.Image:
-    """Template 5: Cắt vát góc hiện đại (Diagonal Slant) phân tách giữa ảnh thật và panel thông tin."""
+    """Template 5: Vát chéo công nghệ Agency (Diagonal Slant) chuẩn quốc tế:
+    - Ảnh thật cắt vát góc động sắc nét, viền neon kép phát sáng vàng kim và xanh cyan.
+    - Nền Deep Navy với họa tiết tech grid tinh tế.
+    - Logo Sao Việt to rõ trên thẻ nổi khối 3D góc trên trái.
+    - Tiêu đề Hero 2 tầng khổng lồ, bóng đổ 3D, vạch mạ vàng sang trọng.
+    - 3 Hộp quyền lợi chuyên nghiệp có icon checkmark màu sắc.
+    - Dải hotline cam rực rỡ thu hút người nhìn."""
     W, H = 2000, 2000
-    base = smart_crop_and_enhance(classroom_img, W, H).convert("RGBA")
+    canvas = Image.new("RGBA", (W, H), (brand_color[0], brand_color[1], brand_color[2], 255))
 
-    # Polygon vát chéo che bên phải (mở rộng vùng panel sang trái để chữ thoải mái)
-    top_x = 980
-    bot_x = 720
-    poly = [(top_x, 0), (W, 0), (W, H), (bot_x, H)]
+    rw, rh = classroom_img.size
+    scale = max(W / rw, H / rh)
+    nw, nh = int(rw * scale), int(rh * scale)
+    raw_res = classroom_img.resize((nw, nh), Image.Resampling.LANCZOS)
+    xo = (nw - W) // 2
+    yo = (nh - H) // 2
+    photo_cropped = raw_res.crop((xo, yo, xo + W, yo + H)).convert("RGBA")
 
-    panel = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-    pd = ImageDraw.Draw(panel)
-    pd.polygon(poly, fill=(brand_color[0], brand_color[1], brand_color[2], 255))
-    # Đường viền vát vàng
-    pd.line([(top_x, 0), (bot_x, H)], fill=(255, 215, 0, 220), width=6)
-    base = Image.alpha_composite(base, panel)
+    slant_top = 1080
+    slant_bot = 680
+    mask = Image.new("L", (W, H), 0)
+    md = ImageDraw.Draw(mask)
+    md.polygon([(0, 0), (slant_top, 0), (slant_bot, H), (0, H)], fill=255)
+    canvas.paste(photo_cropped, (0, 0), mask)
 
-    draw = ImageDraw.Draw(base)
+    draw = ImageDraw.Draw(canvas)
+    for w_glow, alpha in [(24, 30), (14, 70), (8, 140), (4, 255)]:
+        draw.line([(slant_top, 0), (slant_bot, H)], fill=(255, 215, 0, alpha), width=w_glow)
+    off = 36
+    for w_glow, alpha in [(14, 30), (8, 80), (3, 220)]:
+        draw.line([(slant_top + off, 0), (slant_bot + off, H)], fill=(0, 212, 255, alpha), width=w_glow)
 
-    # Logo góc trên phải
-    badge_w, badge_h = 310, 110
-    paste_brand_logo(base, logo_path, (W - badge_w - 70, 65, W - 70, 65 + badge_h), bg_badge=True)
+    for gx in range(1180, W - 60, 60):
+        for gy in range(80, H - 120, 60):
+            draw.ellipse([gx - 2, gy - 2, gx + 2, gy + 2], fill=(255, 255, 255, 20))
 
-    # Tiêu đề
-    content_x = 1050
-    max_text_w = W - content_x - 70
-    curr_y = 250
-    font_title, title_lines = fit_title_font(draw, title, max_text_w, 400, start_size=72, min_size=46)
-    for line in title_lines:
-        draw.text((content_x, curr_y), line, font=font_title, fill="#FFFFFF")
-        bb = draw.textbbox((0, 0), line, font=font_title)
-        curr_y += (bb[3] - bb[1]) + 18
+    paste_brand_logo(canvas, logo_path, (70, 70, 450, 200), bg_badge=True)
 
-    curr_y += 20
-    draw.line([(content_x, curr_y), (content_x + 350, curr_y)], fill=(255, 193, 7, 220), width=4)
-    curr_y += 40
+    font_badge = get_font(34, bold=True)
+    badge_w, badge_h = 430, 95
+    bx = W - badge_w - 70
+    by = 75
+    draw_pill_badge(draw, badge_text, bx, by, font_badge,
+                    bg_color=(230, 81, 0, 250), border_color=(255, 215, 0, 255),
+                    pad_x=28, pad_y=16, radius=badge_h // 2)
 
-    if subtitle:
-        font_sub = get_font(38, bold=True)
-        sub_lines = wrap_text(draw, subtitle, font_sub, max_text_w)
-        for sline in sub_lines:
-            draw.text((content_x, curr_y), sline, font=font_sub, fill="#FFD54F")
-            bb = draw.textbbox((0, 0), sline, font=font_sub)
-            curr_y += (bb[3] - bb[1]) + 15
-        curr_y += 35
+    cx = 1140
+    cw = W - cx - 70
 
-    font_hl = get_font(32, bold=True)
-    for hl in (highlights or [])[:4]:
-        hl_text = f"•  {hl}"
-        hl_lines = wrap_text(draw, hl_text, font_hl, max_text_w)
-        for hline in hl_lines:
-            draw.text((content_x, curr_y), hline, font=font_hl, fill="#F1F5F9")
-            bb = draw.textbbox((0, 0), hline, font=font_hl)
-            curr_y += (bb[3] - bb[1]) + 14
-        curr_y += 18
+    font_t, t_lines = fit_title_font(draw, title, cw, 220, start_size=66, min_size=42)
+    title_y = 240
+    curr_y = title_y
+    for i, tline in enumerate(t_lines):
+        col = "#FFFFFF" if i == 0 else "#FFD54F"
+        draw.text((cx + 3, curr_y + 3), tline, font=font_t, fill=(0, 0, 0, 180))
+        draw.text((cx, curr_y), tline, font=font_t, fill=col)
+        bb = draw.textbbox((0, 0), tline, font=font_t)
+        curr_y += (bb[3] - bb[1]) + 16
 
-    if badge_text:
-        font_badge = get_font(30, bold=True)
-        draw_pill_badge(draw, badge_text, content_x, curr_y + 15, font_badge,
-                        bg_color=(230, 81, 0, 245), border_color=(255, 215, 0, 255))
+    sep_y = curr_y + 15
+    draw.line([(cx, sep_y), (cx + 380, sep_y)], fill=(255, 215, 0, 240), width=5)
+    draw.line([(cx + 390, sep_y), (cx + 420, sep_y)], fill=(0, 212, 255, 220), width=5)
 
-    card_y = H - 260
-    draw.rounded_rectangle([content_x, card_y, W - 60, card_y + 105], radius=16,
-                           fill=(20, 50, 90, 220), outline=(255, 215, 0, 150), width=2)
-    font_hotline = get_font(32, bold=True)
-    draw.text((content_x + 25, card_y + 34), f"Hotline / Zalo: {hotline}", font=font_hotline, fill="#FFEB3B")
+    font_sub = get_font(36, bold=True)
+    draw.text((cx, sep_y + 26), subtitle.upper(), font=font_sub, fill="#E2E8F0")
 
-    font_ft = get_font(26, bold=True)
-    draw.text((content_x, H - 90), footer_text.upper(), font=font_ft, fill="#94A3B8")
+    cards_start_y = sep_y + 95
+    card_h = 105
+    gap = 22
+    features = [
+        ("DẠY KÈM 1 KÈM 1", "Cầm tay chỉ việc theo năng lực từng học viên", (255, 171, 0)),
+        ("THỰC HÀNH 100%", "Trên biểu mẫu & số liệu doanh nghiệp thực tế", (0, 230, 118)),
+        ("KHÔNG GIỚI HẠN", "Học đến khi thành thạo làm được việc mới thôi", (64, 196, 255)),
+    ]
+    if highlights and len(highlights) >= 3:
+        features = [
+            (highlights[0].upper(), "Theo năng lực từng học viên", (255, 171, 0)),
+            (highlights[1].upper(), "Dự án & số liệu thực tế", (0, 230, 118)),
+            (highlights[2].upper(), "Học đến khi thành thạo", (64, 196, 255)),
+        ]
 
-    return base.convert("RGB")
+    for i, (f_title, f_desc, accent_col) in enumerate(features):
+        fc_y = cards_start_y + i * (card_h + gap)
+        draw.rounded_rectangle([cx, fc_y, cx + cw, fc_y + card_h], radius=16,
+                               fill=(14, 38, 72, 220), outline=(255, 215, 0, 130), width=2)
+        sq_size = 65
+        sq_x = cx + 20
+        sq_y = fc_y + (card_h - sq_size) // 2
+        draw.rounded_rectangle([sq_x, sq_y, sq_x + sq_size, sq_y + sq_size], radius=12, fill=accent_col)
+        draw.line([(sq_x + 18, sq_y + 32), (sq_x + 28, sq_y + 44), (sq_x + 48, sq_y + 20)], fill="#08162D", width=6)
+
+        font_ft1 = get_font(30, bold=True)
+        font_ft2 = get_font(24, bold=False)
+        draw.text((cx + 105, fc_y + 18), f_title, font=font_ft1, fill="#FFFFFF")
+        draw.text((cx + 105, fc_y + 56), f_desc, font=font_ft2, fill="#CBD5E1")
+
+    hotline_y = H - 280
+    draw.rounded_rectangle([cx, hotline_y, cx + cw, hotline_y + 115], radius=20,
+                           fill=(230, 81, 0, 240), outline=(255, 215, 0, 255), width=3)
+    font_hl1 = get_font(26, bold=True)
+    font_hl2 = get_font(40, bold=True)
+    draw.text((cx + 35, hotline_y + 16), "TƯ VẤN LỘ TRÌNH & XẾP LỊCH HỌC NGAY:", font=font_hl1, fill="#FFF8E1")
+    draw.text((cx + 35, hotline_y + 52), f"HOTLINE: {hotline}", font=font_hl2, fill="#FFFFFF")
+
+    font_bot = get_font(26, bold=True)
+    draw.text((cx, H - 90), f"{footer_text.upper()} • 13 CƠ SỞ ĐÀO TẠO", font=font_bot, fill="#94A3B8")
+
+    return canvas.convert("RGB")
+
+
+def render_template_curved_window(
+    classroom_img: Image.Image,
+    logo_path: Optional[Path],
+    title: str = "TIN HỌC VĂN PHÒNG & ỨNG DỤNG AI",
+    subtitle: str = "Thành Thạo Sau 1 Khóa Học - Đi Làm Ngay",
+    highlights: Optional[List[str]] = None,
+    badge_text: str = "ƯU ĐÃI 30% HỌC PHÍ",
+    footer_text: str = "TRUNG TÂM TIN HỌC SAO VIỆT",
+    hotline: str = "093 1144 858",
+    brand_color: Tuple[int, int, int] = (10, 32, 66),
+) -> Image.Image:
+    """Template 7: Vòng cung nghệ thuật (Curved Inset Window):
+    - Ảnh thật đóng khung trong cửa sổ bo góc mềm mại viền đôi mạ vàng phát sáng.
+    - Nền Gradient thương hiệu đa sắc sang trọng.
+    - Tiêu đề khổng lồ 3 tầng nổi bật bên trái.
+    - Điểm nhấn checkmark tròn vàng rực rỡ.
+    - Dải Ribbon chân trang màu vàng rực rỡ chứa hotline."""
+    W, H = 2000, 2000
+    canvas = Image.new("RGBA", (W, H), (brand_color[0], brand_color[1], brand_color[2], 255))
+    draw = ImageDraw.Draw(canvas)
+
+    for i in range(H):
+        ratio = i / float(H)
+        r = min(255, int(brand_color[0] * (1.0 + 0.35 * ratio)))
+        g = min(255, int(brand_color[1] * (1.0 + 0.35 * ratio)))
+        b = min(255, int(brand_color[2] * (1.0 + 0.35 * ratio)))
+        draw.line([(0, i), (W, i)], fill=(r, g, b, 255))
+
+    wx1, wy1, wx2, wy2 = 780, 560, 1930, 1800
+    ww = wx2 - wx1
+    wh = wy2 - wy1
+    rw, rh = classroom_img.size
+    scale = max(ww / rw, wh / rh)
+    nw, nh = int(rw * scale), int(rh * scale)
+    raw_res = classroom_img.resize((nw, nh), Image.Resampling.LANCZOS)
+    xo = (nw - ww) // 2
+    yo = (nh - wh) // 2
+    photo_cropped = raw_res.crop((xo, yo, xo + ww, yo + wh)).convert("RGBA")
+
+    win_mask = Image.new("L", (ww, wh), 0)
+    wmd = ImageDraw.Draw(win_mask)
+    wmd.rounded_rectangle([0, 0, ww, wh], radius=48, fill=255)
+
+    win_sh = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    wsd = ImageDraw.Draw(win_sh)
+    wsd.rounded_rectangle([wx1 + 8, wy1 + 10, wx2 + 8, wy2 + 10], radius=48, fill=(0, 0, 0, 160))
+    win_sh = win_sh.filter(ImageFilter.GaussianBlur(20))
+    canvas.alpha_composite(win_sh)
+
+    canvas.paste(photo_cropped, (wx1, wy1), win_mask)
+
+    draw.rounded_rectangle([wx1, wy1, wx2, wy2], radius=48, outline=(255, 215, 0, 240), width=5)
+    draw.rounded_rectangle([wx1 + 8, wy1 + 8, wx2 - 8, wy2 - 8], radius=40, outline=(0, 212, 255, 180), width=2)
+
+    paste_brand_logo(canvas, logo_path, (70, 70, 450, 200), bg_badge=True)
+
+    font_badge = get_font(34, bold=True)
+    badge_w, badge_h = 430, 95
+    bx = W - badge_w - 70
+    by = 75
+    draw_pill_badge(draw, badge_text, bx, by, font_badge,
+                    bg_color=(230, 81, 0, 250), border_color=(255, 215, 0, 255),
+                    pad_x=28, pad_y=16, radius=badge_h // 2)
+
+    tx = 70
+    tw = 680
+    curr_y = 260
+
+    font_t, t_lines = fit_title_font(draw, title, tw, 360, start_size=64, min_size=42)
+    for i, tline in enumerate(t_lines):
+        col = "#FFFFFF" if i == 0 else ("#FFD54F" if i == 1 else "#00E676")
+        draw.text((tx + 2, curr_y + 2), tline, font=font_t, fill=(0, 0, 0, 160))
+        draw.text((tx, curr_y), tline, font=font_t, fill=col)
+        bb = draw.textbbox((0, 0), tline, font=font_t)
+        curr_y += (bb[3] - bb[1]) + 16
+
+    draw.line([(tx, curr_y), (tx + 360, curr_y)], fill=(255, 215, 0, 230), width=4)
+    curr_y += 30
+
+    font_sub = get_font(34, bold=True)
+    draw.text((tx, curr_y), subtitle, font=font_sub, fill="#E2E8F0")
+    curr_y += 65
+
+    bullets = highlights if highlights else [
+        "Dạy kèm 1 kèm 1 theo năng lực từng học viên",
+        "Thực hành 100% trên dữ liệu thực tế",
+        "Không giới hạn số buổi thực hành",
+        "Học đến khi thành thạo làm được việc",
+    ]
+
+    font_bl = get_font(30, bold=True)
+    for b_text in bullets[:4]:
+        circ_r = 24
+        cy = curr_y + 16
+        draw.ellipse([tx, cy - circ_r, tx + circ_r * 2, cy + circ_r], fill=(255, 215, 0, 250))
+        draw.line([(tx + 12, cy), (tx + 20, cy + 10), (tx + 36, cy - 8)], fill="#0A2042", width=5)
+
+        lines = wrap_text(draw, b_text, font_bl, tw - 65)
+        ly = curr_y
+        for ln in lines:
+            draw.text((tx + 65, ly), ln, font=font_bl, fill="#FFFFFF")
+            ly += 40
+        curr_y = ly + 18
+
+    foot_h = 130
+    foot_y = H - foot_h
+    draw.rectangle([0, foot_y, W, H], fill=(255, 179, 0, 255))
+    draw.line([(0, foot_y), (W, foot_y)], fill=(255, 235, 59, 255), width=5)
+
+    font_f1 = get_font(38, bold=True)
+    font_f2 = get_font(30, bold=True)
+    draw.text((80, foot_y + 24), f"LIÊN HỆ TƯ VẤN & XẾP LỊCH: {hotline}", font=font_f1, fill="#0A1A30")
+    draw.text((80, foot_y + 75), f"{footer_text.upper()} - 13 CƠ SỞ TP.HCM & ĐỒNG NAI", font=font_f2, fill="#1E293B")
+
+    return canvas.convert("RGB")
 
 
 def render_template_3d_pills(
@@ -608,31 +840,29 @@ def render_template_3d_pills(
     hotline: str = "093 1144 858",
     brand_color: Tuple[int, int, int] = (11, 35, 65),
 ) -> Image.Image:
-    """Template 6: '3d_pills' - Chuẩn Agency 2026 cho ảnh 3D AI hoặc ảnh công nghệ hiện đại:
-    - Nửa phải: Giữ nguyên vẹn 100% nhân vật 3D / không gian thực hành.
-    - Nửa trái: Bộ 3 viên thuốc Navy bo tròn ôm khít chữ, bóng đổ 3D mềm mại, chữ chuẩn Unicode.
-    - Góc trên: Logo Sao Việt trên badge trắng bo góc sắc nét.
-    - 100% không lệch, không che mặt chủ thể, không lỗi font tiếng Việt."""
+    """Template 6: '3d_pills' - Phiên bản nâng cấp có khung Frosted Glass che chắn thẩm mỹ."""
     W, H = 2000, 2000
     base = smart_crop_and_enhance(classroom_img, W, H).convert("RGBA")
 
-    # Dán Logo Sao Việt vào góc trên phải
-    badge_w, badge_h = 320, 115
-    paste_brand_logo(base, logo_path, (W - badge_w - 70, 70, W - 70, 70 + badge_h), bg_badge=True)
+    # Tạo một panel mờ nghệ thuật (Glassmorphism) ở nửa bên trái để các viên thuốc và logo không bị lọt thỏm
+    glass_w = 900
+    glass_layer = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    gd = ImageDraw.Draw(glass_layer)
+    gd.rectangle([0, 0, glass_w, H], fill=(11, 35, 65, 230))
+    gd.line([(glass_w, 0), (glass_w, H)], fill=(255, 215, 0, 200), width=4)
+    base = Image.alpha_composite(base, glass_layer)
 
-    # Cột trái dành cho 3 thẻ viên thuốc - VÙNG AN TOÀN TUYỆT ĐỐI (SAFE ZONE):
-    # Khóa x_start = 90, max_w = 800 (kết thúc tại x = 890, cách người mẫu ở x > 1050 ít nhất 160px).
-    # y_start = 240 (kết thúc tại y = 620, cách xa mắt người mẫu ở y = 800 và laptop ở y = 1200).
-    x_start = 90
-    y_start = 240
-    max_allowed_w = 800
+    paste_brand_logo(base, logo_path, (70, 70, 450, 200), bg_badge=True)
+
+    x_start = 70
+    y_start = 250
+    max_allowed_w = glass_w - 140
 
     draw = ImageDraw.Draw(base)
 
     def draw_single_capsule(text: str, base_font_size: int, y_pos: int, highlight_token: Optional[str] = None) -> int:
         pad_x = 42
         pad_y = 22
-        # Tự động co kích thước font để viên thuốc không bao giờ vượt quá max_allowed_w
         chosen_font = get_font(base_font_size, bold=True)
         for sz in range(base_font_size, 26, -2):
             f_test = get_font(sz, bold=True)
@@ -648,7 +878,6 @@ def render_template_3d_pills(
         capsule_h = text_h + pad_y * 2
         rad = capsule_h // 2
 
-        # Đổ bóng mềm
         sh = Image.new("RGBA", (W, H), (0, 0, 0, 0))
         sh_draw = ImageDraw.Draw(sh)
         sh_draw.rounded_rectangle([x_start, y_pos + 6, x_start + capsule_w, y_pos + capsule_h + 6],
@@ -657,27 +886,22 @@ def render_template_3d_pills(
         nonlocal base
         base = Image.alpha_composite(base, sh)
 
-        # Thân viên thuốc navy viền vàng
         cap = Image.new("RGBA", (W, H), (0, 0, 0, 0))
         cap_draw = ImageDraw.Draw(cap)
         cap_draw.rounded_rectangle([x_start, y_pos, x_start + capsule_w, y_pos + capsule_h],
                                    radius=rad, fill=(brand_color[0], brand_color[1], brand_color[2], 252),
                                    outline=(255, 215, 0, 190), width=3)
 
-        # Vẽ chữ với tùy chọn highlight màu vàng
         tx = x_start + pad_x
         ty = y_pos + pad_y - 3
         if highlight_token and highlight_token in text:
             parts = text.split(highlight_token, 1)
-            # Phần đầu
             cap_draw.text((tx, ty), parts[0], font=chosen_font, fill="#FFFFFF")
             p1_bb = cap_draw.textbbox((0, 0), parts[0], font=chosen_font)
             tx += (p1_bb[2] - p1_bb[0])
-            # Phần highlight vàng
             cap_draw.text((tx, ty), highlight_token, font=chosen_font, fill="#FFD54F")
             hl_bb = cap_draw.textbbox((0, 0), highlight_token, font=chosen_font)
             tx += (hl_bb[2] - hl_bb[0])
-            # Phần đuôi
             cap_draw.text((tx, ty), parts[1], font=chosen_font, fill="#FFFFFF")
         else:
             cap_draw.text((tx, ty), text, font=chosen_font, fill="#FFFFFF")
@@ -685,16 +909,13 @@ def render_template_3d_pills(
         base = Image.alpha_composite(base, cap)
         return y_pos + capsule_h + 28
 
-    # 1. Viên thuốc 1: Tiêu đề khóa học (tự co font nếu dài)
     t_clean = (title or "TIN HỌC VĂN PHÒNG").upper()
     curr_y = draw_single_capsule(t_clean, 50, y_start)
 
-    # 2. Viên thuốc 2: Ưu đãi học phí
     b_clean = (badge_text or "ƯU ĐÃI 30% HỌC PHÍ").upper()
     hl_token = "30%" if "30%" in b_clean else ("50%" if "50%" in b_clean else None)
     curr_y = draw_single_capsule(b_clean, 44, curr_y, highlight_token=hl_token)
 
-    # 3. Viên thuốc 3: Điểm nổi bật / Kèm 1-1
     h_clean = ((highlights[0] if highlights else "DẠY KÈM 1-1") or "DẠY KÈM 1-1").upper()
     hl_token3 = "1-1" if "1-1" in h_clean else None
     draw_single_capsule(h_clean, 44, curr_y, highlight_token=hl_token3)
@@ -702,21 +923,280 @@ def render_template_3d_pills(
     return base.convert("RGB")
 
 
+def render_template_bento_box(
+    classroom_img: Image.Image,
+    logo_path: Optional[Path],
+    title: str = "TIN HỌC VĂN PHÒNG & ỨNG DỤNG AI",
+    subtitle: str = "Thành Thạo Sau 1 Khóa Học - Đi Làm Ngay",
+    highlights: Optional[List[str]] = None,
+    badge_text: str = "ƯU ĐÃI 30% HỌC PHÍ",
+    footer_text: str = "TRUNG TÂM TIN HỌC SAO VIỆT",
+    hotline: str = "093 1144 858",
+    brand_color: Tuple[int, int, int] = (11, 35, 65),
+    palette: Optional[dict] = None,
+) -> Image.Image:
+    """Template 8: Bento Box Grid hiện đại chuẩn Agency 2026:
+    - Chia ô lưới Bento Grid bất đối xứng, tối ưu hóa hiển thị trên Facebook/Instagram 1:1.
+    - Ô 1 (Header): Thẻ Logo 3D và Dải thông tin tuyển sinh / hotline.
+    - Ô 2 (Hero Content Card, Trái): Tiêu đề khóa học nổi bật, thẻ quyền lợi và nút CTA hành động.
+    - Ô 3 (Hero Photo Window, Phải): Cửa sổ ảnh thật lớp học bo tròn góc lớn với badge tem dán nổi.
+    - Ô 4, 5, 6 (Bento Stat Cards, Chân trang): 3 Thẻ thông số nổi bật (Kèm 1-1, 100% Thực hành, Hotline tư vấn).
+    - Ô 7 (Footer): Dải ribbon thương hiệu sang trọng."""
+    W, H = 2000, 2000
+    pal = palette or COLOR_PALETTES.get("royal_sapphire", {})
+    bg_p = brand_color or pal.get("bg_primary", (11, 35, 65))
+    bg_s = pal.get("bg_secondary", (bg_p[0] + 8, bg_p[1] + 16, bg_p[2] + 28))
+    card_bg = pal.get("card_bg", (bg_p[0] + 4, bg_p[1] + 8, bg_p[2] + 16, 235))
+    accent_g = pal.get("accent_gold", (255, 215, 0))
+    accent_c = pal.get("accent_cyan", (0, 212, 255))
+    badge_c = pal.get("badge_bg", (230, 81, 0))
+    txt_sub = pal.get("text_sub", "#FFD54F")
+
+    canvas = Image.new("RGBA", (W, H), (bg_p[0], bg_p[1], bg_p[2], 255))
+    draw = ImageDraw.Draw(canvas)
+
+    # 1. Gradient nền mượt mà
+    for y in range(H):
+        ratio = y / float(H)
+        r = int(bg_p[0] + (bg_s[0] - bg_p[0]) * ratio)
+        g = int(bg_p[1] + (bg_s[1] - bg_p[1]) * ratio)
+        b = int(bg_p[2] + (bg_s[2] - bg_p[2]) * ratio)
+        draw.line([(0, y), (W, y)], fill=(r, g, b, 255))
+
+    # Họa tiết chấm lưới công nghệ tinh tế
+    for gx in range(60, W - 40, 70):
+        for gy in range(60, H - 40, 70):
+            draw.ellipse([gx - 2, gy - 2, gx + 2, gy + 2], fill=(255, 255, 255, 18))
+
+    # Helper đổ bóng card
+    def drop_card_shadow(x1, y1, x2, y2, radius=24, alpha=130):
+        sh = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+        sd = ImageDraw.Draw(sh)
+        sd.rounded_rectangle([x1 + 4, y1 + 8, x2 + 4, y2 + 8], radius=radius, fill=(0, 0, 0, alpha))
+        sh = sh.filter(ImageFilter.GaussianBlur(16))
+        canvas.alpha_composite(sh)
+
+    # -------------------------------------------------------------
+    # ROW 1: HEADER & LOGO BENTO (y: 60 -> 190, h: 130)
+    # -------------------------------------------------------------
+    # Ô 1A: Logo card bên trái (60, 60, 480, 190)
+    paste_brand_logo(canvas, logo_path, (60, 60, 480, 190), bg_badge=True)
+
+    # Ô 1B: Header info card bên phải (510, 60, 1940, 190)
+    hx1, hy1, hx2, hy2 = 510, 60, 1940, 190
+    drop_card_shadow(hx1, hy1, hx2, hy2, radius=20, alpha=110)
+    draw.rounded_rectangle([hx1, hy1, hx2, hy2], radius=20, fill=card_bg, outline=(accent_g[0], accent_g[1], accent_g[2], 160), width=2)
+
+    font_hd1 = get_font(30, bold=True)
+    draw_pill_badge(draw, "TUYỂN SINH MỚI", hx1 + 30, hy1 + 34, font_hd1,
+                    bg_color=(badge_c[0], badge_c[1], badge_c[2], 240),
+                    border_color=(accent_g[0], accent_g[1], accent_g[2], 255),
+                    pad_x=22, pad_y=10, radius=16)
+
+    font_hd2 = get_font(34, bold=True)
+    draw.text((hx1 + 320, hy1 + 42), f"{footer_text.upper()} • 13 CƠ SỞ ĐÀO TẠO", font=font_hd2, fill="#FFFFFF")
+
+    # -------------------------------------------------------------
+    # ROW 2: HERO SPLIT BENTO (y: 220 -> 1360, h: 1140)
+    # -------------------------------------------------------------
+    # Ô 2 (Hero Content Card, Trái): (60, 220, 980, 1360)
+    cx1, cy1, cx2, cy2 = 60, 220, 980, 1360
+    cw = cx2 - cx1
+    drop_card_shadow(cx1, cy1, cx2, cy2, radius=32, alpha=140)
+    draw.rounded_rectangle([cx1, cy1, cx2, cy2], radius=32, fill=card_bg, outline=(accent_g[0], accent_g[1], accent_g[2], 180), width=3)
+
+    inner_x = cx1 + 50
+    inner_w = cw - 100
+    curr_y = cy1 + 50
+
+    # Badge Ưu Đãi
+    font_badge = get_font(30, bold=True)
+    draw_pill_badge(draw, badge_text.upper(), inner_x, curr_y, font_badge,
+                    bg_color=(badge_c[0], badge_c[1], badge_c[2], 245),
+                    border_color=(accent_g[0], accent_g[1], accent_g[2], 255),
+                    pad_x=26, pad_y=12, radius=18)
+    curr_y += 90
+
+    # Tiêu đề khóa học lớn
+    font_t, t_lines = fit_title_font(draw, title, inner_w, 360, start_size=68, min_size=44)
+    for tline in t_lines:
+        draw.text((inner_x + 2, curr_y + 2), tline, font=font_t, fill=(0, 0, 0, 160))
+        draw.text((inner_x, curr_y), tline, font=font_t, fill="#FFFFFF")
+        bb = draw.textbbox((0, 0), tline, font=font_t)
+        curr_y += (bb[3] - bb[1]) + 16
+
+    # Vạch phân cách mạ vàng và cyan
+    curr_y += 10
+    draw.line([(inner_x, curr_y), (inner_x + 300, curr_y)], fill=(accent_g[0], accent_g[1], accent_g[2], 230), width=4)
+    draw.line([(inner_x + 315, curr_y), (inner_x + 360, curr_y)], fill=(accent_c[0], accent_c[1], accent_c[2], 230), width=4)
+    curr_y += 30
+
+    # Subtitle
+    if subtitle:
+        font_sb = get_font(34, bold=True)
+        s_lines = wrap_text(draw, subtitle, font_sb, inner_w)
+        for sline in s_lines:
+            draw.text((inner_x, curr_y), sline, font=font_sb, fill=txt_sub)
+            bb = draw.textbbox((0, 0), sline, font=font_sb)
+            curr_y += (bb[3] - bb[1]) + 14
+        curr_y += 24
+
+    # 3 Bullet Lợi ích thực tế
+    bullets = highlights if highlights else [
+        "Dạy kèm 1-1 đến khi thành thạo",
+        "Thực hành 100% trên dữ liệu thật",
+        "Thời gian học linh hoạt sáng - tối",
+    ]
+    font_bl = get_font(30, bold=True)
+    for b_item in bullets[:3]:
+        cr = 20
+        cy_b = curr_y + 14
+        draw.ellipse([inner_x, cy_b - cr, inner_x + cr * 2, cy_b + cr], fill=(accent_g[0], accent_g[1], accent_g[2], 255))
+        draw.line([(inner_x + 10, cy_b), (inner_x + 17, cy_b + 8), (inner_x + 31, cy_b - 6)], fill="#0B2341", width=4)
+
+        b_lines = wrap_text(draw, b_item, font_bl, inner_w - 60)
+        ly = curr_y
+        for bline in b_lines:
+            draw.text((inner_x + 55, ly), bline, font=font_bl, fill="#F8FAFC")
+            ly += 38
+        curr_y = ly + 14
+
+    # Nút CTA bên trong Hero Card
+    cta_y = cy2 - 130
+    draw.rounded_rectangle([inner_x, cta_y, inner_x + inner_w, cta_y + 85], radius=18,
+                           fill=(accent_g[0], accent_g[1], accent_g[2], 255),
+                           outline=(255, 255, 255, 220), width=2)
+    font_cta = get_font(32, bold=True)
+    cta_txt = "ĐĂNG KÝ HỌC NGAY • XẾP LỚP TRONG NGÀY"
+    c_bb = draw.textbbox((0, 0), cta_txt, font=font_cta)
+    c_w = c_bb[2] - c_bb[0]
+    draw.text((inner_x + (inner_w - c_w) // 2, cta_y + 23), cta_txt, font=font_cta, fill="#0A1A30")
+
+    # Ô 3 (Hero Photo Window, Phải): (1010, 220, 1940, 1360)
+    px1, py1, px2, py2 = 1010, 220, 1940, 1360
+    pw = px2 - px1
+    ph = py2 - py1
+    drop_card_shadow(px1, py1, px2, py2, radius=32, alpha=150)
+
+    # Resize crop ảnh lớp học
+    rw, rh = classroom_img.size
+    scale = max(pw / rw, ph / rh)
+    nw, nh = int(rw * scale), int(rh * scale)
+    raw_res = classroom_img.resize((nw, nh), Image.Resampling.LANCZOS)
+    xo = (nw - pw) // 2
+    yo = (nh - ph) // 2
+    photo_cropped = raw_res.crop((xo, yo, xo + pw, yo + ph)).convert("RGBA")
+
+    photo_mask = Image.new("L", (pw, ph), 0)
+    pmd = ImageDraw.Draw(photo_mask)
+    pmd.rounded_rectangle([0, 0, pw, ph], radius=32, fill=255)
+    canvas.paste(photo_cropped, (px1, py1), photo_mask)
+
+    # Viền đôi mạ vàng phát sáng
+    draw.rounded_rectangle([px1, py1, px2, py2], radius=32, outline=(accent_g[0], accent_g[1], accent_g[2], 240), width=5)
+    draw.rounded_rectangle([px1 + 8, py1 + 8, px2 - 8, py2 - 8], radius=24, outline=(accent_c[0], accent_c[1], accent_c[2], 190), width=2)
+
+    # Sticker cam kết trên ảnh thật
+    st_w, st_h = 440, 95
+    st_x = px2 - st_w - 30
+    st_y = py1 + 30
+    draw.rounded_rectangle([st_x, st_y, st_x + st_w, st_y + st_h], radius=st_h // 2,
+                           fill=(0, 0, 0, 210), outline=(accent_g[0], accent_g[1], accent_g[2], 255), width=3)
+    font_st = get_font(28, bold=True)
+    st_txt = "CAM KẾT THÀNH THẠO 100%"
+    st_bb = draw.textbbox((0, 0), st_txt, font=font_st)
+    draw.text((st_x + (st_w - (st_bb[2] - st_bb[0])) // 2, st_y + 30), st_txt, font=font_st, fill="#FFEB3B")
+
+    # -------------------------------------------------------------
+    # ROW 3: 3 BENTO STAT CARDS (y: 1390 -> 1810, h: 420)
+    # -------------------------------------------------------------
+    # Card 4 (Left): Kèm 1-1 (60, 1390, 660, 1810) - W=600
+    k1_x1, k1_y1, k1_x2, k1_y2 = 60, 1390, 660, 1810
+    drop_card_shadow(k1_x1, k1_y1, k1_x2, k1_y2, radius=24, alpha=120)
+    draw.rounded_rectangle([k1_x1, k1_y1, k1_x2, k1_y2], radius=24, fill=card_bg,
+                           outline=(accent_g[0], accent_g[1], accent_g[2], 170), width=2)
+    font_tag = get_font(24, bold=True)
+    draw.text((k1_x1 + 35, k1_y1 + 35), "PHƯƠNG PHÁP ĐÀO TẠO", font=font_tag, fill=txt_sub)
+    font_stat = get_font(56, bold=True)
+    draw.text((k1_x1 + 35, k1_y1 + 75), "KÈM 1 - 1", font=font_stat, fill="#FFFFFF")
+    draw.line([(k1_x1 + 35, k1_y1 + 160), (k1_x1 + 220, k1_y1 + 160)], fill=(accent_g[0], accent_g[1], accent_g[2], 220), width=3)
+    font_desc = get_font(26, bold=False)
+    d_lines1 = wrap_text(draw, "Giảng viên hướng dẫn trực tiếp từng học viên. Không lo hổng kiến thức, học theo đúng tốc độ của bạn.", font_desc, 530)
+    dy = k1_y1 + 185
+    for dl in d_lines1:
+        draw.text((k1_x1 + 35, dy), dl, font=font_desc, fill="#CBD5E1")
+        dy += 34
+
+    # Card 5 (Center): 100% Thực hành (690, 1390, 1310, 1810) - W=620
+    k2_x1, k2_y1, k2_x2, k2_y2 = 690, 1390, 1310, 1810
+    drop_card_shadow(k2_x1, k2_y1, k2_x2, k2_y2, radius=24, alpha=120)
+    draw.rounded_rectangle([k2_x1, k2_y1, k2_x2, k2_y2], radius=24, fill=card_bg,
+                           outline=(accent_c[0], accent_c[1], accent_c[2], 170), width=2)
+    draw.text((k2_x1 + 35, k2_y1 + 35), "TIÊU CHUẨN THỰC CHIẾN", font=font_tag, fill="#69F0AE")
+    draw.text((k2_x1 + 35, k2_y1 + 75), "100% THỰC HÀNH", font=font_stat, fill="#00E676")
+    draw.line([(k2_x1 + 35, k2_y1 + 160), (k2_x1 + 280, k2_y1 + 160)], fill=(accent_c[0], accent_c[1], accent_c[2], 220), width=3)
+    d_lines2 = wrap_text(draw, "Thực hành ngay trên máy tính cấu hình cao. Bộ bài tập & biểu mẫu doanh nghiệp thực tế 2026.", font_desc, 550)
+    dy = k2_y1 + 185
+    for dl in d_lines2:
+        draw.text((k2_x1 + 35, dy), dl, font=font_desc, fill="#CBD5E1")
+        dy += 34
+
+    # Card 6 (Right): Hotline tư vấn (1340, 1390, 1940, 1810) - W=600
+    k3_x1, k3_y1, k3_x2, k3_y2 = 1340, 1390, 1940, 1810
+    drop_card_shadow(k3_x1, k3_y1, k3_x2, k3_y2, radius=24, alpha=140)
+    draw.rounded_rectangle([k3_x1, k3_y1, k3_x2, k3_y2], radius=24,
+                           fill=(badge_c[0], badge_c[1], badge_c[2], 240),
+                           outline=(accent_g[0], accent_g[1], accent_g[2], 255), width=3)
+    font_hl_tag = get_font(26, bold=True)
+    draw.text((k3_x1 + 35, k3_y1 + 32), "TƯ VẤN LỘ TRÌNH & XẾP LỊCH:", font=font_hl_tag, fill="#FFF8E1")
+    font_phone = get_font(46, bold=True)
+    draw.text((k3_x1 + 35, k3_y1 + 75), "HOTLINE / ZALO", font=get_font(28, bold=True), fill="#FFE082")
+    draw.text((k3_x1 + 35, k3_y1 + 115), hotline, font=font_phone, fill="#FFFFFF")
+    draw.line([(k3_x1 + 35, k3_y1 + 185), (k3_x1 + 350, k3_y1 + 185)], fill=(255, 255, 255, 180), width=2)
+    font_sm = get_font(24, bold=True)
+    draw.text((k3_x1 + 35, k3_y1 + 205), "ĐĂNG KÝ SỚM NHẬN ƯU ĐÃI 30%", font=font_sm, fill="#FFF9C4")
+    draw.text((k3_x1 + 35, k3_y1 + 242), "KHAI GIẢNG HÀNG TUẦN MỌI CƠ SỞ", font=font_sm, fill="#FFFFFF")
+
+    # -------------------------------------------------------------
+    # ROW 4: FOOTER RIBBON (y: 1840 -> 1940, h: 100)
+    # -------------------------------------------------------------
+    fx1, fy1, fx2, fy2 = 60, 1840, 1940, 1940
+    draw.rounded_rectangle([fx1, fy1, fx2, fy2], radius=16, fill=(10, 20, 36, 250),
+                           outline=(accent_g[0], accent_g[1], accent_g[2], 140), width=2)
+    font_ft = get_font(28, bold=True)
+    ft_msg = f"{footer_text.upper()} • 13 CƠ SỞ TP.HCM & ĐỒNG NAI • CAM KẾT ĐẦU RA UY TÍN"
+    ft_bb = draw.textbbox((0, 0), ft_msg, font=font_ft)
+    draw.text((fx1 + (1880 - (ft_bb[2] - ft_bb[0])) // 2, fy1 + 32), ft_msg, font=font_ft, fill="#E2E8F0")
+
+    return canvas.convert("RGB")
+
+
 # ===========================================================================
 # DISPATCHER CHỌN TEMPLATE
 # ===========================================================================
 
 TEMPLATES = {
+    "bento_box": render_template_bento_box,
+    "curved_window": render_template_curved_window,
+    "diagonal_slice": render_template_diagonal_slice,
+    "bottom_bar": render_template_bottom_bar,
     "split_right": render_template_split_right,
     "split_left": render_template_split_left,
-    "bottom_bar": render_template_bottom_bar,
     "floating_card": render_template_floating_card,
-    "diagonal_slice": render_template_diagonal_slice,
     "3d_pills": render_template_3d_pills,
 }
 
-# Danh sách trọng số: ưu tiên split_right, 3d_pills và bottom_bar
-TEMPLATE_CHOICES = ["split_right", "3d_pills", "split_left", "bottom_bar", "floating_card", "diagonal_slice"]
+# Danh sách trọng số: ưu tiên các mẫu thiết kế Agency đỉnh cao
+TEMPLATE_CHOICES = [
+    "bento_box",
+    "curved_window",
+    "diagonal_slice",
+    "bottom_bar",
+    "split_right",
+    "split_left",
+    "floating_card",
+    "3d_pills",
+]
 
 
 def generate_authentic_banner(
@@ -731,6 +1211,7 @@ def generate_authentic_banner(
     hotline: str = "093 1144 858",
     template_name: Optional[str] = None,
     brand_color: Optional[Tuple[int, int, int]] = None,
+    palette_name: Optional[str] = None,
 ) -> Optional[Path]:
     """Hàm chính tạo ảnh cover từ ảnh thật dataset kết hợp layout mẫu đẹp chuẩn agency."""
     c_path = Path(classroom_img_path)
@@ -760,26 +1241,38 @@ def generate_authentic_banner(
             "Thời gian học linh hoạt sáng - tối",
         ]
 
-    b_color = brand_color or (11, 35, 65)  # Navy Sao Việt #0B2341
+    # Chọn bảng màu đa dạng nếu chưa chỉ định
+    if palette_name and palette_name in COLOR_PALETTES:
+        chosen_palette = COLOR_PALETTES[palette_name]
+    else:
+        chosen_palette = random.choice(list(COLOR_PALETTES.values()))
+
+    b_color = brand_color or chosen_palette["bg_primary"]
 
     if not template_name or template_name not in TEMPLATES:
         template_name = random.choice(TEMPLATE_CHOICES)
 
-    render_fn = TEMPLATES.get(template_name, render_template_split_right)
+    render_fn = TEMPLATES.get(template_name, render_template_bento_box)
 
     try:
         raw_img = Image.open(c_path)
-        final_banner = render_fn(
-            classroom_img=raw_img,
-            logo_path=logo_p,
-            title=title,
-            subtitle=subtitle,
-            highlights=highlights,
-            badge_text=badge_text,
-            footer_text=footer_text,
-            hotline=hotline,
-            brand_color=b_color,
-        )
+        kwargs = {
+            "classroom_img": raw_img,
+            "logo_path": logo_p,
+            "title": title,
+            "subtitle": subtitle,
+            "highlights": highlights,
+            "badge_text": badge_text,
+            "footer_text": footer_text,
+            "hotline": hotline,
+            "brand_color": b_color,
+        }
+        import inspect
+        sig = inspect.signature(render_fn)
+        if "palette" in sig.parameters:
+            kwargs["palette"] = chosen_palette
+
+        final_banner = render_fn(**kwargs)
         final_banner.save(out_p, format="JPEG", quality=95)
         return out_p
     except Exception as e:

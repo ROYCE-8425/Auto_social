@@ -706,9 +706,44 @@ def parse_banner_content(prompt: str) -> dict:
             subtitle = val
 
     tpl = None
-    for cand in ("split_right", "split_left", "bottom_bar", "floating_card", "diagonal_slice"):
+    for cand in (
+        "bento_box",
+        "curved_window",
+        "diagonal_slice",
+        "bottom_bar",
+        "split_right",
+        "split_left",
+        "floating_card",
+        "3d_pills",
+    ):
         if cand in p_lower:
             tpl = cand
+            break
+
+    palette_name = None
+    pal_map = {
+        "sapphire": "royal_sapphire",
+        "navy": "royal_sapphire",
+        "ruby": "ruby_urgency",
+        "wine": "ruby_urgency",
+        "do": "ruby_urgency",
+        "đỏ": "ruby_urgency",
+        "violet": "cosmic_violet",
+        "purple": "cosmic_violet",
+        "tim": "cosmic_violet",
+        "tím": "cosmic_violet",
+        "emerald": "emerald_growth",
+        "green": "emerald_growth",
+        "xanh la": "emerald_growth",
+        "xanh lá": "emerald_growth",
+        "editorial": "warm_editorial",
+        "mocha": "warm_editorial",
+        "nau": "warm_editorial",
+        "nâu": "warm_editorial",
+    }
+    for kw, p_id in pal_map.items():
+        if kw in p_lower:
+            palette_name = p_id
             break
 
     return {
@@ -718,6 +753,7 @@ def parse_banner_content(prompt: str) -> dict:
         "badge_text": badge_text,
         "folder": folder,
         "template_name": tpl,
+        "palette_name": palette_name,
     }
 
 
@@ -810,6 +846,7 @@ def generate_authentic_banner_cover(
             footer_text="TRUNG TÂM TIN HỌC SAO VIỆT",
             hotline=hotline,
             template_name=chosen_template,
+            palette_name=content.get("palette_name"),
         )
 
         if not res_path or not out_file.is_file():

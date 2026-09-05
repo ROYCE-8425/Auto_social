@@ -29,19 +29,30 @@ Logo luon file `chung/thsv-logo-2025.png`. Khong tin logo ve trong poster.
 - Poster Zoom + giao trinh Python xanh la (logo khong phai Sao Viet).
 - Bat ky logo/hotline/web khong phai Sao Viet.
 
-## Cover = 6 Layout Agency Đồ Họa Thực Chiến 1:1 VUÔNG (Chuẩn Facebook 2026)
+## Cover = 8 Layout Agency Đồ Họa Thực Chiến 1:1 VUÔNG & 5 Color Moods (Chuẩn Facebook 2026)
 
 Mọi cover khóa học mặc định 100% sử dụng Deterministic Graphic Engine (banner_templates.py) kết hợp ảnh thật dataset hoặc ảnh 3D visual sạch + logo Sao Việt chuẩn vector/PNG + typography tiếng Việt chuẩn Unicode font Arial Bold / Segoe UI Bold:
-1. **split_right:** Cột trái (50%) là ảnh lớp học thật, cột phải (50%) là panel xanh navy thương hiệu với logo góc trên, tiêu đề lớn, gạch phân cách vàng kim, 3 điểm nổi bật và hotline.
-2. **split_left:** Đảo vị trí panel sang bên trái, ảnh thật bên phải nhằm tạo sự phong phú giữa các bài viết.
-3. **bottom_bar:** Ảnh chụp lớp học góc rộng sáng sủa chiếm 70% phía trên, dải panel thương hiệu navy chiếm 30% chân trang cùng các huy hiệu viên thuốc bo tròn hiện đại.
-4. **floating_card:** Ảnh lớp học tràn nền, một card thông tin bo góc nổi khối 3D với viền vàng ánh kim và bóng đổ mềm mại.
-5. **diagonal_slice:** Đường cắt vát chéo góc công nghệ hiện đại, tạo cảm giác chuyển động và tràn đầy năng lượng.
-6. **3d_pills:** Bố cục hiện đại cho ảnh 3D AI hoặc ảnh công sở: nhân vật thao tác ở nửa phải (50%), nửa trái là 3 thẻ viên thuốc xanh navy bo góc ôm khít chữ tiếng Việt chuẩn Unicode, logo Sao Việt trên thẻ trắng góc trên.
+
+### 8 Layouts Đa Dạng Chuẩn Agency:
+1. **bento_box (Khuyên dùng - Apple/Linear Style 2026):** Chia ô lưới Bento Grid bất đối xứng: Header logo & hotline, Hero card bên trái với tiêu đề đa tầng & nút CTA, Cửa sổ ảnh thật lớp học bo góc 32px viền đôi phát sáng bên phải, và 3 Card thông số nổi bật (Kèm 1-1, 100% Thực hành, Hotline Zalo) ở chân trang.
+2. **curved_window (Vòng cung nghệ thuật):** Ảnh lớp học thật đóng khung trong cửa sổ bo tròn lớn góc dưới phải (radius 48px), viền đôi mạ vàng phát sáng, nền gradient chuyển màu sang trọng, tiêu đề 3 tầng khổng lồ bên trái, checkmark bullets vàng nổi bật.
+3. **diagonal_slice (Vát chéo công nghệ năng động):** Đường cắt vát chéo góc động sắc nét, viền neon kép vàng và cyan phát sáng, họa tiết tech grid dots tinh tế, 3 hộp quyền lợi chuyên nghiệp có icon màu sắc.
+4. **split_right:** Cột trái (50%) là ảnh lớp học thật, cột phải (50%) là panel xanh navy thương hiệu với logo góc trên, tiêu đề lớn, gạch phân cách vàng kim, 3 điểm nổi bật và hotline.
+5. **split_left:** Đảo vị trí panel sang bên trái, ảnh thật bên phải nhằm tạo sự phong phú giữa các bài viết.
+6. **bottom_bar:** Ảnh chụp lớp học góc rộng sáng sủa chiếm 70% phía trên, dải panel thương hiệu navy chiếm 30% chân trang cùng các huy hiệu viên thuốc bo tròn hiện đại.
+7. **floating_card:** Ảnh lớp học tràn nền, một card thông tin bo góc nổi khối 3D với viền vàng ánh kim và bóng đổ mềm mại.
+8. **3d_pills:** Bố cục hiện đại cho ảnh 3D AI hoặc ảnh công sở: nhân vật thao tác ở nửa phải (50%), nửa trái là 3 thẻ viên thuốc xanh navy bo góc ôm khít chữ tiếng Việt chuẩn Unicode, logo Sao Việt trên thẻ trắng góc trên.
+
+### 5 Bảng Màu Nhận Diện Độc Quyền (Color Mood Palettes):
+1. **Royal Sapphire (Sao Việt Classic):** Deep Navy (#0B2341), Vàng kim (#FFD700), Xanh Cyan (#00D4FF). Uy tín, vững chãi, chuẩn nhận diện truyền thống Tin học Sao Việt.
+2. **Ruby Urgency (Cấp tốc / Giới hạn suất học):** Đỏ ruby rượu vang (#400A14), Vàng gold (#FFCC00), Trắng tuyết. Kích thích hành động, tạo cảm giác ưu đãi lớn.
+3. **Cosmic Violet (Công nghệ AI & Tương lai):** Tím vũ trụ (#180E30), Aqua Neon (#00F2FE), Tím hoàng gia (#7C3AED). Tượng trưng cho kỷ nguyên AI, dữ liệu lớn, hiện đại.
+4. **Emerald Growth (Kỹ năng & Thăng tiến sự nghiệp):** Xanh lục bảo (#082A22), Vàng chanh (#FFEB3B), Xanh bạc hà (#00E676). Cảm giác phát triển kỹ năng, thịnh vượng, tươi mới.
+5. **Warm Editorial (Thanh lịch / Doanh nhân):** Nâu espresso (#241A16), Kem bơ (#FEF3C7), Cam đất (#C2410C). Phong cách tạp chí cao cấp, tri thức, chỉn chu.
 
 *(TUYỆT ĐỐI CẤM: Để AI tự vẽ chữ tiếng Việt lên ảnh dẫn đến lỗi font méo dấu như KÉ TOÀN, TÀI CHINC, PHỞNG, KẾM; CẤM để AI vẽ khung rỗng mất logo; CẤM style neon mạch điện tối tăm).*
 
-Xoay luân phiên 6 kiểu cover 1:1 trên. Cấm 2 bài liên tiếp cùng 1 kiểu.
+Xoay luân phiên 8 layout và 5 bảng màu trên. Cấm 2 bài liên tiếp cùng 1 kiểu hoặc cùng 1 màu sắc, đảm bảo 100 bài viết là 100 tác phẩm độc bản khác biệt hoàn toàn.
 Logo: Bắt buộc dùng file `attachments/dataset/chung/thsv-logo-2025.png` trên thẻ bo góc nổi khối, luôn sắc nét 100%.
 Hotline trên poster: Lấy đúng từ brand kit hoặc mặc định 0931144858 / 0823552558.
 CẤM mở `_xuat/` để tái sử dụng. Đăng xong là xóa file tạm.
