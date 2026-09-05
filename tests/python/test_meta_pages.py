@@ -316,20 +316,78 @@ async def handler_tests():
     class _Vault:
         vault_root = str(kit_dir.parents[1])
 
-    bad = plug._caption_kit_err("Hotline 0823 552 558\nLê Văn Lương", "P1", _Vault())
-    check("kit: caption sai hotline/địa chỉ → chan-trang-sai-kit",
-          bad and "chan-trang-sai-kit" in bad and "0935 946 407" in bad)
-    good_msg = (
+    def _long(extra):
+        return extra + "\n" + "\n".join("dong " + str(i) for i in range(50))
+
+    short_bad = plug._caption_kit_err("Hotline 0935 946 407\nTM-20 Sảnh B", "P1", _Vault())
+    check("kit: caption cụt → caption-ngan",
+          short_bad and "caption-ngan" in short_bad)
+    bad = plug._caption_kit_err(_long("Hotline 0823 552 558\nLê Văn Lương"), "P1", _Vault())
+    check("kit: thiếu hẳn hotline+địa chỉ kit → chan-trang-sai-kit",
+          bad and "chan-trang-sai-kit" in bad and "khong-retry=1" in bad)
+    fuzzy = _long(
+        "Hoc AutoCAD tm 20 sanh B Florita tan hung\n"
+        "Hotline 0935.946.407\n"
+    )
+    check("kit: sai dấu / chấm số / thiếu email vẫn ok",
+          plug._caption_kit_err(fuzzy, "P1", _Vault()) is None)
+    good_msg = _long(
         "Học AutoCAD\nTM-20 Sảnh B, Chung cư Florita\n"
         "Hotline/Zalo: 0935 946 407\nEmail: q7@example.com\n"
     )
-    check("kit: caption đủ địa chỉ+hotline+email → ok",
+    check("kit: caption đủ địa chỉ+hotline → ok",
           plug._caption_kit_err(good_msg, "P1", _Vault()) is None)
     miss_page = plug._caption_kit_err("x", "999", _Vault())
     check("kit: page chưa có file kit → chua-co-brand-kit",
           miss_page and "chua-co-brand-kit" in miss_page)
     check("kit: không vault → không chặn (test/ctx trống)",
           plug._caption_kit_err("x", "P1", None) is None)
+    (kit_dir / "royce-shop.md").write_text(
+        "- Tên Fanpage: Royce Shop\n- Page ID: 9886\n- Page test: true\n"
+        "- Cơ sở / địa chỉ: A | B | C | D\n- Hotline / Zalo: 0823 552 558\n"
+        "- Email Fanpage: a@b.com\n",
+        encoding="utf-8",
+    )
+    check("kit: page test Royce không bắt đủ chân trang (vẫn đủ dòng)",
+          plug._caption_kit_err(_long("bài test Royce Shop"), "9886", _Vault()) is None)
+    mau = _long("Học tin học bắt kịp xu hướng công nghệ 4.0 tại Sao Việt\nHotline 0823")
+    check("kit: 4.0 → van-mau-ai",
+          (lambda e: e and "van-mau-ai" in e)(plug._caption_kit_err(mau, "9886", _Vault())))
+    dump = _long("Excel Word AutoCAD Photoshop kế toán Misa SolidWorks")
+    check("kit: nhồi 3 ngành → nhieu-nganh",
+          (lambda e: e and "nhieu-nganh" in e)(plug._caption_kit_err(dump, "9886", _Vault())))
+    check("caption: ** Markdown bị gỡ trước khi lên tường",
+          "**" not in plug._fb_plain_caption("**KHAI PHÁ** tin học"))
+    pipe_msg = _long(
+        "Royce\n193 Nguyễn Xí | Florita TM-20 | Moonlight 510 Kinh Dương Vương | A23 Lê Thị Riêng\n"
+        "Hotline 0823 552 558\n"
+    )
+    check("kit: địa chỉ một dòng dấu | → dia-chi-mot-dong (cả page test)",
+          (lambda e: e and "dia-chi-mot-dong" in e)(
+              plug._caption_kit_err(pipe_msg, "9886", _Vault())))
+    check("album: 4 file _xuat → gen-thua (vượt 3)",
+          (lambda e: e and "gen-thua" in e)(
+              plug._extra_ai_err([
+                  "attachments/dataset/_xuat/cover.png",
+                  "attachments/dataset/_xuat/p2.png",
+                  "attachments/dataset/_xuat/p3.png",
+                  "attachments/dataset/_xuat/p4.png",
+              ])))
+    check("album: 1 cover gen + 2 extra gen (đúng trần 3) → ok",
+          plug._extra_ai_err([
+              "attachments/dataset/_xuat/cover.png",
+              "attachments/dataset/_xuat/p2.png",
+              "attachments/dataset/_xuat/p3.png",
+              "attachments/dataset/tin-hoc _ai/a.jpg",
+              "attachments/dataset/tin-hoc _ai/b.jpg",
+              "attachments/dataset/tin-hoc _ai/c.jpg",
+          ]) is None)
+    check("album: ảnh 2 album_ready + gốc → ok",
+          plug._extra_ai_err([
+              "attachments/dataset/_xuat/cover.png",
+              "attachments/dataset/_xuat/album_ready/a.jpg",
+              "attachments/dataset/tin-hoc _ai/lop.jpg",
+          ]) is None)
 
 asyncio.run(handler_tests())
 

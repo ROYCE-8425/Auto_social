@@ -6,25 +6,22 @@ group: Marketing
 
 # Đăng bài Facebook
 
-Doc `wiki/brand-kits/_y-chu-dang-bai.md` truoc. Engine viec nen tu gen anh bang tool CUA ENGINE. Khong bat ChatGPT. Khong dung Gemini CLI (da go).
+Doc `wiki/brand-kits/_y-chu-dang-bai.md` va `_quy-trinh-dang-bai.md` truoc. Moi bai = dung 1 kit page (logo/mau/font/giong/chan trang). Khong dung kit page khac. Engine viec nen: **Gemini API key** (khong Antigravity/`agy`, khong Gemini CLI, khong bat ChatGPT).
 
-- **Grok Build:** `image_edit` (kieu A, khoa anh dataset) / `image_gen` (kieu B).
-- **Antigravity CLI (`agy`, goi Google):** model Gemini trong Antigravity. Sinh anh bang tool anh native cua `agy` (GenerateImage / Nano Banana neu model co). Luu file vao `attachments/dataset/_xuat/`. Cung prompt `references/prompt-poster.md` + mau `_mau` de so chat luong voi Grok.
-- **Gemini API key:** khong co image_edit nhu Grok CLI. De so anh Gemini vs Grok thi dung Antigravity CLI, khong dan API.
+**Album 7/3.** Anh 1 = banner quang cao: gen tu 1 raw dung the + logo kit, HOAC gen AI full van kem logo kit. Toi da 3 gen. Con lai anh raw dataset. Cover `_xuat/`.
+Cover mac dinh = gen 1 lan tu **1 anh raw dataset + logo kit** (file `attachments/dataset/chung/thsv-logo-2025.png` hoac logo trong kit page). Tool: `javis_search_tools` roi `javis_run_tool` `gemini_generate_image` (Nano Banana). **Bat buoc** dua 2 anh tham chieu: (1) anh lop/raw, (2) file logo — khong gen logo bang tri nho. Luu `_xuat/`. Anh 2..N = anh goc dataset (qua `pick_photos`). Cấm gen 2+ poster. Cấm `agy`. Facebook: `fb_page_album` / `fb_page_photo`.
 
 ## 1. Chọn folder dataset theo brief (Luật A)
 
-| Chữ trong brief | Folder |
+| Chữ trong brief / thẻ kit | Folder (id đúng trên đĩa) |
 |---|---|
-| Word, Excel, văn phòng, MOS | `attachments/dataset/tin-hoc/` |
-| AutoCAD, SolidWorks, CNC, cơ khí | `attachments/dataset/co-khi/` |
+| Word, Excel, văn phòng, MOS, AI văn phòng | `attachments/dataset/tin-hoc _ai/` (`tin-hoc _ai`) |
+| AutoCAD, SolidWorks, vẽ kỹ thuật | `attachments/dataset/ve-ky-thuat/` (`ve-ky-thuat`) |
 | Kế toán, chứng từ, sổ sách | `attachments/dataset/ke-toan/` |
 | Photoshop, Illustrator, đồ họa | `attachments/dataset/do-hoa/` |
-| Ads, Facebook Ads, SEO, Marketing | `attachments/dataset/marketing/` |
-| AI, ChatGPT, Copilot | `attachments/dataset/ai/` |
-| Trẻ em, Scratch, lập trình | `attachments/dataset/tre-em/` |
-| Tiếng Hàn | `attachments/dataset/tieng-han/` |
-| Logo only | `attachments/dataset/chung/` (chỉ làm watermark, không làm ảnh bài) |
+| Logo only | `attachments/dataset/chung/` (chỉ watermark) |
+
+CẤM tìm folder cũ `tin-hoc/`, `co-khi/`, `ai/`, `marketing/`, `tre-em/`, `tieng-han/` — đã gộp/xoá. Không có folder → chọn thẻ khác trong kit, **không** `[[NEEDS_INPUT]]`. Caption tự viết từ skill `viet-bai-facebook`; không cần file giáo trình trong brain.
 
 Kit page có **nhiều ngành**: dòng `Folder anh (dataset): tin-hoc, ke-toan, co-khi`. Brief chọn 1 ngành trong list đó. Không khóa 1 folder/page.
 
@@ -32,7 +29,7 @@ Kit page có **nhiều ngành**: dòng `Folder anh (dataset): tin-hoc, ke-toan, 
 
 Sau post_id: chi append path **anh goc dataset** vao `_anh-da-dung.md` (khong ghi file `_xuat`). Uu tien goc chua dung; het goc moi thi dung lai goc (khong rut xuong 1 tam).
 
-**Anh gen AI khong tai su dung:** CAM lay bat ky file trong `_xuat/` cua vong truoc lam cover/album. Cover phai gen MOI trong vong nay (neu can). Co post_id: **xoa** file cover vua gen trong `_xuat/` (Facebook da co ban). Giu nguyen anh raw trong `tin-hoc/`, `ke-toan/`, ...
+**Anh gen AI khong tai su dung:** CAM lay bat ky file trong `_xuat/` cua vong truoc lam cover/album. Cover phai gen MOI trong vong nay (neu can). Co post_id: **xoa** file cover vua gen trong `_xuat/` (Facebook da co ban). Giu nguyen anh raw trong `tin-hoc _ai/`, `ke-toan/`, `do-hoa/`, `ve-ky-thuat/`. CẤM folder `tin-hoc/` (đã gộp thành `tin-hoc _ai`).
 
 ## 2. Khi nào gen, khi nào dùng ảnh có sẵn (Luật B)
 
@@ -83,7 +80,7 @@ Nếu lệch (ví dụ ảnh ghi nghỉ 25/09 mở lại 26/09 mà caption ghi m
 
 ## 5. Đăng đúng 1 lần, cấm tự xóa bài (Luật E)
 
-N>=2: chỉ `fb_page_album` 1 lần. N<=1: `fb_page_photo` 1 lần. Không thử cả relative và absolute.
+N>=2: chỉ `fb_page_album` 1 lần. N<=1: `fb_page_photo` 1 lần. **CẤM `fb_page_post`** (chỉ chữ, không ảnh). Không thử cả relative và absolute.
 CẤM gọi `fb_page_delete` trừ khi người dùng ra lệnh rõ ràng kèm đúng post_id cần xóa. Tuyệt đối không tự đăng thử rồi tự xóa.
 
 ## 6. Goal ngắn, tự bung (Luật F)
@@ -105,11 +102,13 @@ Trung thu 2026 nếu user không ghi ngày: nghỉ Thứ Sáu 25/09/2026, học 
 ```
 python "brains/Brain Default/scratch/kit_chan_trang.py" <Page ID>
 ```
-Dán nguyên khối `CHAN_TRANG` vào cuối caption (tên page, địa chỉ cơ sở kit, Hotline/Zalo kit, email kit, web kit).
+Dán nguyên khối `CHAN_TRANG` (script đã tách **mỗi cơ sở một dòng**). CẤM copy chuỗi `A | B | C` vào caption. Plugin chặn `dia-chi-mot-dong`.
 
 CẤM dán hotline mặc định `0931 144 858` / `0823 552 558` nếu kit page khác số.
 CẤM dán list 12-13 cơ sở nếu kit chỉ 1 chi nhánh (hoặc chỉ Đồng Nai / chỉ Bình Dương).
-Plugin chặn đăng (`POST_SKIP ly-do=chan-trang-sai-kit`) khi caption thiếu hotline hoặc mẩu địa chỉ của kit.
+Plugin chặn khi **thiếu hẳn** hotline (9 số cuối) hoặc **không có 1 mẩu địa chỉ nào** của kit. Sai dấu/viết tắt/thiếu 1 cụm thì vẫn đăng. Email không bắt. Royce Shop = page test, **vẫn** chặn caption cụt và địa chỉ một dòng `|`.
+
+`chan-trang-sai-kit` / `khong-retry=1`: POST_SKIP **1 lần rồi DỪNG**. CẤM sửa caption 20 lần, CẤM `[[NEEDS_INPUT]]`, CẤM rollback, CẤM gọi `fb_page_*` lại.
 
 ## 7. Tự duyệt rồi mới đăng, cấm đốt token (Luật G)
 
@@ -128,5 +127,6 @@ Thiếu 1 ô: sửa **tối đa 1 lần** (đổi caption hoặc gen lại 1 cov
 
 - Tool trả `post_id`: ghi `[x]` + post_id ngay; append **chi path goc dataset** vao `_anh-da-dung.md`; **xoa** file cover `_xuat` vua gen. `POST_OK post_id=...`. Khong dung lai anh gen. Khong goi dang lan 2.
 - Tool ERROR hoặc không có post_id: `POST_SKIP ly-do=loi-facebook`. CẤM gọi lại tool đăng. CẤM gen thêm. Kết thúc vòng.
+- `khong-retry=1` / `chan-trang-sai-kit`: dừng task (blocked 1 lần). CẤM 20 lần chạy. CẤM NEEDS_INPUT.
 
-CẤM: vòng lặp tìm tool / gen cover / đăng thử nhiều lần. Một vòng = tối đa 1 `image_edit` + 1 lệnh đăng.
+CẤM đăng thử nhiều lần. Có `NEXT=1` thì đọc **đúng 1 kit** `wiki/brand-kits/<kit>` (địa chỉ/hotline page đó), không đọc 56 kit, không `fb_pages_list`. **Bắt buộc** soạn theo `viet-bai-facebook` đủ 7 phần **60–120 dòng** — cấm cắt caption để tiết kiệm token. Plugin chặn bài dưới 45 dòng (`caption-ngan`). Ngành = `_the-khoa-hoc.md`. Ảnh 1 = poster gen `_xuat/`. CẤM `fb_page_post`.

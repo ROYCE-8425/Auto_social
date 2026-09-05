@@ -2,10 +2,10 @@
 
 > Tự sinh từ file - ĐỪNG sửa tay. Chỉ mục mọi năng lực của Javis trong brain này để bất kỳ AI/engine đọc 1 chỗ là hiểu Javis làm được gì. Song song `wiki/index.md` (tri thức).
 
-**Tổng quan:** 1 agents · 8 skills · 2 workflows (0 bật) · 1 loops (0 bật) · 12 plugins (11 chạy)
+**Tổng quan:** 1 agents · 9 skills · 1 workflows (0 bật) · 1 loops (0 bật) · 12 plugins (11 chạy)
 
 ## Agents
-- **Biên tập Facebook** (`bien-tap-facebook`) - Soạn caption Fanpage đúng brand kit; chỉ đăng khi được yêu cầu rõ. · model gemini-3.8-flash-high · skills: dang-bai-facebook, viet-bai-facebook
+- **Biên tập Facebook** (`bien-tap-facebook`) - Soạn caption Fanpage đúng brand kit; chỉ đăng khi được yêu cầu rõ. · model gemini-2.5-flash · skills: dang-bai-facebook, viet-bai-facebook
 
 ## Skills
 ### AI
@@ -14,6 +14,7 @@
 - **Lint Wiki** (`lint-wiki`) - Rà soát sức khoẻ wiki của Second Brain, trả về danh sách vấn đề. Không tự sửa hàng loạt.
 - **Notes** (`notes`) - Lưu tin nhắn hiện tại nguyên văn vào sources/ (kèm ảnh), tự chưng cất lên wiki nếu note đáng.
 - **Query Wiki** (`query-wiki`) - Khai thác tri thức trong Second Brain: tổng hợp, so sánh, giả thuyết. Trả lời có trích dẫn.
+- **Kiểm tra lại năng lực của chính mình** (`verify-own-capabilities`) - Khi không chắc về một năng lực (vd: tạo ảnh), hãy kiểm tra danh sách tool/plugin đang hoạt động thay vì khẳng định là không có.
 ### Content
 - **Viết bài Facebook** (`viet-bai-facebook`) - Bộ skill chuyên sâu viết bài Facebook: 4 trụ cột nội dung, 50 mẫu Hook thực chiến, sườn Hook-Body-CTA, cấm văn mẫu AI, tối ưu đọc lướt di động.
 ### Marketing
@@ -22,16 +23,15 @@
 
 ## Workflows
 - **Đăng Facebook** (`dang-bai-that-facebook`) - True · 1 bước [bien-tap-facebook] · Co anh dataset thi album goc. Khong anh lien quan moi gen 1 tam.
-- **Soạn bài Facebook** (`soan-bai-facebook`) - True · 1 bước [bien-tap-facebook] · Kanban soạn caption Fanpage theo brand kit. Chỉ nháp, không tự đăng.
 
 ## Loops
-- **Tên: Chiến dịch 5 bài Tin học Sao Việt (5p/bài).** (`ten-chien-dich-5-bai-tin-hoc-sao-viet-5p-bai`) - tắt · custom/full · mỗi 5 phút
+- **Đăng bài hàng ngày 1 page** (`dang-bai-hang-ngay`) - tắt · custom/full · mỗi 18 phút
 
 ## Plugins (tool/hook native cho mọi engine)
 - **Thời gian & ngày** (`datetime-vn`) - bundled/chạy · tools: javis_now, javis_date_add · Xem ngày giờ hiện tại theo múi giờ đã cấu hình và tính ngày tương đối (mai, mốt, N ngày nữa, tuần trước). Thuần stdlib, chỉ đọc, không cần mạng.
 - **Theo dõi Facebook (Apify)** (`fb-monitor-apify`) - bundled/chạy · tools: fb_monitor · Theo dõi Trang/Nhóm CÔNG KHAI Facebook tìm bài nhiều share qua dịch vụ Apify. Chỉ đọc, không đụng tài khoản cá nhân, chạy tốt trên VPS. Dùng token của kết nối "facebook-monitor".
 - **Tạo ảnh (ChatGPT)** (`image-chatgpt`) - bundled/chạy · tools: javis_generate_image · Tạo ảnh từ mô tả bằng GÓI ChatGPT đang đăng nhập (OAuth) - không cần OpenAI API key. Dùng Codex Responses API + tool image_generation (gpt-image-2). Ảnh lưu vào attachments/ của vault để nhúng thẳng vào chat. Cần đã kết nối ChatGPT ở trang Model.
-- **Tạo ảnh (Google Gemini / Imagen 3)** (`image-gemini`) - bundled/chạy · tools: gemini_generate_image · Tạo ảnh thương mại 3D bằng Google Imagen 3 (dùng chung API key Gemini). Ảnh lưu trực tiếp vào attachments/ của brain.
+- **Tạo ảnh (Google Gemini / Imagen 3)** (`image-gemini`) - bundled/chạy · tools: gemini_generate_image · Tạo ảnh bằng Google Imagen / Gemini image (Nano Banana), chọn model ở trang Models. Ảnh lưu vào attachments/ của brain.
 - **Đấu thêm MCP** (`javis-connect`) - bundled/chạy · tools: javis_add_mcp · Đấu một MCP server vào kho Kết nối của Javis ngay từ chat, để nó HIỆN ra trang Kết nối như mọi tài khoản khác. Trước tool này Javis chỉ còn đường `claude mcp add` - thứ rơi vào config riêng của Claude Code, không bộ não nào khác thấy và người dùng cũng không thấy trên trang Kết nối.
 - **Đặt việc định kỳ & nhắc hẹn** (`javis-schedule`) - bundled/chạy · tools: javis_schedule · Tạo/liệt kê/huỷ việc chạy định kỳ và nhắc hẹn ngay từ chat. Tự chọn kho - việc lặp và bền thì ghi Javis/loops/<slug>.md để sửa được trong Obsidian; nhắc một lần hoặc lịch cron thì vào kho nhắc hẹn (đã có sẵn cron 5 trường). Thay cho việc gõ YAML tay hoặc curl.
 - **Giao việc Kanban** (`javis-task`) - bundled/chạy · tools: javis_task · Giao một việc nền vào hàng đợi Kanban và xem việc đang chạy tới đâu, ngay từ chat. Trước tool này chỉ engine chạy được lệnh máy (Claude Code, Codex) mới giao việc được, vì đường duy nhất là curl POST /kanban/task - năm engine API đứng ngoài.

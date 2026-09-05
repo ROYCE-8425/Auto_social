@@ -429,6 +429,13 @@ class TasksFeature:
             result, error, needs_input, metadata = await asyncio.wait_for(
                 self._execute(task), timeout=WORKER_TIMEOUT_SECONDS
             )
+            if not error and aux_engine.final_loi_dang_nhap(result or ""):
+                error = (result or "").strip()
+                result = ""
+            if not error:
+                fb_err = self._fb_chua_dang(task, result or "")
+                if fb_err:
+                    error = fb_err
             if error:
                 final_task = self.store.block(
                     tid,
@@ -782,6 +789,14 @@ MỤC TIÊU:
 Nếu thiếu một quyết định hoặc dữ liệu mà không thể suy ra an toàn, kết quả phải bắt đầu
 bằng [[NEEDS_INPUT]] và nêu đúng một lý do cụ thể. Nếu hoàn thành, báo cáo ngắn: đã làm
 gì, dữ liệu/file/artifact nào được tạo và cách đã kiểm chứng.
+
+Đăng Facebook: javis_search_tools rồi javis_run_tool. Ảnh = gemini_generate_image
+(KHÔNG phải javis_generate_image). logo= file kit, images=1 raw. Album fb_page_album.
+Hàng ngày: chạy pick_next_fanpage.py, đọc ĐÚNG wiki/brand-kits/<kit> (không mặc định royce-shop).
+Kanban 1 page: đọc kit page đó. Caption 60-120 dòng, giọng+màu+logo+chân trang = kit.
+Đọc wiki/brand-kits/_y-chu-dang-bai.md + _quy-trinh-dang-bai.md + _the-khoa-hoc.md.
+Cover: banner 7/3 (raw+logo hoặc AI full + logo). Album: tối đa 3 gen, còn lại raw.
+CẤM [[NEEDS_INPUT]] vì 'không có tool / Royce chưa MCP'. CẤM địa chỉ một dòng |. CẤM gen 2 poster.
 """.strip()
         result, error, tool_calls = await self._query(cli, prompt)
         return (
@@ -796,6 +811,46 @@ gì, dữ liệu/file/artifact nào được tạo và cách đã kiểm chứng
                 "provider": aux_engine.read_spec().get("provider"),
             },
         )
+
+    @staticmethod
+    def _fb_chua_dang(task: dict, result: str) -> str:
+        """Workflow đăng Facebook mà không có post_id thì KHÔNG được ghi Hoàn thành."""
+        route = str((task or {}).get("route") or "")
+        if route != "wf:dang-bai-that-facebook":
+            return ""
+        t = result or ""
+        tl = t.lower()
+        # Graph thật: "post_id": "9886..._1221..." hoặc POST_OK post_id=...
+        # pfbid / permalink bịa (ca Royce 2026-09-05) không tính.
+        graph_id = re.search(
+            r'post_id["\s:=]+(\d{8,}_\d{5,}|\d{14,})', t, re.I
+        )
+        if graph_id and "ERROR" not in t[:80]:
+            return ""
+        if "POST_OK" in t and re.search(r"\d{8,}_\d{5,}|\d{14,}", t):
+            return ""
+        # New Page Experience: /posts/122131674009221350 (số thuần, không pfbid)
+        if re.search(r"facebook\.com/.+/posts/(\d{14,})", tl):
+            return ""
+        if "pfbid" in tl and not re.search(r"/posts/\d{14,}", tl):
+            return (
+                "Link pfbid do model bịa. Tool fb_page_album/photo phải trả "
+                "post_id số dạng PAGEID_POSTID hoặc /posts/1221…. Chưa đăng lên tường."
+            )
+        if "facebook.com" in tl and "/posts/" in tl:
+            return (
+                "Chỉ có URL, không có post_id Graph. Chưa đăng. "
+                "Gọi fb_page_album rồi dán nguyên JSON tool (ok, post_id)."
+            )
+        if "javis_generate_image" in tl:
+            return (
+                "Sai tool ảnh: không có javis_generate_image trên Gemini. "
+                "Gọi javis_search_tools('gemini image') rồi javis_run_tool "
+                "gemini_generate_image (logo= file kit, images= 1 raw)."
+            )
+        if "bạn có muốn" in tl or "ban co muon" in tl:
+            return "Worker hỏi thay vì đăng. Kanban không hỏi. Chưa có post_id."
+        return "Chưa đăng Facebook (không có post_id). Không đánh Hoàn thành."
 
     @staticmethod
     def _is_transient(error: str) -> bool:

@@ -86,9 +86,9 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Vẽ kỹ th
 - Hai kiểu ảnh bắt buộc bám mẫu:
   + Kiểu A (có ảnh ngành): bám mẫu attachments/dataset/_mau/mau-khoa-hoc-co-anh-goc.png (ảnh thật lớp học + panel xanh/vàng tóm tắt 3-5 ý chính + logo Sao Việt góc trên).
   + Kiểu B (không có ảnh ngành, lịch lễ): bám mẫu attachments/dataset/_mau/mau-lich-le-tu-gen.png (poster đủ họa tiết đỏ vàng lễ hội, đèn lồng, trăng, 2 khối lịch nghỉ và học lại, logo Sao Việt; cấm vẽ poster tối giản).
-- Album tối ưu phí: tối đa 3 gen/bài. Mặc định 1 cover gen + 4-5 ảnh gốc dataset (hướng 3/7). Cover luôn _xuat. Kiểu B: 1 poster gen. Goal ngắn (Trung thu, kế toán ca tối) tự bung luật skill
+- Album tỷ lệ 7/3: Ảnh 1 = banner quảng cáo (gen từ 1 raw dataset đúng thẻ + logo kit, HOẶC gen AI full). Tối đa 3 ảnh gen/bài; phần còn lại (~7) ảnh raw folder thẻ. Cover luôn _xuat.
 - Nơi lưu ảnh gen: attachments/dataset/_xuat/
-- Gen ảnh bằng tool của engine đang chạy (Grok: image_gen / image_edit). Không bắt ChatGPT
+- Gen cover: gemini_generate_image (KHÔNG javis_generate_image, KHÔNG image_gen Grok). logo= file Logo chính kit, images= 1 raw folder thẻ (tin học = attachments/dataset/tin-hoc _ai/ — CẤM tin-hoc/). Album 7/3.
 - Đối chiếu số liệu: caption và chữ trên ảnh bắt buộc cùng ngày/giờ và số liệu. Nếu lệch phải sửa caption trước khi đăng, không đăng lệch
 - Đăng đúng 1 lần: chỉ gọi fb_page_photo hoặc fb_page_post 1 lần. CẤM gọi fb_page_delete trừ khi user bảo xóa đúng post_id
 
@@ -113,9 +113,21 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Vẽ kỹ th
 - Đăng trùng rồi tự ý gọi `fb_page_delete` để xóa bài
 - Dùng ký tự em dash
 
-## Chân trang caption (bắt buộc)
-Trung Tâm Đào Tạo Kế Toán Sao Việt (hoặc Trung Tâm Tin Học Sao Việt tùy khóa)
-[địa chỉ cơ sở của ĐÚNG Fanpage hoặc hệ thống 12 cơ sở]
+## Chân trang caption (bắt buộc — mỗi cơ sở MỘT DÒNG, cấm dấu |)
+Trung Tâm Đào Tạo Tin Học Sao Việt
+193 Nguyễn Xí, Bình Thạnh
+Florita TM-20, Quận 7
+Moonlight 510 Kinh Dương Vương, Bình Tân
+A23 Lê Thị Riêng, Quận 12
+133/2 Đỗ Xuân Hợp, Thủ Đức
+180 Phạm Văn Bạch, Tân Bình
+69 D32 Oasis, Thuận An
+184/19/11 Đặng Văn Mây, Dĩ An
+107 D5 Phú Hòa, Thủ Dầu Một
+20 ĐX 12, Tân Uyên
+91 Đoàn Văn Cự, Biên Hòa
+72 Đinh Bộ Lĩnh, Long Thành
+293 Bình Giã, Vũng Tàu
 Hotline: 0823 552 558
 Email: trungtamtinhocsaoviet@gmail.com
 Web: https://trannhuy.online
@@ -124,10 +136,11 @@ Web: https://trannhuy.online
 - Tên Fanpage: Royce Shop
 - slug: royce-shop
 - Page ID: 988656934325292
-- Cơ sở / địa chỉ:
+- Page test: true
+- Cơ sở / địa chỉ: 193 Nguyễn Xí, Bình Thạnh | Florita TM-20, Quận 7 | Moonlight 510 Kinh Dương Vương, Bình Tân | A23 Lê Thị Riêng, Quận 12 | 133/2 Đỗ Xuân Hợp, Thủ Đức | 180 Phạm Văn Bạch, Tân Bình | 69 D32 Oasis, Thuận An | 184/19/11 Đặng Văn Mây, Dĩ An | 107 D5 Phú Hòa, Thủ Dầu Một | 20 ĐX 12, Tân Uyên | 91 Đoàn Văn Cự, Biên Hòa | 72 Đinh Bộ Lĩnh, Long Thành | 293 Bình Giã, Vũng Tàu
 - Hotline / Zalo: 0823 552 558
 - Email Fanpage: trungtamtinhocsaoviet@gmail.com
-- Web Fanpage: https://trannhuy.online
+- Web Fanpage: trungtamtinhocsaoviet@gmail.com
 - Link Fanpage: https://www.facebook.com/988656934325292
 - Khoá thế mạnh:
 - Góc địa phương:

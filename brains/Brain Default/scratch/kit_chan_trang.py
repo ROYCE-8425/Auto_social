@@ -36,7 +36,12 @@ def load(page_id):
 
 def footer_block(md, name):
     addr = field(md, "Cơ sở / địa chỉ")
-    parts = [a.strip() for a in addr.split("|") if a.strip()] if addr else []
+    parts = []
+    if addr:
+        for a in addr.replace("|", "\n").splitlines():
+            a = a.strip()
+            if a:
+                parts.append(a)
     hot = field(md, "Hotline / Zalo", "Hotline riêng", "Hotline")
     email = field(md, "Email Fanpage", "Email")
     web = field(md, "Web Fanpage", "Web")
@@ -60,8 +65,23 @@ def main(argv):
         print("ERROR: chua-co-brand-kit page_id=" + argv[1])
         return 1
     name = field(md, "Tên Fanpage") or path.stem
-    print("CHAN_TRANG")
     print("kit=" + path.name)
+    print("logo=" + (field(md, "Logo chính") or "attachments/dataset/chung/thsv-logo-2025.png"))
+    print("mau_chinh=" + (field(md, "Màu chính") or ""))
+    print("mau_phu=" + (field(md, "Màu phụ") or ""))
+    print("font=" + (field(md, "Font") or ""))
+    print("giong=" + (field(md, "Tone of voice") or ""))
+    print("KIT_VISUAL")
+    print("Logo file (bat buoc dua vao gemini_generate_image): "
+          + (field(md, "Logo chính") or "attachments/dataset/chung/thsv-logo-2025.png"))
+    print("Mau: " + (field(md, "Màu chính") or "") + " / " + (field(md, "Màu phụ") or ""))
+    print("Font: " + (field(md, "Font") or ""))
+    print("Giong: " + (field(md, "Tone of voice") or ""))
+    print("Bo cuc: " + (field(md, "Quy tắc bố cục") or ""))
+    print("Phong cach: " + (field(md, "Phong cách hình ảnh") or ""))
+    print("Cam: " + (field(md, "Điều không được làm") or ""))
+    print("HET_KIT_VISUAL")
+    print("CHAN_TRANG")
     print(footer_block(md, name))
     return 0
 

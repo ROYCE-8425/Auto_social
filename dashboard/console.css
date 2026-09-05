@@ -251,6 +251,8 @@ body.in-console .hud-actions { display: none; }
 .mp-model.sel { background: var(--accent-wash-2); border-color: var(--accent); }
 .mp-cur { float: right; font-size: 11px; color: var(--accent2); letter-spacing: 1px; }
 .mp-img-head { margin: 14px 0 8px; padding-top: 12px; border-top: 1px solid var(--hairline); font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; opacity: .75; }
+.mp-model.mp-img { font-size: 14px; }
+.mp-model.mp-img.sel { border-color: var(--accent2-line, var(--accent)); }
 .mp-empty { color: var(--text3); font-size: 14px; padding: 16px; }
 .mp-foot { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-top: 1px solid var(--glass-brd); }
 .mp-foot .mp-note { max-height: 84px; overflow-y: auto; }   /* lỗi dài không làm footer phình đẩy nút ra ngoài */

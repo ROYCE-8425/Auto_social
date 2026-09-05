@@ -9,6 +9,8 @@ Bất kỳ engine nào (Claude Code/Codex/API) khi user bảo "vẽ ảnh bằng
 """
 from __future__ import annotations
 
+import re
+
 import image_gen
 
 
@@ -33,6 +35,35 @@ def register(ctx):
         aspect = str(args.get("aspect_ratio") or "square")
         api_key = args.get("api_key")
         model = str(args.get("model") or "").strip() or None
+        refs = args.get("images") or args.get("reference_images") or []
+        if isinstance(refs, str):
+            refs = [p.strip() for p in refs.split(",") if p.strip()]
+        logo = str(args.get("logo") or "").strip()
+        refs = [image_gen.fix_dataset_path(p) for p in refs]
+        logo = image_gen.fix_dataset_path(logo)
+        if logo:
+            refs = [logo] + [p for p in refs if p != logo]
+        need_brand = bool(re.search(
+            r"cover|poster|fanpage|sao viet|facebook|brand|tin hoc|khoa hoc", prompt, re.I))
+        if need_brand and not logo:
+            logo = "attachments/dataset/chung/thsv-logo-2025.png"
+            refs = [logo] + [p for p in refs if p != logo]
+        if need_brand and logo and len([p for p in refs if p != logo]) == 0:
+            folder = "tin-hoc _ai"
+            if re.search(r"ke.toan|accounting", prompt, re.I):
+                folder = "ke-toan"
+            elif re.search(r"do.hoa|photoshop|illustrator", prompt, re.I):
+                folder = "do-hoa"
+            elif re.search(r"autocad|ve.ky|solidworks", prompt, re.I):
+                folder = "ve-ky-thuat"
+            raw = image_gen.first_dataset_photo(getattr(cctx, "vault_root", None), folder)
+            if raw:
+                refs.append(raw)
+            else:
+                return (
+                    "ERROR: không có ảnh raw trong attachments/dataset/"
+                    + folder + " (tin học = 'tin-hoc _ai' có dấu cách, không phải tin-hoc/_ai)."
+                )
 
         res = await image_gen.generate_gemini(
             prompt=prompt,
@@ -40,6 +71,8 @@ def register(ctx):
             vault_root=cctx.vault_root,
             api_key=api_key,
             model=model,
+            reference_images=refs,
+            save_under="attachments/dataset/_xuat",
         )
         if not res.get("ok"):
             return "ERROR: " + str(res.get("error") or "tạo ảnh thất bại")
@@ -53,11 +86,9 @@ def register(ctx):
     ctx.register_tool(
         name="gemini_generate_image",
         description=(
-            "Tạo ảnh bằng Google Imagen hoặc Gemini image (Nano Banana), dùng API key Gemini. "
-            "Tham số: prompt, aspect_ratio (square|landscape|portrait), "
-            "model (imagen-4.0-generate-001 | imagen-4.0-fast-generate-001 | imagen-4.0-ultra-generate-001 | "
-            "imagen-3.0-generate-002 | gemini-2.5-flash-image | gemini-3.1-flash-image | gemini-3-pro-image). "
-            "Bỏ trống model thì lấy lựa chọn ở trang Models. Sau khi gọi, NHÚNG ![](đường-dẫn)."
+            "Tạo cover Fanpage: BẮT BUỘC logo (file Logo chính kit) + images (1 ảnh raw dataset). "
+            "Nano Banana dán pixel logo, cấm vẽ chữ đường dẫn. Cấm neon mạch điện. "
+            "aspect_ratio square. Lưu attachments/dataset/_xuat/."
         ),
         handler=_gen,
         min_mode="safe",
@@ -80,9 +111,13 @@ def register(ctx):
                                    "imagen-4.0-ultra-generate-001, imagen-3.0-generate-002, "
                                    "gemini-2.5-flash-image, gemini-3.1-flash-image, gemini-3-pro-image"
                 },
-                "api_key": {
+                "logo": {
                     "type": "string",
-                    "description": "Tuỳ chọn: truyền API key Gemini trực tiếp nếu chưa lưu trong Cài đặt"
+                    "description": "File Logo chính trong kit, vd attachments/dataset/chung/thsv-logo-2025.png"
+                },
+                "images": {
+                    "type": "string",
+                    "description": "1 ảnh raw dataset (path trong vault), cách nhau dấu phẩy nếu nhiều"
                 }
             },
             "required": ["prompt"]

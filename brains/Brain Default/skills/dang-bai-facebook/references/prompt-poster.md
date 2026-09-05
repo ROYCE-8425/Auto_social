@@ -11,13 +11,13 @@ Khong copy poster quan doi / esport. Khong gen mat nguoi moi.
 ## Truoc khi goi tool (2 buoc)
 
 1. Viet xong TIEU DE + 2-3 dong loi ich (tieng Viet co dau) tren giay. Khong de AI tua chu.
-2. Dan prompt duoi. `image_edit` kieu A. `image_gen` chi kieu B.
+2. Chi **1 lan gen / bai**. Dua dung 2 file anh: (1) 1 anh raw dataset, (2) logo kit `attachments/dataset/chung/thsv-logo-2025.png`. Khong gen logo. Khong gen them poster thu 2.
 
 ## Vai tung anh
 
-Kieu 1 poster mockup: Anh 1 logo, Anh 2 `mau-poster-do-hoa.png`. Khong anh lop.
+Kieu 1 poster mockup: Anh 1 = logo file that, Anh 2 = mau-poster-do-hoa. Van phai khoa logo file.
 
-Kieu 2 anh goc: Anh 1 dataset, Anh 2 logo, Anh 3 mau A-full / khoa-hoc.
+Kieu 2 anh goc: Anh 1 dataset raw, Anh 2 logo file that, Anh 3 mau A-full. LOCK anh lop; PASTE logo, khong ve lai logo.
 
 ## Prompt kieu A (dan tool)
 
@@ -68,6 +68,8 @@ QUALITY:
 ```
 
 *(Style 3 Neon viền mạch điện tối tăm đã xoá bỏ hoàn toàn khỏi hệ thống do lỗi đè chữ và xấu).*
+CẤM vẽ chữ đường dẫn file (attachments/..., .png) lên ảnh. Logo = pixel file đính kèm, không badge path.
+CẤM nút CTA rỗng. CẤM neon mạch. Dùng gemini_generate_image logo=<Logo chính kit> images=<1 raw dataset>.
 
 ## Prompt kieu B (le / thong bao)
 

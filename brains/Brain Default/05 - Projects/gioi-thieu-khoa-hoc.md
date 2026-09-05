@@ -12,15 +12,11 @@ updated: 2026-09-03
 
 Mỗi vòng lấy **dòng đầu chưa `[x]`**. Đăng xong `[x]` + post_id.
 
-Hết 8 dòng `[x]`: **dừng**, không bỏ `[x]` để xoay lại (đây là bài test giới hạn hết ảnh/hết content).
+Checklist cũ 8 dòng (tin-hoc/co-khi/ai/tre-em/tieng-han) **đã khoá**. Dataset hiện chỉ còn 4 folder. Task “một khoá bất kỳ” = chọn ngẫu nhiên 1 dòng `[ ]` dưới đây, không hỏi user, không `[[NEEDS_INPUT]]`.
 
-Folder 0 ảnh unique: `POST_SKIP het-anh`, không gen vô hạn. Marketing / tiếng Hàn thường rơi vào nhánh này.
+- [ ] Tin học / AI - folder: `tin-hoc _ai`
+- [ ] Kế toán thực hành - folder: `ke-toan`
+- [ ] Vẽ kỹ thuật AutoCAD - folder: `ve-ky-thuat`
+- [ ] Thiết kế đồ họa - folder: `do-hoa`
 
-- [x] Tin học văn phòng (Word, Excel, PowerPoint) - folder: tin-hoc - post_id: 988656934325292_122131523019221350
-- [x] Kế toán thực hành - folder: ke-toan - post_id: 988656934325292_122131524837221350
-- [x] AutoCAD / cơ khí - folder: co-khi - post_id: 988656934325292_122131526349221350
-- [x] Thiết kế đồ họa - folder: do-hoa - post_id: 988656934325292_122131527423221350
-- [x] Ứng dụng AI văn phòng - folder: ai - post_id: 988656934325292_122131529199221350
-- [x] Digital Marketing - folder: marketing - post_id: 988656934325292_122131534335221350
-- [ ] Lập trình trẻ em - folder: tre-em - post_id:
-- [ ] Tiếng Hàn - folder: tieng-han - post_id:
+Lịch sử test cũ (không lấy dòng này nữa): tin-hoc, ke-toan, co-khi, do-hoa, ai, marketing đã từng `[x]`; tre-em/tieng-han hết folder.

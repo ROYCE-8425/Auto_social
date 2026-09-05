@@ -23,6 +23,8 @@ Khi viết caption, CẤM toàn bộ các dấu hiệu nhận diện bài viết
    - CẤM: "vô cùng tuyệt vời", "cực kỳ hữu ích", "đột phá vượt bậc", "hoàn hảo", "đỉnh cao".
    - Thay bằng: Mô tả hành động cụ thể (ví dụ: "bấm cái một là xong", "không còn phải ngồi dò tay từng dòng", "vẽ chuẩn kích thước xưởng yêu cầu").
 3. **Cấm dùng ký tự em dash:** Tuyệt đối không dùng ký tự gạch ngang dài.
+3b. **Cấm Markdown trên Facebook:** không `**in đậm**`, không `__`, không `# heading`. Facebook hiện nguyên `\*\*`. Chữ thường, emoji, xuống dòng.
+3c. **Cấm 4.0 / thời đại số / bạn có biết.** 1 bài = 1 ngành (tin học thì không nhồi AutoCAD + đồ họa + kế toán).
 4. **Icon:**
    - Page chính Sao Việt dùng nhiều `👉` `✔` `🏫` `📞`. Khi viết cho Sao Việt / Royce: **bắt chước page**, không cắt emoji cho "sạch AI".
    - Trang khác (không phải Sao Việt): tiết chế, không icon đầu mọi dòng.
@@ -72,11 +74,12 @@ Luôn lồng ghép khối cam kết vàng tạo sự an tâm tuyệt đối:
 - Website/email: **web và email trong kit page đó**.
 
 ### Phần 7: Chân trang cơ sở (đúng Fanpage, không list hộ)
-Lấy địa chỉ từ kit trang (`Cơ sở / địa chỉ` hoặc lệnh `scratch/kit_chan_trang.py <Page ID>`).
+Lấy địa chỉ từ lệnh `scratch/kit_chan_trang.py <Page ID>` (dán nguyên khối, **mỗi cơ sở một dòng**).
 - Page 1 chi nhánh: chỉ địa chỉ chi nhánh đó.
 - Page Đồng Nai / Bình Dương (tên tỉnh): đúng các cơ sở kit liệt kê.
 - Page không gắn địa phương: mới được list hệ thống.
 CẤM dán 12-13 cơ sở vào mọi bài. CẤM trộn địa chỉ page A vào caption page B.
+CẤM một dòng địa chỉ cách bằng dấu `|` (Facebook đọc rối). Plugin chặn `dia-chi-mot-dong`.
 
 
 ---

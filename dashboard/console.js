@@ -3999,6 +3999,8 @@
     let imgModels = [];
     let imgCurrent = "";
     let imgLoading = false;
+    let imgSaveMsg = "";
+    const isImageChatId = (id) => /image|imagen/i.test(String(id || ""));
 
     const modelsFor = (pid) => (liveCache[pid] && liveCache[pid].models) || (providers.find(x => x.id === pid) || {}).models || [];
     const tagFor = (pid) => {
@@ -4044,11 +4046,14 @@
     }
 
     const draw = () => {
-      const models = modelsFor(selProv);
+      const models = modelsFor(selProv).filter((mod) => selProv !== "gemini" || !isImageChatId(mod));
+      const imgLine = (selProv === "gemini" && imgCurrent)
+        ? " · ảnh: " + imgCurrent
+        : "";
       modal.innerHTML = `
         <div class="mp-box">
           <div class="mp-head">
-            <div><div class="mp-title">${esc(opts.title || "SET MAIN MODEL")}</div><div class="mp-sub">${esc(t("models.mp_current"))} ${esc(main.model || t("models.mp_default"))} · ${esc(main.provider || "")}</div></div>
+            <div><div class="mp-title">${esc(opts.title || "SET MAIN MODEL")}</div><div class="mp-sub">${esc(t("models.mp_current"))} ${esc(main.model || t("models.mp_default"))} · ${esc(main.provider || "")}${esc(imgLine)}</div></div>
             <button class="mp-x" data-act="close">${X_ICON}</button>
           </div>
           <input class="mp-filter" placeholder="${esc(t("models.mp_filter"))}" value="${esc(filterQ)}">
@@ -4063,14 +4068,16 @@
                 : (loadingProv === selProv ? '<div class="mp-empty">' + esc(t("models.mp_loading")) + '</div>'
                     : '<div class="mp-empty">' + esc((liveCache[selProv] && liveCache[selProv].error)
                         || t("models.mp_empty")) + '</div>')}
-              ${selProv === "gemini" ? `<div class="mp-img-head">Gen ảnh · Imagen / Nano Banana (không phải model chat)</div>
+              ${selProv === "gemini" ? `<div class="mp-img-head">Gen ảnh · Imagen / Nano Banana — bấm là lưu, đổi lại bất cứ lúc nào</div>
                 ${imgLoading ? '<div class="mp-empty">Đang tải model ảnh…</div>' : (imgModels.map(im =>
-                  `<button class="mp-model ${im.id === imgCurrent ? "sel" : ""}" data-img="${esc(im.id)}">${esc(im.label)} <span class="mp-cur">${esc(im.id)}</span></button>`
+                  `<button type="button" class="mp-model mp-img ${im.id === imgCurrent ? "sel" : ""}" data-img="${esc(im.id)}">${esc(im.label)} <span class="mp-cur">${im.id === imgCurrent ? "ĐANG DÙNG · " : ""}${esc(im.id)}</span></button>`
                 ).join("") || '<div class="mp-empty">Không tải được danh sách Imagen.</div>')}` : ""}
             </div>
           </div>
           <div class="mp-foot">
-            <span class="mp-note">${esc(opts.note || t("models.mp_note"))}</span>
+            <span class="mp-note">${esc(imgSaveMsg || (selProv === "gemini"
+              ? "Chat: chọn dòng trên rồi Switch. Ảnh: bấm Nano Banana / Imagen là lưu ngay (không cần Switch)."
+              : (opts.note || t("models.mp_note"))))}</span>
             <div><button class="mp-btn" data-act="close">${esc(t("common.cancel"))}</button><button class="mp-btn primary" data-act="switch" ${selModel ? "" : "disabled"}>${esc(opts.title ? t("models.mp_pick") : "Switch")}</button></div>
           </div>
         </div>`;
@@ -4085,8 +4092,15 @@
         const id = b.dataset.img;
         if (!id) return;
         imgCurrent = id;
+        imgSaveMsg = "Đang lưu model ảnh…";
         draw();
-        await saveSetting("model", { gemini_image_model: id });
+        try {
+          await saveSetting("model", { gemini_image_model: id });
+          imgSaveMsg = "Đã lưu ảnh: " + id + " — đổi lại bất cứ lúc nào trong hộp này.";
+        } catch (e) {
+          imgSaveMsg = "Lưu model ảnh thất bại.";
+        }
+        draw();
       });
       modal.querySelectorAll('[data-act="close"]').forEach(b => b.onclick = () => modal.classList.remove("open"));
       const applyFilter = () => {

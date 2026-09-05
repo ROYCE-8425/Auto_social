@@ -8,12 +8,15 @@ from pathlib import Path
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
-sys.path.insert(0, r"C:\Users\199X\OneDrive\Máy tính\javis\javis-os\server")
+_HERE = Path(__file__).resolve()
+VAULT = str(_HERE.parents[1])  # brains/Brain Default
+_SERVER = _HERE.parents[3] / "server"
+if _SERVER.is_dir():
+    sys.path.insert(0, str(_SERVER))
 import mcp_hub  # noqa: E402
 
 TOKEN = mcp_hub.hub_token()
 URL = mcp_hub.hub_url()
-VAULT = r"C:\Users\199X\OneDrive\Máy tính\javis\javis-os\brains\Brain Default"
 _RID = 0
 _IMG_EXT = {".jpg", ".jpeg", ".png", ".webp"}
 
@@ -23,6 +26,9 @@ def unique_dataset_photos(folder, skip_names=None):
     import hashlib
     import re
     skip_names = {str(x).replace("\\", "/").split("/")[-1].lower() for x in (skip_names or [])}
+    folder = str(folder or "").replace("tin-hoc/_ai", "tin-hoc _ai").replace("tin-hoc_ai", "tin-hoc _ai")
+    if folder.strip("/") in ("tin-hoc",):
+        folder = "tin-hoc _ai"
     d = Path(VAULT) / "attachments" / "dataset" / folder
     if not d.is_dir():
         return []

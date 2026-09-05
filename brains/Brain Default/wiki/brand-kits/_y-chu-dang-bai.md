@@ -19,12 +19,14 @@ updated: 2026-09-04
 - 7 phần: tiêu đề, nỗi đau, giải pháp Sao Việt, cam kết vàng, module, ưu đãi, CTA + **chân trang đúng kit page** (địa chỉ / hotline / email / web). Không dán 12 cơ sở khi kit chỉ 1 chi nhánh.
 - Đúng ngành theo thẻ. Cấm "thời đại 4.0", "bạn có biết", em dash
 - Trước đăng: `python scratch/kit_chan_trang.py <Page ID>` rồi dán khối CHAN_TRANG. Plugin từ chối caption sai kit.
+- **Ngoại lệ Royce Shop** (`Page test: true`, Page ID `988656934325292`): page thử nghiệm. Có kit là được đăng, không bắt đủ 12 địa chỉ + hotline + email. Fanpage Sao Việt thật vẫn chặn đủ chân trang.
 
-## Ảnh & album
+## Ảnh & album (tỷ lệ 7/3 — bắt buộc)
 
-- Cover VUÔNG 1:1 (2000x2000 hoặc 1200x1200). Safe margin 15–18%
-- Album 4 / 6 / 7 / 8 ảnh. Cấm banner ngang 16:9 trong album
-- Logo: `chung/thsv-logo-2025.png`. Cấm brand khác
+- **Ảnh 1 = banner quảng cáo** thu hút: gen từ **1 raw dataset đúng thẻ khoá** + file Logo chính kit, **hoặc** gen AI full (vẫn dán logo kit). Lưu `_xuat/`.
+- Album **7/3**: tối đa **3 ảnh gen**; **phần còn lại (~7) ảnh raw** `attachments/dataset/<thẻ>/`. Không album toàn AI.
+- Cover VUÔNG 1:1 (2000×2000). Safe margin 15–18%. Cấm neon mạch, cấm vẽ chữ path file.
+- **Logo / màu / font / giọng** = đúng kit page trên form Brand Kit + file `_quy-trinh-dang-bai.md`, `_the-khoa-hoc.md`.
 
 ## Lệnh ngắn
 

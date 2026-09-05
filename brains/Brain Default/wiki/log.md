@@ -13,3 +13,8 @@ Nhật ký thời gian (append-only). Mỗi entry: `## [YYYY-MM-DD] loại | ti�
 
 Đã tạo:
 - [[Công thức 7 tầng bài chuyển đổi đào tạo nghề]]
+
+## [2026-09-05] ingest | tự học từ chat
+
+Đã tạo:
+- [[Khả năng tạo ảnh của Javis]]

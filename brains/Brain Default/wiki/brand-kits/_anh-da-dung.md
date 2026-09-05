@@ -7,11 +7,11 @@ updated: 2026-09-03
 Mỗi mục = 1 slug Fanpage. Worker bỏ các path **gốc dataset** khi chọn ảnh album. Sau post_id chi ghi path raw (tin-hoc, ke-toan, ...). Khong ghi `_xuat`. Anh gen dang xong thi xoa, khong dung lai.
 
 ## royce-shop
-- attachments/dataset/tin-hoc/lop-tin-hoc-van-phong-word-excel.jpg
+- attachments/dataset/tin-hoc _ai/lop-tin-hoc-van-phong-word-excel.jpg
 - attachments/dataset/_xuat/thong-bao-nghi-le-trung-thu-2026.png
-- attachments/dataset/tin-hoc/dao-tao-tin-hoc-van-phong.jpg
-- attachments/dataset/tin-hoc/hoc-tin-hoc-van-phong-cap-toc.jpg
-- attachments/dataset/tin-hoc/trung-tam-tin-hoc-Sao-Viet.jpg
+- attachments/dataset/tin-hoc _ai/dao-tao-tin-hoc-van-phong.jpg
+- attachments/dataset/tin-hoc _ai/hoc-tin-hoc-van-phong-cap-toc.jpg
+- attachments/dataset/tin-hoc _ai/trung-tam-tin-hoc-Sao-Viet.jpg
 - attachments/dataset/_xuat/royce-shop-tin-hoc-van-phong-01-cover.jpg
 - attachments/dataset/_xuat/royce-shop-excel-nang-cao-01-cover.jpg
 - attachments/dataset/_xuat/royce-shop-powerpoint-thuyet-trinh-01-cover.jpg

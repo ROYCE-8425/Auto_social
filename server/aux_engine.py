@@ -170,6 +170,8 @@ def read_spec(settings: dict = None) -> dict:
     s = settings if settings is not None else cfgmod.read_settings()
     aux = (s.get("model", {}) or {}).get("auxiliary") or {}
     spec = {"provider": (aux.get("provider") or CLAUDE), "model": (aux.get("model") or "")}
+    if spec["provider"] == ANTIGRAVITY:
+        spec = {"provider": "gemini", "model": spec["model"] if "gemini" in (spec["model"] or "").lower() else "gemini-2.5-flash"}
     if spec["provider"] not in API_PROVIDERS:
         return spec                      # gói thuê bao: không tính tiền theo token, kệ phanh
     try:
@@ -224,7 +226,10 @@ def main_spec(settings: dict = None) -> dict:
     m = s.get("model", {}) or {}
     main = m.get("main") or {}
     if main.get("provider"):
-        return {"provider": main["provider"], "model": main.get("model") or ""}
+        p, mo = main["provider"], main.get("model") or ""
+        if p == ANTIGRAVITY:
+            p, mo = "gemini", mo if "gemini" in mo.lower() else "gemini-2.5-flash"
+        return {"provider": p, "model": mo}
     eng = m.get("engine")
     if eng == "openrouter":
         return {"provider": "openrouter", "model": m.get("openrouter_model") or ""}
@@ -364,11 +369,23 @@ class _ApiAuxEngine:
             "Bạn KHÔNG có: lệnh máy (Bash), tự mở URL (WebFetch/WebSearch), và KHÔNG có các "
             "connector gắn thẳng vào TÀI KHOẢN Claude - Gmail, Google Drive, Google Calendar "
             "gọi bằng tool native `mcp__<tên>__*` chỉ tồn tại trên engine Claude Code. "
-            "Nếu việc được giao cần một trong những thứ đó, hãy nói THẲNG là engine hiện tại "
-            "không có công cụ ấy và chủ cần đổi model việc nền sang Claude Code. TUYỆT ĐỐI "
-            "không mô tả chuyện này là bị chặn quyền hay thiếu quyền: mức quyền không liên "
-            "quan, đây là chuyện engine nào có tool nào."
+            "Nếu việc cần Bash/WebFetch/Gmail-Drive native, nói thẳng thiếu tool đó. "
+            "TUYỆT ĐỐI không nói bị chặn quyền. "
+            "Đăng Facebook: KHÔNG cần Claude. Hub LAZY: javis_search_tools rồi "
+            "javis_run_tool. Ảnh: gemini_generate_image (CẤM javis_generate_image). "
+            "logo= file kit + images=1 raw. Album: fb_page_album. Đọc ĐÚNG 1 kit "
+            "wiki/brand-kits/<kit page> (logo, màu, font, giọng, CHAN_TRANG). "
+            "Caption 60-120 dòng. 1 cover AI từ raw+file logo kit. Album ảnh gốc. "
+            "CẤM fb_page_post. CẤM địa chỉ |. CẤM [[NEEDS_INPUT]] 'không có tool'."
         )
+        tool_names = [str(t.get("fn") or t.get("name") or "") for t in (tools or [])]
+        tool_names = [n for n in tool_names if n]
+        if tool_names:
+            sysprompt += "\nTool đang có: " + ", ".join(tool_names[:100])
+            if len(tool_names) > 100:
+                sysprompt += f" …(+{len(tool_names) - 100})"
+        else:
+            sysprompt += "\nCẢNH BÁO nội bộ: danh sách tool rỗng — không bịa là Fanpage chưa kết nối."
         if sysprompt.strip():
             messages.append({"role": "system", "content": sysprompt})
         messages.append({"role": "user", "content": prompt})
@@ -695,6 +712,24 @@ def swap(cli, mode: str = None, tag: str = None, spec: dict = None,
     try:
         sp = spec if spec is not None else read_spec(settings)
         prov = sp.get("provider", CLAUDE)
+        # Vận hành dùng Gemini API key: không dựng agy. Agent/workflow còn ghi
+        # antigravity-cli thì đổi sang gemini (cùng model flash nếu tên model là agy).
+        if prov == ANTIGRAVITY:
+            s = settings if settings is not None else cfgmod.read_settings()
+            if api_key_for("gemini", s):
+                m = (sp.get("model") or "").strip()
+                if not m or "gemini" not in m.lower():
+                    m = (s.get("model") or {}).get("auxiliary", {}).get("model") or "gemini-2.5-flash"
+                    if "gemini" not in str(m).lower():
+                        m = "gemini-2.5-flash"
+                sp = dict(sp)
+                sp["provider"] = "gemini"
+                sp["model"] = m
+                prov = "gemini"
+                print("[aux] antigravity-cli → Gemini API (có API key).", file=sys.stderr)
+            else:
+                print("[aux] bỏ antigravity-cli (không agy); chưa có Gemini key.",
+                      file=sys.stderr)
         # MỨC FULL KHÔNG CÓ CHUỖI DỰ PHÒNG. Đây là quyết định có chủ ý, không phải bỏ sót.
         #
         # Việc ở mức full thường là hành động RA NGOÀI: đăng bài, gửi tin, tạo đơn, đặt lịch.
@@ -716,9 +751,11 @@ def swap(cli, mode: str = None, tag: str = None, spec: dict = None,
                 try:
                     import claude_cli as _cc
                     st = _cc.auth_status()
-                    claude_ok = bool(st.get("connected") or st.get("unknown") or st.get("stale"))
+                    # Chỉ "connected" mới giữ Claude. unknown/stale + chưa login → việc
+                    # full "Hoàn thành" 2s với "Not logged in" (ca Royce 2026-09-05).
+                    claude_ok = bool(st.get("connected"))
                 except Exception:
-                    claude_ok = True
+                    claude_ok = False
                 if claude_ok:
                     cli.model = sp.get("model") or None
                     return cli
@@ -759,6 +796,11 @@ def swap(cli, mode: str = None, tag: str = None, spec: dict = None,
             return _FallbackChain(chain) if len(chain) > 1 else cli
         ok, why = availability(sp, settings)
         if not ok:
+            mn = _main_fallback_engine(cli, mode, tag, settings, {prov, CLAUDE}, codex_profile)
+            if mn:
+                print(f"[aux] {why} → bộ não chính ({getattr(mn, 'provider', '?')}).",
+                      file=sys.stderr)
+                return mn
             print(f"[aux] {why} → việc nền tạm dùng lại Claude.", file=sys.stderr)
             return cli
         if prov == CODEX:

@@ -1482,6 +1482,9 @@ def _agent_model_provider(model: str, provider: str = "") -> str:
     Agent CŨ chưa có trường đó thì suy đúng như trước: gpt*/-codex = Codex, còn lại = Claude.
     """
     p = (provider or "").strip()
+    # Máy này chạy Gemini API key: agent/workflow không được dựng agy.
+    if p == "antigravity-cli":
+        return "gemini"
     if p in AGENT_PROVIDERS:
         return p
     return "openai-oauth" if _is_codex_model(model) else "anthropic-cli"
@@ -6858,7 +6861,10 @@ def _workflow_agent_helpers(brain, tools):
             # (nhà đã chọn chết giữa chừng thì lùi về Claude/bộ não chính, không chết lặng).
             # Gọi SAU khi đã gắn javis_vault/system_prompt vì _build_* đọc lại từ engine này.
             try:
-                c = aux_engine.swap(c, tag="workflow", codex_profile=_write_codex_profile,
+                # mode=full: Kanban đăng bài (tools=None). Thiếu mode thì swap coi
+                # Antigravity/Gemini hỏng là "tạm dùng Claude" → 2s Not logged in.
+                c = aux_engine.swap(c, mode="full", tag="workflow",
+                                    codex_profile=_write_codex_profile,
                                     spec={"provider": prov, "model": (model or "")})
             except Exception as e:
                 print(f"[agent engine] {prov}: {type(e).__name__}: {e}", file=__import__('sys').stderr)

@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import json
 import re
+import unicodedata
 from pathlib import Path
 
 GRAPH = "https://graph.facebook.com/v25.0"
@@ -53,63 +54,167 @@ def _load_page_kit(vault_root, page_id):
             continue
         got = _kit_field(md, "Page ID", "page_id", "ID Fanpage", "ID Trang")
         if got == pid:
+            test_raw = (_kit_field(md, "Page test") or "").lower()
+            stem = p.name[:-3] if p.name.endswith(".md") else p.name
+            name = _kit_field(md, "Tên Fanpage") or stem
+            is_test = (
+                test_raw in ("true", "yes", "1", "có")
+                or stem == "royce-shop"
+                or "royce" in name.lower()
+            )
             return {
                 "file": p.name,
-                "name": _kit_field(md, "Tên Fanpage") or p.stem,
+                "name": name,
                 "address": _kit_field(md, "Cơ sở / địa chỉ"),
                 "hotline": _kit_field(md, "Hotline / Zalo", "Hotline riêng", "Hotline"),
                 "email": _kit_field(md, "Email Fanpage", "Email"),
                 "web": _kit_field(md, "Web Fanpage", "Web"),
+                "test": is_test,
                 "md": md,
             }
     return None
 
 
+def _fold(s):
+    """Bỏ dấu, khoảng trắng, dấu câu — so khớp địa chỉ sai một chút vẫn nhận."""
+    s = unicodedata.normalize("NFD", (s or "").lower())
+    s = "".join(c for c in s if unicodedata.category(c) != "Mn")
+    return re.sub(r"[^a-z0-9]+", "", s)
+
+
 def _addr_needles(addr):
-    """Mẩu địa chỉ bắt buộc có trong caption (từng chi nhánh nếu kit liệt kê nhiều)."""
+    """Mẩu địa chỉ (mỗi chi nhánh 1 mẩu). Caption chỉ cần khớp 1 mẩu, không bắt hết list."""
     out = []
-    for part in (addr or "").split("|"):
+    raw = (addr or "").replace("|", "\n")
+    for part in raw.splitlines():
         part = part.strip()
         if not part:
             continue
         if ":" in part[:48]:
             part = part.split(":", 1)[1].strip()
-        bit = part.split(",")[0].strip()
-        bit = re.sub(r"\s+", " ", bit)
-        if len(bit) >= 6:
-            out.append(bit)
+        for bit in [b.strip() for b in part.split(",")[:2] if b.strip()]:
+            bit = re.sub(r"\s+", " ", bit)
+            if len(_fold(bit)) >= 6:
+                out.append(bit)
     return out
 
 
+def _addr_hit(addr, body):
+    needles = _addr_needles(addr)
+    if not needles:
+        return True
+    fb = _fold(body)
+    for n in needles:
+        fn = _fold(n)
+        if fn and fn in fb:
+            return True
+        if len(fn) >= 10 and fn[:10] in fb:
+            return True
+        for w in re.split(r"\s+", n):
+            fw = _fold(w)
+            if len(fw) >= 5 and fw in fb:
+                return True
+    for num in re.findall(r"\d{2,}", addr or ""):
+        if len(num) >= 3 and num in (body or ""):
+            return True
+    return False
+
+
+def _fb_plain_caption(msg):
+    """Facebook khong render Markdown: bo ** va __ de khong hien ky tu sao tren tuong."""
+    s = msg or ""
+    s = s.replace("\\*", "*")
+    s = re.sub(r"\*\*(.+?)\*\*", r"\1", s)
+    s = re.sub(r"__(.+?)__", r"\1", s)
+    s = s.replace("**", "").replace("__", "")
+    return s
+
+
+def _caption_chat_err(body):
+    """Chặn văn mẫu AI / nhồi hết ngành / path file trên caption. Cả page test."""
+    low = (body or "").lower()
+    if re.search(r"4\.0|thời đại số|thoi dai so|bạn có biết|ban co biet", low):
+        return (
+            "ERROR: POST_SKIP ly-do=van-mau-ai khong-retry=1. "
+            "Cấm '4.0', 'thời đại số', 'bạn có biết'. Viết lại giọng kit, không Markdown."
+        )
+    if "attachments/" in low or "thsv-logo" in low and ".png" in low:
+        return (
+            "ERROR: POST_SKIP ly-do=path-tren-bai khong-retry=1. "
+            "Cấm dán đường dẫn file (attachments/...) vào caption hay coi đó là logo."
+        )
+    nganh = 0
+    if re.search(r"autocad|solidworks|vẽ kỹ thuật|ve ky thuat", low):
+        nganh += 1
+    if re.search(r"photoshop|illustrator|đồ họa|do hoa", low):
+        nganh += 1
+    if re.search(r"kế toán|ke toan|misa", low):
+        nganh += 1
+    if re.search(r"excel|tin học văn phòng|tin hoc van phong", low):
+        nganh += 1
+    if nganh >= 3:
+        return (
+            "ERROR: POST_SKIP ly-do=nhieu-nganh khong-retry=1. "
+            "1 bài = 1 thẻ kit (tin học thì không nhồi AutoCAD + đồ họa + kế toán)."
+        )
+    return None
+
+
+def _phone_hit(phone, body):
+    want = _digits(phone)
+    if len(want) < 9:
+        return True
+    have = _digits(body)
+    return want[-9:] in have
+
+
 def _caption_kit_err(msg, page_id, cctx):
-    """Chặn đăng nếu caption không mang hotline/địa chỉ/email của ĐÚNG kit page."""
+    """Chặn khi SAI PAGE (thiếu hẳn hotline/địa chỉ). Sai dấu/viết tắt một chút thì cho qua.
+    Page test: có kit là đăng. Email không bắt. Không bắt đủ 12 cơ sở."""
     vault = getattr(cctx, "vault_root", None) if cctx is not None else None
     if not vault:
         return None
     kit = _load_page_kit(vault, page_id)
     if not kit:
-        return ("ERROR: POST_SKIP ly-do=chua-co-brand-kit. "
-                f"Page ID {page_id} chưa có file wiki/brand-kits. Không đăng.")
+        return ("ERROR: POST_SKIP ly-do=chua-co-brand-kit khong-retry=1. "
+                f"Page ID {page_id} chưa có file wiki/brand-kits. Không đăng. "
+                "CẤM gọi lại tool đăng. CẤM [[NEEDS_INPUT]].")
     body = msg or ""
-    fold = re.sub(r"\s+", " ", body).lower()
+    lines = [ln for ln in body.splitlines() if ln.strip()]
+    if kit and len(lines) < 45:
+        return (
+            "ERROR: POST_SKIP ly-do=caption-ngan khong-retry=1. "
+            "Caption khóa học phải 60–120 dòng (7 phần viet-bai-facebook), "
+            f"đang có {len(lines)} dòng. Không rút ngắn vì tối ưu phí. "
+            "CẤM gọi đăng lại bài cụt."
+        )
+    for ln in body.splitlines():
+        if ln.count("|") >= 2:
+            return (
+                "ERROR: POST_SKIP ly-do=dia-chi-mot-dong khong-retry=1. "
+                "Mỗi cơ sở một dòng. CẤM dán chuỗi địa chỉ cách bằng |. "
+                "Chạy kit_chan_trang.py rồi dán nguyên khối CHAN_TRANG."
+            )
+    qerr = _caption_chat_err(body)
+    if qerr:
+        return qerr
+    if kit.get("test"):
+        return None
     miss = []
     phone = kit.get("hotline") or ""
-    pd = _digits(phone)
-    if len(pd) >= 9 and pd not in _digits(body):
+    if not _phone_hit(phone, body):
         miss.append("hotline " + phone)
-    for needle in _addr_needles(kit.get("address") or ""):
-        if needle.lower() not in fold:
-            miss.append("địa chỉ «" + needle + "»")
-    em = (kit.get("email") or "").strip()
-    if em and "@" in em and em.lower() not in fold:
-        miss.append("email " + em)
+    if not _addr_hit(kit.get("address") or "", body):
+        needles = _addr_needles(kit.get("address") or "")
+        miss.append("địa chỉ (cần 1 mẩu gần đúng, vd «" + (needles[0] if needles else "?") + "»)")
     if not miss:
         return None
     return (
-        "ERROR: POST_SKIP ly-do=chan-trang-sai-kit. Caption không khớp Brand Kit "
-        f"{kit['file']} ({kit['name']}). Thiếu: " + "; ".join(miss) +
-        ". Dán đúng khối Liên hệ / Tuỳ biến của kit trang này "
-        "(không dùng hotline mặc định 0931 144 858 hay list 12 cơ sở nếu kit không ghi vậy)."
+        "ERROR: POST_SKIP ly-do=chan-trang-sai-kit khong-retry=1. "
+        f"Caption không khớp kit {kit['file']} ({kit['name']}). Thiếu: "
+        + "; ".join(miss)
+        + ". Sửa tối đa 1 lần rồi dừng. CẤM gọi đăng lại 20 lần. CẤM [[NEEDS_INPUT]]. "
+        "CẤM rollback/xóa bài."
     )
 
 
@@ -316,7 +421,7 @@ async def _publish(args, ctx):
     if not token:
         return "ERROR: " + (_check() or "chưa kết nối")
     args = args or {}
-    msg = str(args.get("message") or "").strip()
+    msg = _fb_plain_caption(str(args.get("message") or "").strip())
     link = str(args.get("link") or "").strip()
     if not msg and not link:
         return "ERROR: cần 'message' (nội dung bài) hoặc 'link'."
@@ -326,6 +431,11 @@ async def _publish(args, ctx):
     kit_err = _caption_kit_err(msg, pid, ctx)
     if kit_err:
         return kit_err
+    vault = getattr(ctx, "vault_root", None) if ctx is not None else None
+    if vault and _load_page_kit(vault, pid) and not link:
+        return ("ERROR: POST_SKIP ly-do=thieu-anh khong-retry=1. "
+                "Bài Fanpage khóa học phải đăng ảnh: dùng fb_page_album (nhiều ảnh) "
+                "hoặc fb_page_photo (1 ảnh). CẤM fb_page_post chỉ chữ.")
     data = {}
     if msg:
         data["message"] = msg
@@ -390,6 +500,47 @@ def _resolve_media(ref, cctx):
                         "File phải nằm trong vault, hoặc là file vừa gửi qua khung chat/Telegram.")
 
 
+def _cover_gen_err(ref):
+    """Ảnh 1 (cover) phải nằm _xuat/ (đã gen poster). Cấm file lớp trần trong folder ngành."""
+    s = str(ref or "").replace("\\", "/").lower()
+    if not s or s.startswith("http://") or s.startswith("https://"):
+        return None
+    if "/attachments/dataset/_xuat/" in s or "/dataset/_xuat/" in s:
+        return None
+    if "/attachments/dataset/_mau/" in s:
+        return ("ERROR: POST_SKIP ly-do=anh-mau. File _mau/ chỉ là mẫu, không đăng lên tường. "
+                "Gen cover mới vào _xuat/.")
+    if "/attachments/dataset/" in s:
+        return ("ERROR: POST_SKIP ly-do=anh-goc-chua-gen khong-retry=1. "
+                "Ảnh đầu bài phải là poster/banner vừa gen (Imagen/Nano Banana), "
+                "lưu attachments/dataset/_xuat/. CẤM đăng ảnh lớp học trần trong "
+                "do-hoa / ke-toan / tin-hoc _ai / ve-ky-thuat / chung.")
+    return None
+
+
+def _extra_ai_err(photos):
+    """Tỷ lệ 7/3: photos[0] banner gen; tối đa 3 file _xuat (không kể crop album_ready)."""
+    extra = []
+    for ref in (photos or [])[1:]:
+        s = str(ref or "").replace("\\", "/").lower()
+        if "/_xuat/" in s and "/album_ready/" not in s:
+            extra.append(str(ref))
+    n_gen = 1 + len(extra)  # cover + extra banners
+    n = len(photos or [])
+    if n_gen > 3:
+        return (
+            "ERROR: POST_SKIP ly-do=gen-thua khong-retry=1. "
+            "Album 7/3: tối đa 3 ảnh gen (ảnh 1 = banner). "
+            f"Đang {n_gen} file _xuat. Thừa: {extra[0][:120]}"
+        )
+    if n >= 4 and (n - n_gen) < 2:
+        return (
+            "ERROR: POST_SKIP ly-do=thieu-anh-goc khong-retry=1. "
+            "Album 7/3 cần phần lớn ảnh raw dataset, không gần như toàn gen."
+        )
+    return None
+
+
 async def _post_file(path_in_graph, file_path, data, token, base=GRAPH, timeout=900):
     """POST multipart (upload file thật). Video đi base GRAPH_VIDEO, timeout dài."""
     import mimetypes
@@ -415,13 +566,17 @@ async def _publish_photo(args, cctx):
     if not token:
         return "ERROR: " + (_check() or "chưa kết nối")
     args = args or {}
-    url, path, err = _resolve_media(args.get("photo") or args.get("image") or "", cctx)
+    photo_ref = args.get("photo") or args.get("image") or ""
+    cov = _cover_gen_err(photo_ref)
+    if cov:
+        return cov
+    url, path, err = _resolve_media(photo_ref, cctx)
     if err:
         return err
     pid, ptok, pname, perr = await _resolve_page(args, token)
     if perr:
         return perr
-    caption = str(args.get("message") or args.get("caption") or "").strip()
+    caption = _fb_plain_caption(str(args.get("message") or args.get("caption") or "").strip())
     kit_err = _caption_kit_err(caption, pid, cctx)
     if kit_err:
         return kit_err
@@ -482,10 +637,17 @@ async def _publish_album(args, cctx):
         return "ERROR: album cần ít nhất 2 ảnh trong 'photos' (1 ảnh thì dùng fb_page_photo)."
     if len(photos) > 10:
         return f"ERROR: Meta cho tối đa 10 ảnh một bài, đang có {len(photos)}. Bớt lại hoặc chia 2 bài."
+    cov = _cover_gen_err(photos[0])
+    if cov:
+        return cov
+    extra = _extra_ai_err(photos)
+    if extra:
+        return extra
     pid, ptok, pname, perr = await _resolve_page(args, token)
     if perr:
         return perr
-    kit_err = _caption_kit_err(str(args.get("message") or ""), pid, cctx)
+    msg = _fb_plain_caption(str(args.get("message") or "").strip())
+    kit_err = _caption_kit_err(msg, pid, cctx)
     if kit_err:
         return kit_err
     media_ids = []
@@ -504,7 +666,6 @@ async def _publish_album(args, cctx):
             return f"ERROR: Facebook không trả id cho ảnh thứ {i + 1}."
         media_ids.append(mid)
     data = {}
-    msg = str(args.get("message") or "").strip()
     if msg:
         data["message"] = msg
     for i, mid in enumerate(media_ids):

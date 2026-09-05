@@ -68,9 +68,9 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 - Hai kiểu ảnh bắt buộc bám mẫu:
   + Kiểu A (có ảnh ngành): bám mẫu attachments/dataset/_mau/mau-khoa-hoc-co-anh-goc.png (ảnh thật lớp học + panel xanh/vàng tóm tắt 3-5 ý chính + logo Sao Việt góc trên).
   + Kiểu B (không có ảnh ngành, lịch lễ): bám mẫu attachments/dataset/_mau/mau-lich-le-tu-gen.png (poster đủ họa tiết đỏ vàng lễ hội, đèn lồng, trăng, 2 khối lịch nghỉ và học lại, logo Sao Việt; cấm vẽ poster tối giản).
-- Album tối ưu phí: tối đa 3 gen/bài. Mặc định 1 cover gen + 4-5 ảnh gốc dataset (hướng 3/7). Cover luôn _xuat. Kiểu B: 1 poster gen. Goal ngắn (Trung thu, kế toán ca tối) tự bung luật skill
+- Album tỷ lệ 7/3: Ảnh 1 = banner quảng cáo (gen từ 1 raw dataset đúng thẻ + logo kit, HOẶC gen AI full). Tối đa 3 ảnh gen/bài; phần còn lại (~7) ảnh raw folder thẻ. Cover luôn _xuat.
 - Nơi lưu ảnh gen: attachments/dataset/_xuat/
-- Gen ảnh bằng tool của engine đang chạy (Grok: image_gen / image_edit). Không bắt ChatGPT
+- Gen cover: gemini_generate_image (KHÔNG javis_generate_image, KHÔNG image_gen Grok). logo= file Logo chính kit, images= 1 raw folder thẻ (tin học = attachments/dataset/tin-hoc _ai/ — CẤM tin-hoc/). Album 7/3.
 - Đối chiếu số liệu: caption và chữ trên ảnh bắt buộc cùng ngày/giờ và số liệu. Nếu lệch phải sửa caption trước khi đăng, không đăng lệch
 - Đăng đúng 1 lần: chỉ gọi fb_page_photo hoặc fb_page_post 1 lần. CẤM gọi fb_page_delete trừ khi user bảo xóa đúng post_id
 

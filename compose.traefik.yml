@@ -1,0 +1,17 @@
+services:
+  javis:
+    networks:
+      - default
+      - proxy
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: "proxy"
+      traefik.http.routers.javissocial-aisaoviet-com.rule: "Host(`javissocial.aisaoviet.com`)"
+      traefik.http.routers.javissocial-aisaoviet-com.entrypoints: "websecure"
+      traefik.http.routers.javissocial-aisaoviet-com.tls: "true"
+      traefik.http.routers.javissocial-aisaoviet-com.tls.certresolver: "letsencrypt"
+      traefik.http.services.javissocial-aisaoviet-com.loadbalancer.server.port: "7777"
+
+networks:
+  proxy:
+    external: true

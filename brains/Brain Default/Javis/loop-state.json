@@ -6,14 +6,5 @@
     "runs_today": 1,
     "day": "2026-09-03",
     "fail_streak": 1
-  },
-  "ten-chien-dich-5-bai-tin-hoc-sao-viet-5p-bai": {
-    "auto_paused_reason": "",
-    "fail_streak": 0,
-    "last_run": 1788494033.7532408,
-    "last_summary": "### Báo cáo hoàn thành chiến dịch\n\nChiến dịch quảng cáo 5 khoá học Tin học Sao Việt trên Trang Royce Shop đã **hoàn thành 100%** (5/5 bài đăng).\n\nTất cả các dòng trong file quản lý dự án đều đã được đánh dấu hoàn tất:\n\n- **Bài 1**: Tin học văn phòng (Word, Excel, PowerPoint) - `post_id: 988656934325292_122131587063221350`\n- **Bài 2**: Kế toán thực hành thực chiến - `post_id: 988656934325292_122131593915221350`\n- **Bài 3**: Vẽ kỹ thuật AutoCAD và Thiết kế cơ khí - `post_id: 988656934325292_122131595481221350`\n- **Bài 4**: Thiết kế đồ họa Photoshop và Illustrator - `post_id: 988656934325292_122131597227221350`\n- **Bài 5**: Ứng dụng Trí tuệ nhân tạo AI văn phòng - `post_id: 988656934325292_122131600581221350`\n\n### Thao tác đã thực hiện\n- Đọc và đối soát file dự án: [chien-dich-5-khoa-hoc-sao-viet.md](file:///C:/Users/199X/OneDrive/M%C3%A1y%20t%C3%ADnh/javis/javis-os/brains/Brain%20Default/05%20-%20Projects/chien-dich-5-khoa-hoc-sao-viet.md).\n- Cập nhật chuyển trạng thái `enabled: false` t",
-    "last_status": "✓ Đạt: Dự án đã đủ 5/5 bài hoàn tất, file loop đã tắt enabled: false đúng theo quy trình dừng chiến dịch.",
-    "runs_today": 6,
-    "day": "2026-09-04"
   }
 }

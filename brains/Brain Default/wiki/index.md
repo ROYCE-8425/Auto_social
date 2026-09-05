@@ -10,3 +10,4 @@ Catalog nội dung wiki (cập nhật mỗi lần INGEST). Đọc file này trư
 
 ## Tự học
 - [[Công thức 7 tầng bài chuyển đổi đào tạo nghề]] - Framework Direct Response cho bài tuyển sinh khóa học nghề trên Facebook, đúc từ
+- [[Khả năng tạo ảnh của Javis]] — Javis có khả năng tạo và chỉnh sửa hình ảnh thông qua các công cụ (plugins) được

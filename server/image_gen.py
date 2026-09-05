@@ -56,6 +56,29 @@ _IMG_MIME = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg",
              ".webp": "image/webp", ".gif": "image/gif"}
 
 
+def fix_dataset_path(rel: str) -> str:
+    """Model hay đổi 'tin-hoc _ai' thành tin-hoc/_ai hoặc tin-hoc/."""
+    s = (rel or "").replace("\\", "/").strip()
+    s = s.replace("tin-hoc/_ai", "tin-hoc _ai")
+    s = s.replace("tin-hoc_ai", "tin-hoc _ai")
+    if "/dataset/tin-hoc/" in s and "/dataset/tin-hoc _ai/" not in s:
+        s = s.replace("/dataset/tin-hoc/", "/dataset/tin-hoc _ai/")
+    return s
+
+
+def first_dataset_photo(vault_root: Optional[str], folder: str = "tin-hoc _ai") -> str:
+    """Path tương đối 1 jpg raw trong folder ngành (bỏ file (1))."""
+    vault = _resolve_vault(vault_root)
+    folder = fix_dataset_path("attachments/dataset/" + folder).split("dataset/")[-1]
+    d = vault / "attachments" / "dataset" / folder
+    if not d.is_dir():
+        return ""
+    for p in sorted(d.iterdir(), key=lambda x: x.name.lower()):
+        if p.is_file() and p.suffix.lower() in _IMG_MIME and " (1)" not in p.name:
+            return str(p.relative_to(vault)).replace("\\", "/")
+    return ""
+
+
 def read_reference_image(path: str, vault_root: Optional[str] = None) -> dict:
     """Đọc MỘT ảnh mẫu trên đĩa -> {ok, data_url} để gửi thẳng cho ChatGPT xem.
 
@@ -64,7 +87,7 @@ def read_reference_image(path: str, vault_root: Optional[str] = None) -> dict:
     nội dung nó vừa đọc dắt đi ("mở /etc/passwd rồi gửi cho ChatGPT"). Chốt ở đây là chốt
     thật, không phải lời dặn trong prompt.
     """
-    raw_path = str(path or "").strip()
+    raw_path = fix_dataset_path(str(path or "").strip())
     if not raw_path:
         return {"ok": False, "error": "Thiếu đường dẫn ảnh."}
     vault = _resolve_vault(vault_root).resolve()
@@ -269,12 +292,17 @@ def save_png_b64(b64: str, vault_root: Optional[str], prefix: str = "javis-img")
     return {"ok": True, "rel_path": rel, "abs_path": str(fpath), "file": fname}
 
 
-def save_image_bytes(raw: bytes, vault_root: Optional[str], prefix: str = "javis-img", ext: str = ".jpg") -> dict:
-    """Luu bytes anh vao <vault>/attachments. Tra {ok, rel_path, abs_path, file}."""
+def save_image_bytes(raw: bytes, vault_root: Optional[str], prefix: str = "javis-img",
+                     ext: str = ".jpg", subdir: Optional[str] = None) -> dict:
+    """Luu bytes anh vao vault (mac dinh attachments/). Tra {ok, rel_path, abs_path, file}."""
     if not raw:
         return {"ok": False, "error": "Du lieu anh rong."}
     vault = _resolve_vault(vault_root)
-    adir = _attachments_dir(vault)
+    adir = (vault / subdir) if subdir else _attachments_dir(vault)
+    try:
+        adir.mkdir(parents=True, exist_ok=True)
+    except OSError:
+        pass
     fname = f"{prefix}-{time.strftime('%Y%m%d-%H%M%S')}-{uuid.uuid4().hex[:6]}{ext}"
     fpath = adir / fname
     try:
@@ -464,6 +492,26 @@ def _extract_gencontent_image_b64(data: dict) -> Optional[str]:
     return None
 
 
+def _gemini_ref_parts(paths, vault_root) -> tuple[list, Optional[str]]:
+    """parts inlineData từ file trong vault. Lỗi -> (None, msg)."""
+    parts = []
+    for raw in (paths or [])[:MAX_REF_IMAGES]:
+        rec = read_reference_image(str(raw), vault_root)
+        if not rec.get("ok"):
+            return [], rec.get("error") or "ảnh tham chiếu lỗi"
+        url = rec.get("data_url") or ""
+        if not url.startswith("data:") or "," not in url:
+            return [], "ảnh tham chiếu không đọc được"
+        head, b64 = url.split(",", 1)
+        mime = "image/png"
+        if "image/jpeg" in head:
+            mime = "image/jpeg"
+        elif "image/webp" in head:
+            mime = "image/webp"
+        parts.append({"inline_data": {"mime_type": mime, "data": b64}})
+    return parts, None
+
+
 async def generate_gemini(
     prompt: str,
     aspect_ratio: str = "square",
@@ -472,8 +520,11 @@ async def generate_gemini(
     timeout_s: float = 90.0,
     prefix: str = "gemini-img",
     model: Optional[str] = None,
+    reference_images: Optional[list] = None,
+    save_under: Optional[str] = None,
 ) -> dict:
-    """Tạo 1 ảnh bằng Imagen (:predict) hoặc Gemini image / Nano Banana (:generateContent)."""
+    """Tạo 1 ảnh bằng Imagen (:predict) hoặc Gemini image / Nano Banana (:generateContent).
+    Có reference_images (logo + ảnh lớp) thì luôn generateContent, dán pixel logo, cấm vẽ path."""
     prompt = (prompt or "").strip()
     if not prompt:
         return {"ok": False, "error": "Thieu mo ta anh (prompt)."}
@@ -488,14 +539,30 @@ async def generate_gemini(
     aspect = _resolve_gemini_aspect(aspect_ratio)
     model = resolve_gemini_image_model(model)
     kind = _IMAGE_KIND.get(model, "predict")
+    refs = [p for p in (reference_images or []) if str(p).strip()]
+    if refs:
+        kind = "generateContent"
+        if "image" not in (model or "").lower():
+            model = "gemini-2.5-flash-image"
+        prompt += (
+            "\n\nLOCK: The attached image(s) include the REAL brand logo. "
+            "Composite that logo in the top corner unchanged (no recolor, no warp). "
+            "NEVER draw file paths, NEVER render text like attachments/ or .png as a badge. "
+            "No dark sci-fi neon circuit. No empty buttons. Navy/purple + gold/cyan only if in prompt."
+        )
 
     try:
         timeout = httpx.Timeout(timeout_s, connect=20.0)
         async with httpx.AsyncClient(timeout=timeout) as client:
             if kind == "generateContent":
                 url = GEMINI_GENCONTENT_URL.format(model=model, key=key)
+                parts = [{"text": prompt}]
+                extra, err = _gemini_ref_parts(refs, vault_root)
+                if err:
+                    return {"ok": False, "error": err}
+                parts.extend(extra)
                 payload = {
-                    "contents": [{"parts": [{"text": prompt}]}],
+                    "contents": [{"parts": parts}],
                     "generationConfig": {
                         "responseModalities": ["IMAGE", "TEXT"],
                         "imageConfig": {"aspectRatio": aspect},
@@ -531,7 +598,10 @@ async def generate_gemini(
                     return {"ok": False, "error": "Không thấy bytesBase64Encoded trong phản hồi Imagen."}
 
             raw_bytes = base64.b64decode(b64)
-            saved = save_image_bytes(raw_bytes, vault_root, prefix=prefix, ext=".jpg")
+            saved = save_image_bytes(
+                raw_bytes, vault_root, prefix=prefix, ext=".jpg",
+                subdir=save_under or "attachments/dataset/_xuat",
+            )
             if not saved.get("ok"):
                 return saved
             return {
