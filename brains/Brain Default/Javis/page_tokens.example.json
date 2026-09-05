@@ -1,0 +1,19 @@
+{
+  "YOUR_PAGE_ID_1": {
+    "name": "Sao Việt",
+    "page_id": "YOUR_PAGE_ID_1",
+    "access_token": "EAAYrB1...YOUR_META_PAGE_ACCESS_TOKEN",
+    "app_id": "YOUR_META_APP_ID",
+    "expires_at": "never",
+    "updated_at": "2026-09-09"
+  },
+  "YOUR_PAGE_ID_2": {
+    "name": "Game Giá Rẻ BSN",
+    "page_id": "YOUR_PAGE_ID_2",
+    "access_token": "EAGUzx...YOUR_META_PAGE_ACCESS_TOKEN",
+    "app_id": "YOUR_META_APP_ID",
+    "app_secret": "YOUR_META_APP_SECRET",
+    "expires_at": "never",
+    "updated_at": "2026-09-17"
+  }
+}
