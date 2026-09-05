@@ -620,19 +620,28 @@ def render_template_3d_pills(
     badge_w, badge_h = 320, 115
     paste_brand_logo(base, logo_path, (W - badge_w - 70, 70, W - 70, 70 + badge_h), bg_badge=True)
 
-    # Cột trái dành cho 3 thẻ viên thuốc: Canh lề trái tại X = 130
-    x_start = 130
-    y_start = 780
-    font_pill_title = get_font(58, bold=True)
-    font_pill_badge = get_font(52, bold=True)
-    font_pill_highlight = get_font(52, bold=True)
+    # Cột trái dành cho 3 thẻ viên thuốc - VÙNG AN TOÀN TUYỆT ĐỐI (SAFE ZONE):
+    # Khóa x_start = 90, max_w = 800 (kết thúc tại x = 890, cách người mẫu ở x > 1050 ít nhất 160px).
+    # y_start = 240 (kết thúc tại y = 620, cách xa mắt người mẫu ở y = 800 và laptop ở y = 1200).
+    x_start = 90
+    y_start = 240
+    max_allowed_w = 800
 
     draw = ImageDraw.Draw(base)
 
-    def draw_single_capsule(text: str, font: ImageFont.ImageFont, y_pos: int, highlight_token: Optional[str] = None) -> int:
-        pad_x = 55
-        pad_y = 26
-        bb = draw.textbbox((0, 0), text, font=font)
+    def draw_single_capsule(text: str, base_font_size: int, y_pos: int, highlight_token: Optional[str] = None) -> int:
+        pad_x = 42
+        pad_y = 22
+        # Tự động co kích thước font để viên thuốc không bao giờ vượt quá max_allowed_w
+        chosen_font = get_font(base_font_size, bold=True)
+        for sz in range(base_font_size, 26, -2):
+            f_test = get_font(sz, bold=True)
+            bb = draw.textbbox((0, 0), text, font=f_test)
+            if (bb[2] - bb[0]) + pad_x * 2 <= max_allowed_w:
+                chosen_font = f_test
+                break
+
+        bb = draw.textbbox((0, 0), text, font=chosen_font)
         text_w = bb[2] - bb[0]
         text_h = bb[3] - bb[1]
         capsule_w = text_w + pad_x * 2
@@ -642,9 +651,9 @@ def render_template_3d_pills(
         # Đổ bóng mềm
         sh = Image.new("RGBA", (W, H), (0, 0, 0, 0))
         sh_draw = ImageDraw.Draw(sh)
-        sh_draw.rounded_rectangle([x_start, y_pos + 8, x_start + capsule_w, y_pos + capsule_h + 8],
-                                  radius=rad, fill=(0, 0, 0, 120))
-        sh = sh.filter(ImageFilter.GaussianBlur(15))
+        sh_draw.rounded_rectangle([x_start, y_pos + 6, x_start + capsule_w, y_pos + capsule_h + 6],
+                                  radius=rad, fill=(0, 0, 0, 110))
+        sh = sh.filter(ImageFilter.GaussianBlur(12))
         nonlocal base
         base = Image.alpha_composite(base, sh)
 
@@ -653,42 +662,42 @@ def render_template_3d_pills(
         cap_draw = ImageDraw.Draw(cap)
         cap_draw.rounded_rectangle([x_start, y_pos, x_start + capsule_w, y_pos + capsule_h],
                                    radius=rad, fill=(brand_color[0], brand_color[1], brand_color[2], 252),
-                                   outline=(255, 215, 0, 180), width=3)
+                                   outline=(255, 215, 0, 190), width=3)
 
         # Vẽ chữ với tùy chọn highlight màu vàng
         tx = x_start + pad_x
-        ty = y_pos + pad_y - 4
+        ty = y_pos + pad_y - 3
         if highlight_token and highlight_token in text:
             parts = text.split(highlight_token, 1)
             # Phần đầu
-            cap_draw.text((tx, ty), parts[0], font=font, fill="#FFFFFF")
-            p1_bb = cap_draw.textbbox((0, 0), parts[0], font=font)
+            cap_draw.text((tx, ty), parts[0], font=chosen_font, fill="#FFFFFF")
+            p1_bb = cap_draw.textbbox((0, 0), parts[0], font=chosen_font)
             tx += (p1_bb[2] - p1_bb[0])
             # Phần highlight vàng
-            cap_draw.text((tx, ty), highlight_token, font=font, fill="#FFD54F")
-            hl_bb = cap_draw.textbbox((0, 0), highlight_token, font=font)
+            cap_draw.text((tx, ty), highlight_token, font=chosen_font, fill="#FFD54F")
+            hl_bb = cap_draw.textbbox((0, 0), highlight_token, font=chosen_font)
             tx += (hl_bb[2] - hl_bb[0])
             # Phần đuôi
-            cap_draw.text((tx, ty), parts[1], font=font, fill="#FFFFFF")
+            cap_draw.text((tx, ty), parts[1], font=chosen_font, fill="#FFFFFF")
         else:
-            cap_draw.text((tx, ty), text, font=font, fill="#FFFFFF")
+            cap_draw.text((tx, ty), text, font=chosen_font, fill="#FFFFFF")
 
         base = Image.alpha_composite(base, cap)
-        return y_pos + capsule_h + 36
+        return y_pos + capsule_h + 28
 
-    # 1. Viên thuốc 1: Tiêu đề khóa học
+    # 1. Viên thuốc 1: Tiêu đề khóa học (tự co font nếu dài)
     t_clean = (title or "TIN HỌC VĂN PHÒNG").upper()
-    curr_y = draw_single_capsule(t_clean, font_pill_title, y_start)
+    curr_y = draw_single_capsule(t_clean, 50, y_start)
 
     # 2. Viên thuốc 2: Ưu đãi học phí
     b_clean = (badge_text or "ƯU ĐÃI 30% HỌC PHÍ").upper()
     hl_token = "30%" if "30%" in b_clean else ("50%" if "50%" in b_clean else None)
-    curr_y = draw_single_capsule(b_clean, font_pill_badge, curr_y, highlight_token=hl_token)
+    curr_y = draw_single_capsule(b_clean, 44, curr_y, highlight_token=hl_token)
 
     # 3. Viên thuốc 3: Điểm nổi bật / Kèm 1-1
     h_clean = ((highlights[0] if highlights else "DẠY KÈM 1-1") or "DẠY KÈM 1-1").upper()
     hl_token3 = "1-1" if "1-1" in h_clean else None
-    draw_single_capsule(h_clean, font_pill_highlight, curr_y, highlight_token=hl_token3)
+    draw_single_capsule(h_clean, 44, curr_y, highlight_token=hl_token3)
 
     return base.convert("RGB")
 
