@@ -67,3 +67,19 @@ Mọi prompt tạo ảnh cho bất kỳ ngành học nào đều cấu thành t�
 * **[BLOCK 5 - STRICT NEGATIVE (CẤM CHỮ TOÀN DIỆN)]:**
   `STRICT NEGATIVE: Absolutely NO text, NO words, NO letters, NO numbers, NO typography, NO watermark, NO logo, NO labels, NO gibberish, NO distorted anatomy, NO extra fingers, clean empty copy space on the left.`
 
+---
+
+### 3. CÔNG THỨC PROMPT BẮT BUỘC KHI CẦN AI GEMINI RENDER CHỮ TRỰC TIẾP (BÍ KÍP KHÓA DẤU UNICODE)
+
+Nếu muốn AI tự vẽ chữ trực tiếp trong poster, BẮT BUỘC phải áp dụng 4 nguyên tắc kỹ thuật sau:
+1. **Chỉ định font chuẩn Unicode:** Sử dụng Inter hoặc Roboto (2 font quốc dân ít lỗi dấu nhất đối với AI).
+2. **Kích hoạt chế độ render chất lượng cao:** Yêu cầu advanced text renderer, full Unicode support.
+3. **Khóa dấu không cho tách rời:** Đặt chữ trong ngoặc kép "..." và kèm chỉ thị: "Keep all Vietnamese diacritics strictly attached to their base letters (ă, â, ê, ô, ơ, ư, đ), do not separate accents from characters".
+4. **Định dạng hiển thị:** Chữ nằm ngang (horizontal), sắc nét, không bị méo mó (without distortion).
+
+#### Cú pháp Prompt chuẩn mẫu (Copy dùng ngay):
+```text
+A clear, high-resolution commercial graphic poster, featuring the exact text inside the quotation marks: "[NỘI DUNG TIẾNG VIỆT CẦN VIẾT]". Use clean sans-serif typography like Inter, Roboto or Arial. Render text with full Unicode support. Keep all Vietnamese diacritics strictly attached to their base letters (ă, â, ê, ô, ơ, ư, đ), do not separate accents from characters. The text must be horizontal, sharp, correctly spelled, and perfectly readable without any distortion. Advanced high-quality text rendering.
+```
+
+

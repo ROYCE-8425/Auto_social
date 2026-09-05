@@ -1001,13 +1001,26 @@ async def generate_gemini(
             return banner_res
         # Nếu Kiểu 2 lỗi thì tiếp tục thử Kiểu 1 bên dưới
 
+    has_quote_text = '"' in prompt or "“" in prompt or any(k in p_lower for k in ("vẽ chữ", "ghi chữ", "with text", "featuring text"))
+    if has_quote_text:
+        block_5 = (
+            "[BLOCK 5 - VIETNAMESE TYPOGRAPHY GUARDRAIL]: Use clean sans-serif typography like Inter, Roboto or Arial. "
+            "Render text with full Unicode support. Keep all Vietnamese diacritics strictly attached to their base letters (ă, â, ê, ô, ơ, ư, đ), "
+            "do not separate accents from characters. Use advanced high-quality font rendering, text must be horizontal, sharp, correctly spelled, and perfectly readable without any distortion.\n"
+            "STRICT NEGATIVE: Absolutely NO gibberish text, NO misspelled words, NO detached accents, NO duplicate faces, NO distorted hands, NO dark neon circuit lines."
+        )
+    else:
+        block_5 = (
+            "[BLOCK 5 - STRICT NEGATIVE]: Absolutely NO text, NO letters, NO words, NO typography, NO watermark, NO distorted hands, NO duplicate faces, NO dark neon circuit lines."
+        )
+
     creative_instructions = (
         "\n\nCRITICAL CREATIVE DIRECTOR & BRAND RULES:\n"
         "[BLOCK 1 - SUBJECT]: Authentic Vietnamese/Asian learner or professional in a modern, well-lit tech classroom or corporate office, confident and focused expression, grounded in the attached reference dataset.\n"
-        "[BLOCK 2 - COMPOSITION]: Square 1:1 framing (2000x2000 px). Position subject at lower-third or golden ratio. Leave generous, clean negative space at the top third for official brand logo overlay.\n"
+        "[BLOCK 2 - COMPOSITION]: Square 1:1 framing (2000x2000 px). Position subject at lower-third or golden ratio. Leave generous, clean negative space at the top third or left side for official brand logo and graphic overlay.\n"
         "[BLOCK 3 - LIGHTING & BRAND COLORS]: Commercial advertising studio key lighting, warm and bright atmosphere. Deep Royal Navy Blue (#0B2341) palette with vibrant Golden Yellow (#F59E0B) accents.\n"
         "[BLOCK 4 - STYLE]: Commercial education advertising photography, 8k resolution, crisp focus, natural skin texture, realistic, no uncanny valley.\n"
-        "[BLOCK 5 - STRICT NEGATIVE]: Absolutely NO text, NO letters, NO words, NO typography, NO watermark, NO distorted hands, NO duplicate faces, NO dark neon circuit lines."
+        + block_5
     )
     full_prompt = prompt + creative_instructions
 
