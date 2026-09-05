@@ -29,18 +29,18 @@ Logo luon file `chung/thsv-logo-2025.png`. Khong tin logo ve trong poster.
 - Poster Zoom + giao trinh Python xanh la (logo khong phai Sao Viet).
 - Bat ky logo/hotline/web khong phai Sao Viet.
 
-## Cover = xoay 2 kieu 1:1 VUONG (chuan Agency 2026)
+## Cover = 5 Layout Agency Đồ Họa Thực Chiến 1:1 VUÔNG (Chuẩn Facebook 2026)
 
-**Kieu 1 - Studio Graphic Poster 1:1 VUONG** (Dung AI Image Generation hoac mau-poster-do-hoa): Phong cach do hoa quang cao thuong mai cao cap. Anh sang studio, background sang xanh/trang tinh te, laptop hien dai hien thi phan mem, icon 3D noi khoi bong bay phat quang, chu typography lon sac net tren goc sang hoac panel rieng, nut CTA cam bo tron chuyen doi cao, footer hotline chuan.
+Mọi cover khóa học mặc định 100% sử dụng Deterministic Graphic Engine (banner_templates.py) kết hợp ảnh thật dataset + logo Sao Việt chuẩn vector/PNG + typography tiếng Việt chuẩn Unicode font Arial Bold:
+1. **split_right:** Cột trái (50%) là ảnh lớp học thật, cột phải (50%) là panel xanh navy thương hiệu với logo góc trên, tiêu đề lớn, gạch phân cách vàng kim, 3 điểm nổi bật và hotline.
+2. **split_left:** Đảo vị trí panel sang bên trái, ảnh thật bên phải nhằm tạo sự phong phú giữa các bài viết.
+3. **bottom_bar:** Ảnh chụp lớp học góc rộng sáng sủa chiếm 70% phía trên, dải panel thương hiệu navy chiếm 30% chân trang cùng các huy hiệu viên thuốc bo tròn hiện đại.
+4. **floating_card:** Ảnh lớp học tràn nền, một card thông tin bo góc nổi khối 3D với viền vàng ánh kim và bóng đổ mềm mại.
+5. **diagonal_slice:** Đường cắt vát chéo góc công nghệ hiện đại, tạo cảm giác chuyển động và tràn đầy năng lượng.
 
-**Kieu 2 - Clean Classroom Bottom-Bar 1:1 VUONG** (Anh lop hoc that + khung chan trang): Giu tron 75% khong gian lop hoc sang ro ben tren. Vung thong tin nam gon o 25% chan trang duoi voi gradient navy chuyen mau muot ma, 2 the vien thuoc loi ich thanh lich, logo Sao Viet tinh te o goc tren. CAM tuyet doi de chu len mat, lung hay man hinh hoc vien. CAM ve vien vang bao quanh anh.
+*(TUYỆT ĐỐI CẤM: Để AI tự vẽ chữ tiếng Việt lên ảnh dẫn đến lỗi font méo dấu như KÉ TOÀN, TÀI CHINC; CẤM để AI vẽ khung rỗng mất logo; CẤM style neon mạch điện tối tăm).*
 
-*(DA XOA BO HOAN TOAN: Style ve hop PIL 4 nut vuong tho kech, style vien vang bang khen, style neon mach dien toi tam, va style de chu len lung hoc vien do qua xau).*
-
-Xoay: luan phien 2 kieu cover 1:1 tren. Cam 2 bai lien tiep cung 1 kieu. Cam split-navy lam mac dinh.
-
-CAM mo `_xuat/` de tai su dung. Gen xong dang roi xoa cover.
-
-Hotline tren poster: 0931144858. Cam copy sdt mau ngoai.
-
-Kieu 2: CAM image_gen mat tre em / lop Tay tu trang.
+Xoay luân phiên 5 kiểu cover 1:1 trên. Cấm 2 bài liên tiếp cùng 1 kiểu.
+Logo: Bắt buộc dùng file `attachments/dataset/chung/thsv-logo-2025.png` trên thẻ bo góc nổi khối, luôn sắc nét 100%.
+Hotline trên poster: Lấy đúng từ brand kit hoặc mặc định 0931144858 / 0823552558.
+CẤM mở `_xuat/` để tái sử dụng. Đăng xong là xóa file tạm.
