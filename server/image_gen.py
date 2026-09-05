@@ -28,6 +28,10 @@ from typing import Any, Optional
 
 import httpx
 
+_CUR_DIR = Path(__file__).resolve().parent
+if str(_CUR_DIR) not in sys.path:
+    sys.path.insert(0, str(_CUR_DIR))
+
 import openai_oauth
 
 CODEX_RESPONSES_URL = "https://chatgpt.com/backend-api/codex/responses"
@@ -731,7 +735,15 @@ def generate_authentic_banner_cover(
     5 Layouts đa dạng: split_right, split_left, bottom_bar, floating_card, diagonal_slice.
     Font tiếng Việt Unicode chuẩn không lỗi dấu, tự động ngắt dòng thông minh, không lệch khung."""
     try:
-        import banner_templates
+        try:
+            import banner_templates
+        except ImportError:
+            try:
+                from server import banner_templates
+            except ImportError:
+                import sys
+                sys.path.insert(0, str(Path(__file__).resolve().parent))
+                import banner_templates
         vault = _resolve_vault(vault_root)
         content = parse_banner_content(prompt)
 
