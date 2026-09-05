@@ -162,6 +162,9 @@ async def handler_tests():
     vroot = Path(tempfile.mkdtemp(prefix="javis-fbvault-"))
     (vroot / "attachments").mkdir()
     (vroot / "attachments" / "a.jpg").write_bytes(b"img")
+    (vroot / "wiki" / "brand-kits").mkdir(parents=True, exist_ok=True)
+    (vroot / "wiki" / "brand-kits" / "p1.md").write_text("- Page ID: P1\n- Page test: true\n", encoding="utf-8")
+    caption_valid = "\n".join([f"Dong noi dung chuan {i}" for i in range(55)])
 
     class _CtxVault:
         vault_root = str(vroot)
@@ -173,7 +176,7 @@ async def handler_tests():
         return {"id": "PH1", "post_id": "P1_PH"}
 
     plug._post_file = _fake_post_file
-    r_ph_file = await plug._publish_photo({"photo": "attachments/a.jpg"}, _CtxVault())
+    r_ph_file = await plug._publish_photo({"photo": "attachments/a.jpg", "caption": caption_valid}, _CtxVault())
     check("fb_page_photo(file): upload đúng file trong vault + token Trang",
           filecalls["args"][0] == "P1/photos" and filecalls["args"][1].endswith("a.jpg")
           and filecalls["args"][3] == "PTOKA")
@@ -224,7 +227,7 @@ async def handler_tests():
 
     plug._post = _fake_post_seq
     r_alb = await plug._publish_album(
-        {"photos": ["https://ex.com/1.jpg", "attachments/a.jpg"], "message": "Bộ ảnh"}, _CtxVault())
+        {"photos": ["https://ex.com/1.jpg", "attachments/a.jpg"], "message": caption_valid}, _CtxVault())
     check("fb_page_album: ảnh URL up published=false",
           seq[0][0] == "P1/photos" and seq[0][1].get("url") == "https://ex.com/1.jpg"
           and seq[0][1].get("published") == "false")
@@ -232,7 +235,7 @@ async def handler_tests():
           filecalls["args"][0] == "P1/photos" and filecalls["args"][2].get("published") == "false")
     feed = seq[-1]
     check("fb_page_album: bài cuối POST P1/feed + message + đủ attached_media",
-          feed[0] == "P1/feed" and feed[1].get("message") == "Bộ ảnh"
+          feed[0] == "P1/feed" and feed[1].get("message") == caption_valid
           and json.loads(feed[1].get("attached_media[0]", "{}")).get("media_fbid") == "M1"
           and json.loads(feed[1].get("attached_media[1]", "{}")).get("media_fbid") == "PH1")
     check("fb_page_album: trả ok + số ảnh", '"ok": true' in r_alb.lower() and '"photos": 2' in r_alb)

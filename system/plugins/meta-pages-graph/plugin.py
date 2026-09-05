@@ -133,10 +133,12 @@ def _fb_plain_caption(msg):
 def _caption_chat_err(body):
     """Chặn văn mẫu AI / nhồi hết ngành / path file trên caption. Cả page test."""
     low = (body or "").lower()
-    if re.search(r"4\.0|thời đại số|thoi dai so|bạn có biết|ban co biet", low):
+    if re.search(r"4\.0|thời đại số|thoi dai so|bạn có biết|ban co biet|chinh phục mọi thử thách|chinh phuc moi thu thach|đồng hành cùng bạn|dong hanh cung ban", low):
         return (
             "ERROR: POST_SKIP ly-do=van-mau-ai khong-retry=1. "
-            "Cấm '4.0', 'thời đại số', 'bạn có biết'. Viết lại giọng kit, không Markdown."
+            "Cấm văn mẫu AI ('4.0', 'thời đại số', 'bạn có biết', 'chinh phục mọi thử thách', 'đồng hành cùng bạn'). "
+            "Viết bài chuẩn 7 phần chuyển đổi cao (viet-bai-facebook): Hook câu hỏi / tiêu đề IN HOA, nỗi đau thực tế, "
+            "kèm 1-1, không giới hạn số buổi, module cụ thể, ưu đãi, chân trang."
         )
     if "attachments/" in low or "thsv-logo" in low and ".png" in low:
         return (
@@ -181,12 +183,12 @@ def _caption_kit_err(msg, page_id, cctx):
                 "CẤM gọi lại tool đăng. CẤM [[NEEDS_INPUT]].")
     body = msg or ""
     lines = [ln for ln in body.splitlines() if ln.strip()]
-    if kit and len(lines) < 45:
+    if kit and len(lines) < 50:
         return (
             "ERROR: POST_SKIP ly-do=caption-ngan khong-retry=1. "
             "Caption khóa học phải 60–120 dòng (7 phần viet-bai-facebook), "
-            f"đang có {len(lines)} dòng. Không rút ngắn vì tối ưu phí. "
-            "CẤM gọi đăng lại bài cụt."
+            f"đang có {len(lines)} dòng. CẤM rút ngắn để tiết kiệm token. "
+            "Bắt buộc viết đủ 7 phần: Hook, nỗi đau/tư duy, thành quả cụ thể, cam kết 1-1 không giới hạn số buổi, module, ưu đãi học phí, chân trang."
         )
     for ln in body.splitlines():
         if ln.count("|") >= 2:

@@ -52,33 +52,66 @@ Chan trang: Hotline `093 1144 858` hoac `0823 552 558`, `#tinhocsaoviet` + hasht
 - Không em dash. Page dùng dấu ba chấm hoặc xuống dòng.
 - Page chính dùng nhiều emoji mũi tên. Đó là giọng họ, không phải "văn mẫu AI" cần xóa.
 
-## Mẫu rút gọn (bám bài THVP cấp tốc trên page chính)
+## Mẫu chuẩn mực Tin Học Văn Phòng Cấp Tốc chuyển đổi cao (7 Phần đầy đặn)
 
 ```
-💻⚡ KHÓA HỌC TIN HỌC VĂN PHÒNG CẤP TỐC CHO NGƯỜI ĐI LÀM TẠI TIN HỌC SAO VIỆT
+‼ CHƯƠNG TRÌNH ƯU ĐÃI ĐẶC BIỆT ‼ - 🎁 "GIẢM ĐẾN 30% HỌC PHÍ KHÓA HỌC TIN HỌC VĂN PHÒNG CẤP TỐC CHO NGƯỜI ĐI LÀM" 🎁
 
-❓ Bạn có đang gặp những tình huống này trong công việc?
+Nắm trong tay trọn bộ kỹ năng Tin Học Văn Phòng Căn Bản Đến Chuyên Nghiệp (Máy tính - Word - Excel - PowerPoint - Email) chỉ với 1 Khóa học.
 
-👉 Nhận một file Excel nhưng loay hoay mãi chưa xử lý xong
-👉 Làm báo cáo mất hàng giờ vì chưa biết dùng hàm và công cụ phù hợp
-👉 Soạn văn bản, hợp đồng còn chậm
-👉 Làm PowerPoint nhưng slide chưa chuyên nghiệp
-👉 Thường xuyên phải nhờ đồng nghiệp hỗ trợ xử lý file
+👉 Xem chi tiết khóa học của bạn tại đây: https://blogdaytinhoc.com/trung-tam-tin-hoc-thuc-hanh-sao-viet-dao-tao-vi-tinh-van-phong-cho-nguoi-di-lam-51
 
-🚀 KHÓA HỌC TIN HỌC VĂN PHÒNG CẤP TỐC
-TẠI TIN HỌC SAO VIỆT
+🎓 Khóa Học Tin Học Văn Phòng Cấp Tốc - Không Giới Hạn Thời Gian - Nhanh Chóng Thành Thạo Kỹ Năng Vi Tính Văn Phòng
+- Tự tin làm mọi công việc của một nhân viên văn phòng với 1 khóa học tại Trung Tâm Tin Học Sao Việt!
 
-👉 Không học lan man
-👉 Không lý thuyết dài dòng
-👉 Học nhanh - thực hành nhiều - làm được ngay
+THÔNG TIN KHÓA HỌC:
+🗓 Khai giảng liên tục hàng tuần | 🎁 Với ưu đãi lớn nhất năm (Giảm 30% Học Phí) 🎁
+⏰ Thời gian học linh động, đăng ký có thể học ngay mà không cần xếp lớp, có thể học liên tục không giới hạn số buổi cho đến khi thành thạo.
+🏘 Địa điểm học: 13 cơ sở đào tạo của Tin Học Sao Việt tại Thành Phố Hồ Chí Minh, Bình Dương, Đồng Nai, Vũng Tàu.
 
-⭐ Học thực hành trực tiếp
-⭐ Cầm tay chỉ việc
-⭐ Nội dung sát công việc thực tế
+- VỚI NỘI DUNG ĐƯỢC XÂY DỰNG BÀI BẢN, MANG TÍNH ỨNG DỤNG THỰC TẾ BẠN SẼ:
+✅ Nắm vững kỹ năng sử dụng máy vi tính, các thao tác, phím tắt cơ bản, quản lý tập tin khoa học.
+✅ Biết cách soạn thảo nhanh, chuẩn, đẹp các loại văn bản như hợp đồng, báo giá, sơ yếu lý lịch, giấy mời…
+✅ Kỹ thuật sử dụng Style định dạng nhanh và đồng nhất văn bản, cách tạo mục lục tự động, mục lục hình ảnh.
+✅ Thao tác sử dụng Excel thành thạo, tạo bảng tính đẹp, nhanh và chuyên nghiệp, tạo báo cáo động.
+✅ Xử lý nhanh và chuẩn trong quá trình in ấn.
+✅ Tư duy sử dụng hàm, công thức và các công cụ thống kê như lọc, sắp xếp, tìm kiếm phục vụ công việc của nhân viên văn phòng.
+✅ Thành thạo kỹ năng sử dụng Email, internet, lưu trữ đám mây,...
 
-📞 ĐĂNG KÝ NGAY
-Hotline/Zalo: 093 11 44 858
-👉 Inbox ngay để được tư vấn lớp học phù hợp!
+🏆 Hơn 5000 Học Viên Đã Và Đang Tham Gia Học Tại Tin Học Sao Việt Vì:
+1️⃣ Hệ thống cơ sở đào tạo tin học chất lượng cao trên toàn quốc.
+2️⃣ Đội ngũ giảng viên chuyên nghiệp, dạy kèm tận tình cho từng học viên.
+3️⃣ Nhanh chóng làm được việc với thời gian học cấp tốc.
+4️⃣ Môi trường học tập chuyên nghiệp, trao đổi thân thiện, Giảng viên tận tình.
+5️⃣ Thời gian học linh động theo thời gian của học viên.
+6️⃣ Không giới hạn số buổi học cho đến khi bạn làm được việc.
+7️⃣ Học viên hoàn thành khóa học đạt yêu cầu sẽ được cấp chứng chỉ CHUYÊN VIÊN TIN HỌC VĂN PHÒNG.
+
+🔥 ĐẶC BIỆT: Đăng Ký Cùng Bạn Bè Để Nhận Quà Tặng Đến 300K
+🔥 ƯU ĐÃI: Bạn Là Học Viên Cũ - Nhận Ngay Ưu Đãi Cộng Dồn 10% Học Phí
+📢 Nhanh Tay Đăng Ký Để Nhận Ngay Ưu Đãi Đặc Biệt Từ Các Khóa Học Tin Học Văn Phòng Các Bạn Nhé!
+__________________________________
+TRUNG TÂM ĐÀO TẠO TIN HỌC SAO VIỆT
+Chuyên Nghiệp - Tận Tâm - Học Thành Nghề
+__________________________________
+Website: blogdaytinhoc.com
+Hotline: 093 1144 858
+Hỗ trợ 24/7: 0818 552 558
+
+Địa Chỉ:
+🏘 Bình Thạnh: 21/12 Lê Trực, Phường 7, Bình Thạnh, TP HCM
+🏘 Quận 7: 515 B2/12, Lê Văn Lương, Tân Phong, Quận 7, TP HCM
+🏘 Quận 6: Phòng A206 số 189 Kinh Dương Vương, Phường 12, Quận 6 (Trường CĐ GTVT Trung Ương VI)
+🏘 Quận 12: 247/31 Hà Huy Giáp, Thạnh Lộc, Quận 12, TP HCM
+🏘 TP Thủ Đức: 49 Đường Số 3, Tăng Nhơn Phú B, TP. Thủ Đức
+🏘 Tân Bình: 180 Phạm Văn Bạch, Phường 15, Quận Tân Bình
+🏘 Biên Hoà: 91 Đoàn Văn Cự, P. Tam Hòa, Biên Hòa, Đồng Nai
+🏘 Long Thành: 72 Đinh Bộ Lĩnh, Lộc An, Long Thành, Đồng Nai
+🏘 Dĩ An: 184/19/11 Đặng Văn Mây, KP. Đông Chiêu, P. Tân Đông Hiệp, Dĩ An, Bình Dương
+🏘 Thuận An: 1/513 KDC TÀI LỰC, Tổ 9, Khu phố Hòa Lân 2, Thuận An, Bình Dương
+🏘 Thủ Dầu Một: Số 107, D5, KDC Phú Hòa 1, Khu 4, TP. Thủ Dầu Một
+🏘 Tân Uyên: 30 Tổ 3, DT746, Kp Tân Hoá, Tân Uyên, Bình Dương
+🏘 Vũng Tàu: 293 Bình Giã, Phường 8, TP. Vũng Tàu, Bà Rịa - Vũng Tàu
 
 #tinhocsaoviet #tinhocvanphong #excel #word #powerpoint
 ```

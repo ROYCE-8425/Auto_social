@@ -545,10 +545,11 @@ async def generate_gemini(
         if "image" not in (model or "").lower():
             model = "gemini-2.5-flash-image"
         prompt += (
-            "\n\nLOCK: The attached image(s) include the REAL brand logo. "
-            "Composite that logo in the top corner unchanged (no recolor, no warp). "
-            "NEVER draw file paths, NEVER render text like attachments/ or .png as a badge. "
-            "No dark sci-fi neon circuit. No empty buttons. Navy/purple + gold/cyan only if in prompt."
+            "\n\nCRITICAL CREATIVE & BRAND INSTRUCTIONS:\n"
+            "1. STRICTLY NO ENGLISH TEXT: All typography and badges MUST be in Vietnamese with proper diacritics (e.g. 'TIN HỌC VĂN PHÒNG', 'ƯU ĐÃI 30% HỌC PHÍ', 'DẠY KÈM 1-1'). NEVER generate English words like 'Enroll now', 'Professional Office IT', 'Register now', 'Course'.\n"
+            "2. GROUNDED IN DATASET: Take direct inspiration from the real Vietnamese students and modern classroom in the attached reference image(s). Maintain authentic Asian/Vietnamese subjects in a professional, friendly learning environment. NEVER invent Caucasian/Western stock faces.\n"
+            "3. EYE-CATCHING & VIBRANT (BẮT MẮT THU HÚT): Create a premium commercial education poster. Bright, clean studio lighting, high contrast, vivid Royal Blue and Golden Yellow brand colors, glossy 3D floating software icons with soft drop shadows, and sharp clean typography that pops on the mobile newsfeed.\n"
+            "4. CLEAN LAYOUT: Logo placed naturally in top corner. NEVER draw file paths (attachments/...) or empty buttons. Absolutely NO dark sci-fi neon circuit boards or murky backgrounds."
         )
 
     try:
