@@ -186,8 +186,8 @@ def _default_vault() -> str:
 
 def _resolve_vault(vault_root: Optional[str]) -> Path:
     if vault_root and os.path.isdir(vault_root):
-        return Path(vault_root)
-    return Path(_default_vault())
+        return Path(vault_root).resolve()
+    return Path(_default_vault()).resolve()
 
 
 def _attachments_dir(vault: Path) -> Path:
@@ -985,12 +985,12 @@ async def generate_gemini(
         # Nếu Kiểu 2 lỗi thì tiếp tục thử Kiểu 1 bên dưới
 
     creative_instructions = (
-        "\n\nCRITICAL CREATIVE & BRAND INSTRUCTIONS:\n"
-        "1. STRICTLY NO ENGLISH TEXT: All typography and badges MUST be in Vietnamese with proper diacritics "
-        "(e.g. 'TIN HỌC VĂN PHÒNG', 'ƯU ĐÃI 30% HỌC PHÍ', 'DẠY KÈM 1-1'). NEVER generate English words like 'Enroll now', 'Course'.\n"
-        "2. GROUNDED IN DATASET: Professional modern classroom with authentic Vietnamese/Asian students and instructors in a friendly, high-tech learning environment.\n"
-        "3. EYE-CATCHING & VIBRANT: Create a premium commercial education poster. Bright clean studio lighting, vivid Royal Blue and Golden Yellow brand colors, glossy 3D floating software icons with soft drop shadows, and sharp clean typography.\n"
-        "4. CLEAN LAYOUT: Leave clear space in the top corner for official brand logo overlay. NEVER draw raw file paths (attachments/...) or empty button boxes."
+        "\n\nCRITICAL CREATIVE DIRECTOR & BRAND RULES:\n"
+        "[BLOCK 1 - SUBJECT]: Authentic Vietnamese/Asian learner or professional in a modern, well-lit tech classroom or corporate office, confident and focused expression, grounded in the attached reference dataset.\n"
+        "[BLOCK 2 - COMPOSITION]: Square 1:1 framing (2000x2000 px). Position subject at lower-third or golden ratio. Leave generous, clean negative space at the top third for official brand logo overlay.\n"
+        "[BLOCK 3 - LIGHTING & BRAND COLORS]: Commercial advertising studio key lighting, warm and bright atmosphere. Deep Royal Navy Blue (#0B2341) palette with vibrant Golden Yellow (#F59E0B) accents.\n"
+        "[BLOCK 4 - STYLE]: Commercial education advertising photography, 8k resolution, crisp focus, natural skin texture, realistic, no uncanny valley.\n"
+        "[BLOCK 5 - STRICT NEGATIVE]: Absolutely NO text, NO letters, NO words, NO typography, NO watermark, NO distorted hands, NO duplicate faces, NO dark neon circuit lines."
     )
     full_prompt = prompt + creative_instructions
 
