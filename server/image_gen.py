@@ -24,7 +24,7 @@ import sys
 import time
 import uuid
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Dict, List, Optional, Union
 
 import httpx
 
@@ -223,9 +223,12 @@ def _default_vault() -> str:
     return str(Path(os.getenv("BRAINS_DIR", str(Path(__file__).parent.parent / "brains"))) / "Brain Default")
 
 
-def _resolve_vault(vault_root: Optional[str]) -> Path:
-    if vault_root and os.path.isdir(vault_root):
-        return Path(vault_root).resolve()
+def _resolve_vault(vault_root: Optional[Union[str, Path]]) -> Path:
+    if vault_root and os.path.isdir(str(vault_root)):
+        p = Path(vault_root).resolve()
+        if (p / "brains" / "Brain Default").is_dir() and not (p / "wiki").is_dir():
+            return (p / "brains" / "Brain Default").resolve()
+        return p
     return Path(_default_vault()).resolve()
 
 
@@ -658,74 +661,246 @@ def _extract_gencontent_image_b64(data: dict) -> Optional[str]:
     return None
 
 
-def parse_banner_content(prompt: str) -> dict:
-    """Trích xuất tiêu đề, phụ đề, điểm nổi bật, huy hiệu và thư mục ảnh từ prompt.
-    Tự động chuẩn hóa theo từng khóa học đặc trưng của Tin học Sao Việt."""
+def _kit_field(md: str, *labels: str) -> str:
+    """Trích xuất giá trị trường trong file markdown dạng '- Nhãn: Giá trị'."""
+    for lab in labels:
+        m = re.search(r"^[ \t]*[-*][ \t]*" + re.escape(lab) + r":[ \t]*(.*)$", md, re.M)
+        if m and m.group(1).strip():
+            return m.group(1).strip()
+    return ""
+
+
+def _extract_frontmatter_field(text: str, field_name: str) -> str:
+    """Trích xuất trường YAML frontmatter đơn giản."""
+    m = re.search(r"^" + re.escape(field_name) + r":\s*(.*)$", text, re.M)
+    return m.group(1).strip() if m else ""
+
+
+def load_course_info(course_id_or_tag: str, vault_root: Optional[Union[str, Path]] = None) -> Optional[dict]:
+    """Tải hồ sơ tri thức khóa học từ wiki/courses/<id>.md.
+    Đảm bảo 100% dữ liệu chuyên môn (title, subtitle, highlights, tools, v.v.) chuẩn xác,
+    chống tuyệt đối hiện tượng AI bịa đặt nội dung khóa học."""
+    vault = _resolve_vault(vault_root)
+    courses_dir = vault / "wiki" / "courses"
+    if not courses_dir.is_dir():
+        courses_dir = vault / "brains" / "Brain Default" / "wiki" / "courses"
+        if not courses_dir.is_dir():
+            return None
+
+    target = (course_id_or_tag or "").strip().lower()
+    if not target:
+        return None
+
+    matched_file = None
+    for md_file in courses_dir.glob("*.md"):
+        if md_file.name.startswith("_"):
+            continue
+        stem = md_file.stem.lower()
+        if stem == target or stem.replace(" ", "") == target.replace(" ", "") or stem.replace("-", "") == target.replace("-", ""):
+            matched_file = md_file
+            break
+        try:
+            txt = md_file.read_text(encoding="utf-8")
+        except OSError:
+            continue
+        m_id = re.search(r"^id:\s*(.*)$", txt, re.M)
+        if m_id and m_id.group(1).strip().lower() == target:
+            matched_file = md_file
+            break
+        m_aliases = re.search(r"^aliases:\s*\[(.*?)\]", txt, re.M)
+        if m_aliases:
+            aliases = [a.strip().lower() for a in m_aliases.group(1).split(",")]
+            if target in aliases or any(target in a or a in target for a in aliases):
+                matched_file = md_file
+                break
+
+    if not matched_file:
+        return None
+
+    try:
+        content = matched_file.read_text(encoding="utf-8")
+    except OSError:
+        return None
+
+    def _extract_list_items(header_regex: str, text: str) -> List[str]:
+        items = []
+        m = re.search(header_regex, text, re.I)
+        if not m:
+            return items
+        start = m.end()
+        lines = text[start:].splitlines()
+        for l in lines:
+            l_strip = l.strip()
+            if not l_strip:
+                continue
+            if l_strip.startswith("##") or (l_strip.startswith("- **") and not l_strip.startswith("- **" + header_regex)):
+                break
+            if l_strip.startswith(("*", "-", "•")):
+                val = re.sub(r"^[*•-]\s*", "", l_strip).strip()
+                if val:
+                    items.append(val)
+            elif re.match(r"^\d+\.\s*", l_strip):
+                val = re.sub(r"^\d+\.\s*", "", l_strip).strip()
+                if val:
+                    items.append(val)
+        return items
+
+    folder = matched_file.stem
+    m_folder = re.search(r"^dataset_folder:\s*(?:attachments/dataset/)?([^/\n\r]+)", content, re.M)
+    if m_folder:
+        folder = m_folder.group(1).strip()
+
+    titles = _extract_list_items(r"Tiêu đề gợi ý|Title Hooks", content)
+    subtitles = _extract_list_items(r"Phụ đề gợi ý|Subtitle", content)
+    highlights = _extract_list_items(r"Kho Highlights chuẩn|Highlights", content)
+    badges = _extract_list_items(r"Huy hiệu gợi ý|Badge Text", content)
+
+    layouts = []
+    m_lay = re.search(r"Layout banner phù hợp[:\s]+([^\n\r]+)", content, re.I)
+    if m_lay:
+        layouts = [x.strip() for x in m_lay.group(1).split(",") if x.strip()]
+
+    return {
+        "id": matched_file.stem,
+        "name": _extract_frontmatter_field(content, "name") or matched_file.stem,
+        "folder": folder,
+        "titles": titles,
+        "subtitles": subtitles,
+        "highlights": highlights,
+        "badges": badges,
+        "recommended_layouts": layouts,
+        "raw_md": content,
+    }
+
+
+def load_brand_kit_info(page_identifier: Optional[str] = None, vault_root: Optional[Union[str, Path]] = None) -> Optional[dict]:
+    """Tải Brand Kit của Fanpage từ wiki/brand-kits/<page>.md.
+    Lấy đúng Hotline riêng của Fanpage, Tên giao dịch, Logo và Màu thương hiệu."""
+    vault = _resolve_vault(vault_root)
+    kit_dir = vault / "wiki" / "brand-kits"
+    if not kit_dir.is_dir():
+        kit_dir = vault / "brains" / "Brain Default" / "wiki" / "brand-kits"
+        if not kit_dir.is_dir():
+            return None
+
+    target = str(page_identifier or "").strip().lower()
+    matched_file = None
+
+    if target:
+        for md_file in kit_dir.glob("*.md"):
+            if md_file.name.startswith("_"):
+                continue
+            stem = md_file.stem.lower()
+            if stem == target or stem.replace("-", "") == target.replace("-", ""):
+                matched_file = md_file
+                break
+            try:
+                txt = md_file.read_text(encoding="utf-8")
+            except OSError:
+                continue
+            pid = _kit_field(txt, "Page ID", "page_id", "ID Fanpage", "ID Trang")
+            if pid and pid.lower() == target:
+                matched_file = md_file
+                break
+            pname = (_kit_field(txt, "Tên Fanpage") or "").lower()
+            if target in pname or pname in target:
+                matched_file = md_file
+                break
+
+    if not matched_file:
+        for cand in ("thsv-page-chinh.md", "royce-shop.md", "_mac-dinh.md"):
+            f = kit_dir / cand
+            if f.is_file():
+                matched_file = f
+                break
+
+    if not matched_file:
+        for md_file in kit_dir.glob("*.md"):
+            if not md_file.name.startswith("_"):
+                matched_file = md_file
+                break
+
+    if not matched_file:
+        return None
+
+    try:
+        md = matched_file.read_text(encoding="utf-8")
+    except OSError:
+        return None
+
+    stem = matched_file.stem
+    name = _kit_field(md, "Tên Fanpage") or stem
+    brand_name = _kit_field(md, "Tên giao dịch", "Tên thương hiệu") or "TRUNG TÂM TIN HỌC SAO VIỆT"
+    hotline = _kit_field(md, "Hotline / Zalo", "Hotline riêng", "Hotline")
+    logo_path = _kit_field(md, "Logo chính", "Logo")
+    logo_white = _kit_field(md, "Logo trắng")
+    brand_color = _kit_field(md, "Màu chính")
+    secondary_color = _kit_field(md, "Màu phụ")
+    address = _kit_field(md, "Cơ sở / địa chỉ", "Địa chỉ")
+
+    return {
+        "file": matched_file.name,
+        "name": name,
+        "brand_name": brand_name,
+        "hotline": hotline or None,
+        "logo_path": logo_path or None,
+        "logo_white": logo_white or None,
+        "brand_color": brand_color or None,
+        "secondary_color": secondary_color or None,
+        "address": address or None,
+        "raw_md": md,
+    }
+
+
+def parse_banner_content(
+    prompt: str,
+    course_id: Optional[str] = None,
+    vault_root: Optional[Union[str, Path]] = None,
+) -> dict:
+    """Trích xuất tiêu đề, phụ đề, điểm nổi bật, huy hiệu và thư mục ảnh.
+    Ưu tiên tải từ Hồ sơ tri thức chuẩn wiki/courses/<course_id>.md, chống bịa đặt nội dung.
+    Đồng thời hỗ trợ nạp/ghi đè linh hoạt qua prompt."""
     p_lower = (prompt or "").lower()
 
-    # Mặc định: Tin học văn phòng
-    title = "TIN HỌC VĂN PHÒNG CẤP TỐC"
-    subtitle = "Thành Thạo Sau 1 Khóa Học"
-    highlights = [
-        "Kèm 1-1 đến khi thành thạo",
-        "Thực hành 100% trên máy tính",
-        "Lịch học linh hoạt sáng - tối",
-    ]
-    badge_text = "ƯU ĐÃI 30% HỌC PHÍ"
-    folder = "tin-hoc _ai"
+    # 1. Xác định course_id
+    detected_course = course_id
+    if not detected_course:
+        m_course = re.search(r"(?:khóa học|khoa hoc|chủ đề|chu de|môn học|mon hoc|course)\s*:\s*([^\n\r,.;]+)", prompt, re.IGNORECASE)
+        if m_course:
+            detected_course = m_course.group(1).strip()
+        else:
+            if any(k in p_lower for k in ("kế toán", "ke toan", "thuế", "thue", "misa", "báo cáo tài chính", "bctc", "accounting")):
+                detected_course = "ke-toan"
+            elif any(k in p_lower for k in ("đồ họa", "do hoa", "photoshop", "illustrator", "corel", "indesign", "graphic design")):
+                detected_course = "do-hoa"
+            elif any(k in p_lower for k in ("autocad", "cad", "bản vẽ", "ban ve", "cơ khí", "xây dựng", "solidworks")):
+                detected_course = "ve-ky-thuat"
+            elif any(k in p_lower for k in ("trẻ em", "tre em", "bé", "scratch", "khóa hè", "mua he", "kids")):
+                detected_course = "tre-em"
+            elif any(k in p_lower for k in ("ai", "chatgpt", "copilot", "vibe coding", "n8n", "tự động hóa", "tu dong hoa")):
+                detected_course = "tin-hoc _ai"
+            elif any(k in p_lower for k in ("tin học", "tin hoc", "excel", "word", "powerpoint", "office")):
+                detected_course = "tin-hoc _ai"
 
-    if any(k in p_lower for k in ("ai", "chatgpt", "copilot", "vibe coding", "n8n", "tự động hóa", "tu dong hoa")):
-        title = "AI ỨNG DỤNG VĂN PHÒNG"
-        subtitle = "ChatGPT / Copilot Thực Chiến"
-        highlights = [
-            "Tối ưu Word Excel mỗi ngày",
-            "Tăng 5x hiệu suất làm việc",
-            "Dạy kèm 1-1 thực hành",
-        ]
-        badge_text = "CÔNG NGHỆ MỚI 2026"
-        folder = "tin-hoc _ai"
-    elif any(k in p_lower for k in ("kế toán", "ke toan", "thuế", "thue", "misa", "báo cáo tài chính", "bctc")):
-        title = "KHÓA HỌC KẾ TOÁN THỰC HÀNH"
-        subtitle = "Báo Cáo Tài Chính - Quyết Toán Thuế"
-        highlights = [
-            "Thực hành chứng từ thực tế",
-            "Kèm 1-1 cầm tay chỉ việc",
-            "Thành thạo phần mềm MISA",
-        ]
-        badge_text = "ƯU ĐÃI 30% HỌC PHÍ"
-        folder = "ke-toan"
-    elif any(k in p_lower for k in ("autocad", "cad", "bản vẽ", "ban ve", "cơ khí", "xây dựng", "solidworks")):
-        title = "KHÓA HỌC AUTOCAD THỰC CHIẾN"
-        subtitle = "Bản Vẽ Kỹ Thuật 2D & 3D"
-        highlights = [
-            "Thực hành 100% dự án thực tế",
-            "Đọc hiểu & bóc tách bản vẽ nhanh",
-            "Giảng viên kỹ sư giàu kinh nghiệm",
-        ]
-        badge_text = "ƯU ĐÃI 30% HỌC PHÍ"
-        folder = "ve-ky-thuat"
-    elif any(k in p_lower for k in ("đồ họa", "do hoa", "photoshop", "illustrator", "corel", "indesign")):
-        title = "THIẾT KẾ ĐỒ HỌA CHUYÊN NGHIỆP"
-        subtitle = "Photoshop & Illustrator Thực Chiến"
-        highlights = [
-            "Thiết kế banner poster chuyên nghiệp",
-            "Tư duy bố cục & màu sắc chuẩn in",
-            "Thực hành đồ án doanh nghiệp thực tế",
-        ]
-        badge_text = "ƯU ĐÃI 30% HỌC PHÍ"
-        folder = "do-hoa"
-    elif any(k in p_lower for k in ("trẻ em", "tre em", "bé", "học sinh", "khóa hè", "mua he")):
-        title = "TIN HỌC QUỐC TẾ CHO TRẺ EM"
-        subtitle = "Đánh Thức Tiềm Năng Công Nghệ"
-        highlights = [
-            "Phương pháp trực quan sinh động",
-            "Rèn luyện tư duy logic & sáng tạo",
-            "Giáo viên kiên nhẫn thân thiện",
-        ]
-        badge_text = "ƯU ĐÃI 30% HỌC PHÍ"
-        folder = "tin-hoc _ai"
+    course_data = load_course_info(detected_course or "tin-hoc _ai", vault_root=vault_root)
 
-    # Trích xuất tiêu đề nếu prompt chỉ định: "Tiêu đề: ...", "Title: ..."
+    # 2. Dữ liệu nền tảng từ Course Kit (Chuẩn xác, chống bịa đặt)
+    if course_data:
+        folder = course_data.get("folder", "tin-hoc _ai")
+        title = course_data["titles"][0] if course_data.get("titles") else "TIN HỌC VĂN PHÒNG"
+        subtitle = course_data["subtitles"][0] if course_data.get("subtitles") else None
+        highlights = course_data["highlights"][:3] if course_data.get("highlights") else None
+        badge_text = course_data["badges"][0] if course_data.get("badges") else None
+        recommended_layouts = course_data.get("recommended_layouts", [])
+    else:
+        folder = "tin-hoc _ai"
+        title = "TIN HỌC VĂN PHÒNG CHUYÊN NGHIỆP"
+        subtitle = None
+        highlights = None
+        badge_text = None
+        recommended_layouts = []
+
+    # 3. Ghi đè có chủ đích từ Prompt
     m_title = re.search(r"(?:tiêu đề|title)\s*:\s*([^\n\r,.;]+)", prompt, re.IGNORECASE)
     if m_title:
         val = m_title.group(1).strip().strip('"\'')
@@ -738,6 +913,25 @@ def parse_banner_content(prompt: str) -> dict:
         if len(val) >= 4:
             subtitle = val
 
+    # Badge text
+    if any(k in p_lower for k in ("không badge", "khong badge", "bỏ badge", "bo badge", "không huy hiệu", "khong huy hieu", "no badge")):
+        badge_text = None
+    else:
+        m_badge = re.search(r"(?:huy hiệu|badge|ưu đãi|uu dai)\s*:\s*([^\n\r,.;]+)", prompt, re.IGNORECASE)
+        if m_badge:
+            val = m_badge.group(1).strip().strip('"\'')
+            if len(val) >= 2:
+                badge_text = val.upper()
+
+    # Highlights
+    if any(k in p_lower for k in ("tối giản", "toi gian", "minimalist", "không bullet", "khong bullet", "không gạch đầu dòng", "no bullet")):
+        highlights = None
+    else:
+        bullet_items = re.findall(r"^[ \t]*[-*•]\s*([^\n\r]+)", prompt, re.M)
+        if bullet_items:
+            highlights = [b.strip() for b in bullet_items[:3] if b.strip()]
+
+    # Template
     tpl = None
     for cand in (
         "bento_box",
@@ -752,6 +946,9 @@ def parse_banner_content(prompt: str) -> dict:
         if cand in p_lower:
             tpl = cand
             break
+
+    if not tpl and recommended_layouts:
+        tpl = random.choice(recommended_layouts)
 
     palette_name = None
     pal_map = {
@@ -787,22 +984,29 @@ def parse_banner_content(prompt: str) -> dict:
         "folder": folder,
         "template_name": tpl,
         "palette_name": palette_name,
+        "course_id": detected_course,
     }
 
 
 def generate_authentic_banner_cover(
     vault_root: Optional[str] = None,
+    page_id: Optional[str] = None,
+    course_id: Optional[str] = None,
+    brand_kit: Optional[dict] = None,
     logo_path: Optional[str] = None,
     raw_path: Optional[str] = None,
     prompt: str = "",
     template_name: Optional[str] = None,
     save_under: Optional[str] = None,
     prefix: str = "banner-cover",
-    hotline: str = "093 1144 858",
+    hotline: Optional[str] = None,
+    footer_text: Optional[str] = None,
+    badge_text: Optional[str] = None,
+    highlights: Optional[List[str]] = None,
 ) -> Optional[dict]:
     """Tạo cover Kiểu 2: Ảnh thật lớp học từ dataset kết hợp layout đồ họa Agency 2026.
-    5 Layouts đa dạng: split_right, split_left, bottom_bar, floating_card, diagonal_slice.
-    Font tiếng Việt Unicode chuẩn không lỗi dấu, tự động ngắt dòng thông minh, không lệch khung."""
+    Tự động liên kết Brand Kit (Hotline, Logo, Tên Fanpage) và Course Kit (Dữ liệu khóa học chuẩn xác).
+    Thích ứng linh hoạt: Khi không có hotline, badge, hoặc highlights, layout tự co giãn hoàn hảo."""
     try:
         try:
             import banner_templates
@@ -814,9 +1018,24 @@ def generate_authentic_banner_cover(
                 sys.path.insert(0, str(Path(__file__).resolve().parent))
                 import banner_templates
         vault = _resolve_vault(vault_root)
-        content = parse_banner_content(prompt)
 
-        # 1. Xác định ảnh thật lớp học
+        # 1. Tải Brand Kit theo Fanpage
+        kit = brand_kit if isinstance(brand_kit, dict) else load_brand_kit_info(page_id, vault_root=vault)
+
+        # Trích xuất Hotline và Footer chuẩn từ Brand Kit (Không hardcode!)
+        final_hotline = hotline if hotline is not None else (kit.get("hotline") if kit else None)
+        final_footer = footer_text if footer_text is not None else (
+            (kit.get("brand_name") if kit else None) or (kit.get("name") if kit else None)
+        )
+
+        # 2. Phân tích nội dung khóa học
+        content = parse_banner_content(prompt, course_id=course_id, vault_root=vault)
+        if badge_text is not None:
+            content["badge_text"] = badge_text
+        if highlights is not None:
+            content["highlights"] = highlights
+
+        # 3. Xác định ảnh thật lớp học
         raw_file = None
         if raw_path:
             rp = Path(raw_path).expanduser()
@@ -843,13 +1062,19 @@ def generate_authentic_banner_cover(
         if not raw_file or not raw_file.is_file():
             return None
 
-        # 2. Xác định logo thương hiệu
+        # 4. Xác định logo thương hiệu (Ưu tiên Logo trong Brand Kit)
         logo_file = None
         if logo_path:
             lp = Path(logo_path).expanduser()
             lp = lp if lp.is_absolute() else (vault / lp)
             if lp.is_file():
                 logo_file = lp
+
+        if not logo_file and kit and kit.get("logo_path"):
+            lp = vault / kit["logo_path"]
+            if lp.is_file():
+                logo_file = lp
+
         if not logo_file:
             for def_l in [
                 vault / "attachments" / "dataset" / "chung" / "thsv-logo-2025.png",
@@ -859,17 +1084,14 @@ def generate_authentic_banner_cover(
                     logo_file = def_l
                     break
 
-        # 3. Chuẩn bị đường dẫn lưu
+        # 5. Chuẩn bị đường dẫn lưu
         sub = save_under or "attachments/dataset/_xuat"
         target_dir = (vault / sub).resolve()
         target_dir.mkdir(parents=True, exist_ok=True)
         fname = f"{prefix}-{int(time.time())}-{uuid.uuid4().hex[:6]}.jpg"
         out_file = target_dir / fname
 
-        # Nếu caller không chỉ định template_name, để None để banner_templates tự động
-        # nhận diện nếu là poster sẵn thì chạy Mode 1 (chỉ dán logo cực đẹp),
-        # nếu là ảnh thật thì mới bốc template ngẫu nhiên.
-        chosen_template = template_name
+        chosen_template = template_name or content.get("template_name")
 
         res_path = banner_templates.generate_authentic_banner(
             classroom_img_path=raw_file,
@@ -879,8 +1101,8 @@ def generate_authentic_banner_cover(
             subtitle=content["subtitle"],
             highlights=content["highlights"],
             badge_text=content["badge_text"],
-            footer_text="TRUNG TÂM TIN HỌC SAO VIỆT",
-            hotline=hotline,
+            footer_text=final_footer,
+            hotline=final_hotline,
             template_name=chosen_template,
             palette_name=content.get("palette_name"),
         )
@@ -898,6 +1120,9 @@ def generate_authentic_banner_cover(
             "provider": "authentic-classroom-banner",
             "model": f"banner-layout-{chosen_template or 'random'}",
             "prompt": prompt or content["title"],
+            "hotline": final_hotline,
+            "footer_text": final_footer,
+            "course_id": content.get("course_id"),
         }
     except Exception as e:
         print(f"[image_gen] Lỗi tạo authentic banner: {e}", file=sys.stderr)
@@ -906,24 +1131,34 @@ def generate_authentic_banner_cover(
 
 def create_dataset_fallback_cover(
     vault_root: Optional[str] = None,
+    page_id: Optional[str] = None,
+    course_id: Optional[str] = None,
+    brand_kit: Optional[dict] = None,
     logo_path: Optional[str] = None,
     raw_path: Optional[str] = None,
     save_under: Optional[str] = None,
     prefix: str = "gemini-img",
     prompt: str = "",
     template_name: Optional[str] = None,
+    hotline: Optional[str] = None,
+    footer_text: Optional[str] = None,
 ) -> Optional[dict]:
     """Tạo cover Kiểu 2 từ ảnh thật lớp học trong dataset + dán layout đồ họa thương hiệu chuẩn.
     Dùng khi Google Image API không khả dụng (404/quota), đảm bảo luôn có ảnh cover chuẩn 1:1 để đăng Facebook."""
-    # Ưu tiên tạo banner đồ họa hoàn chỉnh với 5 layouts chuẩn Agency
+    # Ưu tiên tạo banner đồ họa hoàn chỉnh với 8 layouts chuẩn Agency
     res = generate_authentic_banner_cover(
         vault_root=vault_root,
+        page_id=page_id,
+        course_id=course_id,
+        brand_kit=brand_kit,
         logo_path=logo_path,
         raw_path=raw_path,
         prompt=prompt,
         template_name=template_name,
         save_under=save_under,
         prefix=prefix,
+        hotline=hotline,
+        footer_text=footer_text,
     )
     if res and res.get("ok"):
         return res
@@ -1027,15 +1262,17 @@ async def generate_gemini(
     reference_images: Optional[list] = None,
     save_under: Optional[str] = None,
     style_preference: Optional[str] = None,
+    page_id: Optional[str] = None,
+    course_id: Optional[str] = None,
+    brand_kit: Optional[dict] = None,
+    hotline: Optional[str] = None,
+    footer_text: Optional[str] = None,
 ) -> dict:
     """Tạo 1 ảnh cover Fanpage chuẩn Facebook với tỷ lệ 7/3:
     1. 70% Tỷ lệ: Sinh Kiểu 2 (Ảnh thật lớp học dataset + Layout đồ họa Agency 2026).
     2. 30% Tỷ lệ: Sinh Kiểu 1 (AI 3D Poster sinh từ prompt qua Google Imagen / Gemini).
-    3. Nếu prompt hoặc style_preference yêu cầu cụ thể:
-       - 'kiểu 2' / 'ảnh thật' / 'dataset' / 'banner' -> 100% Kiểu 2.
-       - 'kiểu 1' / '3d' / 'mockup' / 'studio' -> Ưu tiên Kiểu 1, tự động cứu hộ về Kiểu 2 nếu lỗi Google API.
-    4. Tự động dán logo thật từ dataset chuẩn pixel.
-    5. Đa dạng 5 mẫu layout Agency không lỗi font, không lệch khung, không đè chữ lên học viên."""
+    3. Tự động liên kết Brand Kit (Hotline, Logo, Tên Fanpage) và Course Kit (Chống bịa đặt nội dung).
+    4. Thích ứng hoàn hảo khi thiếu thông tin, layout tự co giãn chuẩn xác."""
     prompt = (prompt or "").strip()
     if not prompt:
         return {"ok": False, "error": "Thiếu mô tả ảnh (prompt)."}
@@ -1044,6 +1281,12 @@ async def generate_gemini(
     chosen_model = resolve_gemini_image_model(model)
 
     v_root = _resolve_vault(vault_root)
+    kit = brand_kit if isinstance(brand_kit, dict) else load_brand_kit_info(page_id, vault_root=v_root)
+    resolved_hotline = hotline if hotline is not None else (kit.get("hotline") if kit else None)
+    resolved_footer = footer_text if footer_text is not None else (
+        (kit.get("brand_name") if kit else None) or (kit.get("name") if kit else None)
+    )
+
     logo_file = None
     raw_photo_file = None
     for p in (reference_images or []):
@@ -1054,10 +1297,15 @@ async def generate_gemini(
             raw_photo_file = s_p
 
     if not raw_photo_file:
-        content = parse_banner_content(prompt)
+        content = parse_banner_content(prompt, course_id=course_id, vault_root=v_root)
         chosen_rel = pick_dataset_photo(str(v_root), folder=content.get("folder", "tin-hoc _ai"), random_choice=True)
         if chosen_rel:
             raw_photo_file = chosen_rel
+
+    if not logo_file and kit and kit.get("logo_path"):
+        lp = v_root / kit["logo_path"]
+        if lp.is_file():
+            logo_file = str(kit["logo_path"])
 
     if not logo_file:
         for cand in [
@@ -1069,29 +1317,29 @@ async def generate_gemini(
                 break
 
     p_lower = prompt.lower()
-    # Kiểm tra xem có yêu cầu pure AI từ prompt hay không
     is_pure_ai = (
         style_preference == "ai_pure" or
         any(k in p_lower for k in ("ai pure", "chi ve anh ai", "không dùng ảnh thật", "khong dung anh that", "pure ai"))
     )
 
-    # Ưu tiên Chế độ 1 (Poster có sẵn trong dataset) hoặc Chế độ 2 (Ảnh thật dataset + Layout đồ họa)
-    # trừ khi người dùng chỉ định rõ ràng muốn sinh AI với Imagen
     force_imagen = any(k in p_lower for k in ("imagen", "gemini image", "tao anh ai", "tạo ảnh ai", "style 1", "kieu 1", "kiểu 1"))
     if not is_pure_ai and not force_imagen:
         banner_res = generate_authentic_banner_cover(
             vault_root=vault_root,
+            page_id=page_id,
+            course_id=course_id,
+            brand_kit=kit,
             logo_path=logo_file,
             raw_path=raw_photo_file,
             prompt=prompt,
             save_under=save_under,
             prefix=prefix,
+            hotline=resolved_hotline,
+            footer_text=resolved_footer,
         )
         if banner_res and banner_res.get("ok"):
             return banner_res
 
-    # BẢO VỆ TUYỆT ĐỐI CHỐNG LỖI CHÍNH TẢ AI:
-    # Lọc bỏ toàn bộ chuỗi text trong ngoặc kép để Google Imagen CHỈ vẽ nền visual sạch,
     # tuyệt đối không để AI tự vẽ chữ dẫn đến lỗi chính tả ("PHỞNG", "ŨNG", "THỰC HẢN").
     clean_prompt = re.sub(r'["“][^"”]+["”]', '', prompt)
     for kw in ("hiển thị chữ", "vẽ chữ", "ghi chữ", "with text", "featuring text"):
@@ -1209,7 +1457,7 @@ async def generate_gemini(
                     try:
                         import banner_templates
                         ai_base_img = Image.open(io.BytesIO(raw_bytes))
-                        content = parse_banner_content(prompt)
+                        content = parse_banner_content(prompt, course_id=course_id, vault_root=v_root)
                         lp = Path(logo_file) if logo_file else None
                         if lp and not lp.is_absolute():
                             lp = v_root / lp
@@ -1220,7 +1468,8 @@ async def generate_gemini(
                             subtitle=content["subtitle"],
                             highlights=content["highlights"],
                             badge_text=content["badge_text"],
-                            hotline=content.get("hotline", "093 1144 858"),
+                            footer_text=resolved_footer,
+                            hotline=resolved_hotline,
                         )
                         out_buf = io.BytesIO()
                         enhanced_img.save(out_buf, format="JPEG", quality=95)
@@ -1243,6 +1492,9 @@ async def generate_gemini(
                             "provider": "google-imagen",
                             "model": chosen_model,
                             "prompt": prompt,
+                            "hotline": resolved_hotline,
+                            "footer_text": resolved_footer,
+                            "course_id": content.get("course_id"),
                         }
         except Exception as e:
             err = str(e)
@@ -1250,11 +1502,16 @@ async def generate_gemini(
     # 3. TỰ ĐỘNG CỨU HỘ: Tạo Cover Kiểu 2 từ ảnh thật lớp học dataset + logo Sao Việt chuẩn
     fallback_res = create_dataset_fallback_cover(
         vault_root=vault_root,
+        page_id=page_id,
+        course_id=course_id,
+        brand_kit=kit,
         logo_path=logo_file,
         raw_path=raw_photo_file,
         save_under=save_under,
         prefix=prefix,
         prompt=prompt,
+        hotline=resolved_hotline,
+        footer_text=resolved_footer,
     )
     if fallback_res and fallback_res.get("ok"):
         return fallback_res

@@ -67,6 +67,11 @@ def register(ctx):
                     + folder + " (tin học = 'tin-hoc _ai' có dấu cách, không phải tin-hoc/_ai)."
                 )
 
+        page_id = args.get("page_id")
+        course_id = args.get("course_id")
+        hotline = args.get("hotline")
+        footer_text = args.get("footer_text")
+
         res = await image_gen.generate_gemini(
             prompt=prompt,
             aspect_ratio=aspect,
@@ -75,6 +80,10 @@ def register(ctx):
             model=model,
             reference_images=refs,
             save_under="attachments/dataset/_xuat",
+            page_id=page_id,
+            course_id=course_id,
+            hotline=hotline,
+            footer_text=footer_text,
         )
         if not res.get("ok"):
             return "ERROR: " + str(res.get("error") or "tạo ảnh thất bại")
@@ -125,6 +134,22 @@ def register(ctx):
                 "image": {
                     "type": "string",
                     "description": "1 ảnh raw dataset (chuỗi đường dẫn trong vault)"
+                },
+                "page_id": {
+                    "type": "string",
+                    "description": "ID hoặc slug của Fanpage để nạp đúng Brand Kit (Hotline, Logo, Tên Fanpage riêng)"
+                },
+                "course_id": {
+                    "type": "string",
+                    "description": "ID khóa học (tin-hoc _ai, ke-toan, do-hoa, ve-ky-thuat, tre-em) để lấy tri thức chuẩn"
+                },
+                "hotline": {
+                    "type": "string",
+                    "description": "Hotline chỉ định riêng (nếu không truyền sẽ tự lấy từ Brand Kit của Fanpage)"
+                },
+                "footer_text": {
+                    "type": "string",
+                    "description": "Tên thương hiệu ở footer (nếu không truyền sẽ tự lấy từ Brand Kit của Fanpage)"
                 }
             },
             "required": ["prompt"]

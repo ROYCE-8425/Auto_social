@@ -14,5 +14,7 @@ Không có thẻ khớp chủ đề bài → không đăng page đó.
 | ke-toan | Kế toán thực hành |
 | tin-hoc _ai | Tin học / AI |
 | ve-ky-thuat | Vẽ kỹ thuật |
+| tre-em | Tin học & Lập trình Trẻ Em |
 | tin-hoc | tin-hoc |
 | tin-hoc_ai | tin-hoc_ai |
+
