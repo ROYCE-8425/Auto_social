@@ -5,7 +5,7 @@
 **Tổng quan:** 1 agents · 9 skills · 1 workflows (0 bật) · 1 loops (0 bật) · 12 plugins (11 chạy)
 
 ## Agents
-- **Biên tập Facebook** (`bien-tap-facebook`) - Soạn caption Fanpage đúng brand kit và tự động đăng album công khai lên Facebook. · model gemini-2.5-flash · skills: dang-bai-facebook, viet-bai-facebook
+- **Biên tập Facebook** (`bien-tap-facebook`) - Soạn caption Fanpage đúng brand kit và tự động đăng album công khai lên Facebook. · model gemini-3.8-flash-high · skills: dang-bai-facebook, viet-bai-facebook
 
 ## Skills
 ### AI
