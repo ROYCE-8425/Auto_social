@@ -29,7 +29,7 @@ updated: 2026-09-06
   * ĐÀO TẠO KÈM 1-1
   * 80% THỰC HÀNH TRÊN MÁY
   * TỐT NGHIỆP ĐI LÀM NGAY
-- **Layout banner phù hợp:** curved_window, bento_box, split_left, floating_card
+- **Layout banner phù hợp:** photo_first_cinematic, curved_window, bento_box, split_left, floating_card
 
 ## 2. Thông tin giáo trình cho Thân bài Caption
 - **Bộ công cụ thực chiến:**

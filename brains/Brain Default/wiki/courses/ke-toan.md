@@ -29,7 +29,7 @@ updated: 2026-09-06
   * CHỨNG TỪ SỐNG 100%
   * ĐÀO TẠO KÈM 1-1
   * CAM KẾT RA NGHỀ
-- **Layout banner phù hợp:** split_right, bottom_bar, bento_box, floating_card
+- **Layout banner phù hợp:** photo_first_cinematic, split_right, bottom_bar, bento_box, floating_card
 
 ## 2. Thông tin giáo trình cho Thân bài Caption
 - **Bộ công cụ & Phần mềm đào tạo:**

@@ -22,7 +22,7 @@ import sys
 from pathlib import Path
 from typing import List, Optional, Tuple, Union
 
-from PIL import Image, ImageDraw, ImageFilter, ImageFont
+from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont
 
 
 def _project_root() -> Path:
@@ -1331,6 +1331,7 @@ def render_template_dual_hexagon(
     hotline: Optional[str] = None,
     brand_color: Tuple[int, int, int] = (11, 35, 65),
     palette: Optional[dict] = None,
+    classroom_img_2: Optional[Image.Image] = None,
 ) -> Image.Image:
     """Template 9: Dual Hexagon 1:1 VUÔNG (Chuẩn Agency Quốc tế 2026).
     - Tỷ lệ vuông 1:1 tuyệt đối chuẩn kích thước Facebook Album (2000x2000 px).
@@ -1345,8 +1346,8 @@ def render_template_dual_hexagon(
       + Hàng chân trang: Nút CTA 'ĐĂNG KÝ NGAY', Hotline và Website chi nhánh.
     - Cột phải:
       + Khung ảnh Tổ ong 2 tầng (Dual Hexagon):
-        * Lục giác 1 (Trên): Cận cảnh màn hình / bài tập thực hành.
-        * Lục giác 2 (Dưới): Chân dung học viên Sao Việt đang thực hành.
+        * Nếu có 2 ảnh: Mỗi lục giác hiển thị 1 ảnh khác biệt (VD: màn hình và học viên).
+        * Nếu có 1 ảnh: Khung liên tục (continuous aperture) liền mạch tự nhiên, không bao giờ cắt đôi/nhân bản người.
       + Viền lục giác phát sáng Cyan Glow / Electric Blue dày 12px.
       + Mảng khối đa giác navy sắc sảo phía sau tạo chiều sâu 3D.
       + Huy hiệu tròn giảm giá nổi bật giao thoa giữa 2 hình lục giác.
@@ -1419,44 +1420,49 @@ def render_template_dual_hexagon(
             draw.ellipse([dx - 2, dy - 2, dx + 2, dy + 2], fill=(255, 255, 255, 30))
 
     # 4. DUAL HEXAGON PHOTO MASKING
-    cx1, cy1, r1 = 1530, 620, 340
+    cx1, cy1, r1 = 1530, 620, 350
     pts1 = get_hexagon_points(cx1, cy1, r1)
 
-    cx2, cy2, r2 = 1380, 1260, 380
+    cx2, cy2, r2 = 1380, 1260, 390
     pts2 = get_hexagon_points(cx2, cy2, r2)
 
-    c_img_rgb = classroom_img.convert("RGB")
-    c_w, c_h = c_img_rgb.size
+    if classroom_img_2 is not None:
+        # Hai ảnh khác nhau: Mỗi lục giác hiển thị 1 ảnh độc lập chuẩn Agency
+        view1 = smart_crop_and_enhance(classroom_img, int(r1 * 2.3), int(r1 * 2.3)).convert("RGBA")
+        view2 = smart_crop_and_enhance(classroom_img_2, int(r2 * 2.3), int(r2 * 2.3)).convert("RGBA")
 
-    # View 1 for Hexagon 1: Zoom in on upper/right technical detail
-    crop1_box = (int(c_w * 0.25), 0, c_w, int(c_h * 0.70))
-    view1 = c_img_rgb.crop(crop1_box).resize((int(r1 * 2.2), int(r1 * 2.2)), Image.Resampling.LANCZOS).convert("RGBA")
+        mask1 = Image.new("L", (W, H), 0)
+        ImageDraw.Draw(mask1).polygon(pts1, fill=255)
+        hex1_layer = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+        hex1_layer.paste(view1, (int(cx1 - view1.width // 2), int(cy1 - view1.height // 2)))
+        canvas.paste(hex1_layer, (0, 0), mask1)
 
-    # View 2 for Hexagon 2: Center/Lower student focus
-    crop2_box = (0, int(c_h * 0.15), int(c_w * 0.85), c_h)
-    view2 = c_img_rgb.crop(crop2_box).resize((int(r2 * 2.2), int(r2 * 2.2)), Image.Resampling.LANCZOS).convert("RGBA")
+        mask2 = Image.new("L", (W, H), 0)
+        ImageDraw.Draw(mask2).polygon(pts2, fill=255)
+        hex2_layer = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+        hex2_layer.paste(view2, (int(cx2 - view2.width // 2), int(cy2 - view2.height // 2)))
+        canvas.paste(hex2_layer, (0, 0), mask2)
+    else:
+        # Một ảnh duy nhất: Khung liên tục (Continuous Aperture) liền mạch tự nhiên
+        all_x = [p[0] for p in pts1 + pts2]
+        all_y = [p[1] for p in pts1 + pts2]
+        min_x, max_x = min(all_x), max(all_x)
+        min_y, max_y = min(all_y), max(all_y)
+        env_w = int(max_x - min_x) + 40
+        env_h = int(max_y - min_y) + 40
+        env_x1 = int(min_x) - 20
+        env_y1 = int(min_y) - 20
 
-    # Composite Hexagon 1
-    mask1 = Image.new("L", (W, H), 0)
-    m1_d = ImageDraw.Draw(mask1)
-    m1_d.polygon(pts1, fill=255)
+        c_img = smart_crop_and_enhance(classroom_img, env_w, env_h).convert("RGBA")
 
-    hex1_layer = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-    v1_x = int(cx1 - view1.width // 2)
-    v1_y = int(cy1 - view1.height // 2)
-    hex1_layer.paste(view1, (v1_x, v1_y))
-    canvas.paste(hex1_layer, (0, 0), mask1)
+        comb_mask = Image.new("L", (W, H), 0)
+        cm_d = ImageDraw.Draw(comb_mask)
+        cm_d.polygon(pts1, fill=255)
+        cm_d.polygon(pts2, fill=255)
 
-    # Composite Hexagon 2
-    mask2 = Image.new("L", (W, H), 0)
-    m2_d = ImageDraw.Draw(mask2)
-    m2_d.polygon(pts2, fill=255)
-
-    hex2_layer = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-    v2_x = int(cx2 - view2.width // 2)
-    v2_y = int(cy2 - view2.height // 2)
-    hex2_layer.paste(view2, (v2_x, v2_y))
-    canvas.paste(hex2_layer, (0, 0), mask2)
+        photo_layer = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+        photo_layer.paste(c_img, (env_x1, env_y1))
+        canvas.paste(photo_layer, (0, 0), comb_mask)
 
     draw = ImageDraw.Draw(canvas)
 
@@ -1756,11 +1762,204 @@ def render_template_bauhaus_grid(
     return canvas.convert("RGB")
 
 
+
+def render_template_photo_first_cinematic(
+    classroom_img: Image.Image,
+    logo_path: Optional[Union[str, Path]] = None,
+    title: str = "TIN HỌC VĂN PHÒNG CẤP TỐC",
+    subtitle: Optional[str] = None,
+    highlights: Optional[List[str]] = None,
+    badge_text: Optional[str] = None,
+    footer_text: Optional[str] = None,
+    hotline: Optional[str] = None,
+    brand_color: Tuple[int, int, int] = (10, 25, 48),
+    palette: Optional[dict] = None,
+) -> Image.Image:
+    """Template 11: Photo-First Cinematic (Thiết kế Lấy Ảnh Thật Làm Chủ Đạo - Chuẩn Agency Quốc Tế).
+    - Triết lý cốt lõi: Ảnh lớp học thật là tài sản uy tín nhất, KHÔNG BAO GIỜ bị cắt xẻ, ép khối méo mó hay nhân bản người.
+    - Xử lý ảnh chuyên nghiệp (Colorist Grading):
+      + Tăng nhẹ contrast (+12%), đẩy độ rực màu ấm áp (+18%), tăng độ nét chi tiết (+25%).
+      + Ảnh phủ rộng 75% - 80% không gian bên phải và trung tâm, giữ nguyên trọn vẹn chủ thể (học viên, giáo viên, màn hình máy tính).
+    - Hiệu ứng chuyển cảnh điện ảnh (Cinematic Cosine Ease Gradient):
+      + Chuyển màu mượt mà từ nền thương hiệu sẫm màu sang ảnh thật, không dùng vách ngăn hình học cứng.
+    - Cột thông tin sang trọng bên trái:
+      + Logo Sao Việt nổi bật với badge bảo chứng.
+      + Tagline / Eyebrow hiện đại.
+      + Tiêu đề chữ lớn sắc nét Be Vietnam Pro.
+      + Huy hiệu đặc quyền (Pill badge) cam rực rỡ viền kim loại.
+      + Phụ đề truyền tải giá trị khóa học.
+      + Danh sách lợi ích với biểu tượng checkmark phát sáng.
+      + Huy hiệu ưu đãi / bảo chứng nổi khối (Glow badge).
+      + Chân trang: Nút CTA Đăng ký ngay + Hotline + Website.
+    """
+    W, H = 2000, 2000
+    pal = palette or COLOR_PALETTES["royal_sapphire"]
+    bg_pri = pal.get("bg_primary", brand_color)
+    accent_gold = pal.get("accent_gold", (255, 215, 0))
+    accent_cyan = pal.get("accent_cyan", (56, 189, 248))
+    badge_bg = pal.get("badge_bg", (234, 88, 12))
+
+    # 1. Tinh chỉnh màu chuyên nghiệp cho ảnh thật (Colorist Grading)
+    raw_img = classroom_img.convert("RGB")
+    enh_con = ImageEnhance.Contrast(raw_img).enhance(1.12)
+    enh_col = ImageEnhance.Color(enh_con).enhance(1.18)
+    enh_sharp = ImageEnhance.Sharpness(enh_col).enhance(1.25)
+
+    # Scale photo để bao phủ 75% - 80% canvas bên phải
+    target_pw = 1520
+    target_ph = H
+    sw, sh = enh_sharp.size
+    scale = max(target_pw / float(sw), target_ph / float(sh))
+    rw = int(sw * scale)
+    rh = int(sh * scale)
+    scaled_photo = enh_sharp.resize((rw, rh), Image.Resampling.LANCZOS)
+    crop_top = max(0, (rh - target_ph) // 2)
+    crop_left = max(0, rw - target_pw)
+    cropped_photo = scaled_photo.crop((crop_left, crop_top, crop_left + target_pw, crop_top + target_ph))
+
+    # 2. Canvas base: Nền Brand Color sẫm màu
+    canvas = Image.new("RGBA", (W, H), (*bg_pri, 255))
+    canvas.paste(cropped_photo.convert("RGBA"), (W - target_pw, 0))
+
+    # 3. Cinematic Ease Gradient (Cosine Curve từ x = 720 đến x = 1520)
+    grad_layer = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    gd = ImageDraw.Draw(grad_layer)
+    fade_start = 720
+    fade_end = 1520
+    for x in range(W):
+        if x < fade_start:
+            alpha = 255
+        elif x > fade_end:
+            alpha = 0
+        else:
+            t = (x - fade_start) / float(fade_end - fade_start)
+            alpha = int(255 * (0.5 * (1.0 + math.cos(t * math.pi))))
+        gd.line([(x, 0), (x, H)], fill=(*bg_pri, alpha))
+    canvas = Image.alpha_composite(canvas, grad_layer)
+
+    # Thêm vignette ở đáy canvas để đảm bảo chân trang dễ đọc 100%
+    bot_grad = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    bg_d = ImageDraw.Draw(bot_grad)
+    for y in range(H - 450, H):
+        t = (y - (H - 450)) / 450.0
+        alpha = int(210 * (t ** 1.5))
+        bg_d.line([(0, y), (W, y)], fill=(*bg_pri, alpha))
+    canvas = Image.alpha_composite(canvas, bot_grad)
+
+    draw = ImageDraw.Draw(canvas)
+
+    # 4. Typography & Branding bên trái
+    left_m = 120
+    max_tw = 960
+
+    # Logo Sao Việt
+    if logo_path and Path(logo_path).is_file():
+        paste_brand_logo(canvas, logo_path, (left_m, 120, left_m + 420, 120 + 130), bg_badge=True)
+    draw = ImageDraw.Draw(canvas)
+
+    # Tagline / Eyebrow
+    font_tag = get_font(28, bold=True)
+    draw.text((left_m, 290), "CHƯƠNG TRÌNH ĐÀO TẠO THỰC CHIẾN 2026", font=font_tag,
+              fill=accent_cyan if isinstance(accent_cyan, str) else f"#{accent_cyan[0]:02x}{accent_cyan[1]:02x}{accent_cyan[2]:02x}")
+
+    # Tiêu đề chính lớn
+    font_title, t_lines = fit_title_font(draw, title, max_tw, 340, start_size=82, min_size=52, weight="extrabold")
+    curr_y = 340
+    for tl in t_lines:
+        draw.text((left_m, curr_y), tl, font=font_title, fill="#FFFFFF")
+        tbb = draw.textbbox((0, 0), tl, font=font_title)
+        curr_y += (tbb[3] - tbb[1]) + 20
+
+    # Pill Feature Badge
+    curr_y += 10
+    pill_txt = badge_text if (badge_text and len(badge_text) >= 2) else "ĐÀO TẠO THỰC CHIẾN - KÈM 1-1"
+    font_pill = get_font(28, bold=True)
+    pill_bbox = draw.textbbox((0, 0), pill_txt, font=font_pill)
+    pill_w = (pill_bbox[2] - pill_bbox[0]) + 60
+    draw.rounded_rectangle([left_m, curr_y, left_m + pill_w, curr_y + 60], radius=18,
+                           fill=(*badge_bg, 250) if isinstance(badge_bg, tuple) else badge_bg,
+                           outline=(*accent_gold, 255) if isinstance(accent_gold, tuple) else accent_gold,
+                           width=2)
+    draw.text((left_m + 30, curr_y + 14), pill_txt, font=font_pill, fill="#FFFFFF")
+    curr_y += 105
+
+    # Subtitle
+    sub_txt = subtitle or "Giáo trình thực tế doanh nghiệp, cầm tay chỉ việc trên máy tính đến khi thành thạo."
+    font_sub = get_font(32, weight="medium")
+    sub_lines = wrap_text(draw, sub_txt, font_sub, max_tw)
+    for sl in sub_lines:
+        draw.text((left_m, curr_y), sl, font=font_sub, fill="#CBD5E1")
+        curr_y += 44
+    curr_y += 35
+
+    # 4 Bullets Highlights với Checkmark phát sáng
+    def_hl = [
+        "Thực hành 100% trên máy tính và bài toán thực tế",
+        "Kèm 1-1 theo sát tiến độ và năng lực từng học viên",
+        "Lịch học linh hoạt ca sáng - chiều - tối mỗi ngày",
+        "Cấp chứng chỉ tốt nghiệp chuẩn quốc tế đi làm ngay",
+    ]
+    bullets = highlights if (highlights and len(highlights) > 0) else def_hl
+    font_hl = get_font(32, bold=True)
+    for b in bullets[:4]:
+        cx, cy, cr = left_m + 20, curr_y + 20, 20
+        draw.ellipse([cx - cr, cy - cr, cx + cr, cy + cr],
+                     fill=(*accent_cyan, 255) if isinstance(accent_cyan, tuple) else accent_cyan)
+        draw.line([(cx - 7, cy), (cx - 2, cy + 7), (cx + 8, cy - 7)], fill="#FFFFFF", width=4)
+        draw.text((left_m + 60, curr_y), b, font=font_hl, fill="#F8FAFC")
+        curr_y += 75
+
+    # Floating Badge: 'ƯU ĐÃI 35%' với vòng tròn vàng phát sáng góc trên phải
+    st_cx, st_cy = W - 320, 260
+    st_r = 150
+    sh_st = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    ImageDraw.Draw(sh_st).ellipse([st_cx - st_r - 10, st_cy - st_r - 10, st_cx + st_r + 10, st_cy + st_r + 10], fill=(0, 0, 0, 160))
+    sh_st = sh_st.filter(ImageFilter.GaussianBlur(20))
+    canvas = Image.alpha_composite(canvas, sh_st)
+    draw = ImageDraw.Draw(canvas)
+
+    draw.ellipse([st_cx - st_r, st_cy - st_r, st_cx + st_r, st_cy + st_r],
+                 fill=(*badge_bg, 255) if isinstance(badge_bg, tuple) else badge_bg,
+                 outline=(*accent_gold, 255) if isinstance(accent_gold, tuple) else accent_gold,
+                 width=6)
+    font_st1 = get_font(26, bold=True)
+    font_st2 = get_font(74, weight="extrabold")
+    draw.text((st_cx - 56, st_cy - 74), "ƯU ĐÃI", font=font_st1, fill="#FFFFFF")
+    draw.text((st_cx - 86, st_cy - 26), "35%", font=font_st2, fill="#FFEB3B")
+    draw.text((st_cx - 82, st_cy + 52), "HỌC PHÍ 2026", font=font_st1, fill="#FEF3C7")
+
+    # Bottom Row: CTA Button + Hotline + Website
+    y_bot = 1750
+    btn_w = 360
+    btn_h = 84
+    draw.rounded_rectangle([left_m, y_bot, left_m + btn_w, y_bot + btn_h], radius=24,
+                           fill=(*badge_bg, 255) if isinstance(badge_bg, tuple) else badge_bg,
+                           outline=(*accent_gold, 255) if isinstance(accent_gold, tuple) else accent_gold,
+                           width=3)
+    font_btn = get_font(32, weight="extrabold")
+    draw.text((left_m + 48, y_bot + 21), "ĐĂNG KÝ NGAY", font=font_btn, fill="#FFFFFF")
+
+    web_x = left_m + btn_w + 50
+    font_web = get_font(28, bold=True)
+    draw.text((web_x, y_bot + 12), "🌐 www.tinhocsaoviet.edu.vn", font=font_web,
+              fill=accent_cyan if isinstance(accent_cyan, str) else f"#{accent_cyan[0]:02x}{accent_cyan[1]:02x}{accent_cyan[2]:02x}")
+    if hotline:
+        font_hot = get_font(36, weight="extrabold")
+        draw.text((web_x, y_bot + 48), f"📞 Hotline: {hotline}", font=font_hot,
+                  fill=accent_gold if isinstance(accent_gold, str) else f"#{accent_gold[0]:02x}{accent_gold[1]:02x}{accent_gold[2]:02x}")
+    elif footer_text:
+        font_ft = get_font(30, bold=True)
+        draw.text((web_x, y_bot + 48), f"📍 {footer_text.upper()}", font=font_ft, fill="#E2E8F0")
+
+    return canvas.convert("RGB")
+
+
 # ===========================================================================
 # DISPATCHER CHỌN TEMPLATE
 # ===========================================================================
 
 TEMPLATES = {
+    "photo_first_cinematic": render_template_photo_first_cinematic,
     "dual_hexagon": render_template_dual_hexagon,
     "bauhaus_grid": render_template_bauhaus_grid,
     "bento_box": render_template_bento_box,
@@ -1773,17 +1972,21 @@ TEMPLATES = {
     "3d_pills": render_template_3d_pills,
 }
 
-# Danh sách trọng số: ưu tiên các mẫu thiết kế Agency đỉnh cao
+# Danh sách trọng số: ưu tiên cao nhất cho thiết kế lấy ảnh thật làm chủ đạo (Photo-First Cinematic)
 TEMPLATE_CHOICES = [
+    "photo_first_cinematic",
+    "photo_first_cinematic",
+    "photo_first_cinematic",
+    "photo_first_cinematic",
     "dual_hexagon",
-    "bauhaus_grid",
     "bento_box",
     "curved_window",
-    "diagonal_slice",
-    "bottom_bar",
+    "floating_card",
     "split_right",
     "split_left",
-    "floating_card",
+    "bottom_bar",
+    "diagonal_slice",
+    "bauhaus_grid",
     "3d_pills",
 ]
 

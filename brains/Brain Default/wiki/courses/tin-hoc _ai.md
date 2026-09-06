@@ -29,7 +29,7 @@ updated: 2026-09-06
   * CÔNG NGHỆ MỚI 2026
   * ĐÀO TẠO KÈM 1-1
   * CHUẨN ĐẦU RA DOANH NGHIỆP
-- **Layout banner phù hợp:** split_right, floating_card, bento_box, bottom_bar
+- **Layout banner phù hợp:** photo_first_cinematic, split_right, floating_card, bento_box, bottom_bar
 
 ## 2. Thông tin giáo trình cho Thân bài Caption
 - **Bộ công cụ thực chiến:**

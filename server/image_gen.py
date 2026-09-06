@@ -946,19 +946,29 @@ def parse_banner_content(
 
     # Template
     tpl = None
-    for cand in (
-        "bento_box",
-        "curved_window",
-        "diagonal_slice",
-        "bottom_bar",
-        "split_right",
-        "split_left",
-        "floating_card",
-        "3d_pills",
-    ):
-        if cand in p_lower:
-            tpl = cand
-            break
+    if any(k in p_lower for k in ("cinematic", "photo_first", "ảnh thật", "anh that", "nguyên bản", "nguyen ban", "tự nhiên", "tu nhien")):
+        tpl = "photo_first_cinematic"
+    elif "dual_hexagon" in p_lower or "lục giác" in p_lower or "luc giac" in p_lower or "to ong" in p_lower:
+        tpl = "dual_hexagon"
+    elif "bauhaus" in p_lower:
+        tpl = "bauhaus_grid"
+    else:
+        for cand in (
+            "photo_first_cinematic",
+            "dual_hexagon",
+            "bauhaus_grid",
+            "bento_box",
+            "curved_window",
+            "diagonal_slice",
+            "bottom_bar",
+            "split_right",
+            "split_left",
+            "floating_card",
+            "3d_pills",
+        ):
+            if cand in p_lower:
+                tpl = cand
+                break
 
     if not tpl and recommended_layouts:
         tpl = random.choice(recommended_layouts)

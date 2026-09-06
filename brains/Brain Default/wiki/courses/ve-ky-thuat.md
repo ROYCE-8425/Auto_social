@@ -29,7 +29,7 @@ updated: 2026-09-06
   * ĐÀO TẠO KÈM 1-1
   * DỰ ÁN THỰC TẾ 100%
   * CHUẨN ĐẦU RA KỸ SƯ
-- **Layout banner phù hợp:** bottom_bar, split_right, diagonal_slice, bento_box
+- **Layout banner phù hợp:** photo_first_cinematic, bottom_bar, split_right, diagonal_slice, bento_box
 
 ## 2. Thông tin giáo trình cho Thân bài Caption
 - **Bộ công cụ & Phần mềm đào tạo:**
