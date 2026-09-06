@@ -1,8 +1,8 @@
 ---
 id: tre-em
 name: Tin Học & Lập Trình Cho Trẻ Em
-dataset_folder: attachments/dataset/_mau/
-aliases: [tin-hoc-tre-em, lap-trinh-nhis, scratch, python-junior]
+dataset_folder: attachments/dataset/tin-hoc _ai/
+aliases: [tin-hoc-tre-em, lap-trinh-nhi, scratch, python-junior]
 updated: 2026-09-06
 ---
 
