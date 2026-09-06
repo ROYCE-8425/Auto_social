@@ -108,6 +108,9 @@ def pick_dataset_photo(
     if d.is_dir():
         for p in d.iterdir():
             if p.is_file() and p.suffix.lower() in _IMG_MIME and " (1)" not in p.name:
+                # Bỏ các ảnh chụp màn hình/lưng ghế thô không đạt chuẩn thẩm mỹ
+                if p.name.startswith("Tin-hoc-00"):
+                    continue
                 candidates.append(p)
                 if any(k in p.name.lower() for k in premade_kws):
                     premade_candidates.append(p)

@@ -187,9 +187,12 @@ def smart_crop_and_enhance(img: Image.Image, target_w: int, target_h: int) -> Im
     return resized
 
 
-def paste_brand_logo(base: Image.Image, logo_path: Optional[Path], box: Tuple[int, int, int, int], bg_badge: bool = True) -> None:
+def paste_brand_logo(base: Image.Image, logo_path: Optional[Union[Path, str]], box: Tuple[int, int, int, int], bg_badge: bool = True) -> None:
     """Dán logo thương hiệu to rõ, nổi khối 3D với viền vàng ánh kim và bóng đổ mềm mại."""
-    if not logo_path or not logo_path.is_file():
+    if not logo_path:
+        return
+    lp = Path(logo_path)
+    if not lp.is_file():
         return
     try:
         x1, y1, x2, y2 = box
@@ -210,7 +213,7 @@ def paste_brand_logo(base: Image.Image, logo_path: Optional[Path], box: Tuple[in
             draw.rounded_rectangle([x1, y1, x2, y2], radius=22, fill=(255, 255, 255, 252),
                                    outline=(255, 215, 0, 230), width=3)
 
-        logo_img = Image.open(logo_path).convert("RGBA")
+        logo_img = Image.open(lp).convert("RGBA")
         pad_x = 26
         pad_y = 16
         max_lw = bw - (pad_x * 2)
@@ -1575,7 +1578,8 @@ def render_template_photo_first_cinematic(
     rh = int(sh * scale)
     scaled_photo = enh_sharp.resize((rw, rh), Image.Resampling.LANCZOS)
     crop_top = max(0, (rh - target_ph) // 2)
-    crop_left = max(0, rw - target_pw)
+    # Lấy góc 25% bên trái-giữa để bắt trọn học viên và màn hình máy tính, tránh lệch sang góc tường/lưng ghế
+    crop_left = max(0, min(rw - target_pw, int((rw - target_pw) * 0.25)))
     cropped_photo = scaled_photo.crop((crop_left, crop_top, crop_left + target_pw, crop_top + target_ph))
 
     # 2. Canvas base: Nền Brand Color sẫm màu
@@ -1670,24 +1674,7 @@ def render_template_photo_first_cinematic(
         draw.text((left_m + 60, curr_y), b, font=font_hl, fill="#F8FAFC")
         curr_y += 75
 
-    # Floating Badge: 'ƯU ĐÃI 35%' với vòng tròn vàng phát sáng góc trên phải
-    st_cx, st_cy = W - 320, 260
-    st_r = 150
-    sh_st = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-    ImageDraw.Draw(sh_st).ellipse([st_cx - st_r - 10, st_cy - st_r - 10, st_cx + st_r + 10, st_cy + st_r + 10], fill=(0, 0, 0, 160))
-    sh_st = sh_st.filter(ImageFilter.GaussianBlur(20))
-    canvas = Image.alpha_composite(canvas, sh_st)
-    draw = ImageDraw.Draw(canvas)
-
-    draw.ellipse([st_cx - st_r, st_cy - st_r, st_cx + st_r, st_cy + st_r],
-                 fill=(*badge_bg, 255) if isinstance(badge_bg, tuple) else badge_bg,
-                 outline=(*accent_gold, 255) if isinstance(accent_gold, tuple) else accent_gold,
-                 width=6)
-    font_st1 = get_font(26, bold=True)
-    font_st2 = get_font(74, weight="extrabold")
-    draw.text((st_cx - 56, st_cy - 74), "ƯU ĐÃI", font=font_st1, fill="#FFFFFF")
-    draw.text((st_cx - 86, st_cy - 26), "35%", font=font_st2, fill="#FFEB3B")
-    draw.text((st_cx - 82, st_cy + 52), "HỌC PHÍ 2026", font=font_st1, fill="#FEF3C7")
+    # Không vẽ sticker tròn lơ lửng đè lên ảnh học viên để giữ ảnh thật sạch đẹp, trang nhã
 
     # Bottom Row: CTA Button + Hotline + Website
     y_bot = 1750
@@ -1790,8 +1777,8 @@ def generate_authentic_banner(
     premade_kws = ("khai-giang", "uu-dai", "poster", "banner", "thong-bao", "looker-studio", "trung-tam-dao-tao", "hoc-ung-dung", "mau-")
     is_premade = any(k in c_path.name.lower() for k in premade_kws)
 
-    # Nếu ảnh là poster thiết kế sẵn và người dùng không ép buộc template -> Chế độ 1: Hoàn thiện poster chuẩn đăng ngay
-    if is_premade and not template_name:
+    # Nếu ảnh là poster thiết kế sẵn -> Chế độ 1: Hoàn thiện poster chuẩn đăng ngay (không vẽ đè layout lên poster đồ họa)
+    if is_premade:
         try:
             raw_img = Image.open(c_path).convert("RGBA")
             W, H = raw_img.size
@@ -1814,10 +1801,16 @@ def generate_authentic_banner(
                 paste_brand_logo(raw_img, logo_p, (60, 60, 60 + badge_w, 60 + badge_h), bg_badge=True)
 
             raw_img.convert("RGB").save(out_p, format="JPEG", quality=95)
-            print(f"[banner_templates] Phát hiện poster sẵn ({c_path.name}) -> Chế độ 1: Dán Logo Sao Việt chuẩn đẹp đăng ngay.")
+            try:
+                print(f"[banner_templates] Premade poster detected ({c_path.name}) -> Mode 1: Ready to post.")
+            except Exception:
+                pass
             return out_p
         except Exception as e:
-            print(f"[banner_templates] Lỗi dán logo poster sẵn: {e}", file=sys.stderr)
+            try:
+                print(f"[banner_templates] Premade poster error: {e}", file=sys.stderr)
+            except Exception:
+                pass
 
     # KIỂM TRA CHẾ ĐỘ 2: Ảnh lớp học thật thô -> Áp dụng 8 Layout Agency & 5 Bảng màu
     # KHÔNG tự ý bơm highlights giả nếu caller không truyền!
