@@ -162,8 +162,9 @@ Nhằm đảm bảo hình ảnh chân thực, thu hút người xem và đạt t
   + Kết hợp dải đồ họa thương hiệu Solid Deep Navy (`#0B2341`), logo Sao Việt đặt trên thẻ bo góc nổi khối 3D, tiêu đề và điểm nổi bật in hoa sắc nét (màu trắng và vàng hoàng gia).
   + Tuyệt đối không bao giờ đè chữ lên mặt/lưng học viên hoặc màn hình máy tính.
   + Font chữ 100% TrueType Unicode (Arial Bold / Segoe UI), tự động ngắt dòng và co dãn thông minh, không lỗi font, không lệch khung hay tràn viền.
-- **30% Kiểu 1 (AI 3D Poster):**
-  + Dựng poster giáo dục 3D hiện đại sinh qua Google Imagen / Gemini API, có dán logo Sao Việt chuẩn pixel.
+- **30% Kiểu 1 (AI Enhanced Poster với Imagen 4 / Imagen 3):**
+  + Sử dụng ảnh lớp học thật từ dataset làm ảnh tham chiếu (reference image) cho Google Imagen (hỗ trợ cả Imagen 4 và Imagen 3) để tạo ánh sáng studio và chiều sâu 3D thương mại.
+  + Tuyệt đối KHÔNG để AI tự vẽ chữ tiếng Việt lên ảnh (tránh lỗi chính tả, sai dấu). Toàn bộ tiêu đề khóa học, ưu đãi và hotline được engine đồ họa ghép đè chuẩn Unicode font Arial Bold sắc nét kèm dán logo Sao Việt 3D nổi khối.
   + Nếu Google API gặp lỗi hạn mức, hết quota hoặc model không phản hồi: Hệ thống **tự động cứu hộ 100% về Kiểu 2**, đảm bảo tiến trình đăng bài không bao giờ bị gián đoạn.
 
 ### 5 Mẫu Layout Agency Đồ Họa Đa Dạng (Kiểu 2)
@@ -174,9 +175,8 @@ Nhằm đảm bảo hình ảnh chân thực, thu hút người xem và đạt t
 5. `diagonal_slice`: Đường cắt vát chéo góc công nghệ hiện đại, tạo cảm giác chuyển động và tràn đầy năng lượng.
 
 ### Cách gọi lệnh và cấu hình
-- Tự động trong tool `gemini_generate_image`: Mặc định quay xác suất 70% Kiểu 2 và 30% Kiểu 1.
-- Nếu prompt chứa `"kiểu 2"`, `"kieu 2"`, `"ảnh thật"`, `"dataset"`, `"banner"`: Hệ thống sinh 100% Kiểu 2.
-- Nếu prompt chứa `"kiểu 1"`, `"kieu 1"`, `"3d"`, `"mockup"`, `"studio"`: Hệ thống sinh Kiểu 1 (fallback Kiểu 2 nếu lỗi mạng/quota).
+- Tự động trong tool `gemini_generate_image`: Tự động nhận diện khóa học, ưu tiên poster chuẩn trong dataset hoặc ảnh thật lớp học. Khi sinh AI, tự động gửi ảnh thật làm reference và ghép chữ Unicode chuẩn 100%.
+- Hỗ trợ model Google Imagen mới nhất (Imagen 4: `imagen-4.0-generate-001`, Imagen 3: `imagen-3.0-generate-002`).
 - Sinh thủ công qua script:
   ```bash
   python "brains/Brain Default/scratch/make_square_cover.py" tinhoc --kieu2

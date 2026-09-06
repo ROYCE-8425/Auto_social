@@ -88,9 +88,10 @@ def register(ctx):
     ctx.register_tool(
         name="gemini_generate_image",
         description=(
-            "Tạo cover Fanpage bằng Google Imagen 3: BẮT BUỘC logo (file Logo chính kit) + images (1 ảnh raw dataset). "
-            "Hệ thống tự động dán pixel logo thật từ dataset, cấm vẽ chữ đường dẫn, cấm neon mạch điện. "
-            "aspect_ratio square. Lưu attachments/dataset/_xuat/."
+            "Tạo cover Fanpage chuẩn Facebook bằng Google Imagen (hỗ trợ Imagen 4 / Imagen 3 kết hợp ảnh thật dataset) hoặc Graphic Engine: "
+            "BẮT BUỘC logo (file Logo chính kit) + images (1 ảnh raw dataset). "
+            "Hệ thống tự động dán pixel logo thật từ dataset, cấm vẽ chữ đường dẫn, typography chuẩn Unicode 0% lỗi font. "
+            "aspect_ratio square (2000x2000 px). Lưu attachments/dataset/_xuat/."
         ),
         handler=_gen,
         min_mode="safe",
@@ -110,7 +111,7 @@ def register(ctx):
                 "model": {
                     "type": "string",
                     "description": "Model ảnh Google (mặc định để trống sẽ luôn tuân theo model đã chọn trong Cài đặt): "
-                                   "imagen-3.0-generate-002, imagen-3.0-fast-generate-001"
+                                   "imagen-4.0-generate-001, imagen-3.0-generate-002, imagen-3.0-fast-generate-001"
                 },
                 "logo": {
                     "type": "string",

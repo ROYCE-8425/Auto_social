@@ -20,7 +20,7 @@ Nhiệm vụ: từ thông tin khóa học + ảnh thật trong dataset, tạo ra
    - Album gồm: 1 Cover 1:1 + danh sách ảnh thật từ dataset chuẩn hóa qua `pick_photos`.
 
 ## CẤU TRÚC PROMPT 5 KHỐI CHO TOOL gemini_generate_image
-Khi tạo ảnh qua Google Imagen 3 / Gemini, prompt gửi vào tool BẮT BUỘC theo cấu trúc 5 khối tiếng Anh chuẩn xác:
+Khi tạo ảnh qua Google Imagen (Imagen 4 / Imagen 3) / Gemini, prompt gửi vào tool BẮT BUỘC theo cấu trúc 5 khối tiếng Anh chuẩn xác, luôn kèm ảnh thật dataset làm reference:
 
 [KHỐI 1 - CHỦ THỂ]: Chuyên gia hoặc học viên Việt Nam/Châu Á trẻ trung, năng động, trang phục công sở gọn gàng hoặc smart casual, đang thao tác tập trung trên laptop hiện đại trong lớp học máy tính sáng sủa hoặc văn phòng công nghệ cao.
 [KHỐI 2 - BỐ CỤC]: Tỷ lệ vuông 1:1 (square 2000x2000). Chủ thể đặt tại điểm vàng (1/3 góc dưới hoặc 1/3 bên phải). Chừa khoảng không gian sạch (clean negative space) ở 1/3 góc trên để dán logo và tiêu đề.

@@ -477,6 +477,7 @@ async def generate_chatgpt(prompt: str, aspect_ratio: str = "square", quality: s
 GEMINI_IMAGE_MODELS = [
     {"id": "imagen-3.0-generate-002", "label": "Imagen 3 (Tối ưu nhất - Đề xuất)", "kind": "predict"},
     {"id": "imagen-3.0-fast-generate-001", "label": "Imagen 3 Fast (Tốc độ cao)", "kind": "predict"},
+    {"id": "imagen-4.0-generate-001", "label": "Imagen 4 (Google Imagen 4 - Mới nhất)", "kind": "predict"},
 ]
 _IMAGE_KIND = {m["id"]: m["kind"] for m in GEMINI_IMAGE_MODELS}
 GEMINI_DEFAULT_IMAGE_MODEL = "imagen-3.0-generate-002"
@@ -487,9 +488,6 @@ GEMINI_IMAGEN_URL = "https://generativelanguage.googleapis.com/v1beta/models/{mo
 
 
 KNOWN_INVALID_IMAGE_MODELS = {
-    "imagen-4.0-generate-001",
-    "imagen-4.0-fast-generate-001",
-    "imagen-4.0-ultra-generate-001",
     "gemini-2.5-flash-image",
     "gemini-3.1-flash-image",
     "gemini-3-pro-image",
@@ -1055,6 +1053,12 @@ async def generate_gemini(
         elif not raw_photo_file and s_p.endswith((".jpg", ".png", ".jpeg", ".webp")):
             raw_photo_file = s_p
 
+    if not raw_photo_file:
+        content = parse_banner_content(prompt)
+        chosen_rel = pick_dataset_photo(str(v_root), folder=content.get("folder", "tin-hoc _ai"), random_choice=True)
+        if chosen_rel:
+            raw_photo_file = chosen_rel
+
     if not logo_file:
         for cand in [
             "attachments/dataset/chung/thsv-logo-2025.png",
@@ -1065,17 +1069,16 @@ async def generate_gemini(
                 break
 
     p_lower = prompt.lower()
-    # HƯỚNG TIẾP CẬN MỚI TRIỆT ĐỂ:
-    # 1. Toàn bộ Cover/Banner khóa học mặc định 100% sử dụng Deterministic Graphic Engine (banner_templates)
-    #    để đảm bảo: 100% tiếng Việt Unicode chuẩn không lỗi font, 100% giữ logo sắc nét, 100% layout chuẩn agency.
-    # 2. Tuyệt đối không để AI (Google Imagen) tự vẽ chữ tiếng Việt ("KÉ TOÀN", "TÀI CHINC") hay vẽ hộp rỗng mất logo.
-    # 3. Chỉ khi yêu cầu rõ ràng "ai pure" / "chỉ vẽ ảnh ai không dùng ảnh thật" mới gọi Google Imagen.
+    # Kiểm tra xem có yêu cầu pure AI từ prompt hay không
     is_pure_ai = (
         style_preference == "ai_pure" or
         any(k in p_lower for k in ("ai pure", "chi ve anh ai", "không dùng ảnh thật", "khong dung anh that", "pure ai"))
     )
 
-    if not is_pure_ai:
+    # Ưu tiên Chế độ 1 (Poster có sẵn trong dataset) hoặc Chế độ 2 (Ảnh thật dataset + Layout đồ họa)
+    # trừ khi người dùng chỉ định rõ ràng muốn sinh AI với Imagen
+    force_imagen = any(k in p_lower for k in ("imagen", "gemini image", "tao anh ai", "tạo ảnh ai", "style 1", "kieu 1", "kiểu 1"))
+    if not is_pure_ai and not force_imagen:
         banner_res = generate_authentic_banner_cover(
             vault_root=vault_root,
             logo_path=logo_file,
@@ -1086,11 +1089,10 @@ async def generate_gemini(
         )
         if banner_res and banner_res.get("ok"):
             return banner_res
-        # Nếu Kiểu 2 lỗi thì tiếp tục thử Kiểu 1 bên dưới
 
-    # BẢO VỆ TUYỆT ĐỐI CHỐNG ĐÁ NHAU:
+    # BẢO VỆ TUYỆT ĐỐI CHỐNG LỖI CHÍNH TẢ AI:
     # Lọc bỏ toàn bộ chuỗi text trong ngoặc kép để Google Imagen CHỈ vẽ nền visual sạch,
-    # tuyệt đối không để AI tự vẽ chữ dẫn đến lỗi chính tả (PoweProont, HỌY KỂM) và đè lên nhau.
+    # tuyệt đối không để AI tự vẽ chữ dẫn đến lỗi chính tả ("PHỞNG", "ŨNG", "THỰC HẢN").
     clean_prompt = re.sub(r'["“][^"”]+["”]', '', prompt)
     for kw in ("hiển thị chữ", "vẽ chữ", "ghi chữ", "with text", "featuring text"):
         clean_prompt = re.sub(re.escape(kw), '', clean_prompt, flags=re.IGNORECASE)
@@ -1134,8 +1136,26 @@ async def generate_gemini(
         async def _call_generate_content(m_id: str, p_text: str) -> tuple[Optional[str], Optional[str]]:
             try:
                 url = f"https://generativelanguage.googleapis.com/v1beta/models/{m_id}:generateContent?key={key}"
+                parts = []
+                # Đính kèm ảnh thật từ dataset làm ảnh tham chiếu (multimodal conditioning)
+                if raw_photo_file:
+                    rp = Path(raw_photo_file)
+                    rp = rp if rp.is_absolute() else (v_root / rp)
+                    if rp.is_file() and rp.suffix.lower() in _IMG_MIME:
+                        try:
+                            with open(rp, "rb") as rf:
+                                r_bytes = rf.read()
+                            parts.append({
+                                "inlineData": {
+                                    "mimeType": _IMG_MIME.get(rp.suffix.lower(), "image/jpeg"),
+                                    "data": base64.b64encode(r_bytes).decode("utf-8"),
+                                }
+                            })
+                        except Exception:
+                            pass
+                parts.append({"text": p_text})
                 payload = {
-                    "contents": [{"parts": [{"text": p_text}]}],
+                    "contents": [{"parts": parts}],
                     "generationConfig": {
                         "responseModalities": ["TEXT", "IMAGE"],
                         "imageConfig": {"aspectRatio": aspect},
@@ -1169,7 +1189,7 @@ async def generate_gemini(
         try:
             timeout = httpx.Timeout(timeout_s, connect=20.0)
             async with httpx.AsyncClient(timeout=timeout) as client:
-                # 1. Thử theo model người dùng chọn
+                # 1. Thử theo model người dùng chọn (hỗ trợ cả Imagen 4 và Imagen 3)
                 if "image" in chosen_model.lower():
                     b64, err = await _call_generate_content(chosen_model, full_prompt)
                 else:
@@ -1177,7 +1197,7 @@ async def generate_gemini(
                     if not b64:
                         b64, err = await _call_predict(chosen_model, full_prompt)
 
-                # 2. Thử sang các endpoint Gemini Image thế hệ mới
+                # 2. Thử fallback sang các endpoint Gemini Image thế hệ mới nếu model chính lỗi
                 if not b64:
                     b64, err = await _call_generate_content("gemini-2.5-flash-image", full_prompt)
                 if not b64:
@@ -1185,8 +1205,29 @@ async def generate_gemini(
 
                 if b64:
                     raw_bytes = base64.b64decode(b64)
-                    if logo_file:
-                        raw_bytes = overlay_logo(raw_bytes, logo_file, vault_root=vault_root)
+                    # Ghép Logo 3D và chữ tiếng Việt Unicode chuẩn nét căng lên visual Imagen
+                    try:
+                        import banner_templates
+                        ai_base_img = Image.open(io.BytesIO(raw_bytes))
+                        content = parse_banner_content(prompt)
+                        lp = Path(logo_file) if logo_file else None
+                        if lp and not lp.is_absolute():
+                            lp = v_root / lp
+                        enhanced_img = banner_templates.render_ai_enhanced_banner(
+                            ai_background_img=ai_base_img,
+                            logo_path=lp,
+                            title=content["title"],
+                            subtitle=content["subtitle"],
+                            highlights=content["highlights"],
+                            badge_text=content["badge_text"],
+                            hotline=content.get("hotline", "093 1144 858"),
+                        )
+                        out_buf = io.BytesIO()
+                        enhanced_img.save(out_buf, format="JPEG", quality=95)
+                        raw_bytes = out_buf.getvalue()
+                    except Exception as e:
+                        if logo_file:
+                            raw_bytes = overlay_logo(raw_bytes, logo_file, vault_root=vault_root)
 
                     saved = save_image_bytes(
                         raw_bytes, vault_root, prefix=prefix, ext=".jpg",

@@ -215,8 +215,8 @@ def create_clean_classroom_cover(
     return out_path
 
 
-def create_gemini_ai_cover(ctype: str, out_path: Path, api_key: str = None) -> bool:
-    """Tao cover mockup 3D thuong mai bang Google Imagen 3 qua API key Gemini."""
+def create_gemini_ai_cover(ctype: str, out_path: Path, api_key: str = None, raw_img_path: Path = None) -> bool:
+    """Tao cover visual thuong mai bang Google Imagen (Imagen 4 / Imagen 3) ket hop anh that dataset."""
     import asyncio
     import shutil
     server_dir = str(VAULT.parent.parent / "server")
@@ -230,36 +230,37 @@ def create_gemini_ai_cover(ctype: str, out_path: Path, api_key: str = None) -> b
 
     prompts = {
         "tinhoc": (
-            "Premium commercial 3D education poster for Modern Office Computer Skills Course (Word, Excel, PowerPoint, AI). "
+            "Premium commercial education advertising photography for Modern Office Computer Skills Course (Word, Excel, PowerPoint, AI). "
             "A friendly, confident young Vietnamese student sitting in a sleek modern workspace with a high-end laptop. "
             "Glossy floating 3D icons of Microsoft Excel, Word, and PowerPoint with soft realistic shadows and subtle glassmorphism. "
             "Clean professional royal blue and white studio lighting, sharp focus, 4k, balanced commercial layout."
         ),
         "ketoan": (
-            "Premium commercial 3D education poster for Practical Accounting & Taxation Course. "
+            "Premium commercial education advertising photography for Practical Accounting & Taxation Course. "
             "A professional Vietnamese accountant working at a modern organized desk with a sleek laptop displaying clean financial charts. "
             "Glossy floating 3D financial icons, calculators, and tax balance sheets with soft studio lighting. "
             "Deep navy blue and emerald accents, high-end commercial aesthetic, 4k, razor sharp."
         ),
         "cad": (
-            "Premium commercial 3D education poster for Mechanical & Architectural AutoCAD 2D 3D Drafting Course. "
+            "Premium commercial education advertising photography for Mechanical & Architectural AutoCAD 2D 3D Drafting Course. "
             "A modern designer workstation with dual monitors showing intricate blueprints and 3D architectural models. "
             "Floating glowing technical drafting tools and 3D gears, clean studio lighting, 4k."
         ),
         "dohoa": (
-            "Premium commercial 3D education poster for Graphic Design Masterclass (Photoshop, Illustrator, InDesign). "
+            "Premium commercial education advertising photography for Graphic Design Masterclass (Photoshop, Illustrator, InDesign). "
             "An inspired young creative designer in an artistic studio with a graphics tablet and modern computer. "
             "Floating 3D vibrant colorful design elements, color palettes, and glossy icons, dynamic and inspiring commercial lighting, 4k."
         ),
         "ai": (
-            "Premium commercial 3D education poster for Applied Artificial Intelligence Course (ChatGPT, Gemini, Automation). "
+            "Premium commercial education advertising photography for Applied Artificial Intelligence Course (ChatGPT, Gemini, Automation). "
             "A modern high-tech desk setup with sleek laptop, glowing neural network data visualization in the air, 3D AI glowing core. "
             "Futuristic yet grounded commercial office environment, clean vibrant cyan and sapphire lighting, 4k."
         )
     }
 
     prompt = prompts.get(ctype, prompts["tinhoc"])
-    print(f"[*] Dang tao Cover AI Gemini Imagen 3 cho khoa [{ctype}]...")
+    print(f"[*] Dang tao Cover AI Gemini Imagen ket hop anh that cho khoa [{ctype}]...")
+    refs = [str(raw_img_path)] if (raw_img_path and Path(raw_img_path).is_file()) else None
     try:
         res = asyncio.run(
             image_gen.generate_gemini(
@@ -267,11 +268,12 @@ def create_gemini_ai_cover(ctype: str, out_path: Path, api_key: str = None) -> b
                 aspect_ratio="square",
                 vault_root=str(VAULT),
                 api_key=api_key,
-                prefix=f"cover_{ctype}_ai"
+                prefix=f"cover_{ctype}_ai",
+                reference_images=refs,
             )
         )
     except Exception as e:
-        print(f"[WARN] Loi goi Gemini Imagen 3: {e}")
+        print(f"[WARN] Loi goi Gemini Imagen: {e}")
         return False
 
     if res.get("ok") and res.get("abs_path"):
@@ -279,7 +281,7 @@ def create_gemini_ai_cover(ctype: str, out_path: Path, api_key: str = None) -> b
         if src.exists():
             out_path.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(src, out_path)
-            print(f"[OK] Da tao Cover AI Gemini Imagen 3: {out_path}")
+            print(f"[OK] Da tao Cover AI Gemini Imagen: {out_path}")
             return True
     print(f"[INFO] Gemini Imagen khong hoan thanh ({res.get('error')}) -> chuyen ve Cover Lop hoc chuan.")
     return False
