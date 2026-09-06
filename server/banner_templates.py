@@ -1321,271 +1321,32 @@ def render_template_bento_box(
 
 
 def render_template_dual_hexagon(
-    classroom_img: Image.Image,
-    logo_path: Optional[Path] = None,
-    title: str = "TIN HỌC VĂN PHÒNG & ỨNG DỤNG AI",
-    subtitle: Optional[str] = None,
-    highlights: Optional[List[str]] = None,
-    badge_text: Optional[str] = None,
-    footer_text: Optional[str] = None,
-    hotline: Optional[str] = None,
-    brand_color: Tuple[int, int, int] = (11, 35, 65),
-    palette: Optional[dict] = None,
-    classroom_img_2: Optional[Image.Image] = None,
-) -> Image.Image:
-    """Template 9: Dual Hexagon 1:1 VUÔNG (Chuẩn Agency Quốc tế 2026).
-    - Tỷ lệ vuông 1:1 tuyệt đối chuẩn kích thước Facebook Album (2000x2000 px).
-    - Khung viền ngoài gradient công nghệ với các đường sóng phát sáng (glow waves).
-    - Thẻ nội dung chính màu sáng (white ice slate) bo góc 36px với bóng đổ mềm.
-    - Cột trái:
-      + Logo Sao Việt 3D và Tagline định vị thương hiệu.
-      + Tiêu đề lớn 2-3 tầng font Be Vietnam Pro ExtraBold.
-      + Badge viên thuốc bo tròn màu navy/gold.
-      + Đoạn mô tả giá trị thực chiến.
-      + Danh sách 4-5 bullet checklist với icon dấu tích tròn xanh (✔).
-      + Hàng chân trang: Nút CTA 'ĐĂNG KÝ NGAY', Hotline và Website chi nhánh.
-    - Cột phải:
-      + Khung ảnh Tổ ong 2 tầng (Dual Hexagon):
-        * Nếu có 2 ảnh: Mỗi lục giác hiển thị 1 ảnh khác biệt (VD: màn hình và học viên).
-        * Nếu có 1 ảnh: Khung liên tục (continuous aperture) liền mạch tự nhiên, không bao giờ cắt đôi/nhân bản người.
-      + Viền lục giác phát sáng Cyan Glow / Electric Blue dày 12px.
-      + Mảng khối đa giác navy sắc sảo phía sau tạo chiều sâu 3D.
-      + Huy hiệu tròn giảm giá nổi bật giao thoa giữa 2 hình lục giác.
-    """
-    W, H = 2000, 2000
-    pal = palette or COLOR_PALETTES.get("royal_sapphire", {})
-    bg_p = brand_color or pal.get("bg_primary", (11, 35, 65))
-    accent_c = pal.get("accent_cyan", (0, 212, 255))
-    accent_g = pal.get("accent_gold", (255, 215, 0))
-    badge_c = pal.get("badge_bg", (230, 81, 0))
-
-    def get_hexagon_points(cx, cy, r):
-        pts = []
-        for i in range(6):
-            deg = -90 + i * 60
-            rad = math.radians(deg)
-            pts.append((cx + r * math.cos(rad), cy + r * math.sin(rad)))
-        return pts
-
-    # 1. Canvas & Outer Border Frame
-    canvas = Image.new("RGBA", (W, H), (10, 25, 48, 255))
-    draw = ImageDraw.Draw(canvas)
-
-    # Outer gradient
-    for y in range(H):
-        ratio = y / float(H)
-        r = int(10 + (bg_p[0] - 10) * ratio)
-        g = int(25 + (bg_p[1] - 25) * ratio)
-        b = int(48 + (bg_p[2] - 48) * ratio)
-        draw.line([(0, y), (W, y)], fill=(r, g, b, 255))
-
-    # Decorative background waves in outer border
-    for w_idx in range(5):
-        w_offset = w_idx * 18
-        draw.arc([(-200 + w_offset, -200 + w_offset), (700 + w_offset, 700 + w_offset)],
-                 start=0, end=180, fill=(accent_c[0], accent_c[1], accent_c[2], max(10, 45 - w_idx * 8)), width=3)
-        draw.arc([(W - 700 - w_offset, H - 700 - w_offset), (W + 200 - w_offset, H + 200 - w_offset)],
-                 start=180, end=360, fill=(accent_c[0], accent_c[1], accent_c[2], max(10, 45 - w_idx * 8)), width=3)
-
-    # 2. Main Inner Card (White Slate)
-    card_x1, card_y1, card_x2, card_y2 = 70, 70, W - 70, H - 70
-    card_r = 36
-
-    # Drop shadow behind main card
-    sh = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-    sh_d = ImageDraw.Draw(sh)
-    sh_d.rounded_rectangle([card_x1 - 10, card_y1 - 10, card_x2 + 10, card_y2 + 10], radius=card_r + 10, fill=(0, 0, 0, 140))
-    sh = sh.filter(ImageFilter.GaussianBlur(24))
-    canvas = Image.alpha_composite(canvas, sh)
-    draw = ImageDraw.Draw(canvas)
-
-    # Card background (White / Clean Ice Slate)
-    draw.rounded_rectangle([card_x1, card_y1, card_x2, card_y2], radius=card_r, fill=(248, 250, 252, 255))
-
-    # 3. Right-side Dynamic Tech Polygon Accent
-    poly_pts = [
-        (1240, card_y1),
-        (card_x2, card_y1),
-        (card_x2, card_y2),
-        (1080, card_y2),
-        (1160, 1050),
-    ]
-    draw.polygon(poly_pts, fill=(bg_p[0], bg_p[1], bg_p[2], 255))
-    draw.line([(1240, card_y1), (1160, 1050), (1080, card_y2)], fill=(accent_c[0], accent_c[1], accent_c[2], 255), width=6)
-    draw.line([(1240, card_y1), (1160, 1050), (1080, card_y2)], fill=(accent_c[0], accent_c[1], accent_c[2], 80), width=16)
-
-    # Subtle tech dot pattern on the navy accent
-    for dx in range(1280, card_x2 - 40, 60):
-        for dy in range(card_y1 + 40, card_y2 - 40, 60):
-            draw.ellipse([dx - 2, dy - 2, dx + 2, dy + 2], fill=(255, 255, 255, 30))
-
-    # 4. DUAL HEXAGON PHOTO MASKING
-    cx1, cy1, r1 = 1530, 620, 350
-    pts1 = get_hexagon_points(cx1, cy1, r1)
-
-    cx2, cy2, r2 = 1380, 1260, 390
-    pts2 = get_hexagon_points(cx2, cy2, r2)
-
-    if classroom_img_2 is not None:
-        # Hai ảnh khác nhau: Mỗi lục giác hiển thị 1 ảnh độc lập chuẩn Agency
-        view1 = smart_crop_and_enhance(classroom_img, int(r1 * 2.3), int(r1 * 2.3)).convert("RGBA")
-        view2 = smart_crop_and_enhance(classroom_img_2, int(r2 * 2.3), int(r2 * 2.3)).convert("RGBA")
-
-        mask1 = Image.new("L", (W, H), 0)
-        ImageDraw.Draw(mask1).polygon(pts1, fill=255)
-        hex1_layer = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-        hex1_layer.paste(view1, (int(cx1 - view1.width // 2), int(cy1 - view1.height // 2)))
-        canvas.paste(hex1_layer, (0, 0), mask1)
-
-        mask2 = Image.new("L", (W, H), 0)
-        ImageDraw.Draw(mask2).polygon(pts2, fill=255)
-        hex2_layer = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-        hex2_layer.paste(view2, (int(cx2 - view2.width // 2), int(cy2 - view2.height // 2)))
-        canvas.paste(hex2_layer, (0, 0), mask2)
-    else:
-        # Một ảnh duy nhất: Khung liên tục (Continuous Aperture) liền mạch tự nhiên
-        all_x = [p[0] for p in pts1 + pts2]
-        all_y = [p[1] for p in pts1 + pts2]
-        min_x, max_x = min(all_x), max(all_x)
-        min_y, max_y = min(all_y), max(all_y)
-        env_w = int(max_x - min_x) + 40
-        env_h = int(max_y - min_y) + 40
-        env_x1 = int(min_x) - 20
-        env_y1 = int(min_y) - 20
-
-        c_img = smart_crop_and_enhance(classroom_img, env_w, env_h).convert("RGBA")
-
-        comb_mask = Image.new("L", (W, H), 0)
-        cm_d = ImageDraw.Draw(comb_mask)
-        cm_d.polygon(pts1, fill=255)
-        cm_d.polygon(pts2, fill=255)
-
-        photo_layer = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-        photo_layer.paste(c_img, (env_x1, env_y1))
-        canvas.paste(photo_layer, (0, 0), comb_mask)
-
-    draw = ImageDraw.Draw(canvas)
-
-    # Draw Hexagon Outlines (Cyan Glow)
-    draw.polygon(pts1, outline=(accent_c[0], accent_c[1], accent_c[2], 60), width=24)
-    draw.polygon(pts1, outline=(accent_c[0], accent_c[1], accent_c[2], 255), width=10)
-
-    draw.polygon(pts2, outline=(accent_c[0], accent_c[1], accent_c[2], 80), width=26)
-    draw.polygon(pts2, outline=(accent_c[0], accent_c[1], accent_c[2], 255), width=12)
-
-    # Floating graphic badge on hexagon: Dynamic discount extracted from badge_text
-    import re
-    discount_pct = "30%"
-    if badge_text:
-        m = re.search(r"(\d+%)", badge_text)
-        if m:
-            discount_pct = m.group(1)
-
-    bd_cx, bd_cy = int(cx2 - r2 * 0.75), int(cy2 - r2 * 0.6)
-    draw.ellipse([bd_cx - 80, bd_cy - 80, bd_cx + 80, bd_cy + 80],
-                 fill=(badge_c[0], badge_c[1], badge_c[2], 255),
-                 outline=(accent_g[0], accent_g[1], accent_g[2], 255), width=4)
-    font_bd1 = get_font(26, bold=True)
-    font_bd2 = get_font(36, weight="extrabold")
-    draw.text((bd_cx - 48, bd_cy - 42), "ƯU ĐÃI", font=font_bd1, fill="#FFFFFF")
-    draw.text((bd_cx - 42, bd_cy - 6), discount_pct, font=font_bd2, fill="#FFEB3B")
-
-    # 5. LEFT COLUMN: CONTENT & TYPOGRAPHY
-    left_m = 150
-    max_text_w = 900
-
-    # Top: Logo
-    if logo_path and logo_path.is_file():
-        paste_brand_logo(canvas, logo_path, (left_m, 140, left_m + 420, 140 + 130), bg_badge=True)
-    draw = ImageDraw.Draw(canvas)
-
-    # Tagline above title
-    font_tag = get_font(26, bold=True)
-    draw.text((left_m, 295), "CHƯƠNG TRÌNH ĐÀO TẠO THỰC CHIẾN 2026", font=font_tag, fill="#0284C7")
-
-    # Main Headline (Big & Bold)
-    y_title = 345
-    t_font, t_lines = fit_title_font(
-        draw, title, max_width=max_text_w, max_height=320, start_size=82, min_size=46, weight="extrabold"
+    classroom_img,
+    logo_path=None,
+    title="TIN HỌC VĂN PHÒNG",
+    subtitle=None,
+    highlights=None,
+    badge_text=None,
+    footer_text=None,
+    hotline=None,
+    brand_color=(11, 35, 65),
+    palette=None,
+    **kwargs,
+):
+    """Mẫu dual_hexagon đã bị loại bỏ hoàn toàn theo yêu cầu người dùng.
+    Tự động chuyển hướng sang Photo-First Cinematic để giữ trọn vẹn vẻ đẹp ảnh thật."""
+    return render_template_photo_first_cinematic(
+        classroom_img=classroom_img,
+        logo_path=logo_path,
+        title=title,
+        subtitle=subtitle,
+        highlights=highlights,
+        badge_text=badge_text,
+        footer_text=footer_text,
+        hotline=hotline,
+        brand_color=brand_color,
+        palette=palette,
     )
-    curr_y = y_title
-    for tl in t_lines:
-        draw.text((left_m, curr_y), tl, font=t_font, fill="#0A192F")
-        tbb = draw.textbbox((0, 0), tl, font=t_font)
-        curr_y += (tbb[3] - tbb[1]) + 18
-
-    # Sub-badge Pill: If badge_text has discount (e.g. "ƯU ĐÃI 40%"), don't duplicate; use feature pill
-    curr_y += 10
-    if badge_text and not re.search(r"(\d+%)", badge_text):
-        b_txt = badge_text.upper()
-    else:
-        b_txt = "ĐÀO TẠO THỰC CHIẾN - KÈM 1-1"
-
-    font_bp = get_font(28, bold=True)
-    bp_bb = draw.textbbox((0, 0), b_txt, font=font_bp)
-    bp_w = (bp_bb[2] - bp_bb[0]) + 48
-    bp_h = 56
-    draw.rounded_rectangle([left_m, curr_y, left_m + bp_w, curr_y + bp_h], radius=16,
-                           fill=(bg_p[0], bg_p[1], bg_p[2], 255), outline=(accent_c[0], accent_c[1], accent_c[2], 180), width=2)
-    draw.text((left_m + 24, curr_y + 11), b_txt, font=font_bp, fill="#FCD34D")
-    curr_y += bp_h + 30
-
-    # Subtitle description
-    sub_txt = subtitle or "Giáo trình cập nhật công nghệ mới, hướng dẫn cầm tay chỉ việc trực tiếp trên máy tính đến khi thành thạo."
-    font_sub = get_font(28, weight="medium")
-    sub_lines = wrap_text(draw, sub_txt, font_sub, max_text_w)
-    for sl in sub_lines:
-        draw.text((left_m, curr_y), sl, font=font_sub, fill="#475569")
-        curr_y += 38
-    curr_y += 20
-
-    # Checklist Bullets with Circular Checkmarks
-    def_hl = [
-        "Thành thạo công cụ chỉ sau 6 buổi thực hành",
-        "Bộ bài tập và mẫu dự án doanh nghiệp thực tế",
-        "Giảng viên kèm cặp 1-1 theo tiến độ từng học viên",
-        "Hỗ trợ giải đáp chuyên môn trọn đời sau khóa học",
-        "Cấp chứng chỉ hoàn thành khóa học chuẩn quốc tế",
-    ]
-    bullets = highlights if (highlights and len(highlights) > 0) else def_hl
-    font_hl = get_font(30, bold=True)
-
-    for b in bullets[:5]:
-        circ_x = left_m + 20
-        circ_y = curr_y + 18
-        circ_r = 18
-        draw.ellipse([circ_x - circ_r, circ_y - circ_r, circ_x + circ_r, circ_y + circ_r],
-                     fill=(2, 132, 199, 255))
-        draw.line([(circ_x - 7, circ_y), (circ_x - 2, circ_y + 6), (circ_x + 7, circ_y - 6)], fill="#FFFFFF", width=3)
-        draw.text((left_m + 56, curr_y), b, font=font_hl, fill="#1E293B")
-        curr_y += 66
-
-    # 6. Bottom Row: CTA Button, Hotline, Website
-    y_bot = 1730
-
-    # CTA Button [ ĐĂNG KÝ NGAY ]
-    btn_w = 340
-    btn_h = 80
-    draw.rounded_rectangle([left_m, y_bot, left_m + btn_w, y_bot + btn_h], radius=22,
-                           fill=(bg_p[0], bg_p[1], bg_p[2], 255), outline=(accent_c[0], accent_c[1], accent_c[2], 200), width=3)
-    font_btn = get_font(30, weight="extrabold")
-    btn_bb = draw.textbbox((0, 0), "ĐĂNG KÝ NGAY", font=font_btn)
-    draw.text((left_m + (btn_w - (btn_bb[2] - btn_bb[0])) // 2, y_bot + 21), "ĐĂNG KÝ NGAY", font=font_btn, fill="#FFFFFF")
-
-    # Website
-    font_web = get_font(26, bold=True)
-    web_x = left_m + btn_w + 50
-    draw.text((web_x, y_bot + 12), "🌐 www.tinhocsaoviet.edu.vn", font=font_web, fill="#0284C7")
-
-    # Hotline
-    if hotline:
-        font_hl_hot = get_font(32, weight="extrabold")
-        draw.text((web_x, y_bot + 45), f"📞 Hotline: {hotline}", font=font_hl_hot, fill="#B45309")
-    elif footer_text:
-        font_ft = get_font(28, bold=True)
-        draw.text((web_x, y_bot + 45), f"📍 {footer_text.upper()}", font=font_ft, fill="#334155")
-
-    return canvas.convert("RGB")
 
 
 def render_template_bauhaus_grid(
@@ -1978,7 +1739,6 @@ TEMPLATE_CHOICES = [
     "photo_first_cinematic",
     "photo_first_cinematic",
     "photo_first_cinematic",
-    "dual_hexagon",
     "bento_box",
     "curved_window",
     "floating_card",
