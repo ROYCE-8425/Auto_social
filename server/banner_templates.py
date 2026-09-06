@@ -29,21 +29,86 @@ def _project_root() -> Path:
     return Path(__file__).resolve().parent.parent
 
 
-def get_font(size: int, bold: bool = True) -> ImageFont.FreeTypeFont:
-    """Tìm font TrueType hỗ trợ 100% tiếng Việt Unicode trên mọi hệ điều hành (Windows, Linux, Docker)."""
+def get_font(
+    size: int,
+    bold: bool = True,
+    weight: Optional[str] = None,
+    family: Optional[str] = None,
+) -> ImageFont.FreeTypeFont:
+    """Tìm font TrueType hỗ trợ 100% tiếng Việt Unicode trên mọi hệ điều hành (Windows, Linux, Docker).
+    Ưu tiên tuyệt đối:
+    1. Be Vietnam Pro (Font chuẩn mực thiết kế riêng cho tiếng Việt, tối ưu diacritics hoàn hảo không đè dấu).
+    2. Montserrat (Font hình học hiện đại, mạnh mẽ, đúng nhận diện Brand Kit Sao Việt).
+    3. Fallback an toàn: Arial, Segoe UI, Tahoma, DejaVu Sans...
+    """
     root = _project_root()
-    candidates = [
-        root / "system" / "fonts" / ("arialbd.ttf" if bold else "arial.ttf"),
-        root / "system" / "fonts" / "arial.ttf",
+    sys_fonts = root / "system" / "fonts"
+
+    # Xác định mức độ đậm (weight)
+    w = (weight or "").lower()
+    if not w:
+        w = "bold" if bold else "regular"
+
+    fam = (family or "").lower()
+    candidates = []
+
+    # 1. Be Vietnam Pro (Đặc trị tiếng Việt, đẹp nhất, cân đối dấu thanh)
+    if fam in ("", "bevietnam", "vietnam", "default"):
+        if w in ("extrabold", "black"):
+            candidates.extend([
+                sys_fonts / "BeVietnamPro-ExtraBold.ttf",
+                sys_fonts / "BeVietnamPro-Bold.ttf",
+                sys_fonts / "Montserrat-ExtraBold.ttf",
+            ])
+        elif w in ("bold",):
+            candidates.extend([
+                sys_fonts / "BeVietnamPro-Bold.ttf",
+                sys_fonts / "BeVietnamPro-SemiBold.ttf",
+                sys_fonts / "Montserrat-Bold.ttf",
+            ])
+        elif w in ("semibold", "medium"):
+            candidates.extend([
+                sys_fonts / "BeVietnamPro-SemiBold.ttf",
+                sys_fonts / "BeVietnamPro-Medium.ttf",
+                sys_fonts / "Montserrat-SemiBold.ttf",
+            ])
+        else:
+            candidates.extend([
+                sys_fonts / "BeVietnamPro-Regular.ttf",
+                sys_fonts / "BeVietnamPro-Medium.ttf",
+            ])
+
+    # 2. Montserrat (Nhận diện thương hiệu Sao Việt)
+    if fam in ("", "montserrat"):
+        if w in ("extrabold", "black"):
+            candidates.extend([
+                sys_fonts / "Montserrat-ExtraBold.ttf",
+                sys_fonts / "Montserrat-Bold.ttf",
+            ])
+        elif w in ("bold",):
+            candidates.extend([
+                sys_fonts / "Montserrat-Bold.ttf",
+                sys_fonts / "Montserrat-SemiBold.ttf",
+            ])
+        elif w in ("semibold", "medium"):
+            candidates.extend([
+                sys_fonts / "Montserrat-SemiBold.ttf",
+            ])
+
+    # 3. Fallback hệ thống an toàn
+    candidates.extend([
+        sys_fonts / ("arialbd.ttf" if bold else "arial.ttf"),
+        sys_fonts / "arial.ttf",
         Path(r"C:\Windows\Fonts\arialbd.ttf" if bold else r"C:\Windows\Fonts\arial.ttf"),
         Path(r"C:\Windows\Fonts\segoeuib.ttf" if bold else r"C:\Windows\Fonts\segoeui.ttf"),
         Path(r"C:\Windows\Fonts\tahomabd.ttf" if bold else r"C:\Windows\Fonts\tahoma.ttf"),
         Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf" if bold else "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"),
         Path("/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf" if bold else "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf"),
         Path("/usr/share/fonts/truetype/freefont/FreeSansBold.ttf" if bold else "/usr/share/fonts/truetype/freefont/FreeSans.ttf"),
-    ]
+    ])
+
     for p in candidates:
-        if p.is_file():
+        if p and p.is_file():
             try:
                 return ImageFont.truetype(str(p), size)
             except Exception:
@@ -76,21 +141,29 @@ def wrap_text(draw: ImageDraw.ImageDraw, text: str, font: ImageFont.ImageFont, m
     return lines
 
 
-def fit_title_font(draw: ImageDraw.ImageDraw, title: str, max_width: int, max_height: int, start_size: int = 76, min_size: int = 42) -> Tuple[ImageFont.ImageFont, List[str]]:
+def fit_title_font(
+    draw: ImageDraw.ImageDraw,
+    title: str,
+    max_width: int,
+    max_height: int,
+    start_size: int = 76,
+    min_size: int = 42,
+    weight: str = "extrabold",
+    family: str = "bevietnam",
+) -> Tuple[ImageFont.ImageFont, List[str]]:
     """Tự động co kích thước font để tiêu đề nằm vừa vặn, không bao giờ tràn khung."""
     for sz in range(start_size, min_size - 1, -4):
-        font = get_font(sz, bold=True)
+        font = get_font(sz, weight=weight, family=family)
         lines = wrap_text(draw, title, font, max_width)
         if not lines:
             return font, [title]
         total_h = 0
-        fits = True
         for line in lines:
             bb = draw.textbbox((0, 0), line, font=font)
             total_h += (bb[3] - bb[1]) + int(sz * 0.25)
         if total_h <= max_height and len(lines) <= 3:
             return font, lines
-    font = get_font(min_size, bold=True)
+    font = get_font(min_size, weight=weight, family=family)
     return font, wrap_text(draw, title, font, max_width)[:3]
 
 

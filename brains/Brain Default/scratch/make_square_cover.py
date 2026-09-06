@@ -27,14 +27,18 @@ if not LOGO_PATH.exists():
 
 
 def get_font(size, bold=True):
+    sys_fonts = VAULT.parent / "system" / "fonts"
     font_paths = [
-        r"C:\Windows\Fonts\arialbd.ttf" if bold else r"C:\Windows\Fonts\arial.ttf",
-        r"C:\Windows\Fonts\segoeui.ttf",
+        sys_fonts / ("BeVietnamPro-Bold.ttf" if bold else "BeVietnamPro-Regular.ttf"),
+        sys_fonts / ("Montserrat-Bold.ttf" if bold else "Montserrat-SemiBold.ttf"),
+        sys_fonts / ("arialbd.ttf" if bold else "arial.ttf"),
+        Path(r"C:\Windows\Fonts\arialbd.ttf" if bold else r"C:\Windows\Fonts\arial.ttf"),
+        Path(r"C:\Windows\Fonts\segoeui.ttf"),
     ]
     for fp in font_paths:
-        if Path(fp).exists():
+        if Path(fp).is_file():
             try:
-                return ImageFont.truetype(fp, size)
+                return ImageFont.truetype(str(fp), size)
             except Exception:
                 pass
     return ImageFont.load_default()
