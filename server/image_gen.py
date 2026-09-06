@@ -786,7 +786,12 @@ def load_brand_kit_info(page_identifier: Optional[str] = None, vault_root: Optio
     target = str(page_identifier or "").strip().lower()
     matched_file = None
 
-    if target:
+    if target in ("thsv-page-chinh", "page-chinh", "pagechinh", "chinh", "default", "_mac-dinh"):
+        f = kit_dir / "_mac-dinh.md"
+        if f.is_file():
+            matched_file = f
+
+    if not matched_file and target:
         for md_file in kit_dir.glob("*.md"):
             if md_file.name.startswith("_"):
                 continue
@@ -803,12 +808,12 @@ def load_brand_kit_info(page_identifier: Optional[str] = None, vault_root: Optio
                 matched_file = md_file
                 break
             pname = (_kit_field(txt, "Tên Fanpage") or "").lower()
-            if target in pname or pname in target:
+            if pname and len(pname) >= 4 and (target == pname or target in pname or (len(target) >= 4 and pname in target)):
                 matched_file = md_file
                 break
 
     if not matched_file:
-        for cand in ("thsv-page-chinh.md", "royce-shop.md", "_mac-dinh.md"):
+        for cand in ("royce-shop.md", "_mac-dinh.md"):
             f = kit_dir / cand
             if f.is_file():
                 matched_file = f
@@ -831,7 +836,15 @@ def load_brand_kit_info(page_identifier: Optional[str] = None, vault_root: Optio
     stem = matched_file.stem
     name = _kit_field(md, "Tên Fanpage") or stem
     brand_name = _kit_field(md, "Tên giao dịch", "Tên thương hiệu") or "TRUNG TÂM TIN HỌC SAO VIỆT"
-    hotline = _kit_field(md, "Hotline / Zalo", "Hotline riêng", "Hotline")
+    hotline = _kit_field(md, "Hotline / Zalo", "Hotline riêng", "Hotline", "Hotline mặc định")
+    if not hotline:
+        def_file = kit_dir / "_mac-dinh.md"
+        if def_file.is_file():
+            try:
+                def_md = def_file.read_text(encoding="utf-8")
+                hotline = _kit_field(def_md, "Hotline mặc định", "Hotline / Zalo", "Hotline")
+            except OSError:
+                pass
     logo_path = _kit_field(md, "Logo chính", "Logo")
     logo_white = _kit_field(md, "Logo trắng")
     brand_color = _kit_field(md, "Màu chính")
