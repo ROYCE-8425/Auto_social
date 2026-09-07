@@ -396,7 +396,8 @@ def _headers(token: str, account_id: str) -> dict:
 # ---------------------------------------------------------------------------
 async def generate_chatgpt(prompt: str, aspect_ratio: str = "square", quality: str = "medium",
                            vault_root: Optional[str] = None, timeout_s: float = 300.0,
-                           images: Optional[list] = None) -> dict:
+                           images: Optional[list] = None, page_id: Optional[str] = None,
+                           brand_kit: Optional[dict] = None) -> dict:
     """Tạo 1 ảnh bằng gói ChatGPT. Trả {ok, rel_path, abs_path, size, quality, aspect} hoặc {ok:False, error}.
 
     `images` = danh sách đường dẫn ảnh MẪU trong brain. Có ảnh thì ChatGPT NHÌN THẤY ảnh thật
@@ -412,6 +413,10 @@ async def generate_chatgpt(prompt: str, aspect_ratio: str = "square", quality: s
     quality = (quality or "medium").strip().lower()
     if quality not in _QUALITIES:
         quality = "medium"
+
+    vault = _resolve_vault(vault_root)
+    kit = brand_kit if isinstance(brand_kit, dict) else load_brand_kit_info(page_id, vault_root=vault)
+    prompt = apply_brand_guidelines(prompt, kit, provider="openai")
 
     creds = openai_oauth.valid_creds()
     if not creds or not creds.get("access_token"):
@@ -823,6 +828,63 @@ def _extract_frontmatter_field(text: str, field_name: str) -> str:
     return m.group(1).strip() if m else ""
 
 
+def _clean_kit_value(value: Any, limit: int = 260) -> str:
+    """Normalize a Brand Kit value before injecting it into an image prompt."""
+    s = re.sub(r"\s+", " ", str(value or "")).strip()
+    if not s:
+        return ""
+    if len(s) > limit:
+        return s[:limit].rsplit(" ", 1)[0].strip()
+    return s
+
+
+def build_brand_guideline_prompt(kit: Optional[dict], provider: str = "") -> str:
+    """Build a compact mandatory prompt block from wiki/brand-kits/*.md."""
+    if not isinstance(kit, dict) or not kit:
+        return ""
+
+    fields = [
+        ("Brand/page", kit.get("name")),
+        ("Business name", kit.get("brand_name")),
+        ("Primary color", kit.get("brand_color")),
+        ("Secondary color", kit.get("secondary_color")),
+        ("Fonts", kit.get("font")),
+        ("Image style", kit.get("image_style")),
+        ("Voice/tone", kit.get("tone")),
+        ("Layout rules", kit.get("layout_rules")),
+        ("Do not do", kit.get("donts")),
+    ]
+    lines = ["BRAND KIT RULES - follow these as mandatory visual constraints:"]
+    for label, value in fields:
+        val = _clean_kit_value(value)
+        if val:
+            lines.append(f"- {label}: {val}")
+
+    logo = _clean_kit_value(kit.get("logo_path"))
+    if logo:
+        lines.append(f"- Official logo/reference asset: {logo}. Do not alter, recolor, distort, or invent a replacement logo.")
+
+    lines.extend([
+        "- Keep safe margins around all important subjects; never cover faces, hands, screens, or the main learning activity.",
+        "- Use the brand palette and a premium modern education advertising look; avoid random colors, fake brands, clutter, and gimmicky stock-photo effects.",
+        "- Do not render Vietnamese text inside the AI image. Leave clean copy space; Javis will overlay final Vietnamese text, logo, hotline, and badges by code.",
+    ])
+    if provider == "google":
+        lines.append("- If generating a full AI poster/background, make it realistic and usable as an ad cover background, not a fantasy illustration.")
+    elif provider == "openai":
+        lines.append("- Use GPT Image for high-fidelity image generation/editing, while keeping brand assets and layout rules consistent.")
+    return "\n".join(lines)
+
+
+def apply_brand_guidelines(prompt: str, kit: Optional[dict], provider: str = "") -> str:
+    """Append Brand Kit rules to an image prompt without changing the user's core brief."""
+    base = (prompt or "").strip()
+    guide = build_brand_guideline_prompt(kit, provider=provider)
+    if not guide:
+        return base
+    return (base + "\n\n" + guide).strip()
+
+
 def load_course_info(course_id_or_tag: str, vault_root: Optional[Union[str, Path]] = None) -> Optional[dict]:
     """Tải hồ sơ tri thức khóa học từ wiki/courses/<id>.md.
     Đảm bảo 100% dữ liệu chuyên môn (title, subtitle, highlights, tools, v.v.) chuẩn xác,
@@ -996,6 +1058,11 @@ def load_brand_kit_info(page_identifier: Optional[str] = None, vault_root: Optio
     logo_white = _kit_field(md, "Logo trắng")
     brand_color = _kit_field(md, "Màu chính")
     secondary_color = _kit_field(md, "Màu phụ")
+    font = _kit_field(md, "Font", "Fonts")
+    image_style = _kit_field(md, "Phong cách hình ảnh", "Phong cach hinh anh", "Image style")
+    tone = _kit_field(md, "Tone of voice", "Giọng văn", "Giong van", "Tone")
+    layout_rules = _kit_field(md, "Quy tắc bố cục", "Quy tac bo cuc", "Layout rules")
+    donts = _kit_field(md, "Điều không được làm", "Dieu khong duoc lam", "Không được làm", "Khong duoc lam", "Do not do")
     address = _kit_field(md, "Cơ sở / địa chỉ", "Địa chỉ")
 
     return {
@@ -1007,6 +1074,11 @@ def load_brand_kit_info(page_identifier: Optional[str] = None, vault_root: Optio
         "logo_white": logo_white or None,
         "brand_color": brand_color or None,
         "secondary_color": secondary_color or None,
+        "font": font or None,
+        "image_style": image_style or None,
+        "tone": tone or None,
+        "layout_rules": layout_rules or None,
+        "donts": donts or None,
         "address": address or None,
         "raw_md": md,
     }
@@ -1544,6 +1616,7 @@ async def generate_gemini(
         + block_5
     )
     full_prompt = clean_prompt + creative_instructions
+    full_prompt = apply_brand_guidelines(full_prompt, kit, provider="google")
 
     key = get_gemini_api_key(api_key)
 

@@ -30,14 +30,19 @@ def register(ctx):
             return "ERROR: thiếu 'prompt' (mô tả ảnh cần tạo)."
         aspect = str(args.get("aspect_ratio") or "square")
         quality = str(args.get("quality") or "medium")
+        page_id = str(args.get("page_id") or args.get("page") or "").strip() or None
         # `images`: đường dẫn ảnh MẪU trong brain. Nhận cả chuỗi một ảnh lẫn mảng nhiều ảnh -
         # engine nào cũng có lúc gửi kiểu này kiểu kia, ép một kiểu là thỉnh thoảng lại hỏng.
         raw = args.get("images") or args.get("image") or []
         if isinstance(raw, str):
             raw = [raw]
         anh = [str(x).strip() for x in raw if str(x or "").strip()]
+        logo = str(args.get("logo") or "").strip()
+        if logo:
+            logo = image_gen.fix_dataset_path(logo)
+            anh = [logo] + [x for x in anh if image_gen.fix_dataset_path(x) != logo]
         res = await image_gen.generate_chatgpt(prompt, aspect, quality,
-                                               vault_root=cctx.vault_root, images=anh)
+                                               vault_root=cctx.vault_root, images=anh, page_id=page_id)
         if not res.get("ok"):
             return "ERROR: " + str(res.get("error") or "tạo ảnh thất bại")
         rel = res["rel_path"]
@@ -51,8 +56,10 @@ def register(ctx):
         description=("Tạo hoặc SỬA ẢNH bằng gói ChatGPT đang đăng nhập (không cần API key). Tham số: "
                      "prompt (mô tả, bắt buộc), images (danh sách đường dẫn ảnh MẪU trong brain - "
                      "ChatGPT sẽ NHÌN THẤY ảnh thật để sửa/dựng theo, dùng khi cần giữ đúng sản phẩm, "
-                     "nhãn, khuôn mặt, bố cục), aspect_ratio (square|landscape|portrait), "
-                     "quality (low|medium|high). Người dùng đưa ảnh và bảo 'dựng theo ảnh này' thì "
+                     "nhãn, khuôn mặt, bố cục), logo (đường dẫn logo tham chiếu nếu cần), "
+                     "page_id/page (để tự áp Brand Kit từ wiki/brand-kits), "
+                     "aspect_ratio (square|landscape|portrait), quality (low|medium|high). "
+                     "Người dùng đưa ảnh và bảo 'dựng theo ảnh này' thì "
                      "PHẢI truyền đường dẫn ảnh đó vào images, đừng tả lại ảnh bằng lời. "
                      "Sau khi gọi, NHÚNG ![](đường-dẫn) trả về vào câu trả lời."),
         handler=_gen, min_mode="safe", check_fn=_check,
@@ -64,6 +71,9 @@ def register(ctx):
                         "description": "Chất lượng/độ chi tiết, mặc định medium"},
             "images": {"type": "array", "items": {"type": "string"},
                        "description": ("Đường dẫn ảnh MẪU trong brain (vd attachments/chai.jpg) để "
-                                       "ChatGPT nhìn và dựng theo. Tối đa 4 ảnh, mỗi ảnh dưới 12MB.")}},
+                                       "ChatGPT nhìn và dựng theo. Tối đa 4 ảnh, mỗi ảnh dưới 12MB.")},
+            "logo": {"type": "string", "description": "Đường dẫn logo/asset brand trong brain để dùng làm ảnh tham chiếu nếu cần"},
+            "page_id": {"type": "string", "description": "ID hoặc slug Fanpage để nạp wiki/brand-kits/<page>.md"},
+            "page": {"type": "string", "description": "Tên/slug Fanpage thay cho page_id"}},
             "required": ["prompt"]},
     )
