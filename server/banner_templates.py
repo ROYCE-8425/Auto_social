@@ -2000,8 +2000,13 @@ TEMPLATE_CHOICES = [
 
 REAL_PHOTO_TEMPLATE_CHOICES = [
     # Safe automatic choices for real classroom photos.
-    # These keep the photo as a wide scene and avoid slicing people with a hard
-    # vertical divider or covering the middle of the room with a text strip.
+    # These avoid slicing people with a hard vertical divider or covering the
+    # middle of the room with a text strip. `modern_ribbon_wave` is allowed
+    # because it uses the real photo inside a circular frame plus code-drawn
+    # campaign graphics, not AI-generated people/classes.
+    "modern_ribbon_wave",
+    "modern_ribbon_wave",
+    "modern_ribbon_wave",
     "bottom_bar",
     "bottom_bar",
     "top_band",
