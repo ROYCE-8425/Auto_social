@@ -1091,16 +1091,13 @@ def parse_banner_content(
         tpl = "bauhaus_grid"
     else:
         for cand in (
+            "modern_ribbon_wave",
             "photo_first_cinematic",
             "bento_box",
             "curved_window",
-            "diagonal_slice",
-            "bottom_bar",
-            "split_right",
-            "split_left",
             "floating_card",
+            "bottom_bar",
             "bauhaus_grid",
-            "3d_pills",
         ):
             if cand in p_lower:
                 tpl = cand

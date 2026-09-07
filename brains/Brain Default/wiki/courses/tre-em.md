@@ -29,7 +29,7 @@ updated: 2026-09-06
   * KHÓA HỌC HÈ 2026
   * ĐÀO TẠO KÈM 1-1
   * ƯU ĐÃI ĐĂNG KÝ SỚM
-- **Layout banner phù hợp:** photo_first_cinematic, floating_card, 3d_pills, bento_box, curved_window
+- **Layout banner phù hợp:** modern_ribbon_wave, photo_first_cinematic, floating_card, bento_box, curved_window
 
 ## 2. Thông tin giáo trình cho Thân bài Caption
 - **Nội dung chương trình đào tạo theo độ tuổi:**

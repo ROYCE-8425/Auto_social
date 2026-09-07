@@ -33,15 +33,13 @@ Logo luon file `chung/thsv-logo-2025.png`. Khong tin logo ve trong poster.
 
 Mọi cover khóa học mặc định 100% sử dụng Deterministic Graphic Engine (banner_templates.py) kết hợp ảnh thật dataset hoặc ảnh 3D visual sạch + logo Sao Việt chuẩn vector/PNG + typography tiếng Việt chuẩn Unicode font Arial Bold / Segoe UI Bold:
 
-### 8 Layouts Đa Dạng Chuẩn Agency:
-1. **bento_box (Khuyên dùng - Apple/Linear Style 2026):** Chia ô lưới Bento Grid bất đối xứng: Header logo & hotline, Hero card bên trái với tiêu đề đa tầng & nút CTA, Cửa sổ ảnh thật lớp học bo góc 32px viền đôi phát sáng bên phải, và 3 Card thông số nổi bật (Kèm 1-1, 100% Thực hành, Hotline Zalo) ở chân trang.
-2. **curved_window (Vòng cung nghệ thuật):** Ảnh lớp học thật đóng khung trong cửa sổ bo tròn lớn góc dưới phải (radius 48px), viền đôi mạ vàng phát sáng, nền gradient chuyển màu sang trọng, tiêu đề 3 tầng khổng lồ bên trái, checkmark bullets vàng nổi bật.
-3. **diagonal_slice (Vát chéo công nghệ năng động):** Đường cắt vát chéo góc động sắc nét, viền neon kép vàng và cyan phát sáng, họa tiết tech grid dots tinh tế, 3 hộp quyền lợi chuyên nghiệp có icon màu sắc.
-4. **split_right:** Cột trái (50%) là ảnh lớp học thật, cột phải (50%) là panel xanh navy thương hiệu với logo góc trên, tiêu đề lớn, gạch phân cách vàng kim, 3 điểm nổi bật và hotline.
-5. **split_left:** Đảo vị trí panel sang bên trái, ảnh thật bên phải nhằm tạo sự phong phú giữa các bài viết.
+### Các Layouts Đồ Họa Độc Quyền Chuẩn Marketing:
+1. **modern_ribbon_wave (Khuyên dùng - Chuẩn Marketing Sao Việt):** Dải lụa sóng nhận diện uốn lượn sắc sảo, ảnh lớp học thật đóng trong khung tròn viền kép vàng kim nổi bật, tiêu đề 3 tầng ấn tượng, 3 viên thuốc học phí bo góc sắc nét và chân trang hotline đầy đủ.
+2. **photo_first_cinematic (Tối ưu tương tác tự nhiên):** Ảnh thật học viên bao phủ 80% canvas, gradient điện ảnh tối dần về chân ảnh, tiêu đề và quyền lợi hiển thị tinh tế ở 20% đáy ảnh, cam kết 100% không cắt đôi người học viên.
+3. **bento_box (Apple/Linear Style 2026):** Chia ô lưới Bento Grid bất đối xứng: Header logo & hotline, Hero card với tiêu đề đa tầng & nút CTA, Cửa sổ ảnh thật bo góc 32px viền đôi phát sáng, và 3 Card thông số nổi bật ở chân trang.
+4. **curved_window (Vòng cung nghệ thuật):** Ảnh lớp học thật đóng khung trong cửa sổ bo tròn lớn, viền đôi mạ vàng phát sáng, nền gradient chuyển màu sang trọng, tiêu đề 3 tầng nổi bật.
+5. **floating_card:** Ảnh lớp học tràn nền, một card thông tin bo góc nổi khối 3D với viền vàng ánh kim và bóng đổ mềm mại.
 6. **bottom_bar:** Ảnh chụp lớp học góc rộng sáng sủa chiếm 70% phía trên, dải panel thương hiệu navy chiếm 30% chân trang cùng các huy hiệu viên thuốc bo tròn hiện đại.
-7. **floating_card:** Ảnh lớp học tràn nền, một card thông tin bo góc nổi khối 3D với viền vàng ánh kim và bóng đổ mềm mại.
-8. **3d_pills:** Bố cục hiện đại cho ảnh 3D AI hoặc ảnh công sở: nhân vật thao tác ở nửa phải (50%), nửa trái là 3 thẻ viên thuốc xanh navy bo góc ôm khít chữ tiếng Việt chuẩn Unicode, logo Sao Việt trên thẻ trắng góc trên.
 
 ### 5 Bảng Màu Nhận Diện Độc Quyền (Color Mood Palettes):
 1. **Royal Sapphire (Sao Việt Classic):** Deep Navy (#0B2341), Vàng kim (#FFD700), Xanh Cyan (#00D4FF). Uy tín, vững chãi, chuẩn nhận diện truyền thống Tin học Sao Việt.
