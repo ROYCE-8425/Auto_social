@@ -16,6 +16,7 @@ save_png_b64 là THUẦN → test được không cần mạng.
 from __future__ import annotations
 
 import base64
+import io
 import json
 import os
 import random
@@ -478,12 +479,76 @@ async def generate_chatgpt(prompt: str, aspect_ratio: str = "square", quality: s
     if not b64:
         return {"ok": False, "error": err or "ChatGPT không trả ảnh (gói ChatGPT có thể chưa hỗ trợ tạo ảnh qua Codex)."}
 
+    should_overlay_cover = bool(
+        save_under or page_id or re.search(r"cover|bìa|bia|facebook|fanpage|khóa học|khoa hoc", prompt, re.I)
+    )
+    if should_overlay_cover:
+        try:
+            import banner_templates
+        except ImportError:
+            try:
+                from server import banner_templates
+            except ImportError:
+                banner_templates = None
+        if banner_templates is not None:
+            try:
+                from PIL import Image
+                raw_bytes = base64.b64decode(b64)
+                bg_img = Image.open(io.BytesIO(raw_bytes))
+                content = parse_banner_content(prompt, vault_root=vault)
+                logo_file = None
+                if kit and kit.get("logo_path"):
+                    cand = vault / str(kit["logo_path"])
+                    if cand.is_file():
+                        logo_file = cand
+                if not logo_file:
+                    for ref in ds_anh:
+                        s_ref = str(ref).replace("\\", "/").lower()
+                        if "logo" in s_ref:
+                            cand = Path(ref)
+                            cand = cand if cand.is_absolute() else (vault / ref)
+                            if cand.is_file():
+                                logo_file = cand
+                                break
+                if not logo_file:
+                    for cand_rel in (
+                        "attachments/dataset/chung/thsv-logo-2025.png",
+                        "attachments/dataset/chung/thsv-logo-big.png",
+                    ):
+                        cand = vault / cand_rel
+                        if cand.is_file():
+                            logo_file = cand
+                            break
+                enhanced = banner_templates.render_ai_enhanced_banner(
+                    ai_background_img=bg_img,
+                    logo_path=logo_file,
+                    title=content.get("title") or "TIN HỌC VĂN PHÒNG & ỨNG DỤNG AI",
+                    subtitle=content.get("subtitle"),
+                    highlights=content.get("highlights"),
+                    badge_text=content.get("badge_text"),
+                    footer_text=(kit.get("brand_name") if kit else None) or (kit.get("name") if kit else None),
+                    hotline=(kit.get("hotline") if kit else None),
+                )
+                out = io.BytesIO()
+                enhanced.save(out, format="JPEG", quality=95)
+                saved = save_image_bytes(
+                    out.getvalue(), vault_root, prefix="javis-img-cover", ext=".jpg",
+                    subdir=save_under or "attachments/dataset/_xuat",
+                )
+                if saved.get("ok"):
+                    return {"ok": True, "rel_path": saved["rel_path"], "abs_path": saved["abs_path"],
+                            "file": saved["file"], "size": size, "quality": quality, "aspect": aspect,
+                            "provider": "openai-codex", "model": IMAGE_MODEL,
+                            "prompt": prompt, "refs": len(data_urls), "overlay": "brand_cover"}
+            except Exception:
+                pass
+
     saved = save_png_b64(b64, vault_root, prefix="javis-img", subdir=save_under)
     if not saved.get("ok"):
         return saved
     return {"ok": True, "rel_path": saved["rel_path"], "abs_path": saved["abs_path"],
             "file": saved["file"], "size": size, "quality": quality, "aspect": aspect,
-            "provider": "openai-codex", "prompt": prompt, "refs": len(data_urls)}
+            "provider": "openai-codex", "model": IMAGE_MODEL, "prompt": prompt, "refs": len(data_urls)}
 
 
 # ---------------------------------------------------------------------------
