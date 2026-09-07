@@ -18,8 +18,16 @@ import traceback
 from pathlib import Path
 from typing import AsyncIterator, Optional
 
-# Chỉ để dùng strip_provider_markers. engine KHÔNG import ngược claude_cli nên không có vòng.
-import engine
+try:
+    import engine
+except ImportError:
+    try:
+        from server import engine
+    except ImportError:
+        s_dir = str(Path(__file__).resolve().parent)
+        if s_dir not in sys.path:
+            sys.path.insert(0, s_dir)
+        import engine
 
 
 # Registry các tiến trình Claude đang chạy - để ngắt giữa chừng.

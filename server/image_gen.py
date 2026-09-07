@@ -708,15 +708,21 @@ def generate_antigravity_cli_image(
     )
 
     t0 = time.time()
+    prompt_text = (
+        f"Use the tool generate_image now with:\n"
+        f"Prompt: {art_prompt}\n"
+        f"ImageName: sao_viet_cover\n"
+    )
     cmd = [
         cli,
         "--dangerously-skip-permissions",
         "-p",
-        f"Dùng tool generate_image tạo 1 bức ảnh với Prompt: '{art_prompt}', ImageName='sao_viet_cover'",
+        prompt_text,
     ]
 
+    effective_timeout = max(timeout_s or 90.0, 120.0)
     try:
-        r = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=timeout_s)
+        r = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=effective_timeout)
     except Exception as e:
         print(f"[image_gen] Lỗi chạy agy generate_image: {e}", file=sys.stderr)
         return None
@@ -725,6 +731,8 @@ def generate_antigravity_cli_image(
     cand_dirs = [
         home / ".gemini" / "antigravity-cli" / "brain",
         home / ".gemini" / "antigravity-ide" / "brain",
+        home / ".gemini" / "brain",
+        home / ".gemini",
         Path.cwd() / ".gemini" / "brain",
     ]
     files = []

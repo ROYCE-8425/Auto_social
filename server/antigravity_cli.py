@@ -43,6 +43,10 @@ import uuid
 from pathlib import Path
 from typing import AsyncIterator, Optional
 
+_server_dir = str(Path(__file__).resolve().parent)
+if _server_dir not in sys.path:
+    sys.path.insert(0, _server_dir)
+
 try:
     from claude_cli import _home_dir, _no_window, tim_binary
 except ImportError:

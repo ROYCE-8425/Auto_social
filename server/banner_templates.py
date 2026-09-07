@@ -1574,10 +1574,11 @@ def render_template_modern_ribbon_wave(
     draw = ImageDraw.Draw(canvas)
     draw.ellipse([p_cx - p_r, p_cy - p_r, p_cx + p_r, p_cy + p_r], outline="#FFFFFF", width=14)
 
-    # 6. Logo thương hiệu trên khung tròn
+    # 6. Logo thương hiệu đặt chuẩn xác ở góc trên bên trái
+    left_m = 120
     if logo_path:
         badge_w, badge_h = 320, 110
-        paste_brand_logo(canvas, logo_path, (p_cx + p_r - 240, p_cy - p_r + 30, p_cx + p_r - 240 + badge_w, p_cy - p_r + 30 + badge_h), bg_badge=True)
+        paste_brand_logo(canvas, logo_path, (left_m, 60, left_m + badge_w, 60 + badge_h), bg_badge=True)
     draw = ImageDraw.Draw(canvas)
 
     # 7. Thẻ Voucher 3D nổi bật
@@ -1616,7 +1617,6 @@ def render_template_modern_ribbon_wave(
     draw.text((date_x + 10, 264), "ƯU ĐÃI NĂM MỚI", font=get_font(18, bold=True), fill="#64748B")
 
     # 8. Typography tiêu đề góc trên trái
-    left_m = 120
     eyebrow = badge_text or "ƯU ĐÃI LỚN NHẤT NĂM"
     draw.text((left_m, 210), eyebrow.upper(), font=get_font(40, bold=True), fill="#334155")
 
@@ -1628,9 +1628,17 @@ def render_template_modern_ribbon_wave(
         tbb = draw.textbbox((0, 0), line, font=font_t)
         ty += (tbb[3] - tbb[1]) + 20
 
-    # 9. Phần nội dung dải cam phía dưới
+    # 9. Phần nội dung dải cam phía dưới (tự động co chữ, cấm đè lên ảnh tròn)
     sub_title = subtitle or "HỌC THỰC CHIẾN - ĐI LÀM NGAY"
-    draw.text((left_m, 1260), sub_title.upper(), font=get_font(52, weight="extrabold"), fill="#FFFFFF")
+    max_sub_w = (p_cx - p_r) - left_m - 40
+    f_sub_chosen = get_font(42, weight="extrabold")
+    for sz in (48, 42, 36, 32, 28, 24):
+        f_test = get_font(sz, weight="extrabold")
+        bb = draw.textbbox((0, 0), sub_title.upper(), font=f_test)
+        if (bb[2] - bb[0]) <= max_sub_w:
+            f_sub_chosen = f_test
+            break
+    draw.text((left_m, 1260), sub_title.upper(), font=f_sub_chosen, fill="#FFFFFF")
 
     def_bullets = [
         "Tặng khóa học Online trọn đời trị giá 500K",
