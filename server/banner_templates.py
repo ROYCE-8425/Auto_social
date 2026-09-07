@@ -1929,12 +1929,32 @@ def render_template_modern_ribbon_wave(
         draw.text((left_m + 56, by), b, font=f_b, fill="#FFFFFF")
         by += 68
 
-    # 10. 3 Khối Học phí dạng Viên thuốc (Price Pills)
-    pills_data = [
-        ("Tin Học Văn Phòng Căn Bản", "Trọn khóa 800k"),
-        ("Tin Học Văn Phòng & AI Ứng Dụng", "Trọn khóa 1.550k"),
-        ("THVP & AI Doanh Nghiệp Chuyên Sâu", "Trọn khóa 2.950k"),
-    ]
+    # 10. 3 Khối Học phí dạng Viên thuốc (Price Pills) - Map động theo ngành học
+    t_low = (title or "").lower()
+    if any(k in t_low for k in ("do hoa", "đồ họa", "photoshop", "illustrator", "design")):
+        pills_data = [
+            ("Photoshop & Illustrator Cơ Bản", "Trọn khóa 1.200k"),
+            ("Thiết Kế Đồ Họa Thực Chiến", "Trọn khóa 2.500k"),
+            ("Đồ Họa & Nhận Diện Chuyên Sâu", "Trọn khóa 3.800k"),
+        ]
+    elif any(k in t_low for k in ("autocad", "cad", "kỹ thuật", "ky thuat", "solidworks", "nội thất", "noi that")):
+        pills_data = [
+            ("AutoCAD 2D Cơ Bản & Thực Hành", "Trọn khóa 1.100k"),
+            ("AutoCAD 3D & Bản Vẽ Triển Khai", "Trọn khóa 2.200k"),
+            ("Thiết Kế Kỹ Thuật Chuyên Sâu", "Trọn khóa 3.500k"),
+        ]
+    elif any(k in t_low for k in ("kế toán", "ke toan", "misa", "thuế", "thue")):
+        pills_data = [
+            ("Kế Toán Nội Bộ Thực Hành", "Trọn khóa 1.200k"),
+            ("Kế Toán Thuế & BCTC Doanh Nghiệp", "Trọn khóa 2.500k"),
+            ("Kế Toán Tổng Hợp Thực Chiến", "Trọn khóa 3.500k"),
+        ]
+    else:
+        pills_data = [
+            ("Tin Học Văn Phòng Căn Bản", "Trọn khóa 800k"),
+            ("Tin Học Văn Phòng & AI Ứng Dụng", "Trọn khóa 1.550k"),
+            ("THVP & AI Doanh Nghiệp Chuyên Sâu", "Trọn khóa 2.950k"),
+        ]
     py = 1340
     for c_name, price in pills_data:
         pill_w = 980
