@@ -327,95 +327,22 @@ def render_template_split_right(
     badge_text: Optional[str] = None,
     footer_text: Optional[str] = None,
     hotline: Optional[str] = None,
-    brand_color: Tuple[int, int, int] = (11, 35, 65),  # Navy Sao Việt
+    brand_color: Tuple[int, int, int] = (11, 35, 65),
+    **kwargs,
 ) -> Image.Image:
-    """Template 1: Chuẩn theo Ảnh 2 của user gửi.
-    - Cột trái (50%): Ảnh lớp học thật, cắt dọc sắc nét.
-    - Cột phải (50%): Khối thương hiệu Deep Navy, Logo Sao Việt ở góc trên, Tiêu đề lớn, Highlights chữ vàng rực rỡ."""
-    W, H = 2000, 2000
-    canvas = Image.new("RGBA", (W, H), (brand_color[0], brand_color[1], brand_color[2], 255))
-
-    # 1. Ảnh lớp học thật bên trái
-    split_x = 980
-    left_img = smart_crop_and_enhance(classroom_img, split_x, H)
-    canvas.paste(left_img, (0, 0))
-
-    # Viền phân cách ánh kim mờ giữa ảnh và panel
-    draw = ImageDraw.Draw(canvas)
-    draw.line([(split_x, 0), (split_x, H)], fill=(255, 215, 0, 180), width=4)
-
-    # 2. Logo Sao Việt góc trên phải
-    if logo_path:
-        badge_w, badge_h = 320, 110
-        lx1 = W - badge_w - 70
-        ly1 = 70
-        paste_brand_logo(canvas, logo_path, (lx1, ly1, lx1 + badge_w, ly1 + badge_h), bg_badge=True)
-
-    # 3. Badge ưu đãi nổi bật
-    if badge_text:
-        font_badge = get_font(32, bold=True)
-        bx = split_x + 60
-        by = 85
-        draw_pill_badge(draw, badge_text, bx, by, font_badge,
-                        bg_color=(230, 81, 0, 240), border_color=(255, 215, 0, 255))
-
-    # 4. Tiêu đề chính cực lớn, sắc nét
-    content_x = split_x + 60
-    max_text_w = W - content_x - 60
-    title_y = 260 if badge_text else 180
-    has_hl = bool(highlights and len(highlights) > 0)
-    start_sz = 74 if has_hl else 84
-    font_title, title_lines = fit_title_font(draw, title, max_text_w, 520 if not has_hl else 420, start_size=start_sz, min_size=46)
-
-    curr_y = title_y
-    for line in title_lines:
-        draw.text((content_x, curr_y), line, font=font_title, fill="#FFFFFF")
-        bb = draw.textbbox((0, 0), line, font=font_title)
-        curr_y += (bb[3] - bb[1]) + (26 if not has_hl else 20)
-
-    # Phân cách mỏng
-    curr_y += 25
-    draw.line([(content_x, curr_y), (content_x + 350, curr_y)], fill=(255, 193, 7, 220), width=4)
-    curr_y += 45
-
-    # 5. Phụ đề (Subtitle / Tagline) - Vàng nghệ bắt mắt
-    if subtitle:
-        font_sub = get_font(42 if not has_hl else 40, bold=True)
-        sub_lines = wrap_text(draw, subtitle, font_sub, max_text_w)
-        for sline in sub_lines:
-            draw.text((content_x, curr_y), sline, font=font_sub, fill="#FFD54F")
-            bb = draw.textbbox((0, 0), sline, font=font_sub)
-            curr_y += (bb[3] - bb[1]) + 16
-        curr_y += 35
-
-    # 6. Highlights / Lợi ích thực chiến (Bullets)
-    if has_hl:
-        font_hl = get_font(34, bold=True)
-        for hl in highlights[:4]:
-            hl_text = f"•  {hl}"
-            hl_lines = wrap_text(draw, hl_text, font_hl, max_text_w - 30)
-            for hline in hl_lines:
-                draw.text((content_x, curr_y), hline, font=font_hl, fill="#E2E8F0")
-                bb = draw.textbbox((0, 0), hline, font=font_hl)
-                curr_y += (bb[3] - bb[1]) + 14
-            curr_y += 18
-
-    # 7. Khối Hotline / Cam kết
-    if hotline:
-        card_y = H - 280
-        draw.rounded_rectangle([content_x, card_y, W - 60, card_y + 110], radius=16,
-                               fill=(20, 50, 90, 255), outline=(255, 215, 0, 180), width=2)
-        font_hotline = get_font(34, bold=True)
-        hl_str = f"Hotline / Zalo: {hotline}"
-        draw.text((content_x + 30, card_y + 36), hl_str, font=font_hotline, fill="#FFEB3B")
-
-    # 8. Chân trang Footer
-    if footer_text:
-        font_ft = get_font(28, bold=True)
-        ft_str = footer_text.upper()
-        draw.text((content_x, H - 90), ft_str, font=font_ft, fill="#94A3B8")
-
-    return canvas.convert("RGB")
+    """Mẫu split_right chia đôi ảnh đã được chuyển hướng sang Photo-First Cinematic
+    để không bao giờ cắt đôi người hay để khoảng trống trơ trọi."""
+    return render_template_photo_first_cinematic(
+        classroom_img=classroom_img,
+        logo_path=logo_path,
+        title=title,
+        subtitle=subtitle,
+        highlights=highlights,
+        badge_text=badge_text,
+        footer_text=footer_text,
+        hotline=hotline,
+        brand_color=brand_color,
+    )
 
 
 def render_template_split_left(
@@ -428,80 +355,21 @@ def render_template_split_left(
     footer_text: Optional[str] = None,
     hotline: Optional[str] = None,
     brand_color: Tuple[int, int, int] = (11, 35, 65),
+    **kwargs,
 ) -> Image.Image:
-    """Template 2: Đổi bên (Trái: Panel thông tin thương hiệu, Phải: Ảnh lớp học thật)."""
-    W, H = 2000, 2000
-    canvas = Image.new("RGBA", (W, H), (brand_color[0], brand_color[1], brand_color[2], 255))
-
-    split_x = 1020
-    # Ảnh lớp học bên phải
-    right_img = smart_crop_and_enhance(classroom_img, W - split_x, H)
-    canvas.paste(right_img, (split_x, 0))
-
-    draw = ImageDraw.Draw(canvas)
-    draw.line([(split_x, 0), (split_x, H)], fill=(255, 215, 0, 180), width=4)
-
-    # Logo góc trên trái
-    if logo_path:
-        badge_w, badge_h = 320, 110
-        paste_brand_logo(canvas, logo_path, (60, 60, 60 + badge_w, 60 + badge_h), bg_badge=True)
-
-    # Badge ưu đãi
-    if badge_text:
-        font_badge = get_font(32, bold=True)
-        draw_pill_badge(draw, badge_text, split_x - 380, 80, font_badge,
-                        bg_color=(230, 81, 0, 240), border_color=(255, 215, 0, 255))
-
-    # Tiêu đề chính
-    content_x = 60
-    max_text_w = split_x - 120
-    has_hl = bool(highlights and len(highlights) > 0)
-    title_y = 250 if badge_text else 180
-    start_sz = 74 if has_hl else 84
-    font_title, title_lines = fit_title_font(draw, title, max_text_w, 520 if not has_hl else 420, start_size=start_sz, min_size=46)
-
-    curr_y = title_y
-    for line in title_lines:
-        draw.text((content_x, curr_y), line, font=font_title, fill="#FFFFFF")
-        bb = draw.textbbox((0, 0), line, font=font_title)
-        curr_y += (bb[3] - bb[1]) + (26 if not has_hl else 20)
-
-    curr_y += 25
-    draw.line([(content_x, curr_y), (content_x + 350, curr_y)], fill=(255, 193, 7, 220), width=4)
-    curr_y += 45
-
-    if subtitle:
-        font_sub = get_font(42 if not has_hl else 40, bold=True)
-        sub_lines = wrap_text(draw, subtitle, font_sub, max_text_w)
-        for sline in sub_lines:
-            draw.text((content_x, curr_y), sline, font=font_sub, fill="#FFD54F")
-            bb = draw.textbbox((0, 0), sline, font=font_sub)
-            curr_y += (bb[3] - bb[1]) + 16
-        curr_y += 35
-
-    if has_hl:
-        font_hl = get_font(34, bold=True)
-        for hl in highlights[:4]:
-            hl_text = f"•  {hl}"
-            hl_lines = wrap_text(draw, hl_text, font_hl, max_text_w - 20)
-            for hline in hl_lines:
-                draw.text((content_x, curr_y), hline, font=font_hl, fill="#E2E8F0")
-                bb = draw.textbbox((0, 0), hline, font=font_hl)
-                curr_y += (bb[3] - bb[1]) + 14
-            curr_y += 18
-
-    if hotline:
-        card_y = H - 280
-        draw.rounded_rectangle([content_x, card_y, split_x - 60, card_y + 110], radius=16,
-                               fill=(20, 50, 90, 255), outline=(255, 215, 0, 180), width=2)
-        font_hotline = get_font(34, bold=True)
-        draw.text((content_x + 30, card_y + 36), f"Hotline / Zalo: {hotline}", font=font_hotline, fill="#FFEB3B")
-
-    if footer_text:
-        font_ft = get_font(28, bold=True)
-        draw.text((content_x, H - 90), footer_text.upper(), font=font_ft, fill="#94A3B8")
-
-    return canvas.convert("RGB")
+    """Mẫu split_left chia đôi ảnh đã được chuyển hướng sang Modern Ribbon Wave
+    để layout hài hòa chuẩn poster Sao Việt thương hiệu."""
+    return render_template_modern_ribbon_wave(
+        classroom_img=classroom_img,
+        logo_path=logo_path,
+        title=title,
+        subtitle=subtitle,
+        highlights=highlights,
+        badge_text=badge_text,
+        footer_text=footer_text,
+        hotline=hotline,
+        brand_color=brand_color,
+    )
 
 
 def render_template_bottom_bar(
@@ -946,117 +814,22 @@ def render_template_3d_pills(
     footer_text: Optional[str] = None,
     hotline: Optional[str] = None,
     brand_color: Tuple[int, int, int] = (11, 35, 65),
+    **kwargs,
 ) -> Image.Image:
-    """Template 6: '3d_pills' - Phiên bản nâng cấp có khung Frosted Glass che chắn thẩm mỹ."""
-    W, H = 2000, 2000
-    base = smart_crop_and_enhance(classroom_img, W, H).convert("RGBA")
+    """Mẫu 3d_pills chia cắt ảnh học viên và để panel trống phản cảm đã được LOẠI BỎ vĩnh viễn.
+    Tự động chuyển sang Modern Ribbon Wave để đảm bảo 100% banner đẹp sang trọng chuẩn Sao Việt."""
+    return render_template_modern_ribbon_wave(
+        classroom_img=classroom_img,
+        logo_path=logo_path,
+        title=title,
+        subtitle=subtitle,
+        highlights=highlights,
+        badge_text=badge_text,
+        footer_text=footer_text,
+        hotline=hotline,
+        brand_color=brand_color,
+    )
 
-    glass_w = 900
-    glass_layer = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-    gd = ImageDraw.Draw(glass_layer)
-    gd.rectangle([0, 0, glass_w, H], fill=(11, 35, 65, 230))
-    gd.line([(glass_w, 0), (glass_w, H)], fill=(255, 215, 0, 200), width=4)
-    base = Image.alpha_composite(base, glass_layer)
-
-    if logo_path:
-        paste_brand_logo(base, logo_path, (70, 70, 450, 200), bg_badge=True)
-
-    x_start = 70
-    y_start = 250
-    max_allowed_w = glass_w - 140
-
-    draw = ImageDraw.Draw(base)
-
-    def draw_single_capsule(text: str, base_font_size: int, y_pos: int, highlight_token: Optional[str] = None) -> int:
-        pad_x = 42
-        pad_y = 22
-        chosen_font = get_font(base_font_size, bold=True)
-        for sz in range(base_font_size, 26, -2):
-            f_test = get_font(sz, bold=True)
-            bb = draw.textbbox((0, 0), text, font=f_test)
-            if (bb[2] - bb[0]) + pad_x * 2 <= max_allowed_w:
-                chosen_font = f_test
-                break
-
-        bb = draw.textbbox((0, 0), text, font=chosen_font)
-        text_w = bb[2] - bb[0]
-        text_h = bb[3] - bb[1]
-        capsule_w = text_w + pad_x * 2
-        capsule_h = text_h + pad_y * 2
-        rad = capsule_h // 2
-
-        sh = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-        sh_draw = ImageDraw.Draw(sh)
-        sh_draw.rounded_rectangle([x_start, y_pos + 6, x_start + capsule_w, y_pos + capsule_h + 6],
-                                  radius=rad, fill=(0, 0, 0, 110))
-        sh = sh.filter(ImageFilter.GaussianBlur(12))
-        nonlocal base
-        base = Image.alpha_composite(base, sh)
-
-        cap = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-        cap_draw = ImageDraw.Draw(cap)
-        cap_draw.rounded_rectangle([x_start, y_pos, x_start + capsule_w, y_pos + capsule_h],
-                                   radius=rad, fill=(brand_color[0], brand_color[1], brand_color[2], 252),
-                                   outline=(255, 215, 0, 190), width=3)
-
-        tx = x_start + pad_x
-        ty = y_pos + pad_y - 3
-        if highlight_token and highlight_token in text:
-            parts = text.split(highlight_token, 1)
-            cap_draw.text((tx, ty), parts[0], font=chosen_font, fill="#FFFFFF")
-            p1_bb = cap_draw.textbbox((0, 0), parts[0], font=chosen_font)
-            tx += (p1_bb[2] - p1_bb[0])
-            cap_draw.text((tx, ty), highlight_token, font=chosen_font, fill="#FFD54F")
-            hl_bb = cap_draw.textbbox((0, 0), highlight_token, font=chosen_font)
-            tx += (hl_bb[2] - hl_bb[0])
-            cap_draw.text((tx, ty), parts[1], font=chosen_font, fill="#FFFFFF")
-        else:
-            cap_draw.text((tx, ty), text, font=chosen_font, fill="#FFFFFF")
-
-        base = Image.alpha_composite(base, cap)
-        return y_pos + capsule_h + 28
-
-    t_clean = (title or "TIN HỌC VĂN PHÒNG").upper()
-    curr_y = draw_single_capsule(t_clean, 50, y_start)
-
-    if badge_text:
-        b_clean = badge_text.upper()
-        hl_token = "30%" if "30%" in b_clean else ("50%" if "50%" in b_clean else None)
-        curr_y = draw_single_capsule(b_clean, 44, curr_y, highlight_token=hl_token)
-
-    if highlights and len(highlights) > 0:
-        h_clean = highlights[0].upper()
-        hl_token3 = "1-1" if "1-1" in h_clean else None
-        curr_y = draw_single_capsule(h_clean, 44, curr_y, highlight_token=hl_token3)
-
-    if subtitle:
-        font_sub = get_font(34, bold=True)
-        draw.text((x_start + 10, curr_y + 10), subtitle, font=font_sub, fill="#FFD54F")
-        curr_y += 50
-
-    if highlights and len(highlights) > 1:
-        font_hl = get_font(32, bold=True)
-        curr_y += 20
-        for e_hl in highlights[1:4]:
-            hl_lines = wrap_text(draw, f"•  {e_hl}", font_hl, max_allowed_w - 20)
-            for hline in hl_lines:
-                draw.text((x_start + 10, curr_y), hline, font=font_hl, fill="#E2E8F0")
-                bb = draw.textbbox((0, 0), hline, font=font_hl)
-                curr_y += (bb[3] - bb[1]) + 14
-            curr_y += 14
-
-    if hotline:
-        card_y = H - 260
-        draw.rounded_rectangle([x_start, card_y, glass_w - 70, card_y + 100], radius=18,
-                               fill=(20, 50, 90, 255), outline=(255, 215, 0, 180), width=2)
-        font_hotline = get_font(32, bold=True)
-        draw.text((x_start + 24, card_y + 32), f"Hotline / Zalo: {hotline}", font=font_hotline, fill="#FFEB3B")
-
-    if footer_text:
-        font_ft = get_font(26, bold=True)
-        draw.text((x_start + 10, H - 90), footer_text.upper(), font=font_ft, fill="#94A3B8")
-
-    return base.convert("RGB")
 
 
 def render_template_bento_box(
@@ -1881,16 +1654,18 @@ def render_template_modern_ribbon_wave(
     ]
     py = 1340
     for c_name, price in pills_data:
-        pill_w = 880
+        pill_w = 980
         pill_h = 82
-        px = W - pill_w - 90
+        px = W - pill_w - 60
         draw.rounded_rectangle([px, py, px + pill_w, py + pill_h], radius=40, fill="#FFFFFF")
-        tag_w = 210
+        tag_w = 195
         draw.rounded_rectangle([px, py, px + tag_w, py + pill_h], radius=40, fill="#F59E0B")
-        draw.text((px + 24, py + 16), "Học phí", font=get_font(20, bold=True), fill="#FFFFFF")
-        draw.text((px + 24, py + 42), "thấp nhất", font=get_font(22, weight="extrabold"), fill="#FFFFFF")
-        draw.text((px + tag_w + 24, py + 26), c_name, font=get_font(26, bold=True), fill="#1E293B")
-        draw.text((px + pill_w - 260, py + 24), price, font=get_font(28, weight="extrabold"), fill="#0369A1")
+        draw.text((px + 22, py + 16), "Học phí", font=get_font(20, bold=True), fill="#FFFFFF")
+        draw.text((px + 22, py + 42), "thấp nhất", font=get_font(22, weight="extrabold"), fill="#FFFFFF")
+        draw.text((px + tag_w + 18, py + 26), c_name, font=get_font(24, bold=True), fill="#1E293B")
+        font_pr = get_font(26, weight="extrabold")
+        p_bb = draw.textbbox((0, 0), price, font=font_pr)
+        draw.text((px + pill_w - (p_bb[2] - p_bb[0]) - 28, py + 25), price, font=font_pr, fill="#0369A1")
         py += 105
 
     # 11. Chân trang: Hotline & Website
@@ -1913,30 +1688,29 @@ TEMPLATES = {
     "bauhaus_grid": render_template_bauhaus_grid,
     "bento_box": render_template_bento_box,
     "curved_window": render_template_curved_window,
-    "diagonal_slice": render_template_diagonal_slice,
+    "diagonal_slice": render_template_photo_first_cinematic,
     "bottom_bar": render_template_bottom_bar,
-    "split_right": render_template_split_right,
-    "split_left": render_template_split_left,
+    "split_right": render_template_photo_first_cinematic,
+    "split_left": render_template_modern_ribbon_wave,
     "floating_card": render_template_floating_card,
-    "3d_pills": render_template_3d_pills,
+    "3d_pills": render_template_modern_ribbon_wave,
 }
 
-# Danh sách trọng số: Ưu tiên cao nhất cho layout Sóng Marketing Sao Việt (Modern Ribbon Wave)
+# Danh sách trọng số: Ưu tiên cao nhất cho layout Sóng Marketing Sao Việt và Photo-First Cinematic
 TEMPLATE_CHOICES = [
     "modern_ribbon_wave",
     "modern_ribbon_wave",
     "modern_ribbon_wave",
     "photo_first_cinematic",
+    "photo_first_cinematic",
+    "photo_first_cinematic",
     "bento_box",
     "curved_window",
     "floating_card",
-    "split_right",
-    "split_left",
     "bottom_bar",
-    "diagonal_slice",
     "bauhaus_grid",
-    "3d_pills",
 ]
+
 
 
 def generate_authentic_banner(
@@ -1974,8 +1748,8 @@ def generate_authentic_banner(
                 logo_p = cand
                 break
 
-    # KIỂM TRA CHẾ ĐỘ 1: Poster đồ họa đã thiết kế sẵn (có sẵn chữ/nội dung)
-    premade_kws = ("khai-giang", "uu-dai", "poster", "banner", "thong-bao", "looker-studio", "trung-tam-dao-tao", "hoc-ung-dung", "mau-")
+    # KIỂM TRA CHẾ ĐỘ 1: Poster đồ họa đã thiết kế sẵn (chỉ áp dụng cho file poster/standee thật)
+    premade_kws = ("uu-dai-khoa-hoc", "poster", "banner", "mau-poster", "standee")
     is_premade = any(k in c_path.name.lower() for k in premade_kws)
 
     # Nếu ảnh là poster thiết kế sẵn -> Chế độ 1: Hoàn thiện poster chuẩn đăng ngay (không vẽ đè layout lên poster đồ họa)

@@ -679,11 +679,14 @@ def generate_antigravity_cli_image(
     """Tận dụng trực tiếp Antigravity CLI (binary `agy`) đã kết nối trên VPS để tạo ảnh AI miễn phí 100%.
     Chạy lệnh `agy --dangerously-skip-permissions -p` gọi tool `generate_image` của Google Imagen."""
     try:
+        s_dir = str(Path(__file__).resolve().parent)
+        if s_dir not in sys.path:
+            sys.path.insert(0, s_dir)
         from antigravity_cli import find_antigravity_cli
-    except ImportError:
+    except Exception:
         try:
             from server.antigravity_cli import find_antigravity_cli
-        except ImportError:
+        except Exception:
             find_antigravity_cli = None
 
     if not find_antigravity_cli:
@@ -693,13 +696,15 @@ def generate_antigravity_cli_image(
     if not cli or not Path(cli).is_file():
         return None
 
-    import subprocess, time, glob, os, shutil
+    import subprocess, time, os, io
 
     v_root = _resolve_vault(vault_root)
-    clean_p = prompt.replace('"', '').replace("'", "")
+    clean_p = " ".join(prompt.replace('"', '').replace("'", "").split())
+    if len(clean_p) > 400:
+        clean_p = clean_p[:400]
     art_prompt = (
         f"Commercial advertising photography, professional tech education: {clean_p}. "
-        "Modern computer lab, confident Vietnamese students, bright studio key lighting, 8k resolution, photorealistic, realistic skin texture, cinematic"
+        "Modern computer lab, confident Vietnamese students, bright studio key lighting, 8k resolution, photorealistic, realistic skin texture, cinematic composition, absolutely no text, no watermark, no logo."
     )
 
     t0 = time.time()
@@ -707,7 +712,7 @@ def generate_antigravity_cli_image(
         cli,
         "--dangerously-skip-permissions",
         "-p",
-        f"Dùng tool generate_image tạo 1 bức ảnh với Prompt: '{art_prompt}', ImageName='sao_viet_ai'",
+        f"Dùng tool generate_image tạo 1 bức ảnh với Prompt: '{art_prompt}', ImageName='sao_viet_cover'",
     ]
 
     try:
@@ -717,11 +722,17 @@ def generate_antigravity_cli_image(
         return None
 
     home = Path.home()
-    search_pattern = str(home / ".gemini" / "antigravity-cli" / "brain" / "*" / "*.jpg")
-    files = [f for f in glob.glob(search_pattern) if os.path.getmtime(f) >= t0 - 5]
-    if not files:
-        search_pattern2 = str(home / ".gemini" / "antigravity-ide" / "brain" / "*" / "*.jpg")
-        files = [f for f in glob.glob(search_pattern2) if os.path.getmtime(f) >= t0 - 5]
+    cand_dirs = [
+        home / ".gemini" / "antigravity-cli" / "brain",
+        home / ".gemini" / "antigravity-ide" / "brain",
+        Path.cwd() / ".gemini" / "brain",
+    ]
+    files = []
+    for cd in cand_dirs:
+        if cd.is_dir():
+            for ext in ("*.jpg", "*.jpeg", "*.png", "*.webp"):
+                files.extend(list(cd.rglob(ext)))
+    files = [str(f) for f in files if os.path.getmtime(str(f)) >= t0 - 5]
 
     if not files:
         return None
@@ -733,6 +744,38 @@ def generate_antigravity_cli_image(
     # Dán logo thương hiệu Sao Việt nếu có
     if logo_path:
         raw_bytes = overlay_logo(raw_bytes, logo_path, vault_root=vault_root)
+
+    # Thêm dải chân trang sang trọng (Hotline & Tên cơ sở) nếu có
+    if hotline or footer_text:
+        try:
+            from PIL import Image, ImageDraw
+            try:
+                import banner_templates
+            except ImportError:
+                from server import banner_templates
+            ai_img = Image.open(io.BytesIO(raw_bytes)).convert("RGBA")
+            iw, ih = ai_img.size
+            f_h = max(70, int(ih * 0.065))
+            f_bar = Image.new("RGBA", (iw, f_h), (11, 35, 65, 235))
+            f_draw = ImageDraw.Draw(f_bar)
+            f_draw.line([(0, 0), (iw, 0)], fill=(255, 215, 0, 220), width=3)
+
+            f_txt_l = f"📍 {footer_text.upper()}" if footer_text else "🌐 www.tinhocsaoviet.edu.vn"
+            f_txt_r = f"📞 Hotline: {hotline}" if hotline else "ĐÀO TẠO THỰC CHIẾN KÈM 1-1"
+
+            font_f = banner_templates.get_font(max(20, int(f_h * 0.36)), bold=True)
+            f_draw.text((int(iw * 0.04), int(f_h * 0.28)), f_txt_l, font=font_f, fill="#E2E8F0")
+
+            bb_r = f_draw.textbbox((0, 0), f_txt_r, font=font_f)
+            rw_w = bb_r[2] - bb_r[0]
+            f_draw.text((iw - rw_w - int(iw * 0.04), int(f_h * 0.28)), f_txt_r, font=font_f, fill="#FFD54F")
+
+            ai_img.paste(f_bar, (0, ih - f_h), f_bar)
+            out_b = io.BytesIO()
+            ai_img.convert("RGB").save(out_b, format="JPEG", quality=95)
+            raw_bytes = out_b.getvalue()
+        except Exception:
+            pass
 
     saved = save_image_bytes(
         raw_bytes, vault_root, prefix=prefix, ext=".jpg",
@@ -754,6 +797,7 @@ def generate_antigravity_cli_image(
         "footer_text": footer_text,
         "course_id": course_id,
     }
+
 
 
 def _kit_field(md: str, *labels: str) -> str:
@@ -1129,7 +1173,6 @@ def generate_authentic_banner_cover(
             try:
                 from server import banner_templates
             except ImportError:
-                import sys
                 sys.path.insert(0, str(Path(__file__).resolve().parent))
                 import banner_templates
         vault = _resolve_vault(vault_root)
@@ -1432,13 +1475,16 @@ async def generate_gemini(
                 break
 
     p_lower = prompt.lower()
-    is_pure_ai = (
-        style_preference == "ai_pure" or
-        any(k in p_lower for k in ("ai pure", "chi ve anh ai", "không dùng ảnh thật", "khong dung anh that", "pure ai"))
+    force_dataset_photo = (
+        style_preference == "authentic_photo" or
+        any(k in p_lower for k in (
+            "chỉ dùng ảnh thật", "chi dung anh that", "ảnh thật dataset", "anh that dataset",
+            "không dùng ai", "khong dung ai", "dùng ảnh có sẵn", "dung anh co san",
+            "không tạo ai", "khong tao ai", "không gen ai", "khong gen ai"
+        ))
     )
 
-    force_imagen = any(k in p_lower for k in ("imagen", "gemini image", "tao anh ai", "tạo ảnh ai", "style 1", "kieu 1", "kiểu 1"))
-    if not is_pure_ai and not force_imagen:
+    if force_dataset_photo:
         banner_res = generate_authentic_banner_cover(
             vault_root=vault_root,
             page_id=page_id,
@@ -1454,6 +1500,7 @@ async def generate_gemini(
         )
         if banner_res and banner_res.get("ok"):
             return banner_res
+
 
     # tuyệt đối không để AI tự vẽ chữ dẫn đến lỗi chính tả ("PHỞNG", "ŨNG", "THỰC HẢN").
     clean_prompt = re.sub(r'["“][^"”]+["”]', '', prompt)
@@ -1613,8 +1660,9 @@ async def generate_gemini(
                         }
         except Exception as e:
             err = str(e)
-    else:
-        # Nếu không có Google AI Studio API Key: TẬN DỤNG TRỰC TIẾP ANTIGRAVITY CLI ĐANG KẾT NỐI TRÊN VPS!
+
+    # Nếu không có Google AI Studio API Key hoặc API lỗi: TẬN DỤNG TRỰC TIẾP ANTIGRAVITY CLI ĐANG KẾT NỐI TRÊN VPS!
+    if not b64:
         agy_res = generate_antigravity_cli_image(
             prompt=full_prompt,
             aspect_ratio=aspect,
@@ -1629,6 +1677,7 @@ async def generate_gemini(
         )
         if agy_res and agy_res.get("ok"):
             return agy_res
+
 
     # 3. TỰ ĐỘNG CỨU HỘ: Tạo Cover Kiểu 2 từ ảnh thật lớp học dataset + logo Sao Việt chuẩn
     fallback_res = create_dataset_fallback_cover(

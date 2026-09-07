@@ -43,7 +43,10 @@ import uuid
 from pathlib import Path
 from typing import AsyncIterator, Optional
 
-from claude_cli import _home_dir, _no_window, tim_binary
+try:
+    from claude_cli import _home_dir, _no_window, tim_binary
+except ImportError:
+    from server.claude_cli import _home_dir, _no_window, tim_binary
 
 # Model mặc định khi người dùng chưa chọn gì. KHÔNG phải bảng model: chỉ là hạt giống để lượt
 # đầu chạy được nếu `agy models` chưa kịp trả lời. Danh sách thật luôn lấy từ CLI.
