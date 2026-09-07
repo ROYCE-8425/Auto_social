@@ -804,9 +804,16 @@ def swap(cli, mode: str = None, tag: str = None, spec: dict = None,
                 return cli
             ok, why = availability(sp, settings)
             if not ok:
+                chain = [cli]
                 mn = _main_fallback_engine(cli, mode, tag, settings, {prov, CLAUDE}, codex_profile)
                 if mn:
-                    return mn
+                    chain.append(mn)
+                mn = _api_fallback_if_available(cli, mode, tag, settings)
+                if mn:
+                    print(f"[aux] {why} -> fallback sang API thay thế cho full.", file=sys.stderr)
+                    chain.append(mn)
+                if len(chain) > 1:
+                    return _FallbackChain(chain)
                 print(f"[aux] {why} -> việc full tạm dùng lại Claude.", file=sys.stderr)
                 return cli
             if prov == CODEX:
