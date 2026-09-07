@@ -8249,7 +8249,8 @@ async def javis_index(brain: str = Query("brain")):
 @app.post("/image/generate")
 async def image_generate(prompt: str = Form(...), aspect_ratio: str = Form("square"),
                          quality: str = Form("medium"), brain: str = Form("brain"),
-                         images: str = Form(""), page_id: str = Form("")):
+                         images: str = Form(""), page_id: str = Form(""),
+                         save_under: str = Form("")):
     """Tạo ảnh bằng gói ChatGPT (OAuth) → lưu vào attachments/ của vault. Cho UI/gọi trực tiếp;
     engine LLM dùng tool javis_generate_image (plugin image-chatgpt). Trả rel_path để nhúng ![](...).
 
@@ -8258,7 +8259,8 @@ async def image_generate(prompt: str = Form(...), aspect_ratio: str = Form("squa
     ds = [x.strip() for x in re.split(r"[,\n]", images or "") if x.strip()]
     res = await image_gen.generate_chatgpt(prompt, aspect_ratio, quality,
                                            vault_root=_brain_root(brain), images=ds,
-                                           page_id=page_id)
+                                           page_id=page_id,
+                                           save_under=(save_under or None))
     return JSONResponse(res, status_code=200 if res.get("ok") else 400)
 
 

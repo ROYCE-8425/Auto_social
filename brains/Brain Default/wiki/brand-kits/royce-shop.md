@@ -88,7 +88,7 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Vẽ kỹ th
   + Kiểu B (không có ảnh ngành, lịch lễ): bám mẫu attachments/dataset/_mau/mau-lich-le-tu-gen.png (poster đủ họa tiết đỏ vàng lễ hội, đèn lồng, trăng, 2 khối lịch nghỉ và học lại, logo Sao Việt; cấm vẽ poster tối giản).
 - Album tỷ lệ 7/3: Ảnh 1 = banner quảng cáo (gen từ 1 raw dataset đúng thẻ + logo kit, HOẶC gen AI full). Tối đa 3 ảnh gen/bài; phần còn lại (~7) ảnh raw folder thẻ. Cover luôn _xuat.
 - Nơi lưu ảnh gen: attachments/dataset/_xuat/
-- Gen cover: gemini_generate_image (KHÔNG javis_generate_image, KHÔNG image_gen Grok). logo= file Logo chính kit, images= 1 raw folder thẻ (tin học = attachments/dataset/tin-hoc _ai/ — CẤM tin-hoc/). Album 7/3.
+- Gen cover: mặc định dùng gemini_generate_image cho ảnh thật/template. Nếu brief hoặc model hiện tại yêu cầu ChatGPT/OpenAI/gpt-image/javis_generate_image thì dùng javis_generate_image, truyền page_id=royce-shop, logo= file Logo chính kit nếu có, images= 1 raw folder thẻ nếu cần tham chiếu, save_under=attachments/dataset/_xuat. Tin học = attachments/dataset/tin-hoc _ai/ — CẤM tin-hoc/. Album 7/3.
 - Đối chiếu số liệu: caption và chữ trên ảnh bắt buộc cùng ngày/giờ và số liệu. Nếu lệch phải sửa caption trước khi đăng, không đăng lệch
 - Đăng đúng 1 lần: chỉ gọi fb_page_photo hoặc fb_page_post 1 lần. CẤM gọi fb_page_delete trừ khi user bảo xóa đúng post_id
 

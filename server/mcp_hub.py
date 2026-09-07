@@ -546,8 +546,10 @@ CORE_TOOL_FNS = frozenset({
     "javis_read_file",
     "javis_list_dir",
     "javis_write_file",
-    # Đăng Fanpage (Gemini API): model hay bịa javis_generate_image / tin folder cũ
-    # nếu phải search. Phơi thẳng tool ảnh + album.
+    # Đăng Fanpage / tạo ảnh: phơi thẳng tool ảnh + album để model không chỉ nói suông.
+    # gemini_generate_image = đường ảnh thật/template mặc định cho Fanpage.
+    # javis_generate_image = đường ChatGPT/GPT Image khi user chọn OpenAI hoặc yêu cầu rõ.
+    "javis_generate_image",
     "gemini_generate_image",
     "fb_page_album",
     "fb_page_photo",
@@ -746,10 +748,11 @@ def _lazy_tools_and_route(visible_tools, visible_route, pool, full_route, top_k,
             return f"ERROR: thiếu 'name'. Dùng {_LAZY_SEARCH} để tìm tên tool trước."
         if name in (_LAZY_SEARCH, _LAZY_RUN):
             return f"ERROR: '{name}' là meta-tool, không gọi qua {_LAZY_RUN}."
-        if name in ("javis_generate_image", "image_gen", "image_edit"):
+        if name in ("image_gen", "image_edit"):
             name = "gemini_generate_image"
         if name not in full_route:
-            return (f"ERROR: không có tool '{name}'. Ảnh Fanpage = gemini_generate_image "
+            return (f"ERROR: không có tool '{name}'. Ảnh Fanpage mặc định = gemini_generate_image; "
+                    "ảnh bằng ChatGPT/OpenAI = javis_generate_image. "
                     "(logo= file kit, images= 1 raw attachments/dataset/tin-hoc _ai/ — "
                     f"không phải tin-hoc/). Dùng {_LAZY_SEARCH} nếu tên khác.")
         return await mcp_client.call_route(full_route, name, targs)

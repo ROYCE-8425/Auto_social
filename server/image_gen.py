@@ -336,7 +336,8 @@ def brand_png(raw: bytes) -> bytes:
         return raw                                    # gắn nhãn hỏng thì thà mất nhãn còn hơn mất ảnh
 
 
-def save_png_b64(b64: str, vault_root: Optional[str], prefix: str = "javis-img") -> dict:
+def save_png_b64(b64: str, vault_root: Optional[str], prefix: str = "javis-img",
+                 subdir: Optional[str] = None) -> dict:
     """Giải mã b64 → lưu PNG vào <vault>/attachments. Trả {ok, rel_path, abs_path, file}."""
     try:
         raw = base64.b64decode(b64)
@@ -348,7 +349,11 @@ def save_png_b64(b64: str, vault_root: Optional[str], prefix: str = "javis-img")
         raw = strip_c2pa_png(raw)
     raw = brand_png(raw)
     vault = _resolve_vault(vault_root)
-    adir = _attachments_dir(vault)
+    adir = (vault / subdir) if subdir else _attachments_dir(vault)
+    try:
+        adir.mkdir(parents=True, exist_ok=True)
+    except OSError:
+        pass
     fname = f"{prefix}-{time.strftime('%Y%m%d-%H%M%S')}-{uuid.uuid4().hex[:6]}.png"
     fpath = adir / fname
     try:
@@ -397,7 +402,8 @@ def _headers(token: str, account_id: str) -> dict:
 async def generate_chatgpt(prompt: str, aspect_ratio: str = "square", quality: str = "medium",
                            vault_root: Optional[str] = None, timeout_s: float = 300.0,
                            images: Optional[list] = None, page_id: Optional[str] = None,
-                           brand_kit: Optional[dict] = None) -> dict:
+                           brand_kit: Optional[dict] = None,
+                           save_under: Optional[str] = None) -> dict:
     """Tạo 1 ảnh bằng gói ChatGPT. Trả {ok, rel_path, abs_path, size, quality, aspect} hoặc {ok:False, error}.
 
     `images` = danh sách đường dẫn ảnh MẪU trong brain. Có ảnh thì ChatGPT NHÌN THẤY ảnh thật
@@ -472,7 +478,7 @@ async def generate_chatgpt(prompt: str, aspect_ratio: str = "square", quality: s
     if not b64:
         return {"ok": False, "error": err or "ChatGPT không trả ảnh (gói ChatGPT có thể chưa hỗ trợ tạo ảnh qua Codex)."}
 
-    saved = save_png_b64(b64, vault_root, prefix="javis-img")
+    saved = save_png_b64(b64, vault_root, prefix="javis-img", subdir=save_under)
     if not saved.get("ok"):
         return saved
     return {"ok": True, "rel_path": saved["rel_path"], "abs_path": saved["abs_path"],

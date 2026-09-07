@@ -798,7 +798,7 @@ gì, dữ liệu/file/artifact nào được tạo và cách đã kiểm chứng
 Đăng Facebook: BẮT BUỘC GỌI TOOL fb_page_album (hoặc fb_page_photo) để đăng thật lên Facebook lấy post_id.
 TUYỆT ĐỐI CẤM dừng lại ở bản nháp, CẤM hỏi "vui lòng xem xét/xác nhận", CẤM hỏi người dùng.
 TUYỆT ĐỐI CẤM BỊA HOẶC MOCK post_id hoặc link post (cấm 87654321..., cấm số mẫu). Phải thực sự gọi tool đăng bài.
-Ảnh = gemini_generate_image (KHÔNG phải javis_generate_image) ở chế độ ảnh thật: logo= file kit, images=1 raw, style_preference=authentic_photo nếu tool hỗ trợ. Cover PHẢI giữ người/lớp học thật từ dataset; CẤM AI vẽ lại người/lớp học, CẤM AI full poster trừ khi brief ghi rõ ai_full. Album fb_page_album (photos BẮT BUỘC là mảng list ["path1", "path2"], KHÔNG bọc thành chuỗi string).
+Ảnh = mặc định gemini_generate_image ở chế độ ảnh thật: logo= file kit, images=1 raw, style_preference=authentic_photo nếu tool hỗ trợ. Nếu brief/user/model yêu cầu ChatGPT/OpenAI/gpt-image/javis_generate_image thì dùng javis_generate_image với page_id + save_under="attachments/dataset/_xuat". Cover PHẢI giữ người/lớp học thật từ dataset khi không opt-in AI full; CẤM AI vẽ lại người/lớp học, CẤM AI full poster trừ khi brief ghi rõ ai_full. Album fb_page_album (photos BẮT BUỘC là mảng list ["path1", "path2"], KHÔNG bọc thành chuỗi string).
 Hàng ngày: chạy pick_next_fanpage.py, đọc ĐÚNG wiki/brand-kits/<kit> (không mặc định royce-shop).
 Kanban 1 page: đọc kit page đó. Caption 60-120 dòng, giọng+màu+logo+chân trang = kit.
 Đọc wiki/brand-kits/_y-chu-dang-bai.md + _quy-trinh-dang-bai.md + _the-khoa-hoc.md.
@@ -857,11 +857,10 @@ CẤM [[NEEDS_INPUT]] vì 'không có tool / Royce chưa MCP'. CẤM địa ch�
                 "Chỉ có URL hoặc post_id giả, không có post_id Graph thật. Chưa đăng. "
                 "Gọi fb_page_album rồi dán nguyên JSON tool (ok, post_id)."
             )
-        if "javis_generate_image" in tl:
+        if "javis_generate_image" in tl and "post_id" not in tl and "fb_page_" not in tl:
             return (
-                "Sai tool ảnh: không có javis_generate_image trên Gemini. "
-                "Gọi javis_search_tools('gemini image') rồi javis_run_tool "
-                "gemini_generate_image (logo= file kit, images= 1 raw)."
+                "Đã tạo ảnh bằng javis_generate_image nhưng chưa đăng Facebook. "
+                "Tiếp tục chuẩn hóa album rồi gọi fb_page_album/fb_page_photo để lấy post_id thật."
             )
         if any(h in tl for h in ("bạn có muốn", "ban co muon", "vui lòng xem xét", "xác nhận nếu", "bản nháp caption")):
             return "Worker dừng ở bản nháp/hỏi thay vì đăng thật. Cấm hỏi trên Kanban. Bắt buộc gọi fb_page_album lấy post_id."

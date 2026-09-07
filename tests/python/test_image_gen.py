@@ -225,10 +225,13 @@ check("Brand Kit đọc được màu/font/style/quy tắc",
       "#6C3BFF" in guide and "Inter" in guide and "không che mặt" in guide)
 _install_bat_payload(sse)
 r_brand = asyncio.run(image_gen.generate_chatgpt(
-    "Tạo cover Facebook khóa Tin học văn phòng", vault_root=vault, page_id="royce-shop"))
+    "Tạo cover Facebook khóa Tin học văn phòng", vault_root=vault, page_id="royce-shop",
+    save_under="attachments/dataset/_xuat"))
 _text_brand = ((_goi.get("input") or [{}])[0].get("content") or [{}])[0].get("text", "")
 check("ChatGPT image prompt tự gắn BRAND KIT RULES theo page_id",
       r_brand.get("ok") is True and "BRAND KIT RULES" in _text_brand and "#6C3BFF" in _text_brand)
+check("ChatGPT image lưu đúng thư mục _xuat khi truyền save_under",
+      r_brand.get("rel_path", "").startswith("attachments/dataset/_xuat/"))
 
 # Ảnh mẫu thật nằm trong brain
 _anh_that = os.path.join(vault, "attachments", "chai-mau.png")
