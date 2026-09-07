@@ -71,6 +71,19 @@ Tuyệt đối không viết kiểu nhồi đủ 8-10 nỗi đau, 8-10 quyền l
 
 1-3 dòng đầu phải đi thẳng vào chuyện người học đang gặp.
 
+MỞ BÀI PHẢI NÉN. Tối đa 5 dòng trước khi chuyển sang giải pháp/khóa học.
+
+Cấm mở bài bằng một chuỗi 6-8 câu mô tả liên tiếp kiểu:
+
+- Công ty giao file gấp...
+- Ngồi dò từng dòng dữ liệu...
+- Bảng tính hàng nghìn dòng...
+- Word bị nhảy dòng...
+- PowerPoint loay hoay...
+- AI mới biết hỏi đáp...
+
+Kiểu này nhìn có vẻ cụ thể nhưng thực ra rất "AI": đều đều, giải thích quá đủ, thiếu nhịp biên tập. Chỉ chọn 2-3 hình ảnh đau nhất rồi gom phần còn lại bằng một câu khái quát.
+
 Ví dụ hướng viết:
 
 - "Excel không khó. Khó là công ty giao file gấp mà mình không biết bắt đầu từ đâu."
@@ -79,9 +92,45 @@ Ví dụ hướng viết:
 
 Không cần câu tiêu đề quá dài. Không cần lặp tên khóa học 2 lần ở đầu bài.
 
+Ví dụ sửa đoạn lan man:
+
+KHÔNG VIẾT:
+
+```text
+Đi làm rồi mới thấy, Word, Excel và PowerPoint không vững thì việc nhỏ cũng thành mất nhiều thời gian.
+Công ty giao file gấp nhưng bạn chưa biết bắt đầu xử lý từ đâu.
+Ngồi dò từng dòng dữ liệu Excel, tìm lỗi công thức đến hoa cả mắt.
+Bảng tính hàng nghìn dòng nhưng lúng túng khi cần lọc dữ liệu, tính tổng và làm báo cáo.
+Soạn thảo văn bản Word bị nhảy dòng, lệch lề, chỉnh mục lục mãi không theo ý muốn.
+Cần làm slide PowerPoint báo cáo nhưng loay hoay không biết sắp xếp bố cục sao cho mạch lạc.
+Biết đến các công cụ AI nhưng mới chỉ dừng ở mức hỏi đáp chung chung, chưa áp dụng được vào công việc thực tế.
+```
+
+NÊN VIẾT:
+
+```text
+Đi làm rồi mới thấy: Word, Excel, PowerPoint yếu một chút là việc nhỏ cũng kéo dài cả buổi.
+
+File Excel gấp thì không biết lọc từ đâu.
+Word in ra lại nhảy dòng.
+AI có nghe nhiều, nhưng chưa biết dùng vào báo cáo, email hay dữ liệu thật.
+```
+
+Hoặc:
+
+```text
+Có những việc văn phòng không khó, chỉ là mình chưa được chỉ đúng cách.
+
+Một file Excel cần xử lý gấp.
+Một văn bản Word cứ lệch trang khi in.
+Một báo cáo cần AI hỗ trợ nhưng chưa biết viết prompt sao cho ra việc.
+```
+
 ### Phần 2 - Nỗi đau chọn lọc
 
-Chọn 3-5 tình huống đau nhất, không liệt kê tràn lan.
+Chọn 2-4 tình huống đau nhất, không liệt kê tràn lan.
+
+Nếu đã nêu nỗi đau ở mở bài thì phần này chỉ viết tiếp 2-3 dòng, không lặp lại bằng bullet dài.
 
 Mỗi ý phải cụ thể:
 

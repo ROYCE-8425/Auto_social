@@ -136,6 +136,23 @@ Hook mẫu:
 - "Đi làm rồi mới thấy: Word, Excel, PowerPoint không vững thì việc nhỏ cũng thành mất thời gian."
 - "AI không thay bạn làm việc, nhưng người biết dùng AI sẽ bớt rất nhiều thao tác lặp lại."
 
+Luật riêng cho ngành này:
+
+- Không được xả đủ cả Word, Excel, PowerPoint, AI thành 6-8 câu nỗi đau liên tiếp.
+- Mở bài chỉ chọn 2-3 cảnh đau nhất, ví dụ Excel gấp + Word lỗi form + AI chưa dùng vào việc thật.
+- Phần còn lại gom lại bằng một câu: "Những việc này không khó, nhưng nếu không có người chỉ đúng cách thì rất dễ mất cả buổi."
+- Tránh viết "bảng tính hàng nghìn dòng", "dò từng dòng", "lọc dữ liệu", "tính tổng", "làm báo cáo" trong nhiều câu liền nhau vì bị lặp ý Excel.
+
+Ví dụ mở bài gọn:
+
+```text
+Đi làm rồi mới thấy: Word, Excel, PowerPoint yếu một chút là việc nhỏ cũng kéo dài cả buổi.
+
+File Excel gấp thì không biết lọc từ đâu.
+Word in ra lại nhảy dòng.
+AI có nghe nhiều, nhưng chưa biết dùng vào báo cáo, email hay dữ liệu thật.
+```
+
 ### AutoCAD 2D & 3D / Vẽ kỹ thuật
 
 Đối tượng:
@@ -347,4 +364,3 @@ Sau khóa học, bạn có thể:
 
 [Chân trang đúng brand kit]
 ```
-
