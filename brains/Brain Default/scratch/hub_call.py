@@ -56,7 +56,7 @@ def unique_dataset_photos(folder, skip_names=None):
 def pick_random_album_photos(folder, cover_path=None, target_total=None):
     """
     Chon ngau nhien so luong anh goc tu folder de ghep voi cover_path.
-    Muc tieu tong so anh: 4, 6, 7, hoac 8 anh (tranh 5 anh vi bi Facebook chia 2 cot crop cover).
+    Muc tieu tong so anh: 5, 6, 7, hoac 8 anh khi co cover.
     Uu tien anh goc chua tung dung trong _anh-da-dung.md.
     """
     import random
@@ -94,14 +94,17 @@ def pick_random_album_photos(folder, cover_path=None, target_total=None):
     pool = chua_dung if len(chua_dung) >= 3 else all_goc
 
     if target_total is None or str(target_total).lower() == "random":
+        # Neu co cover, so_goc 4/5/6/7 -> tong album 5/6/7/8 anh.
+        # Neu khong co cover, giu album raw tuong ung 5/6/7/8 neu du anh.
+        min_full = 4 if cover_path else 5
         if n_goc >= 7:
-            so_goc = random.choice([3, 5, 6, 7])
+            so_goc = random.choice([min_full, 5, 6, 7])
         elif n_goc >= 5:
-            so_goc = random.choice([3, 5])
-        elif n_goc >= 3:
-            so_goc = 3
-        elif n_goc == 2:
-            so_goc = 2
+            so_goc = random.choice([min_full, 5])
+        elif n_goc >= 4:
+            so_goc = 4
+        elif n_goc >= 2:
+            so_goc = n_goc
         else:
             so_goc = 1
     else:
@@ -153,12 +156,12 @@ def normalize_photo_landscape(in_path, out_path, target_w=2000, target_h=1330):
 def normalize_album_photos(photo_list):
     """
     Chuan hoa toan bo danh sach anh theo dung bo cuc Facebook 2026:
-    - Neu album >= 5 anh (6, 7, 8 anh):
+    - Neu album >= 5 anh (5, 6, 7, 8 anh):
       * photos[0] (Cover Banner): Vuong 1:1 (2000x2000)
       * photos[1] (Anh chinh 2): Vuong 1:1 (2000x2000)
       * photos[2..N] (Anh phu): Ngang 3:2 (2000x1330)
       -> Ket qua hien thi tren Facebook: Cot trai 2 anh vuong, cot phai 3 anh ngang khit cao!
-    - Neu album == 4 anh:
+    - Neu album == 4 anh (fallback khi dataset it anh):
       * Tat ca deu Vuong 1:1 (2000x2000) -> Facebook hien thi luoi 2x2 vuong deu hoan hao.
     """
     from pathlib import Path
@@ -497,4 +500,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

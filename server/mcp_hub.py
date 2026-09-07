@@ -752,9 +752,9 @@ def _lazy_tools_and_route(visible_tools, visible_route, pool, full_route, top_k,
             name = "gemini_generate_image"
         if name not in full_route:
             return (f"ERROR: không có tool '{name}'. Ảnh Fanpage mặc định = gemini_generate_image; "
-                    "ảnh bằng ChatGPT/OpenAI = javis_generate_image. "
-                    "(logo= file kit, images= 1 raw attachments/dataset/tin-hoc _ai/ — "
-                    f"không phải tin-hoc/). Dùng {_LAZY_SEARCH} nếu tên khác.")
+                    "ảnh bằng ChatGPT/OpenAI/GPT Image = javis_generate_image. "
+                    "(GPT Image: truyền page_id + save_under + ai_render_brand=true; "
+                    f"album: ghép ảnh raw đúng folder khóa học bằng pick_photos). Dùng {_LAZY_SEARCH} nếu tên khác.")
         return await mcp_client.call_route(full_route, name, targs)
 
     tools = list(visible_tools)

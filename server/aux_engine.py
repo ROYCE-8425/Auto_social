@@ -375,7 +375,7 @@ class _ApiAuxEngine:
             "TUYỆT ĐỐI CẤM dừng lại ở bản nháp, CẤM hỏi 'vui lòng xem xét/xác nhận', CẤM hỏi người dùng. "
             "GỌI THẲNG TOOL: nếu user yêu cầu ChatGPT/OpenAI/GPT Image/gpt-image/javis_generate_image/ai_render_brand=true/ai_full "
             "hoặc yêu cầu AI tự render logo/tiêu đề/hotline, BẮT BUỘC dùng javis_generate_image với page_id, "
-            "save_under='attachments/dataset/_xuat', ai_render_brand=true để GPT Image render poster full; "
+            "save_under='attachments/dataset/_xuat', ai_render_brand=true để GPT Image render poster full; prompt ảnh phải đúng ngành; "
             "CẤM dùng template code/overlay Javis/split-panel/panel navy/card trắng kiểu cũ trong nhánh này. "
             "Nếu brief KHÔNG yêu cầu AI full, mặc định dùng gemini_generate_image để tạo cover ảnh thật (logo= file kit + images=1 raw, "
             "style_preference=authentic_photo nếu tool hỗ trợ; CẤM AI vẽ lại người/lớp học, CẤM AI full poster). "
@@ -383,7 +383,7 @@ class _ApiAuxEngine:
             "KHÔNG bọc thành chuỗi string). CẤM gọi qua javis_run_tool khi đã có tool trực tiếp. "
             "FAST_PATH: đọc ĐÚNG 1 kit wiki/brand-kits/<kit page> (logo, màu, font, giọng, CHAN_TRANG) "
             "và skill đăng bài ngắn; không đọc corpus/reference dài trừ khi brief yêu cầu. "
-            "Caption 32-45 dòng, ads đầy đủ 45-70 dòng. 1 cover mới. "
+            "Caption 32-45 dòng, ads đầy đủ 45-70 dòng. 1 cover mới. Bài khóa học phải ghép album 5-8 ảnh bằng pick_photos nếu dataset còn ảnh đúng ngành; không đăng lẻ mỗi cover khi đủ ảnh. "
             "CẤM fb_page_post. CẤM địa chỉ |. CẤM [[NEEDS_INPUT]] 'không có tool'."
         )
         tool_names = [str(t.get("fn") or t.get("name") or "") for t in (tools or [])]

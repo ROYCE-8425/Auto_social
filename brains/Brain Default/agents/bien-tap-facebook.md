@@ -28,8 +28,8 @@ Quy trình thực hiện:
    - Nếu brief có `OpenAI`, `GPT Image`, `gpt-image`, `javis_generate_image`, `ai_render_brand=true`, `ai_full`, hoặc yêu cầu AI tự render logo/tiêu đề/hotline: BẮT BUỘC gọi `javis_generate_image` với `page_id`, `save_under="attachments/dataset/_xuat"`, `ai_render_brand=true`. Ảnh phải là poster hoàn chỉnh do GPT Image render trực tiếp logo/chữ/hotline. CẤM dùng template code, CẤM overlay bằng Javis, CẤM split-panel, CẤM panel navy lớn, CẤM card trắng bo sẵn kiểu cũ, CẤM bám mẫu `mau-khoa-hoc-co-anh-goc` hoặc `A-split`.
    - Nếu brief không yêu cầu AI full: tạo bằng `gemini_generate_image` ở chế độ ảnh thật: logo = file logo kit, images = 1 ảnh raw dataset tương ứng khóa học, style_preference = `authentic_photo` nếu tool hỗ trợ. Ảnh cover phải giữ người/lớp học thật từ dataset, chỉ thêm layout/logo/chữ bằng code; CẤM AI vẽ lại người, CẤM AI tạo poster full, CẤM AI render chữ/text.
    - Luôn lưu cover vào `attachments/dataset/_xuat/`.
-4. Chuẩn bị album ảnh: Ảnh 1 là cover vừa tạo, các ảnh còn lại lấy từ thư mục dataset tương ứng (hoặc dùng `python "brains/Brain Default/scratch/hub_call.py" pick_photos <folder> <cover_path> random`).
-5. THỰC HIỆN GỌI TOOL `fb_page_album` để đăng album thật lên Facebook.
+4. Chuẩn bị album ảnh cho bài khóa học: Ảnh 1 là cover vừa tạo, các ảnh còn lại lấy từ thư mục dataset đúng ngành bằng `python "brains/Brain Default/scratch/hub_call.py" pick_photos <folder> <cover_path> random`. Nếu folder đủ ảnh, album phải có tổng 5-8 ảnh. Không đăng lẻ mỗi cover khi dataset còn ảnh phù hợp.
+5. THỰC HIỆN GỌI TOOL `fb_page_album` để đăng album thật lên Facebook. Chỉ dùng `fb_page_photo` nếu không đủ ảnh dataset để tạo album.
 6. Khi nhận được kết quả JSON từ tool (chứa `post_id` thật do Facebook trả về), trả về kết quả hoàn thành:
 - Trang: (Tên trang và link Fanpage)
 - Trạng thái kiểm tra: Đã lên công khai trên Facebook

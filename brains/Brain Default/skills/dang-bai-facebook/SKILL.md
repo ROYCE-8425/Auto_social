@@ -14,8 +14,9 @@ Mục tiêu: hoàn thành 1 bài đăng thật, không vòng vo, không hỏi l�
 2. Đọc đúng 1 file `wiki/brand-kits/<kit-page>.md`.
 3. Viết caption theo `skills/viet-bai-facebook/SKILL.md`, dùng giọng/màu/hotline/chân trang trong kit.
 4. Tạo đúng 1 cover mới trong `attachments/dataset/_xuat/`.
-5. Đăng thật bằng `fb_page_album` nếu có nhiều ảnh, hoặc `fb_page_photo` nếu chỉ 1 ảnh.
-6. Trả `post_id` thật và link bài viết.
+5. Với bài khóa học: chuẩn bị album 5-8 ảnh nếu dataset đúng ngành còn ảnh. `photos[0]` là cover AI, `photos[1..]` là ảnh thật từ folder khóa học.
+6. Đăng thật bằng `fb_page_album` khi có album. Chỉ dùng `fb_page_photo` khi folder dataset không đủ ảnh để tạo album.
+7. Trả `post_id` thật và link bài viết.
 
 Không đọc 56 kit. Không `fb_pages_list` nếu kit đã có Page ID. Không gọi `javis_search_tools` để đoán tool khi tool trực tiếp đã có.
 
@@ -38,7 +39,7 @@ javis_generate_image(
   page_id="<kit/page slug>",
   save_under="attachments/dataset/_xuat",
   ai_render_brand=true,
-  prompt="<brief ảnh + tên khóa + yêu cầu poster>"
+  prompt="<brief ảnh theo đúng ngành + tên khóa + yêu cầu poster>"
 )
 ```
 
@@ -51,11 +52,41 @@ Nhánh này bắt buộc:
 - Không dùng split-panel, panel navy lớn, card trắng bo góc kiểu cũ.
 - Không bám mẫu `mau-khoa-hoc-co-anh-goc`, `A-split`.
 
+Prompt ảnh phải đổi theo ngành, không dùng một câu cho mọi khóa:
+
+- Tin học văn phòng / AI: môi trường văn phòng hiện đại, laptop/màn hình Excel/Word/PowerPoint/AI assistant, cảm giác làm được việc ngay trên máy tính.
+- Đồ họa: studio thiết kế, màn hình Photoshop/Illustrator/Corel, bảng màu, tablet, ấn phẩm truyền thông, mood sáng tạo.
+- Vẽ kỹ thuật / AutoCAD: bản vẽ kỹ thuật, mô hình 2D/3D, kiến trúc/cơ khí, đường nét CAD, thước đo, màn hình AutoCAD.
+- Kế toán: chứng từ, bảng tính, dashboard tài chính, hóa đơn, báo cáo thu chi, môi trường văn phòng kế toán.
+- Marketing / AI: dashboard quảng cáo, social content, biểu đồ hiệu quả, AI automation, không gian digital marketing.
+
 Nếu brief không yêu cầu AI full:
 
 - Dùng nhánh ảnh thật/template mặc định.
 - Cover từ 1 ảnh raw dataset đúng ngành + logo kit.
 - Không AI vẽ lại người/lớp học.
+
+## Album ảnh khóa học
+
+Bài đăng khóa học không được chỉ đăng mỗi cover nếu dataset còn ảnh đúng ngành.
+
+Sau khi có cover, gọi:
+
+```text
+python "brains/Brain Default/scratch/hub_call.py" pick_photos <folder_nganh> <cover_path> random
+```
+
+Kết quả `photos` dùng thẳng cho `fb_page_album`.
+
+Chuẩn album:
+
+- Tổng 5, 6, 7 hoặc 8 ảnh khi folder đủ ảnh.
+- `photos[0]`: cover AI 1:1, thu hút, đúng brand kit.
+- `photos[1]`: ảnh thật chính, được chuẩn hóa 1:1.
+- `photos[2..]`: ảnh thật phụ, chuẩn hóa 3:2.
+- Không lấy ảnh dataset sai ngành.
+- Không dùng lại ảnh `_xuat` cũ làm ảnh phụ.
+- Nếu folder chỉ còn 1-3 ảnh thì vẫn đăng album nếu tổng ảnh từ 2 trở lên; nếu chỉ có cover thì mới dùng `fb_page_photo`.
 
 ## Caption nhanh nhưng đủ chất lượng
 
@@ -72,6 +103,7 @@ Nếu brief không yêu cầu AI full:
 - Đúng page và đúng Page ID trong kit.
 - Ảnh cover mới tạo trong `_xuat`, không dùng lại cover cũ.
 - Nếu dùng GPT Image: không còn dấu hiệu template code cũ.
+- Nếu là bài khóa học và folder đủ ảnh: phải có album 5-8 ảnh, không đăng lẻ mỗi cover.
 - Caption đúng ngành, đúng hotline, đúng địa chỉ.
 - Gọi Facebook đúng 1 lần; nếu plugin báo lỗi thì `POST_SKIP ly-do=<lỗi cụ thể>`.
 
