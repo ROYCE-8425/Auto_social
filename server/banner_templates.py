@@ -466,6 +466,279 @@ def render_template_bottom_bar(
     return canvas.convert("RGB")
 
 
+def render_template_top_band(
+    classroom_img: Image.Image,
+    logo_path: Optional[Path] = None,
+    title: str = "TIN Há»ŒC VÄ‚N PHÃ’NG",
+    subtitle: Optional[str] = None,
+    highlights: Optional[List[str]] = None,
+    badge_text: Optional[str] = None,
+    footer_text: Optional[str] = None,
+    hotline: Optional[str] = None,
+    brand_color: Tuple[int, int, int] = (11, 35, 65),
+) -> Image.Image:
+    """Real-photo cover: compact brand band on top, classroom photo below."""
+    W, H = 2000, 2000
+    band_h = 560 if highlights else 500
+    canvas = Image.new("RGBA", (W, H), (*brand_color, 255))
+    draw = ImageDraw.Draw(canvas)
+
+    photo = smart_crop_and_enhance(classroom_img, W, H - band_h)
+    canvas.paste(photo, (0, band_h))
+    draw.line([(0, band_h), (W, band_h)], fill=(255, 215, 0, 230), width=6)
+
+    if logo_path:
+        paste_brand_logo(canvas, logo_path, (70, 60, 390, 170), bg_badge=True)
+    if badge_text:
+        draw_pill_badge(draw, badge_text, W - 470, 70, get_font(34, bold=True),
+                        bg_color=(230, 81, 0, 245), border_color=(255, 215, 0, 255))
+
+    y = 190
+    font_title, title_lines = fit_title_font(draw, title, W - 260, 170, start_size=78, min_size=50)
+    for line in title_lines:
+        bb = draw.textbbox((0, 0), line, font=font_title)
+        draw.text(((W - (bb[2] - bb[0])) // 2, y), line, font=font_title, fill="#FFFFFF")
+        y += (bb[3] - bb[1]) + 12
+
+    if subtitle:
+        font_sub = get_font(36, bold=True)
+        bb = draw.textbbox((0, 0), subtitle, font=font_sub)
+        draw.text(((W - (bb[2] - bb[0])) // 2, y), subtitle, font=font_sub, fill="#FFD54F")
+        y += (bb[3] - bb[1]) + 18
+
+    if highlights:
+        font_h = get_font(28, bold=True)
+        text = "  •  ".join(str(x) for x in highlights[:2] if str(x).strip())
+        if text:
+            bb = draw.textbbox((0, 0), text, font=font_h)
+            draw.text(((W - (bb[2] - bb[0])) // 2, y), text, font=font_h, fill="#E5E7EB")
+
+    ft = None
+    if footer_text and hotline:
+        ft = f"{footer_text.upper()}  •  HOTLINE: {hotline}"
+    elif footer_text:
+        ft = footer_text.upper()
+    elif hotline:
+        ft = f"HOTLINE / ZALO: {hotline}"
+    if ft:
+        font_ft = get_font(26, bold=True)
+        bb = draw.textbbox((0, 0), ft, font=font_ft)
+        draw.text(((W - (bb[2] - bb[0])) // 2, band_h - 55), ft, font=font_ft, fill="#CBD5E1")
+
+    return canvas.convert("RGB")
+
+
+def render_template_side_panel(
+    classroom_img: Image.Image,
+    logo_path: Optional[Path] = None,
+    title: str = "TIN Há»ŒC VÄ‚N PHÃ’NG",
+    subtitle: Optional[str] = None,
+    highlights: Optional[List[str]] = None,
+    badge_text: Optional[str] = None,
+    footer_text: Optional[str] = None,
+    hotline: Optional[str] = None,
+    brand_color: Tuple[int, int, int] = (11, 35, 65),
+) -> Image.Image:
+    """Real-photo cover: brand panel left, classroom photo right."""
+    W, H = 2000, 2000
+    panel_w = 760
+    canvas = Image.new("RGBA", (W, H), (*brand_color, 255))
+    draw = ImageDraw.Draw(canvas)
+
+    photo = smart_crop_and_enhance(classroom_img, W - panel_w, H)
+    canvas.paste(photo, (panel_w, 0))
+    draw.line([(panel_w, 0), (panel_w, H)], fill=(255, 215, 0, 230), width=6)
+
+    if logo_path:
+        paste_brand_logo(canvas, logo_path, (75, 75, 420, 195), bg_badge=True)
+    if badge_text:
+        draw_pill_badge(draw, badge_text, panel_w + 45, 80, get_font(32, bold=True),
+                        bg_color=(230, 81, 0, 245), border_color=(255, 215, 0, 255))
+
+    x = 70
+    y = 360
+    max_w = panel_w - 140
+    font_title, title_lines = fit_title_font(draw, title, max_w, 520, start_size=78, min_size=48)
+    for line in title_lines:
+        draw.text((x, y), line, font=font_title, fill="#FFFFFF")
+        bb = draw.textbbox((0, 0), line, font=font_title)
+        y += (bb[3] - bb[1]) + 18
+
+    y += 20
+    draw.line([(x, y), (x + 310, y)], fill=(255, 215, 0, 230), width=5)
+    y += 45
+
+    if subtitle:
+        font_sub = get_font(36, bold=True)
+        for line in wrap_text(draw, subtitle, font_sub, max_w):
+            draw.text((x, y), line, font=font_sub, fill="#FFD54F")
+            bb = draw.textbbox((0, 0), line, font=font_sub)
+            y += (bb[3] - bb[1]) + 12
+        y += 30
+
+    if highlights:
+        font_h = get_font(30, bold=True)
+        for item in highlights[:3]:
+            for line in wrap_text(draw, f"• {item}", font_h, max_w):
+                draw.text((x, y), line, font=font_h, fill="#E5E7EB")
+                bb = draw.textbbox((0, 0), line, font=font_h)
+                y += (bb[3] - bb[1]) + 16
+
+    ft_lines = []
+    if footer_text:
+        ft_lines.append(footer_text.upper())
+    if hotline:
+        ft_lines.append(f"HOTLINE: {hotline}")
+    font_ft = get_font(26, bold=True)
+    fy = H - 135
+    for line in ft_lines:
+        draw.text((x, fy), line, font=font_ft, fill="#CBD5E1")
+        fy += 38
+
+    return canvas.convert("RGB")
+
+
+def render_template_corner_card(
+    classroom_img: Image.Image,
+    logo_path: Optional[Path] = None,
+    title: str = "TIN Há»ŒC VÄ‚N PHÃ’NG",
+    subtitle: Optional[str] = None,
+    highlights: Optional[List[str]] = None,
+    badge_text: Optional[str] = None,
+    footer_text: Optional[str] = None,
+    hotline: Optional[str] = None,
+    brand_color: Tuple[int, int, int] = (11, 35, 65),
+) -> Image.Image:
+    """Real-photo cover: full photo with a compact editorial card in one corner."""
+    W, H = 2000, 2000
+    base = smart_crop_and_enhance(classroom_img, W, H).convert("RGBA")
+
+    shade = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    sd = ImageDraw.Draw(shade)
+    for y in range(H):
+        alpha = int(150 * max(0, (y - 980) / 1020))
+        if alpha:
+            sd.line([(0, y), (W, y)], fill=(0, 0, 0, alpha))
+    base = Image.alpha_composite(base, shade)
+
+    card_w = random.choice((1120, 1240))
+    card_h = 620 if highlights and badge_text else (560 if highlights else 520)
+    card_x = random.choice((70, W - card_w - 70))
+    card_y = H - card_h - 75
+    card = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    cd = ImageDraw.Draw(card)
+    cd.rounded_rectangle([card_x, card_y, card_x + card_w, card_y + card_h], radius=34,
+                         fill=(*brand_color, 235), outline=(255, 215, 0, 210), width=4)
+    base = Image.alpha_composite(base, card)
+    draw = ImageDraw.Draw(base)
+
+    if logo_path:
+        lx = 70 if card_x > W // 2 else W - 390
+        paste_brand_logo(base, logo_path, (lx, 65, lx + 320, 175), bg_badge=True)
+    if badge_text:
+        draw_pill_badge(draw, badge_text, card_x + card_w - 390, card_y + 38, get_font(30, bold=True),
+                        bg_color=(230, 81, 0, 245), border_color=(255, 215, 0, 255))
+
+    x = card_x + 55
+    y = card_y + (122 if badge_text else 55)
+    max_w = card_w - 110
+    font_title, title_lines = fit_title_font(draw, title, max_w, 195, start_size=74, min_size=48)
+    for line in title_lines:
+        draw.text((x, y), line, font=font_title, fill="#FFFFFF")
+        bb = draw.textbbox((0, 0), line, font=font_title)
+        y += (bb[3] - bb[1]) + 12
+    if subtitle:
+        font_sub = get_font(34, bold=True)
+        for line in wrap_text(draw, subtitle, font_sub, max_w):
+            draw.text((x, y), line, font=font_sub, fill="#FFD54F")
+            bb = draw.textbbox((0, 0), line, font=font_sub)
+            y += (bb[3] - bb[1]) + 10
+    if highlights:
+        y += 12
+        font_h = get_font(27, bold=True)
+        for item in highlights[:2]:
+            text = f"• {item}"
+            for line in wrap_text(draw, text, font_h, max_w):
+                draw.text((x, y), line, font=font_h, fill="#E5E7EB")
+                bb = draw.textbbox((0, 0), line, font=font_h)
+                y += (bb[3] - bb[1]) + 10
+
+    ft = None
+    if footer_text and hotline:
+        ft = f"{footer_text.upper()}  •  HOTLINE: {hotline}"
+    elif footer_text:
+        ft = footer_text.upper()
+    elif hotline:
+        ft = f"HOTLINE / ZALO: {hotline}"
+    if ft:
+        font_ft = get_font(24, bold=True)
+        draw.text((x, card_y + card_h - 58), ft, font=font_ft, fill="#CBD5E1")
+
+    return base.convert("RGB")
+
+
+def render_template_center_strip(
+    classroom_img: Image.Image,
+    logo_path: Optional[Path] = None,
+    title: str = "TIN Há»ŒC VÄ‚N PHÃ’NG",
+    subtitle: Optional[str] = None,
+    highlights: Optional[List[str]] = None,
+    badge_text: Optional[str] = None,
+    footer_text: Optional[str] = None,
+    hotline: Optional[str] = None,
+    brand_color: Tuple[int, int, int] = (11, 35, 65),
+) -> Image.Image:
+    """Real-photo cover: full photo with a bold horizontal campaign strip."""
+    W, H = 2000, 2000
+    base = smart_crop_and_enhance(classroom_img, W, H).convert("RGBA")
+    overlay = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    od = ImageDraw.Draw(overlay)
+    strip_h = 470 if highlights else 410
+    strip_y = random.choice((1040, 1160, 1260))
+    od.rectangle([0, strip_y, W, min(H, strip_y + strip_h)], fill=(*brand_color, 232))
+    od.rectangle([0, strip_y, W, strip_y + 7], fill=(255, 215, 0, 235))
+    od.rectangle([0, strip_y + strip_h - 7, W, strip_y + strip_h], fill=(255, 215, 0, 200))
+    base = Image.alpha_composite(base, overlay)
+    draw = ImageDraw.Draw(base)
+
+    if logo_path:
+        paste_brand_logo(base, logo_path, (70, 70, 390, 180), bg_badge=True)
+    if badge_text:
+        draw_pill_badge(draw, badge_text, W - 470, 85, get_font(32, bold=True),
+                        bg_color=(230, 81, 0, 245), border_color=(255, 215, 0, 255))
+
+    y = strip_y + 46
+    font_title, title_lines = fit_title_font(draw, title, W - 220, 155, start_size=76, min_size=50)
+    for line in title_lines:
+        bb = draw.textbbox((0, 0), line, font=font_title)
+        draw.text(((W - (bb[2] - bb[0])) // 2, y), line, font=font_title, fill="#FFFFFF")
+        y += (bb[3] - bb[1]) + 10
+    if subtitle:
+        font_sub = get_font(36, bold=True)
+        bb = draw.textbbox((0, 0), subtitle, font=font_sub)
+        draw.text(((W - (bb[2] - bb[0])) // 2, y), subtitle, font=font_sub, fill="#FFD54F")
+        y += (bb[3] - bb[1]) + 22
+    if highlights:
+        font_h = get_font(28, bold=True)
+        text = "  •  ".join(str(x) for x in highlights[:2] if str(x).strip())
+        bb = draw.textbbox((0, 0), text, font=font_h)
+        draw.text(((W - (bb[2] - bb[0])) // 2, y), text, font=font_h, fill="#E5E7EB")
+
+    ft = None
+    if footer_text and hotline:
+        ft = f"{footer_text.upper()}  •  HOTLINE: {hotline}"
+    elif footer_text:
+        ft = footer_text.upper()
+    elif hotline:
+        ft = f"HOTLINE / ZALO: {hotline}"
+    if ft:
+        font_ft = get_font(26, bold=True)
+        bb = draw.textbbox((0, 0), ft, font=font_ft)
+        draw.text(((W - (bb[2] - bb[0])) // 2, min(H - 72, strip_y + strip_h - 58)), ft, font=font_ft, fill="#CBD5E1")
+
+    return base.convert("RGB")
+
+
 
 def render_template_floating_card(
     classroom_img: Image.Image,
@@ -1700,6 +1973,10 @@ TEMPLATES = {
     "curved_window": render_template_curved_window,
     "diagonal_slice": render_template_photo_first_cinematic,
     "bottom_bar": render_template_bottom_bar,
+    "top_band": render_template_top_band,
+    "side_panel": render_template_side_panel,
+    "corner_card": render_template_corner_card,
+    "center_strip": render_template_center_strip,
     "split_right": render_template_photo_first_cinematic,
     "split_left": render_template_modern_ribbon_wave,
     "floating_card": render_template_floating_card,
@@ -1719,6 +1996,17 @@ TEMPLATE_CHOICES = [
     "floating_card",
     "bottom_bar",
     "bauhaus_grid",
+]
+
+REAL_PHOTO_TEMPLATE_CHOICES = [
+    # Safe automatic choices for real classroom photos.
+    # These keep the photo as a wide scene and avoid slicing people with a hard
+    # vertical divider or covering the middle of the room with a text strip.
+    "bottom_bar",
+    "bottom_bar",
+    "top_band",
+    "corner_card",
+    "corner_card",
 ]
 
 
@@ -1809,7 +2097,7 @@ def generate_authentic_banner(
     b_color = brand_color or chosen_palette["bg_primary"]
 
     if not template_name or template_name not in TEMPLATES:
-        template_name = random.choice(TEMPLATE_CHOICES)
+        template_name = random.choice(REAL_PHOTO_TEMPLATE_CHOICES)
 
     render_fn = TEMPLATES.get(template_name, render_template_bento_box)
 

@@ -96,14 +96,14 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Vẽ kỹ th
 - Khách: người đi làm, người trái ngành muốn học nghề thực chiến, sinh viên cần kỹ năng việc làm, phụ huynh và doanh nghiệp
 - Giọng văn: Thực tế, tận tâm, chuyên nghiệp, rõ ràng từng module, không nói chung chung sáo rỗng
 - Bố cục: Tiêu đề IN HOA kèm icon nổi bật, thân bài chia gạch đầu dòng rõ ràng, cam kết đào tạo thực chiến ("DUY NHẤT CHỈ CÓ TẠI TIN HỌC SAO VIỆT"), lộ trình module chi tiết, ưu đãi học phí và hệ thống 12-13 cơ sở
-- Độ dài: 60 đến 120 dòng (chuẩn bài chuyển đổi cao đầm tay, đầy đủ giá trị)
+- Độ dài: mặc định 32-45 dòng thân bài, bài tuyển sinh/ads đầy đủ 45-70 dòng, chưa tính chân trang. Không viết dưới 28 dòng thân bài, nhưng cũng không nhồi dài như landing page nếu brief không yêu cầu.
 - CTA: Nhắn tin Fanpage hoặc liên hệ Hotline/Zalo: 0823 552 558 để được tư vấn lộ trình và xếp lịch học
 
 ## Quy chuẩn thống nhất độ dài
-- Toàn bộ các Fanpage (kể cả page chính lẫn page test Royce Shop) đều áp dụng chuẩn bài viết chuyển đổi thực chiến 60-120 dòng, đầy đủ 7 phần (Tiêu đề, nỗi đau, giải pháp, cam kết vàng, chi tiết module, ưu đãi và hệ thống 12-13 cơ sở). Người dùng xem và duyệt bài trên Royce Shop cần thấy bài viết hoàn chỉnh đúng như đăng thật trên hệ thống
+- Toàn bộ các Fanpage (kể cả page chính lẫn page test Royce Shop) áp dụng chuẩn bài viết Facebook đọc lướt: hook thật, nỗi đau chọn lọc, thành quả cụ thể, quyền lợi chính, CTA rõ và chân trang đúng kit. Không ép 60-120 dòng cho mọi bài; chỉ viết dài khi brief yêu cầu bài ads/landing đầy đủ.
 
 ## Cấm
-- Viết bài ngắn cụt lủn tóm tắt (dưới 30 dòng)
+- Viết bài quá ngắn, cụt ý (dưới 28 dòng thân bài với bài tuyển sinh)
 - Nhảy vào thân bài mà không có Tiêu đề / Hook giật tít IN HOA kèm emoji
 - Bịa học phí không có trong tài liệu đào tạo
 - Trộn địa chỉ page A vào page B; trộn 2 brief một bài

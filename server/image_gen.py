@@ -1254,9 +1254,10 @@ def generate_authentic_banner_cover(
         fname = f"{prefix}-{int(time.time())}-{uuid.uuid4().hex[:6]}.jpg"
         out_file = target_dir / fname
 
-        # Production Facebook covers must keep the dataset photo as the visual truth.
-        # Default to the quiet bottom bar so people/classes stay visible.
-        chosen_template = template_name or "bottom_bar"
+        # Production Facebook covers keep the dataset photo as the visual truth,
+        # but rotate among safe creative layouts so posts do not look cloned.
+        safe_templates = getattr(banner_templates, "REAL_PHOTO_TEMPLATE_CHOICES", ("bottom_bar",))
+        chosen_template = template_name or random.choice(tuple(safe_templates))
 
         res_path = banner_templates.generate_authentic_banner(
             classroom_img_path=raw_file,
@@ -1517,7 +1518,6 @@ async def generate_gemini(
             prefix=prefix,
             hotline=resolved_hotline,
             footer_text=resolved_footer,
-            template_name="bottom_bar",
         )
         if banner_res and banner_res.get("ok"):
             return banner_res
