@@ -788,15 +788,18 @@ def swap(cli, mode: str = None, tag: str = None, spec: dict = None,
                 if claude_ok:
                     cli.model = sp.get("model") or None
                     return cli
+                fallback = []
                 mn = _main_fallback_engine(cli, mode, tag, settings, {CLAUDE}, codex_profile)
                 if mn:
-                    print("[aux] Claude chưa đăng nhập → việc full dùng bộ não chính "
+                    print("[aux] Claude chua dang nhap -> viec full dung bo chinh "
                           f"({getattr(mn, 'provider', '?')}).", file=sys.stderr)
-                    return mn
+                    fallback.append(mn)
                 mn = _api_fallback_if_available(cli, mode, tag, settings)
                 if mn:
                     print("[aux] Claude chua login -> fallback sang API thay the cho full.", file=sys.stderr)
-                    return mn
+                    fallback.append(mn)
+                if fallback:
+                    return fallback[0] if len(fallback) == 1 else _FallbackChain([cli, *fallback])
                 cli.model = sp.get("model") or None
                 return cli
             ok, why = availability(sp, settings)
