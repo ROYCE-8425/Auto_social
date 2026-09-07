@@ -678,6 +678,30 @@ def _main_fallback_engine(cli, mode, tag, settings, exclude, codex_profile=None)
     return None
 
 
+def _api_fallback_if_available(cli, mode, tag, settings):
+    """Dùng ngay provider API có key sẵn khi Claude/Codex không chạy được ở full mode."""
+    s = settings if settings is not None else cfgmod.read_settings()
+    mm = (s.get("model", {}) or {})
+    model_map = {
+        "openrouter": "openrouter_model",
+        "openai": "openai_model",
+        "gemini": "gemini_model",
+        "groq": "groq_model",
+        "anthropic-api": "claude_model",
+        "ollama-local": "ollama_model",
+    }
+    for prov in ("openai", "openrouter", "gemini", "groq", "anthropic-api", "ollama-local"):
+        sp = {"provider": prov, "model": mm.get(model_map.get(prov, ""), "")}
+        ok, _why = availability(sp, s)
+        if not ok:
+            continue
+        try:
+            return _build_api(sp, cli, mode, (tag or getattr(cli, "tag", "aux")) + "-fallback")
+        except Exception:
+            continue
+    return None
+
+
 def _co_mat_orfree(chain) -> bool:
     """Chuỗi đã chứa một mắt OpenRouter model trống (= tự chọn free) chưa - có rồi thì
     mắt or_free cuối trùng hệt, khỏi thêm."""
@@ -768,6 +792,10 @@ def swap(cli, mode: str = None, tag: str = None, spec: dict = None,
                 if mn:
                     print("[aux] Claude chưa đăng nhập → việc full dùng bộ não chính "
                           f"({getattr(mn, 'provider', '?')}).", file=sys.stderr)
+                    return mn
+                mn = _api_fallback_if_available(cli, mode, tag, settings)
+                if mn:
+                    print("[aux] Claude chua login -> fallback sang API thay the cho full.", file=sys.stderr)
                     return mn
                 cli.model = sp.get("model") or None
                 return cli
