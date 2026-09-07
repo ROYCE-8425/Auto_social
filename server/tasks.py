@@ -143,6 +143,8 @@ class TasksFeature:
             # tới trần 5000 thì đây là 5000 lượt round-trip sqlite biến thành 10 lượt.
             events = self.store.list_events_bulk([t["id"] for t in tasks], 20)
             for task in tasks:
+                if str(task.get("route") or "") == "wf:dang-bai-that-facebook" and task.get("result"):
+                    task["result"] = self._compact_fb_result(task, str(task.get("result") or ""))
                 task["log"] = [
                     {
                         "ts": time.strftime(
@@ -436,13 +438,15 @@ class TasksFeature:
                 fb_err = self._fb_chua_dang(task, result or "")
                 if fb_err:
                     error = fb_err
+                else:
+                    result = self._compact_fb_result(task, result or "")
             if error:
                 final_task = self.store.block(
                     tid,
                     worker_id,
                     "transient",
                     error,
-                    result=result,
+                    result=(result or "")[:500],
                     transient=self._is_transient(error),
                 )
             elif needs_input:
@@ -451,7 +455,7 @@ class TasksFeature:
                     worker_id,
                     "needs_input",
                     self._needs_input_reason(result),
-                    result=result,
+                    result=(result or "")[:500],
                 )
             else:
                 final_task = self.store.complete(
@@ -865,6 +869,72 @@ CẤM [[NEEDS_INPUT]] vì 'không có tool / Royce chưa MCP'. CẤM địa ch�
         if any(h in tl for h in ("bạn có muốn", "ban co muon", "vui lòng xem xét", "xác nhận nếu", "bản nháp caption")):
             return "Worker dừng ở bản nháp/hỏi thay vì đăng thật. Cấm hỏi trên Kanban. Bắt buộc gọi fb_page_album lấy post_id."
         return "Chưa đăng Facebook (không có post_id). Không đánh Hoàn thành."
+
+    @staticmethod
+    def _compact_fb_result(task: dict, result: str) -> str:
+        """Cắt gọn kết quả Facebook ở tầng Kanban: cấm lưu nguyên văn caption 50 dòng
+        hay nhật ký suy luận vào task result. Giữ result luôn dưới 500 ký tự."""
+        route = str((task or {}).get("route") or "")
+        if route != "wf:dang-bai-that-facebook":
+            return result
+        t = (result or "").strip()
+        if not t:
+            return ""
+        if len(t) <= 350 and t.startswith("OK |") and "\n" not in t:
+            return t
+
+        post_id = ""
+        m_id = re.search(r'post_id["\s:=]+(\d{8,}_\d{5,}|\d{14,})', t, re.I)
+        if m_id:
+            post_id = m_id.group(1)
+        else:
+            m_posts = re.search(r"facebook\.com/.+/posts/(\d{14,})", t, re.I)
+            if m_posts:
+                post_id = m_posts.group(1)
+
+        link = ""
+        m_link = re.search(r'https?://[^\s)\]"\'>]+facebook\.com[^\s)\]"\'>]+', t)
+        if m_link:
+            link = m_link.group(0).rstrip(".,;")
+        elif post_id:
+            link = f"https://www.facebook.com/{post_id}"
+
+        cover = ""
+        m_cov = re.search(r'attachments/dataset/_xuat/[^\s\n\)\|\'"]+', t)
+        if m_cov:
+            cover = m_cov.group(0)
+
+        photos = ""
+        m_ph = re.search(r'(?:photos|số ảnh|ảnh|album)["\s:=]+(\d+)', t, re.I)
+        if m_ph:
+            photos = m_ph.group(1)
+
+        page = ""
+        m_page = re.search(r'page["\s:=]+([^\n\|,]+)', t, re.I)
+        if m_page:
+            page = m_page.group(1).strip()
+
+        course = ""
+        m_c = re.search(r'(?:course|khóa học|ngành)["\s:=]+([^\n\|,]+)', t, re.I)
+        if m_c:
+            course = m_c.group(1).strip()
+
+        parts = ["OK"]
+        if page:
+            parts.append(f"page: {page}")
+        if course:
+            parts.append(f"course: {course}")
+        if cover:
+            parts.append(f"cover: {cover}")
+        if photos:
+            parts.append(f"photos: {photos}")
+        if post_id:
+            parts.append(f"post_id: {post_id}")
+        if link:
+            parts.append(f"link: {link}")
+
+        compact = " | ".join(parts)
+        return compact[:450] if post_id else t[:450]
 
     @staticmethod
     def _is_transient(error: str) -> bool:
