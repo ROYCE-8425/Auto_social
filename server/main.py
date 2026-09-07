@@ -9978,6 +9978,50 @@ async def websocket_endpoint(ws: WebSocket):
                                      compaction.bootstrap_prompt(
                                          _codex_raw, _codex_current,
                                          summary=_row0.get("compact_summary") or ""))
+                    codex_response_engine = "codex"
+
+                    async def _oauth_direct_fallback():
+                        nonlocal final_text, _ctx_in, codex_response_engine
+                        creds = openai_oauth.valid_creds() or {}
+                        if not creds.get("access_token"):
+                            await ws.send_text(json.dumps({
+                                "type": "error",
+                                "content": "OpenAI OAuth het phien dang nhap. Vao Models ket noi lai ChatGPT.",
+                            }))
+                            return
+                        codex_response_engine = "openai-oauth"
+                        store.clear_codex_thread_id(conv_sid)
+                        await ws.send_text(json.dumps({
+                            "type": "system",
+                            "content": "Codex CLI trong container chua nhan dang nhap, Javis tam dung OpenAI OAuth truc tiep cho luot nay.",
+                        }))
+                        direct_messages = ([{"role": "system", "content": sysprompt}]
+                                           + _codex_raw
+                                           + [{"role": "user", "content": user_message}])
+                        async for ev in engine.openai_responses_stream(
+                                creds.get("access_token", ""), creds.get("account_id", ""),
+                                actual_model, direct_messages, reasoning):
+                            et = ev.get("type")
+                            if et == "meta":
+                                _CONTEXT_RUNTIME.set_route(
+                                    runtime_trace, "openai-oauth", ev.get("model") or actual_model)
+                            elif et == "text":
+                                final_text += ev.get("content") or ""
+                                await ws.send_text(json.dumps({
+                                    "type": "stream", "content": ev.get("content") or "", "tts": False,
+                                }))
+                            elif et == "usage":
+                                _ctx_in += int(ev.get("input", 0) or 0)
+                                usage_store.record(
+                                    "openai-oauth", actual_model, ev.get("input", 0), ev.get("output", 0)
+                                )
+                                _CONTEXT_RUNTIME.record_usage(
+                                    runtime_trace, ev.get("input", 0), ev.get("output", 0))
+                            elif et == "error":
+                                await ws.send_text(json.dumps({
+                                    "type": "error", "content": ev.get("content") or "OpenAI OAuth loi.",
+                                }))
+
                     async def _consume_codex(prompt, suppress_resume_error=False):
                         # _ctx_in PHẢI khai nonlocal: nó bị `+=` ngay dưới, mà thiếu dòng này
                         # thì Python coi nó là biến CỤC BỘ của hàm con - đọc trước khi gán là
@@ -10018,6 +10062,10 @@ async def websocket_endpoint(ws: WebSocket):
                                     resume_failed = True
                                     if suppress_resume_error:
                                         continue
+                                _err = str(ev.get("content") or "")
+                                if "not logged in" in _err.lower() and "/login" in _err.lower():
+                                    nonlocal_codex_login_error[0] = True
+                                    continue
                                 _noi = _subscription_limit_message(ev.get("content") or "", "codex")
                                 if _noi:
                                     _CONTEXT_RUNTIME.record_runtime_event(
@@ -10028,6 +10076,7 @@ async def websocket_endpoint(ws: WebSocket):
                                     "type": "error", "content": _noi or ev["content"]}))
                         return resume_failed
 
+                    nonlocal_codex_login_error = [False]
                     _resume_failed = await _consume_codex(
                         _codex_prompt, suppress_resume_error=bool(stored_codex_thread))
                     if stored_codex_thread and _resume_failed and not final_text:
@@ -10042,8 +10091,10 @@ async def websocket_endpoint(ws: WebSocket):
                             _codex_raw, _codex_current,
                             summary=_row0.get("compact_summary") or "")
                         await _consume_codex(_fallback)
+                    if not final_text and nonlocal_codex_login_error[0]:
+                        await _oauth_direct_fallback()
                     await ws.send_text(json.dumps({
-                        "type": "response", "content": final_text, "engine": "codex",
+                        "type": "response", "content": final_text, "engine": codex_response_engine,
                         "model": actual_model, "session_id": conv_sid,
                         **_ctx_frame(runtime_trace, _ctx_in)}))
             elif (kind == "api" and api_key) or kind == "oauth":
