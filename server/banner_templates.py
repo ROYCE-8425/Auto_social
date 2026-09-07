@@ -1703,12 +1703,213 @@ def render_template_photo_first_cinematic(
 
 
 # ===========================================================================
+# TEMPLATE 12: MODERN RIBBON WAVE (Chuẩn phong cách Poster Sao Việt chuyên nghiệp)
+# Lấy cảm hứng trực tiếp từ mẫu uu-dai-khoa-hoc-tin-hoc-van-phong.png:
+# - Nền trắng sang trọng kết hợp họa tiết chấm bi Dot Matrix
+# - Dải sóng lượn kép xanh dương & cam rực rỡ tạo chuyển động thị giác
+# - Khung tròn nghệ thuật (Circular Portal) viền trắng nổi khối 3D lồng ảnh học viên
+# - Thẻ Voucher ưu đãi 3D (Floating Discount Tickets)
+# - Bảng học phí dạng viên thuốc (Price Pills) bo tròn hiện đại
+# ===========================================================================
+def render_template_modern_ribbon_wave(
+    classroom_img: Image.Image,
+    logo_path: Optional[Union[Path, str]] = None,
+    title: str = "GIẢM HỌC PHÍ ĐẶC BIỆT",
+    subtitle: Optional[str] = "HỌC THỰC CHIẾN - ĐI LÀM NGAY",
+    highlights: Optional[list] = None,
+    badge_text: Optional[str] = "ƯU ĐÃI LỚN NHẤT NĂM",
+    footer_text: Optional[str] = None,
+    hotline: Optional[str] = "0823 552 558",
+    brand_color: Optional[tuple] = None,
+    palette: Optional[dict] = None,
+) -> Image.Image:
+    W, H = 2000, 2000
+    canvas = Image.new("RGBA", (W, H), (255, 255, 255, 255))
+
+    # 1. Nền trên: Trắng sang trọng với gradient nhẹ xuống #F8FAFC
+    bg_top = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    bg_d = ImageDraw.Draw(bg_top)
+    for y in range(900):
+        t = y / 900.0
+        val = int(255 - t * 10)
+        bg_d.line([(0, y), (W, y)], fill=(val, val, val + 2, 255))
+    canvas = Image.alpha_composite(canvas, bg_top)
+
+    # 2. Họa tiết lưới chấm bi (Dot Matrix) trang trí góc trên
+    dot_d = ImageDraw.Draw(canvas)
+    for r in range(8):
+        for c in range(6):
+            dx = 760 + c * 24
+            dy = 320 + r * 24
+            dot_d.ellipse([dx - 3, dy - 3, dx + 3, dy + 3], fill=(203, 213, 225, 255))
+
+    for r in range(6):
+        for c in range(5):
+            dx = 1860 + c * 22
+            dy = 1240 + r * 22
+            dot_d.ellipse([dx - 3, dy - 3, dx + 3, dy + 3], fill=(255, 255, 255, 90))
+
+    # 3. Lớp sóng xanh thương hiệu (Royal Blue Ribbon Wave)
+    blue_layer = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    bld = ImageDraw.Draw(blue_layer)
+    blue_pts = [
+        (0, 960), (250, 920), (500, 860), (750, 820), (1000, 880),
+        (1300, 980), (1600, 940), (1850, 850), (W, 780),
+        (W, 1150), (1600, 1280), (1200, 1260), (800, 1180), (400, 1150), (0, 1200),
+    ]
+    bld.polygon(blue_pts, fill=(14, 82, 186, 255))
+    sh_blue = blue_layer.filter(ImageFilter.GaussianBlur(12))
+    canvas = Image.alpha_composite(canvas, sh_blue)
+    canvas = Image.alpha_composite(canvas, blue_layer)
+
+    # 4. Lớp sóng cam lớn chủ đạo phía dưới (Vibrant Orange Wave)
+    orange_layer = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    old = ImageDraw.Draw(orange_layer)
+    orange_pts = [
+        (0, 1120), (350, 1060), (750, 1020), (1150, 1080), (1500, 1160),
+        (1800, 1090), (W, 1010), (W, H), (0, H),
+    ]
+    old.polygon(orange_pts, fill=(234, 88, 12, 255))
+    sh_orange = orange_layer.filter(ImageFilter.GaussianBlur(16))
+    canvas = Image.alpha_composite(canvas, sh_orange)
+    canvas = Image.alpha_composite(canvas, orange_layer)
+
+    # 5. Khung ảnh tròn nghệ thuật (Circular Portal) lồng ảnh học viên
+    p_cx, p_cy, p_r = 1360, 940, 360
+    pw, ph = p_r * 2, p_r * 2
+
+    raw_img = classroom_img.convert("RGB")
+    enh = ImageEnhance.Contrast(raw_img).enhance(1.12)
+    enh = ImageEnhance.Color(enh).enhance(1.15)
+    sw, sh = enh.size
+    side = min(sw, sh)
+    off_x = max(0, min(sw - side, int((sw - side) * 0.35)))
+    off_y = (sh - side) // 2
+    sq_img = enh.crop((off_x, off_y, off_x + side, off_y + side)).resize((pw, ph), Image.Resampling.LANCZOS)
+
+    mask_circle = Image.new("L", (pw, ph), 0)
+    ImageDraw.Draw(mask_circle).ellipse([0, 0, pw, ph], fill=255)
+    circle_photo = Image.new("RGBA", (pw, ph), (0, 0, 0, 0))
+    circle_photo.paste(sq_img.convert("RGBA"), (0, 0), mask_circle)
+
+    sh_circle = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    ImageDraw.Draw(sh_circle).ellipse([p_cx - p_r - 6, p_cy - p_r + 6, p_cx + p_r + 6, p_cy + p_r + 18], fill=(0, 0, 0, 130))
+    sh_circle = sh_circle.filter(ImageFilter.GaussianBlur(18))
+    canvas = Image.alpha_composite(canvas, sh_circle)
+    canvas.paste(circle_photo, (p_cx - p_r, p_cy - p_r), circle_photo)
+
+    draw = ImageDraw.Draw(canvas)
+    draw.ellipse([p_cx - p_r, p_cy - p_r, p_cx + p_r, p_cy + p_r], outline="#FFFFFF", width=14)
+
+    # 6. Logo thương hiệu trên khung tròn
+    if logo_path:
+        badge_w, badge_h = 320, 110
+        paste_brand_logo(canvas, logo_path, (p_cx + p_r - 240, p_cy - p_r + 30, p_cx + p_r - 240 + badge_w, p_cy - p_r + 30 + badge_h), bg_badge=True)
+    draw = ImageDraw.Draw(canvas)
+
+    # 7. Thẻ Voucher 3D nổi bật
+    vc1_x, vc1_y, vc1_w, vc1_h = 1010, 160, 240, 310
+    sh_vc = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    ImageDraw.Draw(sh_vc).rounded_rectangle([vc1_x + 6, vc1_y + 8, vc1_x + vc1_w + 6, vc1_y + vc1_h + 8], radius=20, fill=(0, 0, 0, 80))
+    sh_vc = sh_vc.filter(ImageFilter.GaussianBlur(12))
+    canvas = Image.alpha_composite(canvas, sh_vc)
+    draw = ImageDraw.Draw(canvas)
+
+    draw.rounded_rectangle([vc1_x, vc1_y, vc1_x + vc1_w, vc1_y + vc1_h], radius=20, fill="#FEF3C7", outline="#F59E0B", width=3)
+    f_vc_tag = get_font(22, bold=True)
+    f_vc_num = get_font(68, weight="extrabold")
+    f_vc_sub = get_font(20, bold=True)
+    draw.text((vc1_x + 36, vc1_y + 20), "GIẢM NGAY", font=f_vc_tag, fill="#B45309")
+    draw.text((vc1_x + 28, vc1_y + 55), "50%", font=f_vc_num, fill="#D97706")
+    draw.text((vc1_x + 28, vc1_y + 145), "COMBO", font=f_vc_sub, fill="#92400E")
+    draw.text((vc1_x + 18, vc1_y + 175), "Cơ Bản & Nâng Cao", font=f_vc_sub, fill="#78350F")
+    draw.rounded_rectangle([vc1_x + 20, vc1_y + 230, vc1_x + vc1_w - 20, vc1_y + 280], radius=14, fill="#0284C7")
+    draw.text((vc1_x + 36, vc1_y + 242), "ĐĂNG KÝ NGAY", font=get_font(20, weight="extrabold"), fill="#FFFFFF")
+
+    vc2_x, vc2_y, vc2_w, vc2_h = 1280, 240, 240, 290
+    draw.rounded_rectangle([vc2_x, vc2_y, vc2_x + vc2_w, vc2_y + vc2_h], radius=20, fill="#FFFFFF", outline="#0284C7", width=3)
+    draw.text((vc2_x + 36, vc2_y + 18), "GIẢM NGAY", font=f_vc_tag, fill="#0369A1")
+    draw.text((vc2_x + 28, vc2_y + 50), "30%", font=f_vc_num, fill="#0284C7")
+    draw.text((vc2_x + 28, vc2_y + 135), "KHÓA CƠ BẢN", font=f_vc_sub, fill="#0F172A")
+    draw.text((vc2_x + 24, vc2_y + 165), "Người Mới Bắt Đầu", font=f_vc_sub, fill="#475569")
+    draw.rounded_rectangle([vc2_x + 20, vc2_y + 215, vc2_x + vc2_w - 20, vc2_y + 265], radius=14, fill="#EA580C")
+    draw.text((vc2_x + 36, vc2_y + 227), "ĐĂNG KÝ NGAY", font=get_font(20, weight="extrabold"), fill="#FFFFFF")
+
+    date_x = 1620
+    draw.rounded_rectangle([date_x, 140, date_x + 240, 190], radius=16, fill="#EA580C")
+    draw.text((date_x + 44, 150), "ÁP DỤNG TỪ", font=get_font(22, bold=True), fill="#FFFFFF")
+    draw.rectangle([date_x - 10, 210, date_x + 250, 300], outline="#1E3A8A", width=3, fill="#FFFFFF")
+    draw.text((date_x + 10, 222), "2026", font=get_font(44, weight="extrabold"), fill="#1E3A8A")
+    draw.text((date_x + 10, 264), "ƯU ĐÃI NĂM MỚI", font=get_font(18, bold=True), fill="#64748B")
+
+    # 8. Typography tiêu đề góc trên trái
+    left_m = 120
+    eyebrow = badge_text or "ƯU ĐÃI LỚN NHẤT NĂM"
+    draw.text((left_m, 210), eyebrow.upper(), font=get_font(40, bold=True), fill="#334155")
+
+    main_title = title if title else "GIẢM HỌC PHÍ ĐẶC BIỆT"
+    font_t, t_lines = fit_title_font(draw, main_title, 820, 280, start_size=88, min_size=58, weight="extrabold")
+    ty = 280
+    for line in t_lines:
+        draw.text((left_m, ty), line, font=font_t, fill="#0F3684")
+        tbb = draw.textbbox((0, 0), line, font=font_t)
+        ty += (tbb[3] - tbb[1]) + 20
+
+    # 9. Phần nội dung dải cam phía dưới
+    sub_title = subtitle or "HỌC THỰC CHIẾN - ĐI LÀM NGAY"
+    draw.text((left_m, 1260), sub_title.upper(), font=get_font(52, weight="extrabold"), fill="#FFFFFF")
+
+    def_bullets = [
+        "Tặng khóa học Online trọn đời trị giá 500K",
+        "Không giới hạn số buổi học kèm 1-1 đến khi thành thạo",
+        "Giáo trình 100% bài toán thực tế doanh nghiệp",
+    ]
+    blist = highlights if (highlights and len(highlights) > 0) else def_bullets
+    by = 1360
+    f_b = get_font(32, bold=True)
+    for b in blist[:3]:
+        draw.ellipse([left_m, by + 4, left_m + 38, by + 42], fill="#0284C7")
+        draw.line([(left_m + 10, by + 22), (left_m + 18, by + 30), (left_m + 28, by + 14)], fill="#FFFFFF", width=4)
+        draw.text((left_m + 56, by), b, font=f_b, fill="#FFFFFF")
+        by += 68
+
+    # 10. 3 Khối Học phí dạng Viên thuốc (Price Pills)
+    pills_data = [
+        ("Tin Học Văn Phòng Căn Bản", "Trọn khóa 800k"),
+        ("Tin Học Văn Phòng & AI Ứng Dụng", "Trọn khóa 1.550k"),
+        ("THVP & AI Doanh Nghiệp Chuyên Sâu", "Trọn khóa 2.950k"),
+    ]
+    py = 1340
+    for c_name, price in pills_data:
+        pill_w = 880
+        pill_h = 82
+        px = W - pill_w - 90
+        draw.rounded_rectangle([px, py, px + pill_w, py + pill_h], radius=40, fill="#FFFFFF")
+        tag_w = 210
+        draw.rounded_rectangle([px, py, px + tag_w, py + pill_h], radius=40, fill="#F59E0B")
+        draw.text((px + 24, py + 16), "Học phí", font=get_font(20, bold=True), fill="#FFFFFF")
+        draw.text((px + 24, py + 42), "thấp nhất", font=get_font(22, weight="extrabold"), fill="#FFFFFF")
+        draw.text((px + tag_w + 24, py + 26), c_name, font=get_font(26, bold=True), fill="#1E293B")
+        draw.text((px + pill_w - 260, py + 24), price, font=get_font(28, weight="extrabold"), fill="#0369A1")
+        py += 105
+
+    # 11. Chân trang: Hotline & Website
+    foot_y = 1880
+    draw.rectangle([0, foot_y, W, H], fill="#0F172A")
+    draw.text((120, foot_y + 36), "🌐 www.tinhocsaoviet.edu.vn", font=get_font(32, bold=True), fill="#38BDF8")
+    draw.text((1150, foot_y + 34), f"📞 TƯ VẤN KHÓA HỌC: {hotline}", font=get_font(36, weight="extrabold"), fill="#FBBF24")
+
+    return canvas.convert("RGB")
+
+
+# ===========================================================================
 # DISPATCHER CHỌN TEMPLATE
 # ===========================================================================
 
 TEMPLATES = {
+    "modern_ribbon_wave": render_template_modern_ribbon_wave,
     "photo_first_cinematic": render_template_photo_first_cinematic,
-    "dual_hexagon": render_template_dual_hexagon,
+    "dual_hexagon": render_template_photo_first_cinematic,
     "bauhaus_grid": render_template_bauhaus_grid,
     "bento_box": render_template_bento_box,
     "curved_window": render_template_curved_window,
@@ -1720,11 +1921,11 @@ TEMPLATES = {
     "3d_pills": render_template_3d_pills,
 }
 
-# Danh sách trọng số: ưu tiên cao nhất cho thiết kế lấy ảnh thật làm chủ đạo (Photo-First Cinematic)
+# Danh sách trọng số: Ưu tiên cao nhất cho layout Sóng Marketing Sao Việt (Modern Ribbon Wave)
 TEMPLATE_CHOICES = [
-    "photo_first_cinematic",
-    "photo_first_cinematic",
-    "photo_first_cinematic",
+    "modern_ribbon_wave",
+    "modern_ribbon_wave",
+    "modern_ribbon_wave",
     "photo_first_cinematic",
     "bento_box",
     "curved_window",
