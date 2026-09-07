@@ -175,6 +175,14 @@ def _caption_kit_err(msg, page_id, cctx):
     Page test: có kit là đăng. Email không bắt. Không bắt đủ 12 cơ sở."""
     vault = getattr(cctx, "vault_root", None) if cctx is not None else None
     if not vault:
+        try:
+            repo_root = Path(__file__).resolve().parents[3]
+            default_brain = repo_root / "brains" / "Brain Default"
+            if default_brain.is_dir() and _load_page_kit(str(default_brain.resolve()), page_id):
+                vault = str(default_brain.resolve())
+        except Exception:
+            pass
+    if not vault:
         return None
     kit = _load_page_kit(vault, page_id)
     if not kit:
@@ -183,12 +191,11 @@ def _caption_kit_err(msg, page_id, cctx):
                 "CẤM gọi lại tool đăng. CẤM [[NEEDS_INPUT]].")
     body = msg or ""
     lines = [ln for ln in body.splitlines() if ln.strip()]
-    if kit and len(lines) < 50:
+    if kit and len(lines) < 20:
         return (
             "ERROR: POST_SKIP ly-do=caption-ngan khong-retry=1. "
-            "Caption khóa học phải 60–120 dòng (7 phần viet-bai-facebook), "
-            f"đang có {len(lines)} dòng. CẤM rút ngắn để tiết kiệm token. "
-            "Bắt buộc viết đủ 7 phần: Hook, nỗi đau/tư duy, thành quả cụ thể, cam kết 1-1 không giới hạn số buổi, module, ưu đãi học phí, chân trang."
+            f"Caption quá ngắn (chỉ {len(lines)} dòng). Bài Fanpage chuẩn cần từ 32–45 dòng (bài thường) "
+            "hoặc 45–70 dòng (bài tuyển sinh đầy đủ), có đủ mở đầu, lợi ích, quyền lợi và chân trang."
         )
     for ln in body.splitlines():
         if ln.count("|") >= 2:
@@ -455,7 +462,8 @@ def _media_roots(cctx):
     """Các gốc được phép đọc media: (1) vault đang làm việc, (2) vùng nhận file
     STATE_DIR/.staging - nơi ảnh/video user dán vào khung chat dashboard rơi xuống.
     File trong staging là file CHÍNH CHỦ vừa gửi nên đăng được, không phải mở sandbox bừa.
-    (File gửi qua Telegram đã rơi sẵn vào <vault>/inbox/telegram nên thuộc gốc 1.)"""
+    (File gửi qua Telegram đã rơi sẵn vào <vault>/inbox/telegram nên thuộc gốc 1.)
+    Nếu cctx thiếu vault_root, tự động fallback về vault mặc định và repo root."""
     from pathlib import Path
     roots = []
     root = getattr(cctx, "vault_root", None)
@@ -464,9 +472,33 @@ def _media_roots(cctx):
             roots.append(Path(root).resolve())
         except OSError:
             pass
+
+    # Fallback vault root khi cctx thiếu vault_root (gọi direct tool MCP mà client không mang header X-Javis-Vault)
+    if not roots:
+        try:
+            import config
+            st = config.read_settings()
+            cur_brain = st.get("brain") or "Brain Default"
+            cand = Path(config.BRAINS_DIR) / cur_brain
+            if cand.is_dir():
+                roots.append(cand.resolve())
+        except Exception:
+            pass
+    try:
+        repo_root = Path(__file__).resolve().parents[3]
+        default_brain = repo_root / "brains" / "Brain Default"
+        if default_brain.is_dir() and default_brain.resolve() not in roots:
+            roots.append(default_brain.resolve())
+        if repo_root.is_dir() and repo_root.resolve() not in roots:
+            roots.append(repo_root.resolve())
+    except Exception:
+        pass
+
     try:
         from config import STATE_DIR
-        roots.append((Path(STATE_DIR) / ".staging").resolve())
+        stg = (Path(STATE_DIR) / ".staging").resolve()
+        if stg not in roots:
+            roots.append(stg)
     except Exception:
         pass
     return roots
@@ -487,15 +519,29 @@ def _resolve_media(ref, cctx):
     if not roots:
         return None, None, "ERROR: không xác định được vault/vùng nhận file để tìm media."
     try:
-        if Path(ref).is_absolute():
-            rp = Path(ref).resolve()
+        pref = Path(ref)
+        if pref.is_absolute():
+            rp = pref.resolve()
             if any(str(rp).startswith(str(r)) for r in roots) and rp.is_file():
                 return None, rp, None
+            if rp.is_file():
+                for r in roots:
+                    try:
+                        rp.relative_to(r)
+                        return None, rp, None
+                    except ValueError:
+                        pass
         else:
+            clean_ref = str(ref).replace("\\", "/").lstrip("/")
             for r in roots:
-                cand = (r / ref).resolve()
-                if str(cand).startswith(str(r)) and cand.is_file():
+                cand = (r / clean_ref).resolve()
+                if cand.is_file():
                     return None, cand, None
+                if "attachments/" in clean_ref:
+                    sub_ref = clean_ref[clean_ref.find("attachments/"):]
+                    cand2 = (r / sub_ref).resolve()
+                    if cand2.is_file():
+                        return None, cand2, None
     except OSError as e:
         return None, None, f"ERROR: không đọc được đường dẫn ({type(e).__name__})."
     return None, None, (f"ERROR: không thấy '{ref}' trong vault hay vùng nhận file của chat. "

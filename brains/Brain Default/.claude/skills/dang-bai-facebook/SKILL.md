@@ -16,13 +16,13 @@ Cover mac dinh = gen 1 lan tu **1 anh raw dataset + logo kit** (file `attachment
 
 ## 1. Chọn folder dataset theo brief (Luật A)
 
-| Chữ trong brief / thẻ kit | Folder (id đúng trên đĩa) |
-|---|---|
+| Chữ trong brief / thẻ kit                 | Folder (id đúng trên đĩa)                          |
+| ----------------------------------------- | -------------------------------------------------- |
 | Word, Excel, văn phòng, MOS, AI văn phòng | `attachments/dataset/tin-hoc _ai/` (`tin-hoc _ai`) |
-| AutoCAD, SolidWorks, vẽ kỹ thuật | `attachments/dataset/ve-ky-thuat/` (`ve-ky-thuat`) |
-| Kế toán, chứng từ, sổ sách | `attachments/dataset/ke-toan/` |
-| Photoshop, Illustrator, đồ họa | `attachments/dataset/do-hoa/` |
-| Logo only | `attachments/dataset/chung/` (chỉ watermark) |
+| AutoCAD, SolidWorks, vẽ kỹ thuật          | `attachments/dataset/ve-ky-thuat/` (`ve-ky-thuat`) |
+| Kế toán, chứng từ, sổ sách                | `attachments/dataset/ke-toan/`                     |
+| Photoshop, Illustrator, đồ họa            | `attachments/dataset/do-hoa/`                      |
+| Logo only                                 | `attachments/dataset/chung/` (chỉ watermark)       |
 
 CẤM tìm folder cũ `tin-hoc/`, `co-khi/`, `ai/`, `marketing/`, `tre-em/`, `tieng-han/` - đã gộp/xoá. Không có folder → chọn thẻ khác trong kit, **không** `[[NEEDS_INPUT]]`. Caption tự viết từ skill `viet-bai-facebook`; không cần file giáo trình trong brain.
 
@@ -42,7 +42,7 @@ Liệt kê file ảnh trong folder ngành. Gọi N = số file. Đọc `_mau/bo-
 
 - **Kiểu 1 Poster mockup studio 1:1 (chuẩn như `mau-poster-do-hoa.png`):** Thiết kế tỷ lệ VUÔNG 1:1 (2000x2000 hoặc 1200x1200 px). Hình ảnh học viên/chuyên gia trẻ trung ngồi bên laptop + icon 3D phần mềm bay nổi khối (Word, Excel, AutoCAD, Misa, Ps...) + tiêu đề to rõ nền xanh nhận diện Sao Việt + badge ưu đãi vàng "ƯU ĐÃI 30% HỌC PHÍ - KÈM 1-1" + footer hotline. Chữ không đè nhau, safe margin 15-18%.
 - **Kiểu 2 Ảnh gốc 1:1 + Khung thương hiệu:** Kết hợp ảnh lớp học thật từ dataset + khung chữ thanh dưới sắc nét (mẫu A-full 1:1), logo Sao Việt, không che mặt học viên.
-*(Style 3 Neon viền mạch điện tối tăm đã xoá bỏ hoàn toàn khỏi hệ thống).*
+  _(Style 3 Neon viền mạch điện tối tăm đã xoá bỏ hoàn toàn khỏi hệ thống)._
 
 Xoay luân phiên 2 kiểu cover trên. Cấm 2 bài liên tiếp cùng kiểu.
 
@@ -65,12 +65,14 @@ Cấm Bach Khoa / Truong Thinh / Zoom. Prompt: `references/prompt-poster.md`.
 ## 3. Cách gọi album chuẩn Facebook (Luật C)
 
 Lọc trùng TRƯỚC khi đăng:
+
 - Bỏ file tên ` (1)` / `copy`.
 - Bỏ file trùng hash (cùng byte).
 - File dùng làm Ảnh 1 của `image_edit` (cảnh trên cover) **không** nằm trong photos[1..]. Cover đã hiện cảnh đó.
 - Sau lọc, nếu chỉ còn 1 cảnh duy nhất: `fb_page_photo` cover **hoặc** gốc, **cấm** album cover + đúng gốc đó.
 
 Số lượng ảnh gửi vào `fb_page_album`:
+
 - Tự động lấy danh sách ảnh ngẫu nhiên qua lệnh:
   `python "brains/Brain Default/scratch/hub_call.py" pick_photos <folder> <cover_path> random`
 - Trả về danh sách `photos` chuẩn gồm 4, 6, 7 hoặc 8 ảnh (cover luôn là photos[0]).
@@ -97,10 +99,11 @@ Kết nối Graph API không đủ.
 User chỉ cần 1 dòng chỉ định Fanpage hoặc chọn theo task checklist chiến dịch (ví dụ: Tin học Sao Việt Thủ Đức, Kế toán Sao Việt Bình Dương, AutoCAD Sao Việt Biên Hòa, Royce Shop...).
 
 **TỰ ĐỘNG KHỚP MỜ (FUZZY MATCH) BRAND KIT & TRANG:**
+
 - Khi brief hoặc user chỉ định tên Trang (ví dụ: "page royce", "thủ đức", "cad biên hòa", "kế toán quận 7"):
-  + BẮT BUỘC tự động khớp mờ (fuzzy match) tìm file kit tương ứng trong `wiki/brand-kits/` (ví dụ: `royce` -> `royce-shop.md`, `thủ đức` -> kit Thủ Đức).
-  + Khớp theo ngành học: nếu brief chỉ ghi địa danh chung chung (vd "quận 7"), đối chiếu ngành trong brief (tin học / kế toán / autocad / đồ họa) để chọn đúng cơ sở.
-  + Chạy ngay lệnh tìm tự động:
+  - BẮT BUỘC tự động khớp mờ (fuzzy match) tìm file kit tương ứng trong `wiki/brand-kits/` (ví dụ: `royce` -> `royce-shop.md`, `thủ đức` -> kit Thủ Đức).
+  - Khớp theo ngành học: nếu brief chỉ ghi địa danh chung chung (vd "quận 7"), đối chiếu ngành trong brief (tin học / kế toán / autocad / đồ họa) để chọn đúng cơ sở.
+  - Chạy ngay lệnh tìm tự động:
     ```
     python "brains/Brain Default/scratch/kit_tim.py" "<tên_page_hoặc_từ_khóa>"
     ```
@@ -109,7 +112,7 @@ User chỉ cần 1 dòng chỉ định Fanpage hoặc chọn theo task checklist
     python "brains/Brain Default/skills/dang-bai-facebook/scripts/pick_next_fanpage.py" --page "<tên_page_hoặc_từ_khóa>"
     ```
     Lệnh này sẽ tự động phân giải, trả về đúng Page ID, slug, file kit và toàn bộ khối CHAN_TRANG chuẩn.
-  + **TUYỆT ĐỐI CẤM HỎI LẠI TRONG KANBAN WORKER:** Kanban là hệ thống worker chạy ngầm (headless). Người dùng không ngồi trực chat. Nghiêm cấm hỏi các câu như "Tôi không tìm thấy royce.md, bạn có muốn dùng royce-shop.md không?". Hỏi thay vì làm sẽ bị hệ thống phát hiện và BLOCK ngay lập tức. Hãy tự động chọn kit điểm cao nhất, ghi log lý do và tiến hành đăng luôn.
+  - **TUYỆT ĐỐI CẤM HỎI LẠI TRONG KANBAN WORKER:** Kanban là hệ thống worker chạy ngầm (headless). Người dùng không ngồi trực chat. Nghiêm cấm hỏi các câu như "Tôi không tìm thấy royce.md, bạn có muốn dùng royce-shop.md không?". Hỏi thay vì làm sẽ bị hệ thống phát hiện và BLOCK ngay lập tức. Hãy tự động chọn kit điểm cao nhất, ghi log lý do và tiến hành đăng luôn.
 
 Thiếu page: tự động lấy target page từ task checklist của chiến dịch đang chạy (30+ Fanpage) **trong số page đã có kit** hoặc chạy `python "brains/Brain Default/skills/dang-bai-facebook/scripts/pick_next_fanpage.py"`. Map ngành và chủ đề -> folder + kiểu A/B + kit + chân trang + album Luật C. Không bắt user dán luật.
 
@@ -118,17 +121,18 @@ Trung thu 2026 nếu user không ghi ngày: nghỉ Thứ Sáu 25/09/2026, học 
 1 goal = 1 page = 1 brief. Không em dash.
 
 **Chân trang = đúng kit của page đang đăng.** Trước khi gọi `fb_page_*`:
+
 ```
 python "brains/Brain Default/scratch/kit_chan_trang.py" <Page ID hoặc từ khóa page>
 ```
+
 Dán nguyên khối `CHAN_TRANG` (script đã tự tách **mỗi cơ sở một dòng** và hỗ trợ cả từ khóa mờ). CẤM copy chuỗi `A | B | C` vào caption. Plugin chặn `dia-chi-mot-dong`.
 
 CẤM dán hotline mặc định `0931 144 858` / `0823 552 558` nếu kit page khác số.
 CẤM dán list 12-13 cơ sở nếu kit chỉ 1 chi nhánh (hoặc chỉ Đồng Nai / chỉ Bình Dương).
 Plugin chặn khi **thiếu hẳn** hotline (9 số cuối) hoặc **không có 1 mẩu địa chỉ nào** của kit. Sai dấu/viết tắt/thiếu 1 cụm thì vẫn đăng. Email không bắt. Royce Shop = page test, **vẫn** chặn caption cụt và địa chỉ một dòng `|`.
 
-`chan-trang-sai-kit` / `khong-retry=1`: POST_SKIP **1 lần rồi DỪNG**. CẤM sửa caption 20 lần, CẤM `[[NEEDS_INPUT]]`, CẤM rollback, CẤM gọi `fb_page_*` lại.
-
+`chan-trang-sai-kit` / `khong-retry=1`: POST*SKIP **1 lần rồi DỪNG**. CẤM sửa caption 20 lần, CẤM `[[NEEDS_INPUT]]`, CẤM rollback, CẤM gọi `fb_page*\*` lại.
 
 ## 7. Tự duyệt rồi mới đăng, cấm đốt token (Luật G)
 
@@ -151,22 +155,23 @@ Thiếu 1 ô: sửa **tối đa 1 lần** (đổi caption hoặc gen lại 1 cov
 
 CẤM đăng thử nhiều lần. Có `NEXT=1` thì đọc **đúng 1 kit** `wiki/brand-kits/<kit>` (địa chỉ/hotline page đó), không đọc 56 kit, không `fb_pages_list`. **Bắt buộc** soạn theo `viet-bai-facebook` đủ 7 phần **60-120 dòng** - cấm cắt caption để tiết kiệm token. Plugin chặn bài dưới 45 dòng (`caption-ngan`). Ngành = `_the-khoa-hoc.md`. Ảnh 1 = poster gen `_xuat/`. CẤM `fb_page_post`.
 
-
 ## 8. Quy chuẩn Cover Banner & Tỷ lệ sinh ảnh 7 / 3
 
 Nhằm đảm bảo hình ảnh chân thực, thu hút người xem và đạt tỷ lệ chuyển đổi cao nhất cho các khóa học Tin học Sao Việt, hệ thống áp dụng cơ chế sinh Cover tỷ lệ **7 / 3**:
 
 ### Tỷ lệ phân bổ khi tạo Cover
+
 - **70% Kiểu 2 (Authentic Classroom Banner - Khuyên dùng & Mặc định chiếm đa số):**
-  + Sử dụng ảnh chụp lớp học thật 100% từ kho dataset (`attachments/dataset/<ngành>/`).
-  + Kết hợp dải đồ họa thương hiệu Solid Deep Navy (`#0B2341`), logo Sao Việt đặt trên thẻ bo góc nổi khối 3D, tiêu đề và điểm nổi bật in hoa sắc nét (màu trắng và vàng hoàng gia).
-  + Tuyệt đối không bao giờ đè chữ lên mặt/lưng học viên hoặc màn hình máy tính.
-  + Font chữ 100% TrueType Unicode (Arial Bold / Segoe UI), tự động ngắt dòng và co dãn thông minh, không lỗi font, không lệch khung hay tràn viền.
+  - Sử dụng ảnh chụp lớp học thật 100% từ kho dataset (`attachments/dataset/<ngành>/`).
+  - Kết hợp dải đồ họa thương hiệu Solid Deep Navy (`#0B2341`), logo Sao Việt đặt trên thẻ bo góc nổi khối 3D, tiêu đề và điểm nổi bật in hoa sắc nét (màu trắng và vàng hoàng gia).
+  - Tuyệt đối không bao giờ đè chữ lên mặt/lưng học viên hoặc màn hình máy tính.
+  - Font chữ 100% TrueType Unicode (Arial Bold / Segoe UI), tự động ngắt dòng và co dãn thông minh, không lỗi font, không lệch khung hay tràn viền.
 - **30% Kiểu 1 (AI 3D Poster):**
-  + Dựng poster giáo dục 3D hiện đại sinh qua Google Imagen / Gemini API, có dán logo Sao Việt chuẩn pixel.
-  + Nếu Google API gặp lỗi hạn mức, hết quota hoặc model không phản hồi: Hệ thống **tự động cứu hộ 100% về Kiểu 2**, đảm bảo tiến trình đăng bài không bao giờ bị gián đoạn.
+  - Dựng poster giáo dục 3D hiện đại sinh qua Google Imagen / Gemini API, có dán logo Sao Việt chuẩn pixel.
+  - Nếu Google API gặp lỗi hạn mức, hết quota hoặc model không phản hồi: Hệ thống **tự động cứu hộ 100% về Kiểu 2**, đảm bảo tiến trình đăng bài không bao giờ bị gián đoạn.
 
 ### 5 Mẫu Layout Agency Đồ Họa Đa Dạng (Kiểu 2)
+
 1. `split_right` (Chuẩn theo ảnh mẫu tham chiếu): Cột trái (50%) là ảnh lớp học thật, cột phải (50%) là panel xanh thương hiệu với logo góc trên, tiêu đề lớn, gạch phân cách vàng kim, 3 điểm nổi bật và hotline.
 2. `split_left`: Đảo vị trí panel sang bên trái, ảnh thật bên phải nhằm tạo sự phong phú giữa các bài viết trên cùng 1 Fanpage.
 3. `bottom_bar`: Ảnh chụp lớp học góc rộng sáng sủa chiếm 62% phía trên, dải panel thương hiệu solid navy chiếm 38% chân trang cùng các huy hiệu viên thuốc bo tròn hiện đại.
@@ -174,6 +179,7 @@ Nhằm đảm bảo hình ảnh chân thực, thu hút người xem và đạt t
 5. `diagonal_slice`: Đường cắt vát chéo góc công nghệ hiện đại, tạo cảm giác chuyển động và tràn đầy năng lượng.
 
 ### Cách gọi lệnh và cấu hình
+
 - Tự động trong tool `gemini_generate_image`: Mặc định quay xác suất 70% Kiểu 2 và 30% Kiểu 1.
 - Nếu prompt chứa `"kiểu 2"`, `"kieu 2"`, `"ảnh thật"`, `"dataset"`, `"banner"`: Hệ thống sinh 100% Kiểu 2.
 - Nếu prompt chứa `"kiểu 1"`, `"kieu 1"`, `"3d"`, `"mockup"`, `"studio"`: Hệ thống sinh Kiểu 1 (fallback Kiểu 2 nếu lỗi mạng/quota).

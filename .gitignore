@@ -59,6 +59,8 @@ server/update_state.json
 server/logs/
 server/brain-trash/
 server/tmp/
+.dataset_cache.json
+*.dataset_cache.json
 server/_selfupdate.bat
 # Bổ sung 0.12.4: kho bot Telegram của trang Chatbot (0.19.0) và nhật ký hội thoại của
 # chúng. Cả hai là dữ liệu chạy trong STATE_DIR (chatbot_store.py, chatbot_log.py) và

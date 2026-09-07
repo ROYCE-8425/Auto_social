@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
-"""Gọi tool qua Javis hub MCP (JSON-RPC)."""
+"""Gọi tool qua Javis hub MCP (JSON-RPC) và tiện ích chọn/chuẩn hóa ảnh Facebook."""
 import json
+import os
 import sys
 import urllib.request
 from pathlib import Path
@@ -21,19 +22,100 @@ _RID = 0
 _IMG_EXT = {".jpg", ".jpeg", ".png", ".webp"}
 
 
+def resolve_dataset_folder(folder):
+    """
+    Chuẩn hóa tên hoặc đường dẫn folder dataset về đúng thư mục thật trên đĩa.
+    Chấp nhận: 'tin-hoc _ai', 'attachments/dataset/tin-hoc _ai', 'tin-hoc-ai', 'tin-hoc',
+    've-ky-thuat', 'cad', 'autocad', 'do-hoa', 'ke-toan', slash/backslash.
+    """
+    f = str(folder or "").strip().replace("\\", "/")
+    if "attachments/dataset/" in f:
+        f = f.split("attachments/dataset/", 1)[1]
+    elif f.startswith("dataset/"):
+        f = f.split("dataset/", 1)[1]
+    f = f.strip("/")
+
+    # Fuzzy map theo từ khóa ngành / khóa học
+    low = f.lower().replace(" ", "").replace("_", "").replace("-", "")
+    if any(k in low for k in ("tinhoc", "vanphong", "office", "word", "excel", "mos")) or low in ("ai", "tinhocai", "tinhoc_ai"):
+        f = "tin-hoc _ai"
+    elif any(k in low for k in ("cad", "autocad", "vekythuat", "solidworks", "cokhi")):
+        f = "ve-ky-thuat"
+    elif any(k in low for k in ("dohoa", "photoshop", "illustrator", "design", "corel")):
+        f = "do-hoa"
+    elif any(k in low for k in ("ketoan", "misa", "tax", "sach", "chungtu")):
+        f = "ke-toan"
+    elif low in ("chung", "logo"):
+        f = "chung"
+
+    d = Path(VAULT) / "attachments" / "dataset" / f
+    if d.is_file():
+        # Pointer file text (ví dụ file 'tin-hoc' chứa 'tin-hoc _ai')
+        try:
+            target = d.read_text(encoding="utf-8").strip()
+            if (Path(VAULT) / "attachments" / "dataset" / target).is_dir():
+                return target
+        except Exception:
+            pass
+
+    if not d.is_dir():
+        dataset_root = Path(VAULT) / "attachments" / "dataset"
+        if dataset_root.is_dir():
+            for sub in dataset_root.iterdir():
+                if sub.is_dir():
+                    sub_clean = sub.name.lower().replace(" ", "").replace("_", "").replace("-", "")
+                    if sub_clean == low or sub.name.lower() == f.lower():
+                        return sub.name
+
+    return f
+
+
+def _get_dataset_cache(folder):
+    cache_file = Path(VAULT) / "attachments" / "dataset" / ".dataset_cache.json"
+    if not cache_file.exists():
+        return {}
+    try:
+        return json.loads(cache_file.read_text(encoding="utf-8")).get(folder, {})
+    except Exception:
+        return {}
+
+
+def _save_dataset_cache(folder, data):
+    cache_file = Path(VAULT) / "attachments" / "dataset" / ".dataset_cache.json"
+    all_cache = {}
+    if cache_file.exists():
+        try:
+            all_cache = json.loads(cache_file.read_text(encoding="utf-8"))
+        except Exception:
+            all_cache = {}
+    all_cache[folder] = data
+    try:
+        cache_file.write_text(json.dumps(all_cache, ensure_ascii=False, indent=2), encoding="utf-8")
+    except Exception:
+        pass
+
+
 def unique_dataset_photos(folder, skip_names=None):
-    """Anh goc khong trung hash, bo file Windows ' (1)' / copy."""
+    """
+    Ảnh gốc không trùng hash, bỏ file Windows ' (1)' / copy.
+    Tối ưu I/O: Scan metadata st_size/st_mtime trước, dùng cache JSON nhẹ.
+    Chỉ hash MD5 khi trùng kích thước file hoặc cache miss để tránh đọc hàng trăm MB.
+    """
     import hashlib
     import re
     skip_names = {str(x).replace("\\", "/").split("/")[-1].lower() for x in (skip_names or [])}
-    folder = str(folder or "").replace("tin-hoc/_ai", "tin-hoc _ai").replace("tin-hoc_ai", "tin-hoc _ai")
-    if folder.strip("/") in ("tin-hoc",):
-        folder = "tin-hoc _ai"
-    d = Path(VAULT) / "attachments" / "dataset" / folder
+    real_folder = resolve_dataset_folder(folder)
+    d = Path(VAULT) / "attachments" / "dataset" / real_folder
     if not d.is_dir():
         return []
-    seen_hash = set()
+
+    cache = _get_dataset_cache(real_folder)
+    new_cache = {}
     out = []
+    seen_sizes = {}
+    seen_hash = set()
+    cache_changed = False
+
     for p in sorted(d.iterdir(), key=lambda x: x.name.lower()):
         if not p.is_file() or p.suffix.lower() not in _IMG_EXT:
             continue
@@ -45,21 +127,60 @@ def unique_dataset_photos(folder, skip_names=None):
             continue
         if p.name.lower() in skip_names:
             continue
-        h = hashlib.md5(p.read_bytes()).hexdigest()
+
+        try:
+            st = p.stat()
+            sz = st.st_size
+            mtime = st.st_mtime
+        except OSError:
+            continue
+
+        rel = f"attachments/dataset/{real_folder}/{p.name}"
+
+        # Nếu kích thước chưa từng xuất hiện trong folder -> file độc nhất, không cần hash byte
+        if sz not in seen_sizes:
+            seen_sizes[sz] = p
+            out.append(rel)
+            cached_info = cache.get(p.name)
+            if cached_info and cached_info.get("size") == sz and cached_info.get("mtime") == mtime:
+                new_cache[p.name] = cached_info
+            else:
+                new_cache[p.name] = {"size": sz, "mtime": mtime}
+                cache_changed = True
+            continue
+
+        # Nếu trùng size với một file khác trong folder -> cần đối chiếu MD5
+        cached_info = cache.get(p.name)
+        if cached_info and cached_info.get("size") == sz and cached_info.get("mtime") == mtime and "md5" in cached_info:
+            h = cached_info["md5"]
+        else:
+            try:
+                h = hashlib.md5(p.read_bytes()).hexdigest()
+                cache_changed = True
+            except OSError:
+                continue
+
+        new_cache[p.name] = {"size": sz, "mtime": mtime, "md5": h}
         if h in seen_hash:
             continue
         seen_hash.add(h)
-        out.append(f"attachments/dataset/{folder}/{p.name}")
+        out.append(rel)
+
+    if cache_changed or len(new_cache) != len(cache):
+        _save_dataset_cache(real_folder, new_cache)
+
     return out
 
 
 def pick_random_album_photos(folder, cover_path=None, target_total=None):
     """
-    Chon ngau nhien so luong anh goc tu folder de ghep voi cover_path.
-    Muc tieu tong so anh: 5, 6, 7, hoac 8 anh khi co cover.
-    Uu tien anh goc chua tung dung trong _anh-da-dung.md.
+    Chọn ngẫu nhiên số lượng ảnh gốc từ folder để ghép với cover_path.
+    Mục tiêu tổng số ảnh: 5, 6, 7, hoặc 8 ảnh khi có cover.
+    Ưu tiên ảnh gốc chưa từng dùng trong _anh-da-dung.md.
+    Nếu hết ảnh mới, tự động xoay vòng ảnh gốc để luôn đủ 5-8 ảnh khi folder có đủ ảnh.
     """
     import random
+    real_folder = resolve_dataset_folder(folder)
     skip = []
     if cover_path:
         skip.append(cover_path)
@@ -68,11 +189,11 @@ def pick_random_album_photos(folder, cover_path=None, target_total=None):
         inner_name = cover_inner_file.read_text(encoding="utf-8").strip().replace("\\", "/").split("/")[-1].lower()
         if inner_name:
             skip.append(inner_name)
-    all_goc = unique_dataset_photos(folder, skip_names=skip)
+    all_goc = unique_dataset_photos(real_folder, skip_names=skip)
     if not all_goc:
         return [cover_path] if cover_path else []
 
-    # Uu tien anh chua dung
+    # Ưu tiên ảnh chưa dùng
     used_file = Path(VAULT) / "wiki" / "brand-kits" / "_anh-da-dung.md"
     used_set = set()
     if used_file.exists():
@@ -80,49 +201,54 @@ def pick_random_album_photos(folder, cover_path=None, target_total=None):
             if l.strip().startswith("- "):
                 used_set.add(l.strip()[2:].strip().replace("\\", "/").split("/")[-1].lower())
 
-    # Kiem tra anh da ghep vao cover (neu co) de tranh trung lap
-    cover_inner_file = Path(VAULT) / "attachments/dataset/_xuat/cover_inner_photo.txt"
     if cover_inner_file.exists():
         inner_name = cover_inner_file.read_text(encoding="utf-8").strip().replace("\\", "/").split("/")[-1].lower()
         if inner_name:
             used_set.add(inner_name)
 
-    # Bo qua anh da dung (neu du anh moi)
+    # Lọc ảnh chưa dùng
     chua_dung = [p for p in all_goc if p.replace("\\", "/").split("/")[-1].lower() not in used_set]
 
-    n_goc = len(chua_dung) if len(chua_dung) >= 3 else len(all_goc)
-    pool = chua_dung if len(chua_dung) >= 3 else all_goc
+    # Nếu ảnh chưa dùng còn >= 4 ảnh thì ưu tiên dùng ảnh chưa dùng;
+    # nếu không đủ, cho phép xoay vòng lại all_goc để không bị tụt số lượng album
+    if len(chua_dung) >= 4:
+        pool = chua_dung
+    elif len(all_goc) >= 4:
+        pool = all_goc
+    else:
+        pool = chua_dung if chua_dung else all_goc
+
+    n_pool = len(pool)
 
     if target_total is None or str(target_total).lower() == "random":
-        # Neu co cover, so_goc 4/5/6/7 -> tong album 5/6/7/8 anh.
-        # Neu khong co cover, giu album raw tuong ung 5/6/7/8 neu du anh.
+        # Có cover -> cần 4, 5, 6, 7 ảnh gốc để tổng album đạt 5, 6, 7, 8 ảnh
         min_full = 4 if cover_path else 5
-        if n_goc >= 7:
+        if n_pool >= 7:
             so_goc = random.choice([min_full, 5, 6, 7])
-        elif n_goc >= 5:
+        elif n_pool >= 5:
             so_goc = random.choice([min_full, 5])
-        elif n_goc >= 4:
+        elif n_pool >= 4:
             so_goc = 4
-        elif n_goc >= 2:
-            so_goc = n_goc
+        elif n_pool >= 2:
+            so_goc = n_pool
         else:
             so_goc = 1
     else:
         try:
             tot = int(target_total)
             can_goc = tot - (1 if cover_path else 0)
-            so_goc = max(1, min(can_goc, n_goc))
+            so_goc = max(1, min(can_goc, n_pool))
         except Exception:
-            so_goc = min(3, n_goc)
+            so_goc = min(4, n_pool)
 
-    # Xao tron random cac anh goc de moi bai la mot tap anh khac nhau
+    # Xáo trộn random các ảnh gốc
     chosen_goc = random.sample(pool, min(so_goc, len(pool)))
     raw_list = ([cover_path] if cover_path else []) + chosen_goc
     return raw_list
 
 
 def normalize_photo_square(in_path, out_path, size=2000):
-    """Center-crop va resize anh ve hinh vuong 1:1 (2000x2000)."""
+    """Center-crop và resize ảnh về hình vuông 1:1 (2000x2000)."""
     from PIL import Image
     with Image.open(in_path) as im:
         side = min(im.width, im.height)
@@ -135,7 +261,7 @@ def normalize_photo_square(in_path, out_path, size=2000):
 
 
 def normalize_photo_landscape(in_path, out_path, target_w=2000, target_h=1330):
-    """Center-crop va resize anh ve hinh chu nhat ngang 3:2 (2000x1330)."""
+    """Center-crop và resize ảnh về hình chữ nhật ngang 3:2 (2000x1330)."""
     from PIL import Image
     with Image.open(in_path) as im:
         target_ratio = target_w / target_h
@@ -155,16 +281,14 @@ def normalize_photo_landscape(in_path, out_path, target_w=2000, target_h=1330):
 
 def normalize_album_photos(photo_list):
     """
-    Chuan hoa toan bo danh sach anh theo dung bo cuc Facebook 2026:
-    - Neu album >= 5 anh (5, 6, 7, 8 anh):
-      * photos[0] (Cover Banner): Vuong 1:1 (2000x2000)
-      * photos[1] (Anh chinh 2): Vuong 1:1 (2000x2000)
-      * photos[2..N] (Anh phu): Ngang 3:2 (2000x1330)
-      -> Ket qua hien thi tren Facebook: Cot trai 2 anh vuong, cot phai 3 anh ngang khit cao!
-    - Neu album == 4 anh (fallback khi dataset it anh):
-      * Tat ca deu Vuong 1:1 (2000x2000) -> Facebook hien thi luoi 2x2 vuong deu hoan hao.
+    Chuẩn hóa toàn bộ danh sách ảnh theo bố cục Facebook 2026:
+    - Nếu album >= 5 ảnh (5, 6, 7, 8 ảnh):
+      * photos[0] (Cover Banner): Vuông 1:1 (2000x2000)
+      * photos[1] (Ảnh chính 2): Vuông 1:1 (2000x2000)
+      * photos[2..N] (Ảnh phụ): Ngang 3:2 (2000x1330)
+    - Nếu album == 4 ảnh:
+      * Tất cả đều Vuông 1:1 (2000x2000) -> Lưới 2x2.
     """
-    from pathlib import Path
     if not photo_list:
         return []
 
@@ -172,7 +296,7 @@ def normalize_album_photos(photo_list):
     out_dir = vault_p / "attachments" / "dataset" / "_xuat" / "album_ready"
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    # Don dep anh cu
+    # Dọn dẹp ảnh cũ
     for old_f in out_dir.glob("*.jpg"):
         try:
             old_f.unlink()
@@ -183,9 +307,6 @@ def normalize_album_photos(photo_list):
     n = len(photo_list)
     for i, p_str in enumerate(photo_list):
         full_in = vault_p / p_str if not Path(p_str).is_absolute() else Path(p_str)
-        # Một số tool trả về đường dẫn tương đối theo brain/workdir thay vì
-        # theo gốc vault. Thử tìm lại đúng file theo basename để không truyền
-        # đường dẫn "ma" sang fb_page_album.
         if not full_in.exists():
             try:
                 name = Path(p_str).name
@@ -211,7 +332,7 @@ def normalize_album_photos(photo_list):
                 normalize_photo_square(full_in, out_file, size=2000)
             norm_paths.append(rel_out)
         except Exception as e:
-            print(f"Warning: Loi chuan hoa {p_str}: {e}")
+            print(f"Warning: Lỗi chuẩn hóa {p_str}: {e}")
             norm_paths.append(p_str)
 
     return norm_paths
@@ -224,14 +345,12 @@ def _parse_body(raw: str, ctype: str):
             if line.startswith("data:"):
                 chunks.append(line[5:].strip())
         raw = "\n".join(c for c in chunks if c) or raw
-    # lấy object JSON đầu
     raw = raw.strip()
     if not raw:
         return {"error": "empty"}
     try:
         return json.loads(raw.split("\n")[0])
     except Exception:
-        # thử tìm { ... }
         i = raw.find("{")
         if i >= 0:
             try:
@@ -270,7 +389,6 @@ def tool(name, arguments=None):
     if "error" in r and "result" not in r:
         return r
     result = r.get("result") or r
-    # MCP wraps content
     if isinstance(result, dict) and "content" in result:
         parts = []
         for c in result["content"]:
@@ -285,6 +403,9 @@ def tool(name, arguments=None):
 def main():
     cmd = sys.argv[1] if len(sys.argv) > 1 else "list"
 
+    # =========================================================================
+    # CÁC LỆNH LOCAL CỤC BỘ: Chạy ngay lập tức, KHÔNG kết nối RPC HTTP port 7777
+    # =========================================================================
     if cmd == "kit":
         import kit_tim
         args = ["kit_tim.py"] + sys.argv[2:]
@@ -294,93 +415,6 @@ def main():
         import kit_chan_trang
         args = ["kit_chan_trang.py"] + sys.argv[2:]
         sys.exit(kit_chan_trang.main(args))
-
-    rpc(
-        "initialize",
-        {
-            "protocolVersion": "2024-11-05",
-            "capabilities": {},
-            "clientInfo": {"name": "hub_call", "version": "1.0"},
-        },
-    )
-    try:
-        rpc("notifications/initialized", {})
-    except Exception:
-        pass
-
-    if cmd == "list":
-
-        tools = rpc("tools/list", {})
-        tls = (tools.get("result") or {}).get("tools") or []
-        names = [t.get("name") for t in tls]
-        print("COUNT", len(names))
-        for n in sorted(names):
-            print(n)
-        return
-
-    if cmd == "search":
-        q = sys.argv[2] if len(sys.argv) > 2 else "facebook"
-        print(tool("javis_search_tools", {"query": q}))
-        return
-
-    if cmd == "run":
-        name = sys.argv[2]
-        if len(sys.argv) > 3:
-            raw = sys.argv[3]
-            if raw.startswith("@"):
-                args = json.loads(open(raw[1:], encoding="utf-8").read())
-            else:
-                args = json.loads(raw)
-        else:
-            args = {}
-        print(tool(name, args))
-        return
-
-    if cmd == "fb":
-        # shortcut: fb <tool> [@args.json | inline json]
-        name = sys.argv[2]
-        if len(sys.argv) > 3:
-            raw = sys.argv[3]
-            args = json.loads(open(raw[1:], encoding="utf-8").read()) if raw.startswith("@") else json.loads(raw)
-        else:
-            args = {}
-        print(tool("javis_run_tool", {"name": name, "args": args}))
-        return
-
-    if cmd == "check":
-        target = sys.argv[2] if len(sys.argv) > 2 else ""
-        page_id = sys.argv[3] if len(sys.argv) > 3 else "988656934325292"
-        # Lấy các bài gần đây để kiểm tra
-        res = tool("javis_run_tool", {"name": "fb_page_posts", "args": {"page_id": page_id, "limit": 5}})
-        if isinstance(res, str):
-            try:
-                res = json.loads(res)
-            except Exception:
-                print(res)
-                return
-        data = res.get("data") if isinstance(res, dict) else []
-        if not data:
-            print(f"Khong tim thay bai viet nao tren trang {page_id}")
-            return
-        
-        found = None
-        if target:
-            for p in data:
-                if target in p.get("id", "") or target.lower() in (p.get("message") or "").lower():
-                    found = p
-                    break
-        if not found:
-            found = data[0]
-
-        print("=== KET QUA KIEM TRA BAI VIET FACEBOOK ===")
-        print(f"Trang: Royce Shop (ID: {page_id})")
-        print(f"Post ID: {found.get('id')}")
-        print(f"Thoi gian dang: {found.get('created_time')}")
-        print(f"Trang thai: DA DANG CONG KHAI TREN FACEBOOK")
-        print(f"Link xem truc tiep: {found.get('permalink_url')}")
-        msg = (found.get('message') or '').strip().split('\n')[0]
-        print(f"Noi dung dau: {msg}")
-        return
 
     if cmd == "used_photos":
         slug = sys.argv[2] if len(sys.argv) > 2 else ""
@@ -449,31 +483,120 @@ def main():
         return
 
     if cmd == "list_imgs":
-        folder = sys.argv[2] if len(sys.argv) > 2 else ""
+        raw_folder = sys.argv[2] if len(sys.argv) > 2 else ""
+        folder = resolve_dataset_folder(raw_folder)
         d = Path(VAULT) / "attachments" / "dataset" / folder
         if not d.is_dir():
-            print(json.dumps({"ok": False, "error": "khong co folder " + folder}))
+            print(json.dumps({"ok": False, "error": "khong co folder " + raw_folder}))
             return
         files = unique_dataset_photos(folder)
         print(json.dumps({"folder": folder, "n": len(files), "photos": files}, ensure_ascii=False))
         return
 
     if cmd == "pick_photos":
-        folder = sys.argv[2] if len(sys.argv) > 2 else ""
+        raw_folder = sys.argv[2] if len(sys.argv) > 2 else ""
+        folder = resolve_dataset_folder(raw_folder)
         cover = sys.argv[3] if len(sys.argv) > 3 and not sys.argv[3].isdigit() and sys.argv[3] != "random" else None
         target = "random"
         for a in sys.argv[3:]:
             if a.isdigit() or a == "random":
                 target = a
         raw_res = pick_random_album_photos(folder, cover_path=cover, target_total=target)
-        # Tu dong chuan hoa toan bo anh ve dung ti le vang Facebook 2026 (1:1 vuong cho anh 1 va 2, 3:2 ngang cho cac anh con lai)
         norm_res = normalize_album_photos(raw_res)
         print(json.dumps({"ok": True, "folder": folder, "count": len(norm_res), "photos": norm_res, "raw_photos": raw_res}, ensure_ascii=False))
         return
 
+    # =========================================================================
+    # CÁC LỆNH GỌI QUA MCP HUB RPC (chỉ kết nối khi cần thiết)
+    # =========================================================================
+    rpc(
+        "initialize",
+        {
+            "protocolVersion": "2024-11-05",
+            "capabilities": {},
+            "clientInfo": {"name": "hub_call", "version": "1.0"},
+        },
+    )
+    try:
+        rpc("notifications/initialized", {})
+    except Exception:
+        pass
+
+    if cmd == "list":
+        tools = rpc("tools/list", {})
+        tls = (tools.get("result") or {}).get("tools") or []
+        names = [t.get("name") for t in tls]
+        print("COUNT", len(names))
+        for n in sorted(names):
+            print(n)
+        return
+
+    if cmd == "search":
+        q = sys.argv[2] if len(sys.argv) > 2 else "facebook"
+        print(tool("javis_search_tools", {"query": q}))
+        return
+
+    if cmd == "run":
+        name = sys.argv[2]
+        if len(sys.argv) > 3:
+            raw = sys.argv[3]
+            if raw.startswith("@"):
+                args = json.loads(open(raw[1:], encoding="utf-8").read())
+            else:
+                args = json.loads(raw)
+        else:
+            args = {}
+        print(tool(name, args))
+        return
+
+    if cmd == "fb":
+        name = sys.argv[2]
+        if len(sys.argv) > 3:
+            raw = sys.argv[3]
+            args = json.loads(open(raw[1:], encoding="utf-8").read()) if raw.startswith("@") else json.loads(raw)
+        else:
+            args = {}
+        print(tool("javis_run_tool", {"name": name, "args": args}))
+        return
+
+    if cmd == "check":
+        target = sys.argv[2] if len(sys.argv) > 2 else ""
+        page_id = sys.argv[3] if len(sys.argv) > 3 else "988656934325292"
+        res = tool("javis_run_tool", {"name": "fb_page_posts", "args": {"page_id": page_id, "limit": 5}})
+        if isinstance(res, str):
+            try:
+                res = json.loads(res)
+            except Exception:
+                print(res)
+                return
+        data = res.get("data") if isinstance(res, dict) else []
+        if not data:
+            print(f"Khong tim thay bai viet nao tren trang {page_id}")
+            return
+
+        found = None
+        if target:
+            for p in data:
+                if target in p.get("id", "") or target.lower() in (p.get("message") or "").lower():
+                    found = p
+                    break
+        if not found:
+            found = data[0]
+
+        print("=== KET QUA KIEM TRA BAI VIET FACEBOOK ===")
+        print(f"Trang: Royce Shop (ID: {page_id})")
+        print(f"Post ID: {found.get('id')}")
+        print(f"Thoi gian dang: {found.get('created_time')}")
+        print(f"Trang thai: DA DANG CONG KHAI TREN FACEBOOK")
+        print(f"Link xem truc tiep: {found.get('permalink_url')}")
+        msg = (found.get('message') or '').strip().split('\n')[0]
+        print(f"Noi dung dau: {msg}")
+        return
+
     if cmd == "album_folder":
         page = sys.argv[2] if len(sys.argv) > 2 else "Royce Shop"
-        folder = sys.argv[3] if len(sys.argv) > 3 else ""
+        raw_folder = sys.argv[3] if len(sys.argv) > 3 else ""
+        folder = resolve_dataset_folder(raw_folder)
         rest = sys.argv[4:]
         message = ""
         if rest and rest[0].startswith("@"):
@@ -482,7 +605,7 @@ def main():
             message = " ".join(rest)
         d = Path(VAULT) / "attachments" / "dataset" / folder
         if not d.is_dir():
-            print("ERROR: khong co folder " + folder)
+            print("ERROR: khong co folder " + raw_folder)
             return
         photos = unique_dataset_photos(folder)[:4]
         if len(photos) < 2:
