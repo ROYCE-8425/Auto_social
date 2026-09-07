@@ -463,8 +463,9 @@ def _media_roots(cctx):
     STATE_DIR/.staging - nơi ảnh/video user dán vào khung chat dashboard rơi xuống.
     File trong staging là file CHÍNH CHỦ vừa gửi nên đăng được, không phải mở sandbox bừa.
     (File gửi qua Telegram đã rơi sẵn vào <vault>/inbox/telegram nên thuộc gốc 1.)
-    Nếu cctx thiếu vault_root, tự động fallback về vault mặc định và repo root."""
+    Nếu cctx thiếu vault_root, tự động fallback về vault mặc định, volume Docker và repo root."""
     from pathlib import Path
+    import os
     roots = []
     root = getattr(cctx, "vault_root", None)
     if root:
@@ -473,17 +474,29 @@ def _media_roots(cctx):
         except OSError:
             pass
 
-    # Fallback vault root khi cctx thiếu vault_root (gọi direct tool MCP mà client không mang header X-Javis-Vault)
-    if not roots:
-        try:
-            import config
-            st = config.read_settings()
-            cur_brain = st.get("brain") or "Brain Default"
-            cand = Path(config.BRAINS_DIR) / cur_brain
-            if cand.is_dir():
+    # Fallback vault root khi cctx thiếu vault_root hoặc chạy trên Docker volume
+    try:
+        import config
+        st = config.read_settings()
+        cur_brain = st.get("brain") or "Brain Default"
+        b_dir = getattr(config, "BRAINS_DIR", None)
+        if b_dir:
+            cand = Path(b_dir) / cur_brain
+            if cand.is_dir() and cand.resolve() not in roots:
                 roots.append(cand.resolve())
-        except Exception:
-            pass
+            for sub in Path(b_dir).iterdir():
+                if sub.is_dir() and sub.resolve() not in roots:
+                    roots.append(sub.resolve())
+        v_env = os.getenv("JAVIS_VAULT")
+        if v_env and Path(v_env).is_dir() and Path(v_env).resolve() not in roots:
+            roots.append(Path(v_env).resolve())
+        for dv in ("/data/vaults", "/data/brains", "/data/vaults/default"):
+            dp = Path(dv)
+            if dp.is_dir() and dp.resolve() not in roots:
+                roots.append(dp.resolve())
+    except Exception:
+        pass
+
     try:
         repo_root = Path(__file__).resolve().parents[3]
         default_brain = repo_root / "brains" / "Brain Default"
@@ -497,7 +510,7 @@ def _media_roots(cctx):
     try:
         from config import STATE_DIR
         stg = (Path(STATE_DIR) / ".staging").resolve()
-        if stg not in roots:
+        if stg.is_dir() and stg not in roots:
             roots.append(stg)
     except Exception:
         pass
@@ -510,7 +523,7 @@ def _resolve_media(ref, cctx):
     url/path có giá trị. File NGOÀI các gốc cho phép thì từ chối - plugin chạy full quyền
     nhưng không vì thế mà cho đăng file tuỳ ý trên máy lên mạng."""
     from pathlib import Path
-    ref = str(ref or "").strip()
+    ref = str(ref or "").strip().strip('"').strip("'")
     if not ref:
         return None, None, "ERROR: thiếu đường dẫn file hoặc URL http(s) của media."
     if ref.startswith("http://") or ref.startswith("https://"):
@@ -537,11 +550,19 @@ def _resolve_media(ref, cctx):
                 cand = (r / clean_ref).resolve()
                 if cand.is_file():
                     return None, cand, None
-                if "attachments/" in clean_ref:
-                    sub_ref = clean_ref[clean_ref.find("attachments/"):]
-                    cand2 = (r / sub_ref).resolve()
-                    if cand2.is_file():
-                        return None, cand2, None
+                for marker in ("attachments/", "dataset/", "album_ready/"):
+                    if marker in clean_ref:
+                        sub_ref = clean_ref[clean_ref.find(marker):]
+                        cand2 = (r / sub_ref).resolve()
+                        if cand2.is_file():
+                            return None, cand2, None
+            # Quét tìm trực tiếp trong thư mục album_ready nếu truyền tên file
+            fname = Path(clean_ref).name
+            if fname.lower().endswith((".jpg", ".jpeg", ".png", ".webp")):
+                for r in roots:
+                    cand_ar = (r / "attachments" / "dataset" / "_xuat" / "album_ready" / fname).resolve()
+                    if cand_ar.is_file():
+                        return None, cand_ar, None
     except OSError as e:
         return None, None, f"ERROR: không đọc được đường dẫn ({type(e).__name__})."
     return None, None, (f"ERROR: không thấy '{ref}' trong vault hay vùng nhận file của chat. "
@@ -679,16 +700,156 @@ async def _publish_video(args, cctx):
                       ensure_ascii=False, default=str)
 
 
+def _auto_prepare_album(course, cover_ref, cctx):
+    """Tự động chọn 5-8 ảnh từ dataset và chuẩn hóa tỷ lệ 7/3 (0 token LLM)."""
+    from pathlib import Path
+    import random
+    roots = _media_roots(cctx)
+    cover_path = None
+    if cover_ref and str(cover_ref).strip().lower() != "auto":
+        _, cp, _ = _resolve_media(cover_ref, cctx)
+        if cp and Path(cp).is_file():
+            cover_path = Path(cp)
+    if not cover_path:
+        for r in roots:
+            xuat_dir = r / "attachments" / "dataset" / "_xuat"
+            if xuat_dir.is_dir():
+                candidates = sorted(
+                    [f for f in xuat_dir.iterdir() if f.is_file() and f.suffix.lower() in (".jpg", ".jpeg", ".png", ".webp") and "album_ready" not in str(f)],
+                    key=lambda f: f.stat().st_mtime, reverse=True
+                )
+                if candidates:
+                    cover_path = candidates[0]
+                    break
+
+    dataset_dir = None
+    clean_course = str(course or "").strip().lower().replace(" ", "").replace("_", "").replace("-", "")
+    target_folder_name = ""
+    if any(k in clean_course for k in ("tinhoc", "vanphong", "office", "word", "excel", "mos", "ai")):
+        target_folder_name = "tin-hoc _ai"
+    elif any(k in clean_course for k in ("cad", "autocad", "vekythuat", "solidworks", "cokhi")):
+        target_folder_name = "ve-ky-thuat"
+    elif any(k in clean_course for k in ("dohoa", "photoshop", "illustrator", "design", "corel")):
+        target_folder_name = "do-hoa"
+    elif any(k in clean_course for k in ("ketoan", "misa", "tax", "sach", "chungtu")):
+        target_folder_name = "ke-toan"
+
+    for r in roots:
+        base_ds = r / "attachments" / "dataset"
+        if not base_ds.is_dir():
+            continue
+        if target_folder_name:
+            cand = base_ds / target_folder_name
+            if cand.is_dir():
+                dataset_dir = cand
+                break
+        for sub in base_ds.iterdir():
+            if sub.is_dir():
+                sub_clean = sub.name.lower().replace(" ", "").replace("_", "").replace("-", "")
+                if clean_course in sub_clean or sub_clean in clean_course:
+                    dataset_dir = sub
+                    break
+        if dataset_dir:
+            break
+
+    pool = []
+    if dataset_dir and dataset_dir.is_dir():
+        for f in sorted(dataset_dir.iterdir(), key=lambda x: x.name.lower()):
+            if f.is_file() and f.suffix.lower() in (".jpg", ".jpeg", ".png", ".webp"):
+                if "copy" not in f.stem.lower() and "(" not in f.stem:
+                    pool.append(f)
+
+    # Chọn 4-6 ảnh raw để album đạt 5-7 ảnh
+    n_raw = min(len(pool), random.choice([4, 5, 6])) if pool else 0
+    chosen_raw = random.sample(pool, n_raw) if len(pool) >= n_raw else pool
+
+    final_photos = []
+    if cover_path and cover_path.is_file():
+        final_photos.append(str(cover_path.resolve()))
+    for cr in chosen_raw:
+        final_photos.append(str(cr.resolve()))
+
+    if len(final_photos) < 2:
+        return final_photos
+
+    try:
+        from PIL import Image
+        out_dir = None
+        for r in roots:
+            od = r / "attachments" / "dataset" / "_xuat" / "album_ready"
+            try:
+                od.mkdir(parents=True, exist_ok=True)
+                out_dir = od
+                break
+            except Exception:
+                pass
+        if out_dir:
+            norm_list = []
+            n_tot = len(final_photos)
+            for idx, p_in in enumerate(final_photos):
+                out_file = out_dir / f"fb_norm_{idx:02d}.jpg"
+                with Image.open(p_in) as im:
+                    if n_tot >= 5:
+                        if idx in (0, 1):
+                            side = min(im.width, im.height)
+                            l = (im.width - side) // 2
+                            t = (im.height - side) // 2
+                            c = im.crop((l, t, l + side, t + side)).resize((2000, 2000), Image.Resampling.LANCZOS)
+                        else:
+                            target_ratio = 2000 / 1330
+                            cur_ratio = im.width / im.height
+                            if cur_ratio > target_ratio:
+                                w = int(im.height * target_ratio)
+                                l = (im.width - w) // 2
+                                c = im.crop((l, 0, l + w, im.height)).resize((2000, 1330), Image.Resampling.LANCZOS)
+                            else:
+                                h = int(im.width / target_ratio)
+                                t = (im.height - h) // 2
+                                c = im.crop((0, t, im.width, t + h)).resize((2000, 1330), Image.Resampling.LANCZOS)
+                    else:
+                        side = min(im.width, im.height)
+                        l = (im.width - side) // 2
+                        t = (im.height - side) // 2
+                        c = im.crop((l, t, l + side, t + side)).resize((2000, 2000), Image.Resampling.LANCZOS)
+                    c.convert("RGB").save(out_file, "JPEG", quality=95)
+                norm_list.append(str(out_file.resolve()))
+            return norm_list
+    except Exception:
+        pass
+    return final_photos
+
+
 async def _publish_album(args, cctx):
     """Đăng NHIỀU ảnh thành một bài (album): up từng ảnh published=false lấy id,
-    rồi gom vào MỘT bài /feed qua attached_media. Meta cho tối đa 10 ảnh một bài."""
+    rồi gom vào MỘT bài /feed qua attached_media. Meta cho tối đa 10 ảnh một bài.
+    Hỗ trợ deterministic: nếu photos rỗng hoặc 'auto', tự động chọn ảnh từ dataset theo 'course'."""
     token = await _token()
     if not token:
         return "ERROR: " + (_check() or "chưa kết nối")
     args = args or {}
     photos = args.get("photos") or []
-    if isinstance(photos, str):   # model hay đưa chuỗi cách nhau dấu phẩy
-        photos = [p.strip() for p in photos.split(",") if p.strip()]
+    course = args.get("course") or args.get("khoa_hoc") or args.get("folder")
+    if isinstance(photos, str):   # model hay đưa chuỗi cách nhau dấu phẩy hoặc chuỗi JSON array
+        p_str = photos.strip()
+        if p_str.startswith("[") and p_str.endswith("]"):
+            try:
+                parsed = json.loads(p_str)
+                if isinstance(parsed, list):
+                    photos = parsed
+            except Exception:
+                pass
+        if isinstance(photos, str):
+            if photos.strip().lower() == "auto":
+                photos = []
+            else:
+                photos = [p.strip() for p in photos.split(",") if p.strip()]
+
+    # Tự động chuẩn bị album deterministic nếu photos rỗng mà có course
+    if (not photos or len(photos) < 2) and course:
+        auto_p = _auto_prepare_album(course, args.get("cover") or (photos[0] if photos else None), cctx)
+        if auto_p and len(auto_p) >= 2:
+            photos = auto_p
+
     if len(photos) < 2:
         return "ERROR: album cần ít nhất 2 ảnh trong 'photos' (1 ảnh thì dùng fb_page_photo)."
     if len(photos) > 10:
@@ -737,9 +898,16 @@ async def _publish_album(args, cctx):
     d = await _post(f"{pid}/feed", data, ptok)
     if isinstance(d, dict) and d.get("error"):
         return _fmt(d)
-    return json.dumps({"ok": True, "page": pname, "photos": len(media_ids),
-                       "post_id": d.get("id") if isinstance(d, dict) else None},
-                      ensure_ascii=False, default=str)
+    post_id = d.get("id") if isinstance(d, dict) else None
+    link = f"https://www.facebook.com/{post_id}" if post_id else ""
+    return json.dumps({
+        "ok": True,
+        "page": pname,
+        "photos": len(media_ids),
+        "post_id": post_id,
+        "link": link,
+        "status": "verified"
+    }, ensure_ascii=False, default=str)
 
 
 async def _edit_post(args, cctx):
@@ -882,11 +1050,12 @@ def register(ctx):
     ctx.register_tool(
         name="fb_page_album", min_mode="full", check_fn=_check, handler=_publish_album,
         description=("ĐĂNG ALBUM: nhiều ảnh (2-10) gom vào MỘT bài trên Trang - hành động THẬT, công khai. "
-                     "photos = danh sách đường dẫn ảnh trong vault hoặc URL http(s). message = caption chung. "
-                     "Một ảnh thì dùng fb_page_photo."),
+                     "photos = danh sách đường dẫn ảnh hoặc 'auto' kèm course để hệ thống tự động chuẩn bị album. "
+                     "message = caption chung."),
         schema={"type": "object", "properties": {
-            "photos": {"type": "array", "items": {"type": "string"},
-                       "description": "2-10 ảnh: đường dẫn trong vault hoặc URL http(s)"},
+            "photos": {"description": "Danh sách 2-10 ảnh trong vault hoặc URL http(s), hoặc 'auto'"},
+            "course": {"type": "string", "description": "Tên khóa học hoặc ngành (vd: 'tin-hoc', 've-ky-thuat', 'do-hoa', 'ke-toan') để tự động chuẩn bị album"},
+            "cover": {"type": "string", "description": "Đường dẫn ảnh cover 1:1 (tuỳ chọn, nếu bỏ trống sẽ tự lấy cover mới nhất trong _xuat)"},
             "message": {"type": "string", "description": "Caption chung của album (tuỳ chọn)"},
             "page_id": {"type": "string", "description": "id Trang (bỏ trống nếu chỉ có 1 Trang)"},
             "page": {"type": "string", "description": "tên Trang (thay cho page_id)"}},

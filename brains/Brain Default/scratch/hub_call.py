@@ -615,10 +615,59 @@ def main():
         print("ALBUM", len(photos), "anh tu", folder)
         for pth in photos:
             print(" ", pth)
-        print(tool("javis_run_tool", {"name": "fb_page_album", "args": args}))
+    if cmd == "auto_post":
+        # usage: hub_call.py auto_post <page> <course_or_folder> <caption_or_@file> [cover_path]
+        page = sys.argv[2] if len(sys.argv) > 2 else "Royce Shop"
+        raw_course = sys.argv[3] if len(sys.argv) > 3 else "tin-hoc"
+        folder = resolve_dataset_folder(raw_course)
+        caption = ""
+        if len(sys.argv) > 4:
+            c_arg = sys.argv[4]
+            if c_arg.startswith("@"):
+                p_cap = Path(c_arg[1:])
+                if not p_cap.is_absolute():
+                    p_cap = Path(VAULT) / p_cap
+                caption = p_cap.read_text(encoding="utf-8") if p_cap.exists() else ""
+            else:
+                caption = c_arg
+        cover = sys.argv[5] if len(sys.argv) > 5 else None
+        if not cover:
+            # Tự tìm cover mới nhất trong _xuat
+            xuat_p = Path(VAULT) / "attachments" / "dataset" / "_xuat"
+            if xuat_p.is_dir():
+                cand_covers = sorted(
+                    [f for f in xuat_p.iterdir() if f.is_file() and f.suffix.lower() in _IMG_EXT and "album_ready" not in str(f)],
+                    key=lambda f: f.stat().st_mtime, reverse=True
+                )
+                if cand_covers:
+                    cover = str(cand_covers[0].relative_to(Path(VAULT))).replace("\\", "/")
+
+        raw_res = pick_random_album_photos(folder, cover_path=cover, target_total="random")
+        norm_res = normalize_album_photos(raw_res)
+        if len(norm_res) < 2:
+            print(json.dumps({"ok": False, "error": f"Khong du anh de tao album cho folder '{folder}'"}))
+            return
+
+        res = tool("javis_run_tool", {"name": "fb_page_album", "args": {"page": page, "photos": norm_res, "message": caption}})
+        res_obj = {}
+        if isinstance(res, str):
+            try:
+                res_obj = json.loads(res)
+            except Exception:
+                res_obj = {"raw": res}
+        elif isinstance(res, dict):
+            res_obj = res
+
+        pid = res_obj.get("post_id") or ""
+        link = res_obj.get("link") or (f"https://www.facebook.com/{pid}" if pid else "")
+        if pid:
+            print(f"POST_OK post_id={pid} link={link} photos={len(norm_res)}")
+            print(f"OK | {page} | {folder} | {len(norm_res)} anh | post_id: {pid} | link: {link}")
+        else:
+            print(f"FAIL | {page} | {res}")
         return
 
-    print("usage: list | search <q> | run <tool> '<json>' | fb <tool> [@args.json] | check [post_id_or_keyword] | kit <q> | kit_footer <q> | used_photos <slug> | append_used <slug> <path1>... | list_imgs <folder> | album_folder <page> <folder> [@caption.txt]")
+    print("usage: list | search <q> | run <tool> '<json>' | fb <tool> [@args.json] | check [post_id_or_keyword] | kit <q> | kit_footer <q> | used_photos <slug> | append_used <slug> <path1>... | list_imgs <folder> | pick_photos <folder> [cover] [target] | album_folder <page> <folder> [@caption.txt] | auto_post <page> <course> <caption_or_@file> [cover]")
 
 
 if __name__ == "__main__":

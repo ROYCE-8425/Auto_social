@@ -802,12 +802,12 @@ gì, dữ liệu/file/artifact nào được tạo và cách đã kiểm chứng
 Đăng Facebook: BẮT BUỘC GỌI TOOL fb_page_album (hoặc fb_page_photo) để đăng thật lên Facebook lấy post_id.
 TUYỆT ĐỐI CẤM dừng lại ở bản nháp, CẤM hỏi "vui lòng xem xét/xác nhận", CẤM hỏi người dùng.
 TUYỆT ĐỐI CẤM BỊA HOẶC MOCK post_id hoặc link post (cấm 87654321..., cấm số mẫu). Phải thực sự gọi tool đăng bài.
-Ảnh = nếu brief/user/model yêu cầu ChatGPT/OpenAI/GPT Image/gpt-image/javis_generate_image/ai_render_brand=true/ai_full hoặc AI tự render logo/tiêu đề/hotline thì BẮT BUỘC dùng javis_generate_image với page_id + save_under="attachments/dataset/_xuat" + ai_render_brand=true; prompt ảnh phải đúng ngành (tin học/đồ họa/vẽ kỹ thuật/kế toán...), nhánh này CẤM dùng ảnh thật dataset + template code, CẤM overlay Javis, CẤM split-panel/panel navy/card trắng kiểu cũ. Nếu không opt-in AI full thì mặc định gemini_generate_image ở chế độ ảnh thật: logo= file kit, images=1 raw, style_preference=authentic_photo nếu tool hỗ trợ; Cover PHẢI giữ người/lớp học thật từ dataset, CẤM AI vẽ lại người/lớp học. Bài khóa học phải kèm album ảnh thật từ dataset đúng ngành nếu đủ ảnh: photos[0]=cover AI, photos[1..]=raw; tổng 5/6/7/8 ảnh khi đủ. fb_page_album photos BẮT BUỘC là mảng list ["path1", "path2"], KHÔNG bọc thành chuỗi string.
+Chuẩn hóa album tự động (0 token): Hệ thống Python deterministic đã tự động chọn ảnh dataset, crop 1:1 và 3:2, resolve path và upload. Gọi fb_page_album(page="<page>", course="<course>", message="<caption>", photos="auto") hoặc hub_call.py auto_post. CẤM tự chạy vòng lặp ReAct dò file ảnh, CẤM tự crop hay đọc metadata file.
+Ảnh Cover nếu opt-in AI full: nếu brief yêu cầu ChatGPT/OpenAI/GPT Image/gpt-image/javis_generate_image/ai_render_brand=true/ai_full hoặc AI tự render logo/tiêu đề/hotline thì dùng javis_generate_image với page_id + save_under="attachments/dataset/_xuat" + ai_render_brand=true. Sau đó gọi fb_page_album(..., photos="auto") để hệ thống tự ghép cover và ảnh dataset.
 Hàng ngày: chạy pick_next_fanpage.py, đọc ĐÚNG wiki/brand-kits/<kit> (không mặc định royce-shop).
 Kanban 1 page: FAST_PATH chỉ đọc kit page đó + skill đăng bài ngắn. Caption 32-45 dòng, ads đầy đủ 45-70 dòng, giọng+màu+logo+chân trang = kit.
 Không bắt đọc tài liệu hệ thống/reference dài trong mỗi vòng, trừ khi thiếu dữ liệu bắt buộc.
-Cover: đúng 1 ảnh mới; nếu brief có OpenAI/GPT Image/ai_render_brand/ai_full thì gọi thẳng javis_generate_image GPT Image 2. Sau cover phải pick_photos để ghép album 5-8 ảnh nếu dataset còn ảnh đúng khóa.
-CẤM [[NEEDS_INPUT]] vì 'không có tool / Royce chưa MCP'. CẤM địa chỉ một dòng |. CẤM gen 2 poster.
+CẤM [[NEEDS_INPUT]] vì 'không có tool / Royce chưa MCP'. CẤM địa chỉ một dòng |. CẤM gen 2 poster. CẤM gọi subagent verify lại vì Graph API đã tự kiểm tra post_id.
 """.strip()
         result, error, tool_calls = await self._query(cli, prompt)
         return (

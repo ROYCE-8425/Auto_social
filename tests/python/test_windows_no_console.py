@@ -23,7 +23,9 @@ Hai cách viết sai đã gặp thật, cả hai đều nằm trong danh sách c
   trả 0 - lời gọi trông như đã bảo vệ mà thật ra trần trụi.
 """
 from _paths import ROOT  # noqa: E402,F401
+import os
 import re
+import subprocess
 import sys
 
 _fails = []
@@ -112,8 +114,12 @@ check("CANARY: không lấy CREATE_NO_WINDOW từ asyncio.subprocess (ở đó n
 sys.path.insert(0, str(ROOT / "server"))
 import winproc  # noqa: E402
 
-check("winproc.no_window() trả 0 ngoài Windows", winproc.no_window() == 0)
-check("winproc.kwargs_no_window() rỗng ngoài Windows", winproc.kwargs_no_window() == {})
+if getattr(os, "name", "") == "nt":
+    check("winproc.no_window() có cờ trên Windows", winproc.no_window() == getattr(subprocess, "CREATE_NO_WINDOW", 0))
+    check("winproc.kwargs_no_window() có cờ trên Windows", winproc.kwargs_no_window() == {"creationflags": getattr(subprocess, "CREATE_NO_WINDOW", 0)})
+else:
+    check("winproc.no_window() trả 0 ngoài Windows", winproc.no_window() == 0)
+    check("winproc.kwargs_no_window() rỗng ngoài Windows", winproc.kwargs_no_window() == {})
 
 print()
 if _fails:
