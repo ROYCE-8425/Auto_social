@@ -836,6 +836,9 @@ def swap(cli, mode: str = None, tag: str = None, spec: dict = None,
             or_free = _openrouter_free_engine(cli, mode, tag, settings)
             if or_free and not _co_mat_orfree(chain):
                 chain.append(or_free)
+            api_fb = _api_fallback_if_available(cli, mode, tag, settings)
+            if api_fb:
+                chain.append(api_fb)
             return _FallbackChain(chain) if len(chain) > 1 else cli
         ok, why = availability(sp, settings)
         if not ok:
