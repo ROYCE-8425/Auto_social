@@ -22,6 +22,54 @@ _RID = 0
 _IMG_EXT = {".jpg", ".jpeg", ".png", ".webp"}
 
 
+COURSE_SPECS = {
+    "tin-hoc": {
+        "folder": "tin-hoc _ai",
+        "aliases": ["tinhoc", "tin-hoc", "tin_hoc", "vanphong", "van-phong", "van_phong", "office", "word", "excel", "powerpoint", "mos", "ic3", "ai-van-phong", "ai_van_phong", "tinhocai", "tinhoc_ai"],
+        "forbidden": ["dohoa", "do-hoa", "do_hoa", "photoshop", "illustrator", "autocad", "cad", "vekythuat", "ve-ky-thuat", "ve_ky_thuat", "solidworks", "ketoan", "ke-toan", "ke_toan", "misa", "tax"],
+        "display": "Tin học văn phòng & AI",
+    },
+    "ve-ky-thuat": {
+        "folder": "ve-ky-thuat",
+        "aliases": ["cad", "autocad", "vekythuat", "ve-ky-thuat", "ve_ky_thuat", "solidworks", "cokhi", "banve", "ban-ve"],
+        "forbidden": ["dohoa", "do-hoa", "do_hoa", "photoshop", "illustrator", "ketoan", "ke-toan", "ke_toan", "misa", "tax", "tinhoc", "tin-hoc", "vanphong", "office", "word", "excel"],
+        "display": "Vẽ kỹ thuật & AutoCAD",
+    },
+    "do-hoa": {
+        "folder": "do-hoa",
+        "aliases": ["dohoa", "do-hoa", "do_hoa", "photoshop", "illustrator", "design", "corel", "premiere"],
+        "forbidden": ["autocad", "cad", "vekythuat", "ve-ky-thuat", "solidworks", "ketoan", "ke-toan", "ke_toan", "misa", "tax", "tinhoc", "tin-hoc", "vanphong", "office", "word", "excel"],
+        "display": "Thiết kế đồ họa",
+    },
+    "ke-toan": {
+        "folder": "ke-toan",
+        "aliases": ["ketoan", "ke-toan", "ke_toan", "misa", "tax", "sach", "chungtu", "thue"],
+        "forbidden": ["dohoa", "do-hoa", "do_hoa", "photoshop", "illustrator", "autocad", "cad", "vekythuat", "ve-ky-thuat", "solidworks", "tinhoc", "tin-hoc", "vanphong", "office", "word", "excel"],
+        "display": "Kế toán thực hành",
+    },
+}
+
+
+def _clean_vn(text):
+    import unicodedata
+    s = unicodedata.normalize("NFD", str(text or "").lower())
+    s = "".join(c for c in s if unicodedata.category(c) != "Mn")
+    s = s.replace("đ", "d").replace("Đ", "d")
+    for ch in " _-&/|\\":
+        s = s.replace(ch, "")
+    return s
+
+
+def detect_course(course_or_folder):
+    c = _clean_vn(course_or_folder)
+    for ckey, spec in COURSE_SPECS.items():
+        for al in spec["aliases"]:
+            al_clean = _clean_vn(al)
+            if al_clean in c or c in al_clean:
+                return ckey, spec
+    return None, None
+
+
 def resolve_dataset_folder(folder):
     """
     Chuẩn hóa tên hoặc đường dẫn folder dataset về đúng thư mục thật trên đĩa.
@@ -95,9 +143,10 @@ def _save_dataset_cache(folder, data):
         pass
 
 
-def unique_dataset_photos(folder, skip_names=None):
+def unique_dataset_photos(folder, skip_names=None, forbidden=None):
     """
     Ảnh gốc không trùng hash, bỏ file Windows ' (1)' / copy.
+    Loại trừ tuyệt đối các file chứa từ khóa cấm của ngành khác (Strict Asset Guard).
     Tối ưu I/O: Scan metadata st_size/st_mtime trước, dùng cache JSON nhẹ.
     Chỉ hash MD5 khi trùng kích thước file hoặc cache miss để tránh đọc hàng trăm MB.
     """
@@ -127,6 +176,10 @@ def unique_dataset_photos(folder, skip_names=None):
             continue
         if p.name.lower() in skip_names:
             continue
+        if forbidden:
+            stem_clean = p.stem.lower().replace(" ", "").replace("_", "").replace("-", "")
+            if any(forb in stem_clean for forb in forbidden):
+                continue
 
         try:
             st = p.stat()
@@ -172,7 +225,7 @@ def unique_dataset_photos(folder, skip_names=None):
     return out
 
 
-def pick_random_album_photos(folder, cover_path=None, target_total=None):
+def pick_random_album_photos(folder, cover_path=None, target_total=None, forbidden=None):
     """
     Chọn ngẫu nhiên số lượng ảnh gốc từ folder để ghép với cover_path.
     Mục tiêu tổng số ảnh: 5, 6, 7, hoặc 8 ảnh khi có cover.
@@ -189,7 +242,7 @@ def pick_random_album_photos(folder, cover_path=None, target_total=None):
         inner_name = cover_inner_file.read_text(encoding="utf-8").strip().replace("\\", "/").split("/")[-1].lower()
         if inner_name:
             skip.append(inner_name)
-    all_goc = unique_dataset_photos(real_folder, skip_names=skip)
+    all_goc = unique_dataset_photos(real_folder, skip_names=skip, forbidden=forbidden)
     if not all_goc:
         return [cover_path] if cover_path else []
 
@@ -619,6 +672,7 @@ def main():
         # usage: hub_call.py auto_post <page> <course_or_folder> <caption_or_@file> [cover_path]
         page = sys.argv[2] if len(sys.argv) > 2 else "Royce Shop"
         raw_course = sys.argv[3] if len(sys.argv) > 3 else "tin-hoc"
+        ckey, spec = detect_course(raw_course)
         folder = resolve_dataset_folder(raw_course)
         caption = ""
         if len(sys.argv) > 4:
@@ -631,24 +685,77 @@ def main():
             else:
                 caption = c_arg
         cover = sys.argv[5] if len(sys.argv) > 5 else None
+
+        # Validate cover nếu được truyền thủ công: CẤM chứa từ khóa cấm của ngành
+        if cover:
+            c_name = Path(cover).stem.lower().replace(" ", "").replace("_", "").replace("-", "")
+            if spec and any(forb in c_name for forb in spec["forbidden"]):
+                print(json.dumps({
+                    "ok": False,
+                    "error": f"VIOLATION_ASSET_GUARD: File cover '{Path(cover).name}' chứa từ khóa cấm của ngành khác, không thuộc khóa học '{raw_course}'."
+                }, ensure_ascii=False))
+                return
+
         if not cover:
-            # Tự tìm cover mới nhất trong _xuat
+            # CẤM TUYỆT ĐỐI bốc file mới nhất theo mtime nếu không lọc ngành!
+            # CHỈ tìm cover trong _xuat nếu tên file khớp alias của course và KHÔNG chứa forbidden
+            cand_covers = []
             xuat_p = Path(VAULT) / "attachments" / "dataset" / "_xuat"
             if xuat_p.is_dir():
-                cand_covers = sorted(
-                    [f for f in xuat_p.iterdir() if f.is_file() and f.suffix.lower() in _IMG_EXT and "album_ready" not in str(f)],
-                    key=lambda f: f.stat().st_mtime, reverse=True
-                )
-                if cand_covers:
-                    cover = str(cand_covers[0].relative_to(Path(VAULT))).replace("\\", "/")
+                for f in sorted(xuat_p.iterdir(), key=lambda x: x.stat().st_mtime, reverse=True):
+                    if f.is_file() and f.suffix.lower() in _IMG_EXT and "album_ready" not in str(f):
+                        f_stem = f.stem.lower().replace(" ", "").replace("_", "").replace("-", "")
+                        if spec:
+                            if any(al in f_stem for al in spec["aliases"]) and not any(forb in f_stem for forb in spec["forbidden"]):
+                                cand_covers.append(f)
+                        else:
+                            cand_covers.append(f)
+            if cand_covers:
+                cover = str(cand_covers[0].relative_to(Path(VAULT))).replace("\\", "/")
 
-        raw_res = pick_random_album_photos(folder, cover_path=cover, target_total="random")
+        # Fallback an toàn sang poster có sẵn trong folder dataset của chính ngành đó
+        if not cover and spec:
+            ds_f = Path(VAULT) / "attachments" / "dataset" / spec["folder"]
+            if ds_f.is_dir():
+                posters = []
+                for f in ds_f.iterdir():
+                    if f.is_file() and f.suffix.lower() in _IMG_EXT:
+                        f_low = f.stem.lower().replace(" ", "").replace("_", "").replace("-", "")
+                        if any(k in f_low for k in ("poster", "banner", "uudai", "khaigiang", "daotao", "khoahoc")):
+                            if not any(forb in f_low for forb in spec["forbidden"]):
+                                posters.append(f)
+                if posters:
+                    cover = str(sorted(posters, key=lambda x: x.name.lower())[0].relative_to(Path(VAULT))).replace("\\", "/")
+
+        # Nếu vẫn không có cover đúng khóa: FAIL NGAY, cấm bốc cover khóa khác!
+        if not cover:
+            print(json.dumps({
+                "ok": False,
+                "error": f"POST_SKIP ly-do=thieu-cover-dung-khoa khong-retry=1. Không tìm thấy cover nào cho khóa học '{raw_course}' trong _xuat. CẤM lấy cover của khóa học khác."
+            }, ensure_ascii=False))
+            return
+
+        forbidden_kws = spec["forbidden"] if spec else None
+        raw_res = pick_random_album_photos(folder, cover_path=cover, target_total="random", forbidden=forbidden_kws)
+
+        # Strict Asset Guard: kiểm tra toàn bộ raw_res trước khi chuẩn hóa
+        if spec:
+            for idx, pth in enumerate(raw_res):
+                p_stem = Path(pth).stem.lower().replace(" ", "").replace("_", "").replace("-", "")
+                for forb in spec["forbidden"]:
+                    if forb in p_stem:
+                        print(json.dumps({
+                            "ok": False,
+                            "error": f"VIOLATION_ASSET_GUARD: Ảnh #{idx} ('{Path(pth).name}') chứa từ khóa cấm '{forb}' không thuộc khóa học '{raw_course}'."
+                        }, ensure_ascii=False))
+                        return
+
         norm_res = normalize_album_photos(raw_res)
         if len(norm_res) < 2:
             print(json.dumps({"ok": False, "error": f"Khong du anh de tao album cho folder '{folder}'"}))
             return
 
-        res = tool("javis_run_tool", {"name": "fb_page_album", "args": {"page": page, "photos": norm_res, "message": caption}})
+        res = tool("javis_run_tool", {"name": "fb_page_album", "args": {"page": page, "photos": norm_res, "message": caption, "course": raw_course}})
         res_obj = {}
         if isinstance(res, str):
             try:

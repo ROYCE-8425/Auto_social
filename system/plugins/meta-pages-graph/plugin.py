@@ -700,40 +700,115 @@ async def _publish_video(args, cctx):
                       ensure_ascii=False, default=str)
 
 
+COURSE_SPECS = {
+    "tin-hoc": {
+        "folder": "tin-hoc _ai",
+        "aliases": ["tinhoc", "tin-hoc", "tin_hoc", "vanphong", "van-phong", "van_phong", "office", "word", "excel", "powerpoint", "mos", "ic3", "ai-van-phong", "ai_van_phong", "tinhocai", "tinhoc_ai"],
+        "forbidden": ["dohoa", "do-hoa", "do_hoa", "photoshop", "illustrator", "autocad", "cad", "vekythuat", "ve-ky-thuat", "ve_ky_thuat", "solidworks", "ketoan", "ke-toan", "ke_toan", "misa", "tax"],
+        "display": "Tin học văn phòng & AI",
+    },
+    "ve-ky-thuat": {
+        "folder": "ve-ky-thuat",
+        "aliases": ["cad", "autocad", "vekythuat", "ve-ky-thuat", "ve_ky_thuat", "solidworks", "cokhi", "banve", "ban-ve"],
+        "forbidden": ["dohoa", "do-hoa", "do_hoa", "photoshop", "illustrator", "ketoan", "ke-toan", "ke_toan", "misa", "tax", "tinhoc", "tin-hoc", "vanphong", "office", "word", "excel"],
+        "display": "Vẽ kỹ thuật & AutoCAD",
+    },
+    "do-hoa": {
+        "folder": "do-hoa",
+        "aliases": ["dohoa", "do-hoa", "do_hoa", "photoshop", "illustrator", "design", "corel", "premiere"],
+        "forbidden": ["autocad", "cad", "vekythuat", "ve-ky-thuat", "solidworks", "ketoan", "ke-toan", "ke_toan", "misa", "tax", "tinhoc", "tin-hoc", "vanphong", "office", "word", "excel"],
+        "display": "Thiết kế đồ họa",
+    },
+    "ke-toan": {
+        "folder": "ke-toan",
+        "aliases": ["ketoan", "ke-toan", "ke_toan", "misa", "tax", "sach", "chungtu", "thue"],
+        "forbidden": ["dohoa", "do-hoa", "do_hoa", "photoshop", "illustrator", "autocad", "cad", "vekythuat", "ve-ky-thuat", "solidworks", "tinhoc", "tin-hoc", "vanphong", "office", "word", "excel"],
+        "display": "Kế toán thực hành",
+    },
+}
+
+
+def _clean_vn(text):
+    import unicodedata
+    s = unicodedata.normalize("NFD", str(text or "").lower())
+    s = "".join(c for c in s if unicodedata.category(c) != "Mn")
+    s = s.replace("đ", "d").replace("Đ", "d")
+    for ch in " _-&/|\\":
+        s = s.replace(ch, "")
+    return s
+
+
+def _detect_course(course_str):
+    c = _clean_vn(course_str)
+    for ckey, spec in COURSE_SPECS.items():
+        for al in spec["aliases"]:
+            al_clean = _clean_vn(al)
+            if al_clean in c or c in al_clean:
+                return ckey, spec
+    return None, None
+
+
 def _auto_prepare_album(course, cover_ref, cctx):
-    """Tự động chọn 5-8 ảnh từ dataset và chuẩn hóa tỷ lệ 7/3 (0 token LLM)."""
+    """Tự động chọn 5-8 ảnh từ dataset và chuẩn hóa tỷ lệ 7/3 (0 token LLM).
+    Bảo đảm 100% đúng khóa học qua Strict Asset Guard."""
     from pathlib import Path
     import random
     roots = _media_roots(cctx)
+    ckey, spec = _detect_course(course)
+
     cover_path = None
     if cover_ref and str(cover_ref).strip().lower() != "auto":
         _, cp, _ = _resolve_media(cover_ref, cctx)
         if cp and Path(cp).is_file():
+            c_stem = Path(cp).stem.lower().replace(" ", "").replace("_", "").replace("-", "")
+            if spec and any(forb in c_stem for forb in spec["forbidden"]):
+                return None, (f"ERROR: VIOLATION_ASSET_GUARD: File cover '{Path(cp).name}' chứa từ khóa cấm của ngành khác, "
+                              f"không thuộc khóa học '{course}'. Dừng đăng để bảo vệ trang.")
             cover_path = Path(cp)
+
     if not cover_path:
+        # CẤM TUYỆT ĐỐI bốc file mới nhất theo mtime nếu không lọc ngành!
+        # CHỈ chọn file trong _xuat nếu tên file khớp alias của course và KHÔNG chứa forbidden
+        cand_covers = []
         for r in roots:
             xuat_dir = r / "attachments" / "dataset" / "_xuat"
             if xuat_dir.is_dir():
-                candidates = sorted(
-                    [f for f in xuat_dir.iterdir() if f.is_file() and f.suffix.lower() in (".jpg", ".jpeg", ".png", ".webp") and "album_ready" not in str(f)],
-                    key=lambda f: f.stat().st_mtime, reverse=True
-                )
-                if candidates:
-                    cover_path = candidates[0]
+                for f in sorted(xuat_dir.iterdir(), key=lambda x: x.stat().st_mtime, reverse=True):
+                    if f.is_file() and f.suffix.lower() in (".jpg", ".jpeg", ".png", ".webp") and "album_ready" not in str(f):
+                        f_stem = f.stem.lower().replace(" ", "").replace("_", "").replace("-", "")
+                        if spec:
+                            if any(al in f_stem for al in spec["aliases"]) and not any(forb in f_stem for forb in spec["forbidden"]):
+                                cand_covers.append(f)
+                        else:
+                            cand_covers.append(f)
+            if cand_covers:
+                cover_path = cand_covers[0]
+                break
+
+    # Nếu vẫn chưa có cover trong _xuat: Fallback an toàn sang poster có sẵn trong folder dataset của CHÍNH NGÀNH ĐÓ
+    if not cover_path and spec:
+        for r in roots:
+            ds_f = r / "attachments" / "dataset" / spec["folder"]
+            if ds_f.is_dir():
+                posters = []
+                for f in ds_f.iterdir():
+                    if f.is_file() and f.suffix.lower() in (".jpg", ".jpeg", ".png", ".webp"):
+                        f_low = f.stem.lower().replace(" ", "").replace("_", "").replace("-", "")
+                        if any(k in f_low for k in ("poster", "banner", "uudai", "khaigiang", "daotao", "khoahoc")):
+                            if not any(forb in f_low for forb in spec["forbidden"]):
+                                posters.append(f)
+                if posters:
+                    cover_path = sorted(posters, key=lambda x: x.name.lower())[0]
                     break
 
-    dataset_dir = None
-    clean_course = str(course or "").strip().lower().replace(" ", "").replace("_", "").replace("-", "")
-    target_folder_name = ""
-    if any(k in clean_course for k in ("tinhoc", "vanphong", "office", "word", "excel", "mos", "ai")):
-        target_folder_name = "tin-hoc _ai"
-    elif any(k in clean_course for k in ("cad", "autocad", "vekythuat", "solidworks", "cokhi")):
-        target_folder_name = "ve-ky-thuat"
-    elif any(k in clean_course for k in ("dohoa", "photoshop", "illustrator", "design", "corel")):
-        target_folder_name = "do-hoa"
-    elif any(k in clean_course for k in ("ketoan", "misa", "tax", "sach", "chungtu")):
-        target_folder_name = "ke-toan"
+    # Nếu vẫn không có cover đúng khóa học: FAIL NGAY, cấm bốc cover khóa khác!
+    if not cover_path:
+        return None, (f"ERROR: POST_SKIP ly-do=thieu-cover-dung-khoa khong-retry=1. "
+                      f"Không tìm thấy ảnh cover/poster nào phù hợp cho khóa học '{course}'. "
+                      f"CẤM lấy cover của khóa học khác.")
 
+    dataset_dir = None
+    target_folder_name = spec["folder"] if spec else ""
     for r in roots:
         base_ds = r / "attachments" / "dataset"
         if not base_ds.is_dir():
@@ -743,35 +818,44 @@ def _auto_prepare_album(course, cover_ref, cctx):
             if cand.is_dir():
                 dataset_dir = cand
                 break
-        for sub in base_ds.iterdir():
-            if sub.is_dir():
-                sub_clean = sub.name.lower().replace(" ", "").replace("_", "").replace("-", "")
-                if clean_course in sub_clean or sub_clean in clean_course:
-                    dataset_dir = sub
-                    break
+        if not dataset_dir:
+            clean_c = str(course or "").strip().lower().replace(" ", "").replace("_", "").replace("-", "")
+            for sub in base_ds.iterdir():
+                if sub.is_dir():
+                    sub_clean = sub.name.lower().replace(" ", "").replace("_", "").replace("-", "")
+                    if clean_c in sub_clean or sub_clean in clean_c:
+                        dataset_dir = sub
+                        break
         if dataset_dir:
             break
 
+    if not dataset_dir or not dataset_dir.is_dir():
+        return None, f"ERROR: Không tìm thấy thư mục dataset cho khóa học '{course}'."
+
+    # Lọc pool ảnh từ folder dataset: loại trừ copy, trùng, và đặc biệt loại trừ forbidden keywords!
     pool = []
-    if dataset_dir and dataset_dir.is_dir():
-        for f in sorted(dataset_dir.iterdir(), key=lambda x: x.name.lower()):
-            if f.is_file() and f.suffix.lower() in (".jpg", ".jpeg", ".png", ".webp"):
-                if "copy" not in f.stem.lower() and "(" not in f.stem:
-                    pool.append(f)
+    cover_name = cover_path.name.lower()
+    for f in sorted(dataset_dir.iterdir(), key=lambda x: x.name.lower()):
+        if f.is_file() and f.suffix.lower() in (".jpg", ".jpeg", ".png", ".webp"):
+            if f.name.lower() == cover_name:
+                continue
+            f_stem = f.stem.lower().replace(" ", "").replace("_", "").replace("-", "")
+            if "copy" in f_stem or "(" in f.stem:
+                continue
+            if spec and any(forb in f_stem for forb in spec["forbidden"]):
+                continue
+            pool.append(f)
+
+    if len(pool) < 2:
+        return None, f"ERROR: Thư mục dataset '{dataset_dir.name}' không đủ ảnh đạt chuẩn để tạo album (cần ít nhất 2 ảnh)."
 
     # Chọn 4-6 ảnh raw để album đạt 5-7 ảnh
-    n_raw = min(len(pool), random.choice([4, 5, 6])) if pool else 0
-    chosen_raw = random.sample(pool, n_raw) if len(pool) >= n_raw else pool
+    n_raw = min(len(pool), random.choice([4, 5, 6]))
+    chosen_raw = random.sample(pool, n_raw)
 
-    final_photos = []
-    if cover_path and cover_path.is_file():
-        final_photos.append(str(cover_path.resolve()))
-    for cr in chosen_raw:
-        final_photos.append(str(cr.resolve()))
+    final_photos = [str(cover_path.resolve())] + [str(cr.resolve()) for cr in chosen_raw]
 
-    if len(final_photos) < 2:
-        return final_photos
-
+    # Chuẩn hóa ảnh sang album_ready (fb_norm_00..06.jpg)
     try:
         from PIL import Image
         out_dir = None
@@ -783,40 +867,41 @@ def _auto_prepare_album(course, cover_ref, cctx):
                 break
             except Exception:
                 pass
-        if out_dir:
-            norm_list = []
-            n_tot = len(final_photos)
-            for idx, p_in in enumerate(final_photos):
-                out_file = out_dir / f"fb_norm_{idx:02d}.jpg"
-                with Image.open(p_in) as im:
-                    if n_tot >= 5:
-                        if idx in (0, 1):
-                            side = min(im.width, im.height)
-                            l = (im.width - side) // 2
-                            t = (im.height - side) // 2
-                            c = im.crop((l, t, l + side, t + side)).resize((2000, 2000), Image.Resampling.LANCZOS)
-                        else:
-                            target_ratio = 2000 / 1330
-                            cur_ratio = im.width / im.height
-                            if cur_ratio > target_ratio:
-                                w = int(im.height * target_ratio)
-                                l = (im.width - w) // 2
-                                c = im.crop((l, 0, l + w, im.height)).resize((2000, 1330), Image.Resampling.LANCZOS)
-                            else:
-                                h = int(im.width / target_ratio)
-                                t = (im.height - h) // 2
-                                c = im.crop((0, t, im.width, t + h)).resize((2000, 1330), Image.Resampling.LANCZOS)
-                    else:
+        if not out_dir:
+            return final_photos, None
+
+        norm_list = []
+        n_tot = len(final_photos)
+        for idx, p_in in enumerate(final_photos):
+            out_file = out_dir / f"fb_norm_{idx:02d}.jpg"
+            with Image.open(p_in) as im:
+                if n_tot >= 5:
+                    if idx in (0, 1):
                         side = min(im.width, im.height)
                         l = (im.width - side) // 2
                         t = (im.height - side) // 2
                         c = im.crop((l, t, l + side, t + side)).resize((2000, 2000), Image.Resampling.LANCZOS)
-                    c.convert("RGB").save(out_file, "JPEG", quality=95)
-                norm_list.append(str(out_file.resolve()))
-            return norm_list
+                    else:
+                        target_ratio = 2000 / 1330
+                        cur_ratio = im.width / im.height
+                        if cur_ratio > target_ratio:
+                            w = int(im.height * target_ratio)
+                            l = (im.width - w) // 2
+                            c = im.crop((l, 0, l + w, im.height)).resize((2000, 1330), Image.Resampling.LANCZOS)
+                        else:
+                            h = int(im.width / target_ratio)
+                            t = (im.height - h) // 2
+                            c = im.crop((0, t, im.width, t + h)).resize((2000, 1330), Image.Resampling.LANCZOS)
+                else:
+                    side = min(im.width, im.height)
+                    l = (im.width - side) // 2
+                    t = (im.height - side) // 2
+                    c = im.crop((l, t, l + side, t + side)).resize((2000, 2000), Image.Resampling.LANCZOS)
+                c.convert("RGB").save(out_file, "JPEG", quality=95)
+            norm_list.append(str(out_file.resolve()))
+        return norm_list, None
     except Exception:
-        pass
-    return final_photos
+        return final_photos, None
 
 
 async def _publish_album(args, cctx):
@@ -846,9 +931,22 @@ async def _publish_album(args, cctx):
 
     # Tự động chuẩn bị album deterministic nếu photos rỗng mà có course
     if (not photos or len(photos) < 2) and course:
-        auto_p = _auto_prepare_album(course, args.get("cover") or (photos[0] if photos else None), cctx)
+        auto_p, err_prep = _auto_prepare_album(course, args.get("cover") or (photos[0] if photos else None), cctx)
+        if err_prep:
+            return err_prep
         if auto_p and len(auto_p) >= 2:
             photos = auto_p
+
+    # Strict Asset Guard: kiểm tra mọi ảnh xem có dính từ khóa cấm của khóa học không
+    from pathlib import Path
+    ckey, spec = _detect_course(course)
+    if spec and photos:
+        for idx, p in enumerate(photos):
+            p_stem = Path(p).stem.lower().replace(" ", "").replace("_", "").replace("-", "")
+            for forb in spec["forbidden"]:
+                if forb in p_stem:
+                    return (f"ERROR: VIOLATION_ASSET_GUARD: Ảnh #{idx} ('{Path(p).name}') chứa từ khóa cấm '{forb}' "
+                            f"không thuộc khóa học '{course}'. Dừng đăng để bảo vệ fanpage.")
 
     if len(photos) < 2:
         return "ERROR: album cần ít nhất 2 ảnh trong 'photos' (1 ảnh thì dùng fb_page_photo)."
