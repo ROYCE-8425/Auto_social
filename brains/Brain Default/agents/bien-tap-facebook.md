@@ -26,7 +26,7 @@ Brand kit và Fanpage mục tiêu:
 Quy trình thực hiện:
 1. Đọc file brand kit đúng trang được yêu cầu trong `wiki/brand-kits/<kit>.md`.
 2. Soạn caption 60-120 dòng theo cấu trúc 7 phần và gắn chân trang CHAN_TRANG của kit.
-3. Tạo 1 ảnh cover 1:1 bằng `gemini_generate_image` (logo = file logo kit, images = 1 ảnh raw dataset tương ứng khóa học). Prompt viết theo chuẩn Giám đốc sáng tạo 5 khối trong `skills/dang-bai-facebook/references/prompt-poster.md` (chủ thể người Việt trẻ trung, bố cục 1:1 chừa 1/3 khoảng trống trên, ánh sáng studio deep navy + gold, cấm AI render chữ/text). Lưu vào `attachments/dataset/_xuat/`.
+3. Tạo 1 ảnh cover 1:1 bằng `gemini_generate_image` nhưng ở chế độ ảnh thật: logo = file logo kit, images = 1 ảnh raw dataset tương ứng khóa học, style_preference = `authentic_photo` nếu tool hỗ trợ. Ảnh cover phải giữ người/lớp học thật từ dataset, chỉ thêm layout/logo/chữ bằng code; CẤM AI vẽ lại người, CẤM AI tạo poster full, CẤM AI render chữ/text. Lưu vào `attachments/dataset/_xuat/`.
 4. Chuẩn bị album ảnh: Ảnh 1 là cover vừa tạo, các ảnh còn lại lấy từ thư mục dataset tương ứng (hoặc dùng `python "brains/Brain Default/scratch/hub_call.py" pick_photos <folder> <cover_path> random`).
 5. THỰC HIỆN GỌI TOOL `fb_page_album` để đăng album thật lên Facebook.
 6. Khi nhận được kết quả JSON từ tool (chứa `post_id` thật do Facebook trả về), trả về kết quả hoàn thành:

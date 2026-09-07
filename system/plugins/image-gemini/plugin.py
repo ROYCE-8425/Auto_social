@@ -17,12 +17,7 @@ import image_gen
 def register(ctx):
     def _check():
         try:
-            key = image_gen.get_gemini_api_key()
-            if not key:
-                return (
-                    "Chưa có API key Gemini. Vào trang Cài đặt > Models nhập key Google Gemini "
-                    "(hoặc đặt biến môi trường GEMINI_API_KEY) rồi thử lại."
-                )
+            image_gen.get_gemini_api_key()
         except Exception as e:
             return f"Không kiểm tra được API key Gemini: {e}"
         return None
@@ -71,6 +66,7 @@ def register(ctx):
         course_id = args.get("course_id")
         hotline = args.get("hotline")
         footer_text = args.get("footer_text")
+        style_preference = str(args.get("style_preference") or "").strip() or None
 
         res = await image_gen.generate_gemini(
             prompt=prompt,
@@ -84,12 +80,13 @@ def register(ctx):
             course_id=course_id,
             hotline=hotline,
             footer_text=footer_text,
+            style_preference=style_preference,
         )
         if not res.get("ok"):
             return "ERROR: " + str(res.get("error") or "tạo ảnh thất bại")
         rel = res["rel_path"]
         return (
-            f"Đã tạo ảnh Google ({res.get('aspect')}, model {res.get('model')}), lưu tại {rel}. "
+            f"Đã tạo ảnh cover ({res.get('provider')}, {res.get('aspect')}, model {res.get('model')}), lưu tại {rel}. "
             f"HÃY NHÚNG ngay vào câu trả lời cho người dùng bằng cú pháp markdown: "
             f"![{prompt[:40]}]({rel})"
         )
@@ -97,9 +94,9 @@ def register(ctx):
     ctx.register_tool(
         name="gemini_generate_image",
         description=(
-            "Tạo cover Fanpage chuẩn Facebook bằng Google Imagen (hỗ trợ Imagen 4 / Imagen 3 kết hợp ảnh thật dataset) hoặc Graphic Engine: "
+            "Tạo cover Fanpage chuẩn Facebook: mặc định dùng ảnh thật dataset + Graphic Engine, chỉ dùng Google Imagen khi opt-in AI full. "
             "BẮT BUỘC logo (file Logo chính kit) + images (1 ảnh raw dataset). "
-            "Hệ thống tự động dán pixel logo thật từ dataset, cấm vẽ chữ đường dẫn, typography chuẩn Unicode 0% lỗi font. "
+            "Hệ thống giữ người/lớp học thật từ dataset, dán logo/text bằng code, cấm vẽ lại chữ/người khi không opt-in AI full. "
             "aspect_ratio square (2000x2000 px). Lưu attachments/dataset/_xuat/."
         ),
         handler=_gen,
@@ -150,6 +147,11 @@ def register(ctx):
                 "footer_text": {
                     "type": "string",
                     "description": "Tên thương hiệu ở footer (nếu không truyền sẽ tự lấy từ Brand Kit của Fanpage)"
+                },
+                "style_preference": {
+                    "type": "string",
+                    "enum": ["authentic_photo", "facebook_cover", "real_photo_cover", "ai_full", "pure_ai", "generated_poster"],
+                    "description": "Mặc định authentic_photo: giữ ảnh thật dataset và dựng poster bằng code. Chỉ dùng ai_full/pure_ai khi muốn AI vẽ poster toàn phần."
                 }
             },
             "required": ["prompt"]

@@ -1254,7 +1254,9 @@ def generate_authentic_banner_cover(
         fname = f"{prefix}-{int(time.time())}-{uuid.uuid4().hex[:6]}.jpg"
         out_file = target_dir / fname
 
-        chosen_template = template_name or content.get("template_name")
+        # Production Facebook covers must keep the dataset photo as the visual truth.
+        # Default to the quiet bottom bar so people/classes stay visible.
+        chosen_template = template_name or "bottom_bar"
 
         res_path = banner_templates.generate_authentic_banner(
             classroom_img_path=raw_file,
@@ -1480,13 +1482,26 @@ async def generate_gemini(
                 break
 
     p_lower = prompt.lower()
-    force_dataset_photo = (
-        style_preference == "authentic_photo" or
+    allow_ai_full = (
+        style_preference in ("ai_full", "pure_ai", "generated_poster") or
         any(k in p_lower for k in (
-            "chỉ dùng ảnh thật", "chi dung anh that", "ảnh thật dataset", "anh that dataset",
-            "không dùng ai", "khong dung ai", "dùng ảnh có sẵn", "dung anh co san",
-            "không tạo ai", "khong tao ai", "không gen ai", "khong gen ai"
+            "ai_full", "pure_ai", "generated_poster", "full ai", "ai poster",
+            "poster ai toan phan", "poster ai toàn phần", "tao moi bang ai", "tạo mới bằng ai",
         ))
+    )
+    force_dataset_photo = (
+        style_preference != "ai_full" and
+        not allow_ai_full and
+        (
+            style_preference in (None, "", "authentic_photo", "facebook_cover", "real_photo_cover") or
+            bool(raw_photo_file) or
+            any(k in p_lower for k in (
+                "chỉ dùng ảnh thật", "chi dung anh that", "ảnh thật dataset", "anh that dataset",
+                "không dùng ai", "khong dung ai", "dùng ảnh có sẵn", "dung anh co san",
+                "không tạo ai", "khong tao ai", "không gen ai", "khong gen ai",
+                "cover facebook", "fanpage", "ảnh đầu", "anh dau", "bài đăng", "bai dang",
+            ))
+        )
     )
 
     if force_dataset_photo:
@@ -1502,6 +1517,7 @@ async def generate_gemini(
             prefix=prefix,
             hotline=resolved_hotline,
             footer_text=resolved_footer,
+            template_name="bottom_bar",
         )
         if banner_res and banner_res.get("ok"):
             return banner_res
@@ -1702,5 +1718,3 @@ async def generate_gemini(
         return fallback_res
 
     return {"ok": False, "error": err or "Không thể tạo ảnh (cả Google API và dataset fallback đều thất bại)."}
-
-
