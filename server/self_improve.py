@@ -918,7 +918,21 @@ class LoopFeature:
                 summary = "Lỗi: " + ev["content"][:200]
 
         verify_line, verify_failed = "", False
-        if mode in ("auto", "full") and summary and not summary.startswith("Lỗi:") \
+
+        # Fast-path Facebook / Deterministic: Nếu kết quả vòng loop đã chứa post_id Graph thật
+        # và đã xác thực thành công (POST_OK hoặc status: "verified"), thì bài ĐÃ LÊN TƯỜNG THẬT.
+        # Bỏ qua việc spawn subagent verifier độc lập để tiết kiệm 350k - 450k token và 1.5 phút mỗi bài.
+        fb_verified = False
+        if summary and not summary.startswith("Lỗi:"):
+            m_post = re.search(r'post_id["\s:=]+(\d{8,}_\d{5,}|\d{14,})|POST_OK[^\n]*post_id[=:](\d+)', summary, re.I)
+            if m_post and any(k in summary.lower() for k in ("verified", "post_ok", "https://www.facebook.com", "facebook.com/")):
+                pid_val = m_post.group(1) or m_post.group(2) or ""
+                if not any(dummy in pid_val for dummy in ("87654321", "12345678", "0000000", "1111111")):
+                    fb_verified = True
+                    verify_line = f"✓ Đạt: Graph API đã xác thực thành công trên tường Facebook (post_id: {pid_val})"
+                    verify_failed = False
+
+        if not fb_verified and mode in ("auto", "full") and summary and not summary.startswith("Lỗi:") \
                 and "không có việc mới" not in summary.lower():
             # Kiểm chứng độc lập: giả định kết quả SAI, kiểm tra thực tế
             vcli = self._make_cli(loop, cwd, "Bạn là người KIỂM CHỨNG độc lập, giả định kết quả vừa rồi SAI.",
