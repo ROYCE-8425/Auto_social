@@ -21,11 +21,11 @@ Cách gọi tool Facebook:
 Brand kit và Fanpage mục tiêu:
 - Đọc kỹ yêu cầu brief: Nếu brief chỉ định trang (ví dụ "Royce Shop", "royce", "royce page") -> BẮT BUỘC đọc đúng file `wiki/brand-kits/royce-shop.md` (Page ID: 988656934325292). Tuyệt đối không đăng nhầm sang trang khác (như Biên Hòa hay Đồng Nai).
 - Lấy logo, màu sắc, font chữ, giọng văn, địa chỉ, hotline và chân trang CHAN_TRANG từ đúng file brand kit của trang đó.
-- Soạn caption theo `skills/viet-bai-facebook/SKILL.md`: mặc định 32-45 dòng cho bài thường, 45-70 dòng nếu brief yêu cầu bài tuyển sinh/ads đầy đủ, chưa tính chân trang. Chữ tự nhiên, không dùng Markdown `**`, không dùng ký tự em dash, không mở đầu bằng "Chiến dịch tuyển sinh".
+- Soạn caption theo `skills/viet-bai-facebook/SKILL.md` và đọc reference `skills/viet-bai-facebook/references/corpus-sao-viet-1txt.md` để lấy vốn từ đúng ngành trước khi viết. Mặc định 32-45 dòng cho bài thường, 45-70 dòng nếu brief yêu cầu bài tuyển sinh/ads đầy đủ, chưa tính chân trang. Chữ tự nhiên, không dùng Markdown `**`, không dùng ký tự em dash, không mở đầu bằng "Chiến dịch tuyển sinh".
 
 Quy trình thực hiện:
 1. Đọc file brand kit đúng trang được yêu cầu trong `wiki/brand-kits/<kit>.md`.
-2. Soạn caption gọn, rõ, có nhịp đọc lướt theo skill `viet-bai-facebook`; chọn lọc 3-5 nỗi đau, 5-7 thành quả, 3-5 quyền lợi, 4-6 module chính rồi gắn chân trang CHAN_TRANG của kit.
+2. Đọc `skills/viet-bai-facebook/references/corpus-sao-viet-1txt.md` để chọn đúng ngành và lấy chất liệu viết, sau đó soạn caption gọn, rõ, có nhịp đọc lướt theo skill `viet-bai-facebook`; chọn lọc 3-5 nỗi đau, 5-7 thành quả, 3-5 quyền lợi, 4-6 module chính rồi gắn chân trang CHAN_TRANG của kit.
 3. Tạo 1 ảnh cover 1:1 bằng `gemini_generate_image` nhưng ở chế độ ảnh thật: logo = file logo kit, images = 1 ảnh raw dataset tương ứng khóa học, style_preference = `authentic_photo` nếu tool hỗ trợ. Ảnh cover phải giữ người/lớp học thật từ dataset, chỉ thêm layout/logo/chữ bằng code; CẤM AI vẽ lại người, CẤM AI tạo poster full, CẤM AI render chữ/text. Lưu vào `attachments/dataset/_xuat/`.
 4. Chuẩn bị album ảnh: Ảnh 1 là cover vừa tạo, các ảnh còn lại lấy từ thư mục dataset tương ứng (hoặc dùng `python "brains/Brain Default/scratch/hub_call.py" pick_photos <folder> <cover_path> random`).
 5. THỰC HIỆN GỌI TOOL `fb_page_album` để đăng album thật lên Facebook.
