@@ -203,6 +203,67 @@ def _install_bat_payload(lines, status=200):
 openai_oauth.valid_creds = lambda: {"access_token": "faketoken", "account_id": "acc_1"}
 _install_bat_payload(sse)
 
+# ---- 8a. Brand Kit: tool ảnh phải áp đúng guideline Fanpage vào prompt ----
+_kit_dir = os.path.join(vault, "wiki", "brand-kits")
+os.makedirs(_kit_dir, exist_ok=True)
+with open(os.path.join(_kit_dir, "royce-shop.md"), "w", encoding="utf-8") as f:
+    f.write("""# Kit trang: Royce Shop
+- Tên Fanpage: Royce Shop
+- Tên giao dịch: Trung Tâm Tin Học Sao Việt
+- Màu chính: #6C3BFF
+- Màu phụ: #00D4FF
+- Font: Inter, Montserrat
+- Phong cách hình ảnh: công nghệ, tối giản, premium
+- Tone of voice: chuyên nghiệp, trẻ, hiện đại
+- Quy tắc bố cục: logo góc trên, lề an toàn 15-18%, không che mặt học viên
+- Điều không được làm: đổi màu logo, bóp méo logo, dùng màu ngoài palette, không bám mẫu A-split panel xanh
+- Logo chính: attachments/dataset/chung/thsv-logo-2025.png
+""")
+kit = image_gen.load_brand_kit_info("royce-shop", vault_root=vault)
+guide = image_gen.build_brand_guideline_prompt(kit, provider="openai")
+check("Brand Kit đọc được màu/font/style/quy tắc",
+      "#6C3BFF" in guide and "Inter" in guide and "không che mặt" in guide)
+_install_bat_payload(sse)
+r_brand = asyncio.run(image_gen.generate_chatgpt(
+    "Tạo cover Facebook khóa Tin học văn phòng", vault_root=vault, page_id="royce-shop",
+    save_under="attachments/dataset/_xuat"))
+_text_brand = ((_goi.get("input") or [{}])[0].get("content") or [{}])[0].get("text", "")
+check("ChatGPT image prompt tự gắn BRAND KIT RULES theo page_id",
+      r_brand.get("ok") is True and "BRAND KIT RULES" in _text_brand and "#6C3BFF" in _text_brand)
+check("ChatGPT image lưu đúng thư mục _xuat khi truyền save_under",
+      r_brand.get("rel_path", "").startswith("attachments/dataset/_xuat/"))
+
+# Chế độ thử nghiệm: để GPT Image tự render luôn logo/chữ/hotline thay vì Javis overlay bằng code.
+os.makedirs(os.path.join(vault, "attachments", "dataset", "chung"), exist_ok=True)
+with open(os.path.join(vault, "attachments", "dataset", "chung", "thsv-logo-2025.png"), "wb") as f:
+    f.write(base64.b64decode(_PNG_B64))
+_install_bat_payload(sse)
+r_ai_brand = asyncio.run(image_gen.generate_chatgpt(
+    "GPT tự render luôn logo, tiêu đề và hotline cho cover Royce Shop",
+    vault_root=vault,
+    page_id="royce-shop",
+    save_under="attachments/dataset/_xuat",
+    ai_render_brand=True,
+))
+_content_ai_brand = ((_goi.get("input") or [{}])[0].get("content") or [])
+_text_ai_brand = next((c.get("text", "") for c in _content_ai_brand if c.get("type") == "input_text"), "")
+check("ai_render_brand: không overlay bằng code, lưu ảnh GPT thô vào _xuat",
+      r_ai_brand.get("ok") is True and r_ai_brand.get("ai_render_brand") is True
+      and not r_ai_brand.get("overlay") and r_ai_brand.get("rel_path", "").startswith("attachments/dataset/_xuat/"))
+check("ai_render_brand: prompt cho phép GPT render chữ/logo",
+      "Render the final brand cover directly" in _text_ai_brand
+      and "Do not render Vietnamese text" not in _text_ai_brand)
+check("ai_render_brand: bỏ layout cũ/panel từ brand kit để GPT tự sáng tạo",
+      "A-split panel xanh" not in _text_ai_brand
+      and "old dataset/template layouts" in _text_ai_brand
+      and "Avoid split-panel layouts" in _text_ai_brand)
+check("ai_render_brand: tên page Royce Shop không thành brand hiển thị",
+      "Brand/page: Royce Shop" not in _text_ai_brand
+      and 'Never render "Royce Shop"' in _text_ai_brand
+      and "TIN HỌC SAO VIỆT" in _text_ai_brand)
+check("ai_render_brand: tự gửi logo kit làm ảnh tham chiếu",
+      any(c.get("type") == "input_image" for c in _content_ai_brand))
+
 # Ảnh mẫu thật nằm trong brain
 _anh_that = os.path.join(vault, "attachments", "chai-mau.png")
 os.makedirs(os.path.dirname(_anh_that), exist_ok=True)

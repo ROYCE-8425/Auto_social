@@ -1,0 +1,10 @@
+name: Tạo ảnh (Google Gemini / Imagen 3)
+slug: image-gemini
+version: 1.0.0
+description: Tạo ảnh bằng Google Imagen / Gemini image (Nano Banana), chọn model ở trang Models. Ảnh lưu vào attachments/ của brain.
+author: Javis (bundled)
+enabled: true
+min_mode: safe
+tools:
+  - gemini_generate_image
+hooks: []
