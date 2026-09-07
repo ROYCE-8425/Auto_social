@@ -2,6 +2,7 @@
 type: source
 updated: 2026-09-03
 ---
+
 # Giọng Fanpage chính Tin Học Sao Việt
 
 Nguồn học: bài công khai trên https://www.facebook.com/trungtamtinhocvanphongsaoviet
@@ -30,7 +31,6 @@ CAM cat ngan con duoi 20 dong cun con.
 **Kieu 4 - Huong den ket qua / Luong 8 con so:** Vi du: "Chinh phuc nghe Ke toan - Hoc xong lam duoc viec ngay, so huu muc luong 8 con so".
 
 Chan trang: Hotline `093 1144 858` hoac `0823 552 558`, `#tinhocsaoviet` + hashtag nganh. Bat buoc dan danh sach 12-13 co so dao tao tai TP.HCM, Binh Duong, Dong Nai, Vung Tau.
-
 
 ## Sườn kiểu 4 (hiếm, khi đến lượt)
 
