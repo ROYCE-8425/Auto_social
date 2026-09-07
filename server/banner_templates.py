@@ -388,7 +388,9 @@ def render_template_bottom_bar(
     canvas = Image.new("RGBA", (W, H), (brand_color[0], brand_color[1], brand_color[2], 255))
 
     has_hl = bool(highlights and len(highlights) > 0)
-    top_h = 1240 if has_hl else 1340
+    # Facebook album grids shrink the first photo into a small tile. Keep the
+    # text band compact so the classroom photo and title remain readable there.
+    top_h = 1520 if has_hl else 1580
     top_img = smart_crop_and_enhance(classroom_img, W, top_h)
     canvas.paste(top_img, (0, 0))
 
@@ -404,10 +406,10 @@ def render_template_bottom_bar(
 
     draw.line([(0, top_h), (W, top_h)], fill=(255, 215, 0, 220), width=6)
 
-    curr_y = top_h + (35 if has_hl else 55)
+    curr_y = top_h + (24 if has_hl else 34)
 
-    start_sz = 72 if has_hl else 80
-    font_title, title_lines = fit_title_font(draw, title, W - 180, 220, start_size=start_sz, min_size=48)
+    start_sz = 74 if has_hl else 84
+    font_title, title_lines = fit_title_font(draw, title, W - 180, 145, start_size=start_sz, min_size=50)
     for line in title_lines:
         bb = draw.textbbox((0, 0), line, font=font_title)
         lw = bb[2] - bb[0]
@@ -415,22 +417,22 @@ def render_template_bottom_bar(
         curr_y += (bb[3] - bb[1]) + 15
 
     if subtitle:
-        font_sub = get_font(40, bold=True)
+        font_sub = get_font(38, bold=True)
         bb = draw.textbbox((0, 0), subtitle, font=font_sub)
         sw = bb[2] - bb[0]
         draw.text(((W - sw) // 2, curr_y), subtitle, font=font_sub, fill="#FFD54F")
-        curr_y += (bb[3] - bb[1]) + 30
+        curr_y += (bb[3] - bb[1]) + 20
 
     if has_hl:
-        font_pill = get_font(32, bold=True)
+        font_pill = get_font(28, bold=True)
         if len(highlights) == 1:
             p1 = highlights[0]
             bb1 = draw.textbbox((0, 0), f"•  {p1}", font=font_pill)
             pw1 = bb1[2] - bb1[0] + 60
             x1 = (W - pw1) // 2
-            pill_y = curr_y + 10
-            draw.rounded_rectangle([x1, pill_y, x1 + pw1, pill_y + 70], radius=35, fill=(20, 50, 90, 255), outline=(255, 215, 0, 180), width=2)
-            draw.text((x1 + 30, pill_y + 15), f"•  {p1}", font=font_pill, fill="#FFFFFF")
+            pill_y = curr_y + 6
+            draw.rounded_rectangle([x1, pill_y, x1 + pw1, pill_y + 60], radius=30, fill=(20, 50, 90, 255), outline=(255, 215, 0, 180), width=2)
+            draw.text((x1 + 30, pill_y + 12), f"•  {p1}", font=font_pill, fill="#FFFFFF")
         else:
             p1 = highlights[0]
             p2 = highlights[1]
@@ -442,11 +444,11 @@ def render_template_bottom_bar(
             tot_w = pw1 + pw2 + spacing
             x1 = (W - tot_w) // 2
             x2 = x1 + pw1 + spacing
-            pill_y = curr_y + 10
-            draw.rounded_rectangle([x1, pill_y, x1 + pw1, pill_y + 70], radius=35, fill=(20, 50, 90, 255), outline=(255, 215, 0, 180), width=2)
-            draw.text((x1 + 30, pill_y + 15), f"•  {p1}", font=font_pill, fill="#FFFFFF")
-            draw.rounded_rectangle([x2, pill_y, x2 + pw2, pill_y + 70], radius=35, fill=(20, 50, 90, 255), outline=(255, 215, 0, 180), width=2)
-            draw.text((x2 + 30, pill_y + 15), f"•  {p2}", font=font_pill, fill="#FFFFFF")
+            pill_y = curr_y + 6
+            draw.rounded_rectangle([x1, pill_y, x1 + pw1, pill_y + 60], radius=30, fill=(20, 50, 90, 255), outline=(255, 215, 0, 180), width=2)
+            draw.text((x1 + 30, pill_y + 12), f"•  {p1}", font=font_pill, fill="#FFFFFF")
+            draw.rounded_rectangle([x2, pill_y, x2 + pw2, pill_y + 60], radius=30, fill=(20, 50, 90, 255), outline=(255, 215, 0, 180), width=2)
+            draw.text((x2 + 30, pill_y + 12), f"•  {p2}", font=font_pill, fill="#FFFFFF")
 
     font_ft = get_font(30, bold=True)
     ft_line = None
@@ -1863,4 +1865,3 @@ def render_ai_enhanced_banner(
         hotline=hotline,
         brand_color=brand_color,
     )
-
