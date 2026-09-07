@@ -180,6 +180,17 @@ def normalize_album_photos(photo_list):
     n = len(photo_list)
     for i, p_str in enumerate(photo_list):
         full_in = vault_p / p_str if not Path(p_str).is_absolute() else Path(p_str)
+        # Một số tool trả về đường dẫn tương đối theo brain/workdir thay vì
+        # theo gốc vault. Thử tìm lại đúng file theo basename để không truyền
+        # đường dẫn "ma" sang fb_page_album.
+        if not full_in.exists():
+            try:
+                name = Path(p_str).name
+                matches = list(vault_p.rglob(name)) if name else []
+                if matches:
+                    full_in = matches[0]
+            except Exception:
+                pass
         if not full_in.exists():
             norm_paths.append(p_str)
             continue
@@ -486,5 +497,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-
 
