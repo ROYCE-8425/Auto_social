@@ -47,6 +47,7 @@ Nhánh này bắt buộc:
 
 - GPT Image tự render poster hoàn chỉnh gồm logo, tiêu đề, bullet ngắn, hotline.
 - Brand kit của page được đưa trực tiếp vào prompt bởi tool `javis_generate_image`.
+- Brand hiển thị trên ảnh luôn là `TIN HỌC SAO VIỆT` hoặc `TRUNG TÂM TIN HỌC SAO VIỆT`; tên page như `Royce Shop` chỉ dùng để chọn nơi đăng, không render thành badge/logo/watermark.
 - Không dùng ảnh thật dataset + template code.
 - Không overlay bằng Javis.
 - Không dùng split-panel, panel navy lớn, card trắng bo góc kiểu cũ.

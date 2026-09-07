@@ -930,16 +930,32 @@ def build_brand_guideline_prompt(kit: Optional[dict], provider: str = "",
     if not isinstance(kit, dict) or not kit:
         return ""
 
-    fields = [
-        ("Brand/page", kit.get("name")),
-        ("Business name", kit.get("brand_name")),
-        ("Primary color", kit.get("brand_color")),
-        ("Secondary color", kit.get("secondary_color")),
-        ("Fonts", kit.get("font")),
-        ("Image style", kit.get("image_style")),
-        ("Voice/tone", kit.get("tone")),
-    ]
-    if not ai_render_brand:
+    visible_brand = _clean_kit_value(kit.get("brand_name")) or "Trung Tâm Tin Học Sao Việt"
+    visible_brand_fold = visible_brand.lower()
+    if "sao việt" not in visible_brand_fold and "sao viet" not in visible_brand_fold:
+        # Page names such as "Royce Shop" are posting targets, not the brand to print
+        # on Sao Việt course posters. Keep the visual identity stable.
+        visible_brand = "Trung Tâm Tin Học Sao Việt"
+
+    if ai_render_brand:
+        fields = [
+            ("Visible brand name", visible_brand),
+            ("Primary color", kit.get("brand_color")),
+            ("Secondary color", kit.get("secondary_color")),
+            ("Fonts", kit.get("font")),
+            ("Image style", kit.get("image_style")),
+            ("Voice/tone", kit.get("tone")),
+        ]
+    else:
+        fields = [
+            ("Brand/page", kit.get("name")),
+            ("Business name", kit.get("brand_name")),
+            ("Primary color", kit.get("brand_color")),
+            ("Secondary color", kit.get("secondary_color")),
+            ("Fonts", kit.get("font")),
+            ("Image style", kit.get("image_style")),
+            ("Voice/tone", kit.get("tone")),
+        ]
         fields.extend([
             ("Layout rules", kit.get("layout_rules")),
             ("Do not do", kit.get("donts")),
@@ -960,6 +976,9 @@ def build_brand_guideline_prompt(kit: Optional[dict], provider: str = "",
     ])
     if ai_render_brand:
         lines.extend([
+            '- Visible brand text on the image MUST be "TIN HỌC SAO VIỆT" or "TRUNG TÂM TIN HỌC SAO VIỆT".',
+            '- The Fanpage/page name is only the backend posting target; do NOT render the page name as a logo, badge, brand, watermark, or headline unless it already contains "Sao Việt".',
+            '- Never render "Royce Shop" as the visual brand on the poster.',
             "- Render the final brand cover directly in the image, including the official logo, Vietnamese title, short subtitle/bullets, and hotline if available.",
             "- Text must be sharp, readable, correctly spelled Vietnamese, with no mojibake, no broken accents, no fake phone numbers, and no invented addresses.",
             "- Use the attached official logo reference if provided; keep it recognizable and faithful.",
@@ -1144,7 +1163,10 @@ def load_brand_kit_info(page_identifier: Optional[str] = None, vault_root: Optio
 
     stem = matched_file.stem
     name = _kit_field(md, "Tên Fanpage") or stem
-    brand_name = _kit_field(md, "Tên giao dịch", "Tên thương hiệu") or "TRUNG TÂM TIN HỌC SAO VIỆT"
+    brand_name = _kit_field(md, "Tên giao dịch", "Tên thương hiệu") or "Trung Tâm Tin Học Sao Việt"
+    brand_name_fold = _clean_kit_value(brand_name).lower()
+    if "sao việt" not in brand_name_fold and "sao viet" not in brand_name_fold:
+        brand_name = "Trung Tâm Tin Học Sao Việt"
     hotline = _kit_field(md, "Hotline / Zalo", "Hotline riêng", "Hotline", "Hotline mặc định")
     if not hotline:
         def_file = kit_dir / "_mac-dinh.md"

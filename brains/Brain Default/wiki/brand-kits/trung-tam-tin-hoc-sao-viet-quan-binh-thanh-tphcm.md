@@ -4,6 +4,7 @@ updated: 2026-09-05
 ---
 # Kit trang: Trung Tâm Tin học Sao Việt Quận Bình Thạnh - TPHCM
 
+- Brand hiển thị trên ảnh: TIN HỌC SAO VIỆT / TRUNG TÂM TIN HỌC SAO VIỆT
 Kit riêng Fanpage này. Địa chỉ lấy từ Fanpage. Bình Thạnh (địa chỉ Fanpage). Không trộn cơ sở trang khác.
 
 ## Nhận diện thương hiệu

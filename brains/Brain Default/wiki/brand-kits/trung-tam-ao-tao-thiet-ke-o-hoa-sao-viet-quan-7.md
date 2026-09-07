@@ -4,6 +4,7 @@ updated: 2026-09-05
 ---
 # Kit trang: Trung Tâm Đào Tạo Thiết Kế Đồ Hoạ Sao Việt Quận 7
 
+- Brand hiển thị trên ảnh: TIN HỌC SAO VIỆT / TRUNG TÂM TIN HỌC SAO VIỆT
 Kit riêng Fanpage này. Địa chỉ lấy từ Fanpage. Quận 7 (địa chỉ Fanpage). Không trộn cơ sở trang khác.
 
 ## Nhận diện thương hiệu

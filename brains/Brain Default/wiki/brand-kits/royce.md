@@ -5,6 +5,7 @@ updated: 2026-09-05
 ---
 # Kit trang: Royce (Bí danh cho Royce Shop)
 
+- Brand hiển thị trên ảnh: TIN HỌC SAO VIỆT / TRUNG TÂM TIN HỌC SAO VIỆT
 File bí danh ánh xạ trực tiếp từ `royce.md` sang `royce-shop.md`.
 Xem chi tiết đầy đủ tại [[brand-kits/royce-shop]].
 

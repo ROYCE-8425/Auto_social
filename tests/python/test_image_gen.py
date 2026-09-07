@@ -257,6 +257,10 @@ check("ai_render_brand: bỏ layout cũ/panel từ brand kit để GPT tự sán
       "A-split panel xanh" not in _text_ai_brand
       and "old dataset/template layouts" in _text_ai_brand
       and "Avoid split-panel layouts" in _text_ai_brand)
+check("ai_render_brand: tên page Royce Shop không thành brand hiển thị",
+      "Brand/page: Royce Shop" not in _text_ai_brand
+      and 'Never render "Royce Shop"' in _text_ai_brand
+      and "TIN HỌC SAO VIỆT" in _text_ai_brand)
 check("ai_render_brand: tự gửi logo kit làm ảnh tham chiếu",
       any(c.get("type") == "input_image" for c in _content_ai_brand))
 

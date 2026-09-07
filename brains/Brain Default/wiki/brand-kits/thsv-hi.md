@@ -4,6 +4,7 @@ updated: 2026-09-04
 ---
 # Kit trang: hi
 
+- Brand hiển thị trên ảnh: TIN HỌC SAO VIỆT / TRUNG TÂM TIN HỌC SAO VIỆT
 Kế thừa `_mac-dinh.md`. Đã sao chép toàn bộ nhận diện từ Brand Kit Default.
 
 ## Nhận diện thương hiệu

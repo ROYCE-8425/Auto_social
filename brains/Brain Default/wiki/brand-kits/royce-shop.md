@@ -4,6 +4,7 @@ updated: 2026-09-04
 ---
 # Kit trang: Royce Shop
 
+- Brand hiển thị trên ảnh: TIN HỌC SAO VIỆT / TRUNG TÂM TIN HỌC SAO VIỆT
 Gốc cho mọi Fanpage. Tạo page mới = copy khối Nhận diện thương hiệu từ file này, rồi chỉ sửa tên/slug/địa chỉ nếu khác.
 
 ## Nhận diện thương hiệu

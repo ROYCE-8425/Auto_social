@@ -4,6 +4,7 @@ updated: 2026-09-05
 ---
 # Kit trang: Trung Tâm Đào Tạo Kế Toán Long Thành - Đồng Nai
 
+- Brand hiển thị trên ảnh: TIN HỌC SAO VIỆT / TRUNG TÂM TIN HỌC SAO VIỆT
 Kit riêng Fanpage này. Địa chỉ lấy từ Fanpage. Long Thành (địa chỉ Fanpage). Không trộn cơ sở trang khác.
 
 ## Nhận diện thương hiệu

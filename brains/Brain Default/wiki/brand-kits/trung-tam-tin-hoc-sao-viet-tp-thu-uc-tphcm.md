@@ -4,6 +4,7 @@ updated: 2026-09-05
 ---
 # Kit trang: Trung Tâm Tin Học Sao Việt TP. Thủ Đức - TPHCM
 
+- Brand hiển thị trên ảnh: TIN HỌC SAO VIỆT / TRUNG TÂM TIN HỌC SAO VIỆT
 Kit riêng Fanpage này. Địa chỉ lấy từ Fanpage. Thủ Đức (địa chỉ Fanpage). Không trộn cơ sở trang khác.
 
 ## Nhận diện thương hiệu

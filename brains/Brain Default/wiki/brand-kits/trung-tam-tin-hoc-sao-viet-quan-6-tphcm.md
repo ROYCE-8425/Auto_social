@@ -4,6 +4,7 @@ updated: 2026-09-05
 ---
 # Kit trang: Trung Tâm Tin Học Sao Việt Quận 6 - TPHCM
 
+- Brand hiển thị trên ảnh: TIN HỌC SAO VIỆT / TRUNG TÂM TIN HỌC SAO VIỆT
 Kit riêng Fanpage này. Địa chỉ lấy từ Fanpage. Quận 6 / Bình Tân (địa chỉ Fanpage). Không trộn cơ sở trang khác.
 
 ## Nhận diện thương hiệu
