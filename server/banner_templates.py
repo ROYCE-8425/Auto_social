@@ -1929,46 +1929,25 @@ def render_template_modern_ribbon_wave(
         draw.text((left_m + 56, by), b, font=f_b, fill="#FFFFFF")
         by += 68
 
-    # 10. 3 Khối Học phí dạng Viên thuốc (Price Pills) - Map động theo ngành học
-    t_low = (title or "").lower()
-    if any(k in t_low for k in ("do hoa", "đồ họa", "photoshop", "illustrator", "design")):
-        pills_data = [
-            ("Photoshop & Illustrator Cơ Bản", "Trọn khóa 1.200k"),
-            ("Thiết Kế Đồ Họa Thực Chiến", "Trọn khóa 2.500k"),
-            ("Đồ Họa & Nhận Diện Chuyên Sâu", "Trọn khóa 3.800k"),
-        ]
-    elif any(k in t_low for k in ("autocad", "cad", "kỹ thuật", "ky thuat", "solidworks", "nội thất", "noi that")):
-        pills_data = [
-            ("AutoCAD 2D Cơ Bản & Thực Hành", "Trọn khóa 1.100k"),
-            ("AutoCAD 3D & Bản Vẽ Triển Khai", "Trọn khóa 2.200k"),
-            ("Thiết Kế Kỹ Thuật Chuyên Sâu", "Trọn khóa 3.500k"),
-        ]
-    elif any(k in t_low for k in ("kế toán", "ke toan", "misa", "thuế", "thue")):
-        pills_data = [
-            ("Kế Toán Nội Bộ Thực Hành", "Trọn khóa 1.200k"),
-            ("Kế Toán Thuế & BCTC Doanh Nghiệp", "Trọn khóa 2.500k"),
-            ("Kế Toán Tổng Hợp Thực Chiến", "Trọn khóa 3.500k"),
-        ]
-    else:
-        pills_data = [
-            ("Tin Học Văn Phòng Căn Bản", "Trọn khóa 800k"),
-            ("Tin Học Văn Phòng & AI Ứng Dụng", "Trọn khóa 1.550k"),
-            ("THVP & AI Doanh Nghiệp Chuyên Sâu", "Trọn khóa 2.950k"),
-        ]
+    # 10. 3 Khối Cam Kết Đào Tạo Thực Chiến (Thay thế hoàn toàn bảng giá giả lập / mock)
+    commitments_data = [
+        ("CAM KẾT", "Đào tạo kèm 1-1 đến khi thành thạo", "1 KÈM 1"),
+        ("LỊCH HỌC", "Thời gian linh hoạt - Rảnh giờ nào học giờ đó", "LINH ĐỘNG"),
+        ("BẢO HÀNH", "Hỗ trợ chuyên môn & Cập nhật kiến thức trọn đời", "TRỌN ĐỜI"),
+    ]
     py = 1340
-    for c_name, price in pills_data:
+    for tag, c_desc, badge in commitments_data:
         pill_w = 980
         pill_h = 82
         px = W - pill_w - 60
         draw.rounded_rectangle([px, py, px + pill_w, py + pill_h], radius=40, fill="#FFFFFF")
         tag_w = 195
         draw.rounded_rectangle([px, py, px + tag_w, py + pill_h], radius=40, fill="#F59E0B")
-        draw.text((px + 22, py + 16), "Học phí", font=get_font(20, bold=True), fill="#FFFFFF")
-        draw.text((px + 22, py + 42), "thấp nhất", font=get_font(22, weight="extrabold"), fill="#FFFFFF")
-        draw.text((px + tag_w + 18, py + 26), c_name, font=get_font(24, bold=True), fill="#1E293B")
-        font_pr = get_font(26, weight="extrabold")
-        p_bb = draw.textbbox((0, 0), price, font=font_pr)
-        draw.text((px + pill_w - (p_bb[2] - p_bb[0]) - 28, py + 25), price, font=font_pr, fill="#0369A1")
+        draw.text((px + 32, py + 26), tag, font=get_font(24, weight="extrabold"), fill="#FFFFFF")
+        draw.text((px + tag_w + 18, py + 26), c_desc, font=get_font(23, bold=True), fill="#1E293B")
+        font_badge = get_font(22, weight="extrabold")
+        b_bb = draw.textbbox((0, 0), badge, font=font_badge)
+        draw.text((px + pill_w - (b_bb[2] - b_bb[0]) - 28, py + 28), badge, font=font_badge, fill="#0369A1")
         py += 105
 
     # 11. Chân trang: Hotline & Website
