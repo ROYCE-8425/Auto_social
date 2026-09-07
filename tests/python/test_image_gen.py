@@ -216,7 +216,7 @@ with open(os.path.join(_kit_dir, "royce-shop.md"), "w", encoding="utf-8") as f:
 - Phong cách hình ảnh: công nghệ, tối giản, premium
 - Tone of voice: chuyên nghiệp, trẻ, hiện đại
 - Quy tắc bố cục: logo góc trên, lề an toàn 15-18%, không che mặt học viên
-- Điều không được làm: đổi màu logo, bóp méo logo, dùng màu ngoài palette
+- Điều không được làm: đổi màu logo, bóp méo logo, dùng màu ngoài palette, không bám mẫu A-split panel xanh
 - Logo chính: attachments/dataset/chung/thsv-logo-2025.png
 """)
 kit = image_gen.load_brand_kit_info("royce-shop", vault_root=vault)
@@ -253,6 +253,10 @@ check("ai_render_brand: không overlay bằng code, lưu ảnh GPT thô vào _xu
 check("ai_render_brand: prompt cho phép GPT render chữ/logo",
       "Render the final brand cover directly" in _text_ai_brand
       and "Do not render Vietnamese text" not in _text_ai_brand)
+check("ai_render_brand: bỏ layout cũ/panel từ brand kit để GPT tự sáng tạo",
+      "A-split panel xanh" not in _text_ai_brand
+      and "old dataset/template layouts" in _text_ai_brand
+      and "Avoid split-panel layouts" in _text_ai_brand)
 check("ai_render_brand: tự gửi logo kit làm ảnh tham chiếu",
       any(c.get("type") == "input_image" for c in _content_ai_brand))
 

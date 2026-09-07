@@ -938,9 +938,12 @@ def build_brand_guideline_prompt(kit: Optional[dict], provider: str = "",
         ("Fonts", kit.get("font")),
         ("Image style", kit.get("image_style")),
         ("Voice/tone", kit.get("tone")),
-        ("Layout rules", kit.get("layout_rules")),
-        ("Do not do", kit.get("donts")),
     ]
+    if not ai_render_brand:
+        fields.extend([
+            ("Layout rules", kit.get("layout_rules")),
+            ("Do not do", kit.get("donts")),
+        ])
     lines = ["BRAND KIT RULES - follow these as mandatory visual constraints:"]
     for label, value in fields:
         val = _clean_kit_value(value)
@@ -960,6 +963,8 @@ def build_brand_guideline_prompt(kit: Optional[dict], provider: str = "",
             "- Render the final brand cover directly in the image, including the official logo, Vietnamese title, short subtitle/bullets, and hotline if available.",
             "- Text must be sharp, readable, correctly spelled Vietnamese, with no mojibake, no broken accents, no fake phone numbers, and no invented addresses.",
             "- Use the attached official logo reference if provided; keep it recognizable and faithful.",
+            "- Use a fresh premium technology advertising composition. Do not follow old dataset/template layouts.",
+            "- Avoid split-panel layouts, large navy side panels, boxed template cards, rigid half-photo half-text layouts, and any layout that looks copied from mau-khoa-hoc-co-anh-goc or A-split.",
         ])
     else:
         lines.append("- Do not render Vietnamese text inside the AI image. Leave clean copy space; Javis will overlay final Vietnamese text, logo, hotline, and badges by code.")
