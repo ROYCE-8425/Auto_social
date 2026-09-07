@@ -1,7 +1,10 @@
 # Bộ Bài Viết Mẫu Thực Chiến Chuẩn - Hệ Thống Đào Tạo Tin Học Sao Việt
 
-Tài liệu tham chiếu chuẩn mực copywriting trực tiếp từ dữ liệu thực tế của Tin Học Sao Việt. Mọi bài viết của agent biên tập Facebook đều phải đạt độ sâu, cấu trúc và nhịp điệu tương đương các bài mẫu này.
+> [!WARNING]
+> **CẢNH BÁO TIẾT KIỆM TOKEN: TUYỆT ĐỐI CẤM ĐỌC TOÀN BỘ FILE NÀY (46 KB).**
+> File này chứa 10 bài mẫu đầy đủ của mọi ngành. Khi cần tham khảo, CHỈ ĐƯỢC ĐỌC đúng section bài mẫu của ngành được yêu cầu (ví dụ chỉ đọc mục Kế toán hoặc mục Tin học văn phòng). Cấm nạp cả file vào context.
 
+Tài liệu tham chiếu copywriting thực tế từ dữ liệu của Tin Học Sao Việt.
 LƯU Ý: Tuyệt đối không dùng ký tự em dash trong toàn bộ tài liệu và bài viết (dùng ký tự gạch nối thông thường -).
 
 ---

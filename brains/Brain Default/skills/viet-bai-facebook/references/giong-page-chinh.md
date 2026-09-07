@@ -11,13 +11,16 @@ Kit trang: `wiki/brand-kits/thsv-page-chinh.md`. Caption live: `sources/facebook
 
 Khi soạn bài cho Fanpage Sao Việt / Royce: **giữ giọng người đi làm**, không văn mẫu AI. Page chính có sườn list 👉, nhưng **cấm dùng đúng một sườn cho mọi khóa**. Bài Royce vừa rồi trùng vì copy nguyên khối IN HOA + 👉 + cầm tay chỉ việc.
 
-Trước khi viết: đọc `fb_page_posts` 5 bài gần nhất nếu token có page. Page chính chưa nối: bám 2 bài live trong source + kit. 3 dòng đầu bài mới **không** được trùng ý với 3 dòng đầu bài vừa học.
+3 dòng đầu bài mới **không** được trùng ý với bài đăng gần nhất.
 
 ## Do dai & Chieu sau chuan (Thong nhat moi page)
 
-**Moi Fanpage (ke ca page chinh lan Royce Shop test)**: Bai khoa hoc viet day du, giau thuyet phuc, do dai **60-120 dong**.
-Day du 7 phan: Tieu de IN HOA giat tit kem emoji, noi dau/van de thuc te, giai phap khoa hoc, cam ket vang doc quyen ("DUY NHAT CHI CO TAI TIN HỌC SAO VIET"), chi tiet 5-8 module ky nang, chinh sach uu dai hoc phi & qua tang, CTA va danh sach he thong 12-13 co so dao tao.
-CAM cat ngan con 12 dong cun con. Nguoi dung duyet bai tren Royce Shop can danh gia chat luong bai viet day du y nhu tren Fanpage chinh.
+**Moi Fanpage (ke ca page chinh lan Royce Shop test)**:
+- Bai thuong dang fanpage: do dai **32-45 dong** (chua tinh chan trang).
+- Bai tuyen sinh/ads day du: do dai **45-70 dong** (chua tinh chan trang).
+- KHONG ep 60-120 dong cho moi bai de tranh ton token va roi mat nguoi doc tren mobile.
+Cau truc gon, de doc: Tieu de IN HOA kem emoji dan mat, 2-4 noi dau thuc te, giai phap khoa hoc, cam ket chat luong, 3-5 ky nang trong tam, uu dai & CTA, chan trang dung kit.
+CAM cat ngan con duoi 20 dong cun con.
 
 ## Xoay cac kieu hook (than bai van day du va dai)
 

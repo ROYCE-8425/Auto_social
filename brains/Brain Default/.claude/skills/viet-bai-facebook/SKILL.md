@@ -1,127 +1,299 @@
 ---
 name: Viết bài Facebook
-description: "Bộ skill chuyên sâu viết bài Facebook: 4 trụ cột nội dung, 50 mẫu Hook thực chiến, sườn Hook-Body-CTA, cấm văn mẫu AI, tối ưu đọc lướt di động."
+description: "Skill viết caption Facebook cho hệ thống Sao Việt: rõ người học, rõ việc làm được, giọng tự nhiên, không văn mẫu AI, tối ưu đọc lướt trên di động."
 group: Content
 ---
 
-# Kỹ năng viết bài Facebook thực chiến (Brand Voice Sao Việt)
+# Viết bài Facebook thực chiến - Brand Voice Sao Việt
 
-Bộ chuẩn mực copywriting chuyển đổi cao, chắt lọc từ các trường phái Direct Response Copywriting (Dan Kennedy, Alex Hormozi) và hành vi đọc lướt của người dùng mạng xã hội Việt Nam.
+Mục tiêu: viết như một biên tập viên fanpage hiểu nghề, không như brochure tuyển sinh tự động.
 
-Mục tiêu cốt lõi: **Nói tiếng người, đánh trúng việc thật, ngắn gọn, đồng cảm, loại bỏ 100% văn mẫu AI sáo rỗng.**
+Bài phải bán được khóa học, nhưng đọc lên vẫn giống người thật: có tình huống cụ thể, câu ngắn, nhịp thở tự nhiên, không nhồi hết mọi thứ vào một bài.
 
----
+## 1. Luật giọng văn
 
-## 1. Bộ lọc "Anti-Văn-Mẫu AI" (Rào cản tuyệt đối)
+- Viết bằng tiếng Việt tự nhiên, rõ ràng, gần người đi học nghề.
+- Ưu tiên tình huống thật: đi làm bị giao file Excel gấp, bản vẽ bị trả về, căn Word nhảy trang, không biết dùng AI vào việc thật.
+- Một dòng chỉ nên có một ý.
+- Cứ 1-2 câu thì xuống dòng để dễ đọc trên điện thoại.
+- Không dùng Markdown: không `**`, không heading `#`.
+- Không dùng ký tự em dash. Chỉ dùng dấu `-`.
+- Không tự bịa học phí, số tiền quà tặng, cam kết pháp lý, số suất nếu brand kit hoặc brief không có.
+- Không trộn nhiều ngành trong một bài. Tin học văn phòng thì không lôi AutoCAD/Kế toán vào thân bài, trừ khi brief yêu cầu.
+- Phải có nhịp thị giác Facebook bằng emoji dẫn mắt vừa đủ. Không viết một bài toàn chữ trơn với gạch đầu dòng `-` từ đầu tới cuối.
 
-Khi viết caption, CẤM toàn bộ các dấu hiệu nhận diện bài viết do AI sinh ra:
+## 2. Cấm văn mẫu AI
 
-1. **Cấm mở đầu sáo rỗng & sáo ngữ vô hồn:**
-   - CẤM: "Bạn có biết?", "Trong thời đại 4.0...", "Bạn đang tìm kiếm...", "Hãy cùng chúng tôi khám phá...", "Chào các bạn!".
-   - CẤM: "nâng cao năng lực, chinh phục mọi thử thách!", "Hãy để chúng tôi đồng hành cùng bạn!", "Bạn đang gặp khó khăn với các tác vụ văn phòng hàng ngày?".
-   - Thay bằng: Mở đầu bằng một câu hỏi nhức nhối xoáy thẳng vào thực tế công việc (`❓ CÓ BAO NHIÊU VIỆC TRONG DOANH NGHIỆP...`, `❓ Học Kế Toán Có Khó Không?`, `❓ DOANH NGHIỆP CỦA BẠN ĐANG DÙNG AI, HAY CHỈ MỚI “GÕ LỆNH”?`), hoặc Tuyên bố kết quả viết HOA (`🎨 KHÓA HỌC THIẾT KẾ ĐỒ HỌA...`, `THÀNH THẠO NGHỀ... TRỞ THÀNH DESIGNER TRONG 3 THÁNG - TỐT NGHIỆP ĐI LÀM NGAY`).
-2. **Cấm tính từ nâng tầm vô căn cứ:**
-   - CẤM: "vô cùng tuyệt vời", "cực kỳ hữu ích", "đột phá vượt bậc", "hoàn hảo", "đỉnh cao".
-   - Thay bằng: Mô tả hành động và thành quả thực tế (ví dụ: "bấm cái một là xong", "không còn phải ngồi dò tay từng dòng", "vẽ chuẩn kích thước xưởng yêu cầu", "website chạy online có link riêng gửi ai mở cũng được").
-3. **CẤM RÚT GỌN CONTENT ĐỂ TIẾT KIỆM TOKEN (QUY TẮC SỐNG CÒN):**
-   - Tuyệt đối CẤM cắt bỏ các phần cam kết, lộ trình, module kỹ năng hay chân trang chi nhánh để "tiết kiệm token".
-   - Khóa học giá trị hàng triệu đồng đòi hỏi nội dung phải dày dặn, đầy đủ 60 đến 120 dòng để thuyết phục khách hàng. Bài viết tóm tắt ngắn ngủn 15-30 dòng sẽ bị coi là phế phẩm và bị hệ thống chặn đăng ngay lập tức.
-4. **Cấm dùng ký tự em dash:** Tuyệt đối không dùng ký tự gạch ngang dài (chỉ dùng `-` thông thường).
-5. **Cấm Markdown trên Facebook:** Không `**in đậm**`, không `__`, không `# heading`. Facebook hiển thị nguyên mã markdown rất mất thẩm mỹ. Dùng chữ IN HOA, emoji, và xuống dòng để phân cấp thị giác.
-6. **Cấm nhồi nhiều ngành:** 1 bài = 1 ngành chuyên biệt (Tin học thì không nhồi AutoCAD hay Kế toán).
-7. **Nhịp điệu di động (Mobile-First Rhythm):** Cứ 1 đến 2 câu là xuống dòng. Dùng dòng kẻ `________________` hoặc emoji làm gạch đầu dòng để người dùng đọc lướt trên điện thoại dễ tiếp thu.
+Không mở bài bằng các cụm này:
 
----
+- "Chiến dịch tuyển sinh"
+- "Bạn có biết?"
+- "Trong thời đại 4.0"
+- "Bạn đang tìm kiếm"
+- "Hãy cùng chúng tôi khám phá"
+- "Nâng cao năng lực, chinh phục mọi thử thách"
+- "Tối ưu hiệu suất vượt trội"
+- "Duy nhất chỉ có tại..." nếu phía sau chỉ là danh sách quyền lợi quen thuộc
 
-## 2. Cấu trúc bài chuẩn mực chuyển đổi cao (7 Phần bắt buộc)
+Tránh các tính từ phồng:
 
-Mọi bài viết khóa học trên hệ thống Fanpage (kể cả bài đăng trên Royce Shop) đều phải xây dựng đầy đủ theo 7 phần đầm tay (độ dài 60 đến 120 dòng):
+- vượt trội
+- đột phá
+- đỉnh cao
+- hoàn hảo
+- toàn diện
+- cực kỳ hữu ích
+- chuyên nghiệp hóa bản thân
 
-### Phần 1: Tiêu đề & The Hook (Giật tít dòng 1)
-- Dòng 1 BẮT BUỘC: Tiêu đề IN HOA nổi bật kèm emoji đặc trưng ngành, hoặc câu hỏi trăn trở giật tít (Pattern Interrupt).
-  + Mẫu câu hỏi nhức nhối:
-    `❓ Học Kế Toán Có Khó Không?`
-    `❓ CÓ BAO NHIÊU VIỆC TRONG DOANH NGHIỆP CỦA BẠN ĐANG LÀM THỦ CÔNG MỖI NGÀY?`
-    `❓ DOANH NGHIỆP CỦA BẠN ĐANG DÙNG AI, HAY CHỈ MỚI “GÕ LỆNH” VỚI AI?`
-  + Mẫu cam kết kết quả + thời gian + đầu ra:
-    `🎨 KHÓA HỌC THIẾT KẾ ĐỒ HỌA TẠI TIN HỌC SAO VIỆT - NÂNG CAO KỸ NĂNG SÁNG TẠO CỦA BẠN 🎨`
-    `THÀNH THẠO NGHỀ THIẾT KẾ ĐỒ HỌA - TRỞ THÀNH DESIGNER CHUYÊN NGHIỆP TRONG 3 THÁNG - TỐT NGHIỆP ĐI LÀM NGAY`
-    `🚀 WORKSHOP VIBE CODING: XÂY DỰNG & PHÁT TRIỂN HỆ THỐNG VỚI AI AGENT`
-    `🔔 BA MẸ ƠI - HÈ 2026 NÀY, HÃY CÙNG TIN HỌC SAO VIỆT ĐÁNH THỨC TIỀM NĂNG CÔNG NGHỆ CHO BÉ!`
-- CẤM nhảy bổ vào bài bằng câu trần thuật không có tiêu đề nhận diện.
+Thay bằng việc cụ thể:
 
-### Phần 2: Đảo ngược tư duy & Đánh trúng nỗi đau (Paradigm Shift)
-- Không nói lý thuyết, định vị lại bản chất vấn đề bằng sự đồng cảm:
-  + Kế toán: "Ngành Kế toán không chỉ đơn thuần là ghi chép sổ sách mà toàn bộ câu chuyện kinh doanh và những bí mật của doanh nghiệp đều nằm ở đây..."
-  + n8n / Tự động hóa: "Nhập liệu, báo cáo, CSKH, email, lead, Google Sheet, nhắc lịch, tổng hợp dữ liệu... đều có thể tự động hóa bằng n8n kết hợp AI."
-  + Vibe Coding: "Bạn không cần biết code, không cần thuê đội ngũ kỹ thuật và cũng không cần chuẩn bị kiến thức trước. Hãy hình dung bạn đang có trong tay một người thợ rất giỏi..."
-  + AI Doanh nghiệp: "Doanh nghiệp không chỉ cần biết dùng AI - Doanh nghiệp cần một 'đội ngũ AI' có thể làm việc thật 24/7."
+- "biết lọc dữ liệu, dò lỗi và làm báo cáo nhanh hơn"
+- "vẽ đúng layer, đúng tỷ lệ, in ra không lệch"
+- "làm được bộ hồ sơ/bảng tính/bản vẽ để đi làm"
+- "giáo viên ngồi kèm và sửa ngay trên bài của bạn"
 
-### Phần 3: Thành quả cầm tay cụ thể ("Sau khóa / Cuối buổi bạn cầm về được gì?")
-- Liệt kê các sản phẩm hoặc năng lực đo đếm được (dùng icon `✅`):
-  + Với Kế toán: 8 kỹ năng từ A-Z (Báo cáo thuế, BCTC, hóa đơn chứng từ, Misa/Fast/Excel, thanh tra quyết toán, nhận làm ngoài giờ tăng thu nhập).
-  + Với Vibe Coding: Một trang web chạy online có link riêng gửi ai mở cũng được; dữ liệu lưu lại khi tắt máy; phân quyền trang mua hàng và trang quản trị; dùng thật được ngay.
-  + Với n8n: Hoàn thiện ít nhất 10 quy trình tự động hóa áp dụng ngay vào công việc.
-  + Với Đồ họa: Portfolio cá nhân hoàn chỉnh, bộ ấn phẩm Ps, Ai, Corel, InDesign sẵn sàng đi làm ngay.
+## 3. Độ dài chuẩn
 
-### Phần 4: Cam kết thép độc quyền ("DUY NHẤT CHỈ CÓ TẠI SAO VIỆT")
-Luôn lồng ghép khối cam kết thép tạo sự an tâm tuyệt đối:
-- `📌 Không giới hạn thực hành cho đến khi thành thạo (Học đến khi phải làm được việc)`
-- `📌 Giáo viên hướng dẫn 1 kèm 1, cầm tay chỉ việc sát theo năng lực từng học viên`
-- `📌 Thời gian học linh động: Ca Sáng - Chiều - Tối (từ Thứ 2 đến Thứ 7), đăng ký là học ngay không cần chờ lớp`
-- `📌 Thực hành 100% trên chứng từ / dự án / bản vẽ thực tế của doanh nghiệp`
-- `📌 Hoàn thành được cấp chứng chỉ chuyên viên có giá trị toàn quốc`
-- `📌 Hỗ trợ nghiệp vụ lâu dài trọn đời sau khóa học`
-- `🔖 KHÔNG RA NGHỀ SẼ HOÀN TRẢ HỌC PHÍ` (đối với các khóa nghề Kế toán / Đồ họa)
+Không còn ép 60-120 dòng cho mọi bài.
 
-### Phần 5: Nội dung đào tạo & Module chi tiết
-- Liệt kê chi tiết 5 đến 8 module cụ thể bằng checklist `✅` hoặc `🔹`.
-- Nêu rõ công cụ, phần mềm: Word, Excel, PowerPoint, Photoshop, Illustrator, CorelDRAW, AutoCAD, Misa, Fast, n8n, ChatGPT, Copilot...
+Chọn độ dài theo mục tiêu:
 
-### Phần 6: Chính sách ưu đãi học phí & Kêu gọi hành động (CTA)
-- Nêu bảng giá hoặc mức giảm cụ thể: "Giảm đến 30% học phí", hoặc "Kế toán cho người mới bắt đầu: Giảm từ 5,500,000đ chỉ còn 4,550,000đ".
-- Quà tặng bổ trợ: Tặng kho thư viện 300GB bố cục thiết kế, tặng khóa học online sử dụng trọn đời, quà tặng đăng ký theo nhóm 300k, giảm thêm 10% cho cựu học viên.
-- Kêu gọi hành động dứt khoát:
-  + `🎁 INBOX ngay cho Tin Học Sao Việt để được TƯ VẤN MIỄN PHÍ VÀ NHẬN NGAY ƯU ĐÃI HỌC PHÍ!`
-  + Link inbox Messenger: `https://m.me/trungtamtinhocvanphongsaoviet`
-- Hotline/Zalo tư vấn: lấy từ Brand Kit page đang đăng.
+- Bài thường đăng fanpage: 28-45 dòng, chưa tính chân trang.
+- Bài tuyển sinh/ads cần đầy đủ hơn: 45-70 dòng, chưa tính chân trang.
+- Bài tips/case học viên/thông báo lịch: 18-35 dòng, chưa tính chân trang.
 
-### Phần 7: Chân trang cơ sở & Quy mô hệ thống (đúng Fanpage, không list hộ)
-Lấy địa chỉ từ lệnh `scratch/kit_chan_trang.py <Page ID>` (dán nguyên khối, **mỗi cơ sở một dòng**).
-- Page hệ thống chính (như Tin Học Sao Việt, Kế Toán Sao Việt): hiển thị đầy đủ 12-13 cơ sở tại TP.HCM, Bình Dương, Đồng Nai, Vũng Tàu để khẳng định quy mô uy tín hàng đầu.
-- Page 1 chi nhánh: chỉ địa chỉ chi nhánh đó.
-- Page Đồng Nai / Bình Dương (tên tỉnh): đúng các cơ sở kit liệt kê.
-CẤM trộn địa chỉ page A vào caption page B.
-CẤM một dòng địa chỉ cách bằng dấu `|` (Facebook đọc rối). Plugin chặn `dia-chi-mot-dong`.
+Nếu brief không yêu cầu "bài dài", mặc định viết 32-45 dòng.
 
+Tuyệt đối không viết kiểu nhồi đủ 8-10 nỗi đau, 8-10 quyền lợi, 8-10 module trong một bài. Facebook không phải landing page.
 
----
+## 4. Cấu trúc bài tuyển sinh nên dùng
 
-## 3. Bốn trụ cột nội dung thực chiến (Content Matrix)
+### Phần 1 - Hook ngắn và đúng vấn đề
 
-Mỗi bài viết thuộc 1 trong 4 trụ cột rõ ràng (đọc chi tiết tại `references/khung-viet-chuyen-doi.md`):
+1-3 dòng đầu phải đi thẳng vào chuyện người học đang gặp.
 
-1. **Trụ cột A - Bài Tuyển sinh / Khóa học (Chuyển đổi & Chạy Ads):**
-   - Đánh trúng nỗi sợ bị sếp nhắc nhở, áp lực công việc, mong muốn tăng lương hoặc đổi việc.
-   - Đưa ra giải pháp học kèm 1-1, học đúng những gì công ty cần, không dạy lý thuyết lan man.
-2. **Trụ cột B - Bài Chia sẻ Thủ thuật / Tips nhanh (Tương tác & Lưu bài):**
-   - Hướng dẫn 1 mẹo xử lý công việc cực nhanh (thủ thuật Excel 10 giây, mẹo AutoCAD giảm nửa thời gian vẽ).
-   - Định dạng danh sách bước 1, 2, 3 dễ áp dụng ngay.
-3. **Trụ cột C - Câu chuyện học viên / Case Study (Xây dựng niềm tin):**
-   - Người thật việc thật: Kể chuyện anh/chị học viên cụ thể (độ tuổi, nghề nghiệp, rào cản lúc mới tới).
-   - Trải nghiệm được giáo viên kèm cặp kiên nhẫn và kết quả công việc sau khi hoàn thành khóa học.
-4. **Trụ cột D - Thông báo / Lịch mở lớp / Khuyến mãi (Tạo sự khan hiếm):**
-   - Lịch học ca tối, cuối tuần cho người bận rộn.
-   - Giới hạn số lượng (mỗi ca chỉ nhận tối đa 5 bạn để giáo viên kèm sát).
+MỞ BÀI PHẢI NÉN. Tối đa 5 dòng trước khi chuyển sang giải pháp/khóa học.
 
----
+Cấm mở bài bằng một chuỗi 6-8 câu mô tả liên tiếp kiểu:
 
-## 4. Danh mục tài liệu tham chiếu
+- Công ty giao file gấp...
+- Ngồi dò từng dòng dữ liệu...
+- Bảng tính hàng nghìn dòng...
+- Word bị nhảy dòng...
+- PowerPoint loay hoay...
+- AI mới biết hỏi đáp...
 
-- Mẫu mở đầu giật hook: `references/bo-hook-thuc-chien.md`
-- Sườn bài chi tiết từng trụ cột: `references/khung-viet-chuyen-doi.md`
-- Dữ liệu cơ sở và thông tin thực tế: `references/du-lieu-thuc-te-fanpage-sao-viet.md`
-- Giọng caption page chính (học từ bài cũ): `references/giong-page-chinh.md`
-- Mẫu bài thực chiến Kế toán chuyển đổi cao: `references/mau-bai-ke-toan-chuyen-doi.md`
-- Cẩm nang copywriting thực chiến đa ngành (Kế toán, Đồ họa, AI, n8n, Trẻ em): `references/cam-nang-content-da-nganh.md`
-- Bộ bài viết mẫu thực chiến chuẩn (AutoCAD, Kế toán, Đồ họa, AI, n8n): `references/mau-that-tin-hoc-sao-viet.md`
+Kiểu này nhìn có vẻ cụ thể nhưng thực ra rất "AI": đều đều, giải thích quá đủ, thiếu nhịp biên tập. Chỉ chọn 2-3 hình ảnh đau nhất rồi gom phần còn lại bằng một câu khái quát.
+
+Ví dụ hướng viết:
+
+- "Excel không khó. Khó là công ty giao file gấp mà mình không biết bắt đầu từ đâu."
+- "Một bản vẽ sai tỷ lệ có thể làm cả khâu gia công phải sửa lại."
+- "Biết dùng AI không phải để cho vui. Quan trọng là dùng được vào báo cáo, email, nội dung và dữ liệu hằng ngày."
+
+Không cần câu tiêu đề quá dài. Không cần lặp tên khóa học 2 lần ở đầu bài.
+
+Ví dụ sửa đoạn lan man:
+
+KHÔNG VIẾT:
+
+```text
+Đi làm rồi mới thấy, Word, Excel và PowerPoint không vững thì việc nhỏ cũng thành mất nhiều thời gian.
+Công ty giao file gấp nhưng bạn chưa biết bắt đầu xử lý từ đâu.
+Ngồi dò từng dòng dữ liệu Excel, tìm lỗi công thức đến hoa cả mắt.
+Bảng tính hàng nghìn dòng nhưng lúng túng khi cần lọc dữ liệu, tính tổng và làm báo cáo.
+Soạn thảo văn bản Word bị nhảy dòng, lệch lề, chỉnh mục lục mãi không theo ý muốn.
+Cần làm slide PowerPoint báo cáo nhưng loay hoay không biết sắp xếp bố cục sao cho mạch lạc.
+Biết đến các công cụ AI nhưng mới chỉ dừng ở mức hỏi đáp chung chung, chưa áp dụng được vào công việc thực tế.
+```
+
+NÊN VIẾT:
+
+```text
+Đi làm rồi mới thấy: Word, Excel, PowerPoint yếu một chút là việc nhỏ cũng kéo dài cả buổi.
+
+File Excel gấp thì không biết lọc từ đâu.
+Word in ra lại nhảy dòng.
+AI có nghe nhiều, nhưng chưa biết dùng vào báo cáo, email hay dữ liệu thật.
+```
+
+Hoặc:
+
+```text
+Có những việc văn phòng không khó, chỉ là mình chưa được chỉ đúng cách.
+
+Một file Excel cần xử lý gấp.
+Một văn bản Word cứ lệch trang khi in.
+Một báo cáo cần AI hỗ trợ nhưng chưa biết viết prompt sao cho ra việc.
+```
+
+### Phần 2 - Nỗi đau chọn lọc
+
+Chọn 2-4 tình huống đau nhất, không liệt kê tràn lan.
+
+Nếu đã nêu nỗi đau ở mở bài thì phần này chỉ viết tiếp 2-3 dòng, không lặp lại bằng bullet dài.
+
+Mỗi ý phải cụ thể:
+
+- Sai layer, sai tỷ lệ, in bản vẽ bị lệch.
+- Excel nhiều dòng nhưng không biết lọc, tổng hợp, dò lỗi.
+- Word căn chỉnh mãi vẫn nhảy trang.
+- Muốn ứng dụng AI nhưng chỉ mới biết hỏi đáp chung chung.
+
+### Phần 3 - Sau khóa học làm được gì
+
+Chọn 5-7 thành quả cầm tay.
+
+Dùng câu bắt đầu bằng động từ:
+
+- Làm được...
+- Tự xử lý...
+- Biết dựng...
+- Biết kiểm tra...
+- Tự tin nhận...
+
+Không viết thành quả quá chung như "nâng cao kỹ năng toàn diện".
+
+### Phần 4 - Điểm mạnh Sao Việt
+
+Chọn 3-5 quyền lợi thật sự quan trọng:
+
+- Học kèm 1-1, giáo viên sửa trực tiếp trên bài.
+- Thực hành trên máy tính và dữ liệu/bản vẽ/chứng từ thật.
+- Lịch học linh hoạt sáng, chiều, tối.
+- Đăng ký là xếp lớp, không phải chờ gom đông.
+- Hỗ trợ sau khóa học.
+
+Không gọi là "duy nhất" nếu không có lý do cụ thể.
+
+### Phần 5 - Lộ trình
+
+Chỉ nêu 4-6 cụm nội dung chính.
+
+Không viết đủ 8-10 module dài như giáo trình, trừ khi user yêu cầu bài landing-page.
+
+### Phần 6 - Ưu đãi và CTA
+
+Nêu ngắn:
+
+- Ưu đãi 20-30% học phí khi đăng ký sớm nếu chính sách này có trong kit.
+- Giảm thêm 10% khi đăng ký nhóm từ 2 học viên nếu có trong kit.
+- Tặng tài liệu/giáo trình/kho biểu mẫu nếu có trong kit, không gắn giá tiền.
+
+CTA tự nhiên:
+
+- "Nhắn tin Fanpage để được tư vấn lộ trình phù hợp."
+- "Gửi ngành học hoặc công việc hiện tại, Sao Việt sẽ gợi ý ca học phù hợp."
+- "Liên hệ Hotline/Zalo để xếp lịch học gần nhất."
+
+## 5. Biến thể nội dung để bài không bị một màu
+
+Luân phiên 5 kiểu bài, không phải bài nào cũng là tuyển sinh dài:
+
+1. Bài vấn đề - giải pháp: mở bằng một lỗi công việc rất cụ thể.
+2. Bài thành quả sau khóa: tập trung vào sản phẩm/nghiệp vụ học viên làm được.
+3. Bài lớp học thật: dựa vào ảnh album, kể không khí học, giáo viên kèm, học viên thực hành.
+4. Bài checklist nghề: 5-7 kỹ năng cần có để đi làm.
+5. Bài ưu đãi/lịch học: ngắn, rõ ca học, ưu đãi, cách đăng ký.
+
+Nếu bài có album ảnh lớp thật, nên ưu tiên kiểu 3 hoặc kiểu 1. Đừng viết như tờ rơi chung chung.
+
+## 6. Nhịp thị giác bắt buộc cho Facebook
+
+Caption phải có icon dẫn mắt theo cụm, nhưng không spam.
+
+Mẫu phân vai emoji:
+
+- Dòng tiêu đề/hook: dùng 1 icon đúng ngành như `💻`, `📐`, `🎨`, `🤖`, `📊`.
+- Nỗi đau: dùng `👉` cho 2-4 dòng ngắn.
+- Ý chốt/điểm khác biệt: dùng `📌`.
+- Thành quả sau khóa: dùng `✅`.
+- Lộ trình/nội dung học: dùng `📚` hoặc `1️⃣ 2️⃣ 3️⃣ 4️⃣`.
+- Ưu đãi: dùng `🎁`.
+- CTA: dùng `📩` và `📞`.
+
+Quy tắc:
+
+- Không dùng quá 2 emoji trong một dòng.
+- Không dùng một loại emoji cho toàn bài.
+- Không để toàn bộ các mục đều bắt đầu bằng dấu `-`. Với các khối chính, ưu tiên `👉`, `✅`, `📌`, `🎁`.
+- Mỗi khối chỉ 3-5 dòng. Nếu một khối vượt 6 dòng, phải gộp hoặc cắt.
+
+Khung gợi ý:
+
+```text
+💻 [Tên khóa học/ngành]
+
+[Hook 1-3 dòng]
+
+👉 [Nỗi đau 1]
+👉 [Nỗi đau 2]
+👉 [Nỗi đau 3]
+
+📌 [Câu chuyển ý: học đúng bài cần làm, có giáo viên kèm]
+
+🎯 Sau khóa học, bạn có thể:
+✅ ...
+✅ ...
+✅ ...
+✅ ...
+
+📚 Nội dung học trọng tâm:
+1️⃣ ...
+2️⃣ ...
+3️⃣ ...
+4️⃣ ...
+
+🎁 Ưu đãi / quyền lợi:
+✅ ...
+✅ ...
+
+📩 Nhắn Fanpage để được tư vấn lộ trình phù hợp.
+📞 Hotline/Zalo: [số đúng kit]
+```
+
+## 7. Hashtag
+
+Cuối bài chỉ dùng 3-6 hashtag.
+
+Hashtag phải gọn, đúng ngành:
+
+- #tinhocsaoviet
+- #tinhocvanphong
+- #ungdungai
+- #autocad
+- #ketoanthuchanh
+- #thietkedohoa
+
+Không nhồi quá nhiều hashtag vì nhìn spam.
+
+## 8. Chân trang
+
+Chân trang lấy đúng từ brand kit của Fanpage đang đăng.
+
+- Page hệ thống chính có thể dùng đầy đủ cơ sở nếu kit yêu cầu.
+- Page chi nhánh chỉ dùng đúng địa chỉ chi nhánh.
+- Mỗi cơ sở một dòng, không gom bằng dấu `|`.
+- Không trộn địa chỉ page này sang page khác.
+
+Nếu chân trang quá dài, thân bài càng phải gọn để tổng thể không ngợp.
+
+## 9. Tài liệu giọng mẫu
+
+Không bắt buộc đọc reference dài trong mỗi bài. Chỉ mở thêm khi brief yêu cầu học sâu từ bài mẫu hoặc cần xử lý ngành mới:
+
+- `references/giong-tu-bai-mau-user.md` cho lỗi văn AI cần tránh.
+- `references/corpus-sao-viet-1txt.md` khi cần vốn từ ngành chi tiết.
+
+## 10. Checklist tự kiểm trước khi đăng
+
+Trước khi gọi tool đăng Facebook, tự kiểm:
+
+- 3 dòng đầu có giống người thật viết không?
+- Có cụm "Chiến dịch tuyển sinh" hoặc "tối ưu hiệu suất vượt trội" không? Nếu có, sửa.
+- Có quá 7 gạch đầu dòng trong một mục không? Nếu có, cắt.
+- Có bài toàn chữ trơn/dấu `-` mà thiếu `👉`, `📌`, `✅`, `🎁`, `📩` không? Nếu có, thêm nhịp thị giác.
+- Có lặp "thành thạo/chuyên nghiệp/thực chiến" quá nhiều không? Nếu có, thay bằng việc cụ thể.
+- Nội dung đúng một khóa học, không lạc ngành.
+- Ưu đãi, địa chỉ, hotline lấy đúng kit.
+- Không Markdown, không em dash.
