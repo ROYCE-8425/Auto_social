@@ -22,8 +22,6 @@ Nút **Tạo kit từ Fanpage đã kết nối** → tick page → tên kit = t�
 ## Tài liệu hệ thống
 - [[brand-kits/_mac-dinh]] nhận diện + pháp nhân
 - [[brand-kits/_the-khoa-hoc]] thẻ / folder ảnh
-- [[brand-kits/_van-hanh]] vận hành nhiều page
-- [[brand-kits/_y-chu-dang-bai]] chuẩn caption + album
 - [[brand-kits/_anh-da-dung]] ảnh gốc đã dùng
 
 ## Page đã có kit

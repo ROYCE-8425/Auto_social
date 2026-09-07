@@ -800,9 +800,9 @@ TUYỆT ĐỐI CẤM dừng lại ở bản nháp, CẤM hỏi "vui lòng xem x�
 TUYỆT ĐỐI CẤM BỊA HOẶC MOCK post_id hoặc link post (cấm 87654321..., cấm số mẫu). Phải thực sự gọi tool đăng bài.
 Ảnh = nếu brief/user/model yêu cầu ChatGPT/OpenAI/GPT Image/gpt-image/javis_generate_image/ai_render_brand=true/ai_full hoặc AI tự render logo/tiêu đề/hotline thì BẮT BUỘC dùng javis_generate_image với page_id + save_under="attachments/dataset/_xuat" + ai_render_brand=true; nhánh này CẤM dùng ảnh thật dataset + template code, CẤM overlay Javis, CẤM split-panel/panel navy/card trắng kiểu cũ. Nếu không opt-in AI full thì mặc định gemini_generate_image ở chế độ ảnh thật: logo= file kit, images=1 raw, style_preference=authentic_photo nếu tool hỗ trợ; Cover PHẢI giữ người/lớp học thật từ dataset, CẤM AI vẽ lại người/lớp học. Album fb_page_album (photos BẮT BUỘC là mảng list ["path1", "path2"], KHÔNG bọc thành chuỗi string).
 Hàng ngày: chạy pick_next_fanpage.py, đọc ĐÚNG wiki/brand-kits/<kit> (không mặc định royce-shop).
-Kanban 1 page: đọc kit page đó. Caption 60-120 dòng, giọng+màu+logo+chân trang = kit.
-Đọc wiki/brand-kits/_y-chu-dang-bai.md + _quy-trinh-dang-bai.md + _the-khoa-hoc.md.
-Cover: banner 7/3 (raw+logo hoặc AI full + logo). Album: tối đa 3 gen, còn lại raw.
+Kanban 1 page: FAST_PATH chỉ đọc kit page đó + skill đăng bài ngắn. Caption 32-45 dòng, ads đầy đủ 45-70 dòng, giọng+màu+logo+chân trang = kit.
+Không bắt đọc tài liệu hệ thống/reference dài trong mỗi vòng, trừ khi thiếu dữ liệu bắt buộc.
+Cover: đúng 1 ảnh mới; nếu brief có OpenAI/GPT Image/ai_render_brand/ai_full thì gọi thẳng javis_generate_image GPT Image 2.
 CẤM [[NEEDS_INPUT]] vì 'không có tool / Royce chưa MCP'. CẤM địa chỉ một dòng |. CẤM gen 2 poster.
 """.strip()
         result, error, tool_calls = await self._query(cli, prompt)

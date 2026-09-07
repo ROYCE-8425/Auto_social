@@ -68,7 +68,7 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
   + Kiểu B (không có ảnh ngành, lịch lễ): bám mẫu attachments/dataset/_mau/mau-lich-le-tu-gen.png (poster đủ họa tiết đỏ vàng lễ hội, đèn lồng, trăng, 2 khối lịch nghỉ và học lại, logo Sao Việt; cấm vẽ poster tối giản).
 - Album tỷ lệ 7/3: Ảnh 1 = banner quảng cáo (gen từ 1 raw dataset đúng thẻ + logo kit, HOẶC gen AI full). Tối đa 3 ảnh gen/bài; phần còn lại (~7) ảnh raw folder thẻ. Cover luôn _xuat.
 - Nơi lưu ảnh gen: attachments/dataset/_xuat/
-- Gen cover: gemini_generate_image (KHÔNG javis_generate_image, KHÔNG image_gen Grok). logo= file Logo chính kit, images= 1 raw folder thẻ (tin học = attachments/dataset/tin-hoc _ai/ — CẤM tin-hoc/). Album 7/3.
+- Gen cover: nếu brief/model yêu cầu ChatGPT/OpenAI/GPT Image/gpt-image/javis_generate_image/ai_render_brand=true/ai_full hoặc AI tự render logo/tiêu đề/hotline thì dùng trực tiếp javis_generate_image với page_id đúng kit, save_under=attachments/dataset/_xuat, ai_render_brand=true; brand kit page được đưa thẳng vào prompt tạo ảnh. Nhánh này KHÔNG bám mẫu A/B, KHÔNG template code, KHÔNG overlay Javis. Nếu không opt-in AI full thì dùng ảnh thật/template mặc định với logo kit và ảnh raw đúng thẻ.
 - Đối chiếu số liệu: caption và chữ trên ảnh bắt buộc cùng ngày/giờ và số liệu. Nếu lệch phải sửa caption trước khi đăng, không đăng lệch
 - Đăng đúng 1 lần: chỉ gọi fb_page_photo hoặc fb_page_post 1 lần. CẤM gọi fb_page_delete trừ khi user bảo xóa đúng post_id
 
@@ -80,7 +80,7 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 - CTA: Nhắn tin Fanpage hoặc liên hệ Hotline/Zalo: 0818 552 558 để được tư vấn lộ trình và xếp lịch học
 
 ## Quy chuẩn thống nhất độ dài
-- Toàn bộ các Fanpage (kể cả page chính lẫn page test Royce Shop) đều áp dụng chuẩn bài viết chuyển đổi thực chiến 60-120 dòng, đầy đủ 7 phần (Tiêu đề, nỗi đau, giải pháp, cam kết vàng, chi tiết module, ưu đãi và hệ thống 12-13 cơ sở). Người dùng xem và duyệt bài trên Royce Shop cần thấy bài viết hoàn chỉnh đúng như đăng thật trên hệ thống
+- Chuẩn caption: viết tự nhiên, đọc lướt mobile, đủ hook - nỗi đau chọn lọc - thành quả - quyền lợi - CTA - chân trang đúng kit. Không ép 60-120 dòng cho mọi bài; chỉ viết dài khi brief yêu cầu ads/landing đầy đủ.
 
 ## Cấm
 - Viết bài ngắn cụt lủn tóm tắt (dưới 30 dòng)

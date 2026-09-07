@@ -19,21 +19,21 @@ Mục tiêu ngày: mỗi Fanpage có Brand Kit + Page ID được tối đa 1 b�
 ## Bảo vệ server / API (bắt buộc)
 
 - Gemini **Tier 1** (tính 2026-09): Flash ~150 RPM / ~1500 RPD; ảnh (Imagen/Nano Banana) ~10 IPM / ~500 RPD; trần chi **$10 / 10 phút**, cap billing **$250/tháng**. Quota theo **project**, reset RPD nửa đêm giờ Pacific.
-- Không đọc 56 kit / fb_pages_list. Chân trang lấy từ CHAN_TRANG. **Caption vẫn 7 phần 60–120 dòng** (skill viet-bai-facebook): tiêu đề IN HOA, nỗi đau, giải pháp Sao Việt, cam kết vàng, module, ưu đãi, CTA + chân trang. Cấm bài cụt, cấm bịa khóa ngoài `_the-khoa-hoc.md`. Cấm 20 lần đăng thử.
+- Không đọc 56 kit / fb_pages_list. Chân trang lấy từ CHAN_TRANG. Caption theo fast-path: 32-45 dòng, ads đầy đủ 45-70 dòng; hook thật, nỗi đau chọn lọc, thành quả, quyền lợi, CTA + chân trang. Cấm bài cụt, cấm bịa khóa ngoài thẻ trong kit. Cấm 20 lần đăng thử.
 - Javis chỉ chạy 1 loop lúc một. Không tạo loop thứ hai cùng việc này.
 - Không gọi image_gen quá 1 cover. Album ảnh gốc dataset, không gen 8 tấm.
 - Không đọc fb_page_posts quá 1 lần (limit 5).
 - Timeout: Facebook ERROR → POST_SKIP, không retry trong vòng. 429 Gemini → POST_SKIP, không spam.
 - Không mở hết 56 kit. Chỉ đọc kit của page NEXT.
-- Mục tiêu 55 page/ngày. Cửa sổ 07–22 = 15 giờ → ~50 khe nếu 18 phút/vòng (còn 5 page xoay hôm sau, hoặc nới 06–23). Ảnh 55/ngày dưới ~500 RPD. Tiền 2.5 Pro + 1 ảnh/bài dễ **>$250/tháng (cap Tier 1)** nếu mỗi job >5 lần gọi — xem `_van-hanh.md`.
+- Mục tiêu 55 page/ngày. Cửa sổ 07–22 = 15 giờ → ~50 khe nếu 18 phút/vòng. Fast-path: mỗi job chỉ 1 cover + 1 lần đăng, không đọc tài liệu vận hành dài.
 
 ## Quy trình 1 vòng
 
-0. Đọc `wiki/brand-kits/_y-chu-dang-bai.md` + `_quy-trinh-dang-bai.md` + `_the-khoa-hoc.md` (tài liệu hệ thống Brand Kit). Album 7/3.
+0. FAST_PATH: đọc `skills/dang-bai-facebook/SKILL.md`; không đọc tài liệu hệ thống/reference dài trong mỗi vòng trừ khi thiếu dữ liệu bắt buộc.
 1. `python "brains/Brain Default/skills/dang-bai-facebook/scripts/pick_next_fanpage.py"`
 2. `NEXT=NONE` → hết hàng, dừng.
 3. `NEXT=1` → đọc **đúng 1 file** `wiki/brand-kits/<kit>` (dòng kit=) **và** khối `KIT_VISUAL` (logo file, màu, font, giọng, bố cục). Lấy địa chỉ/hotline từ `CHAN_TRANG`. CẤM bỏ qua kit. CẤM đọc 56 kit. Không `fb_pages_list`.
-4. **Đọc** `skills/viet-bai-facebook/SKILL.md` + `wiki/brand-kits/_quy-trinh-dang-bai.md`. Caption **60–120 dòng, 7 phần**, giọng = kit. Dán CHAN_TRANG (mỗi cơ sở một dòng). Gen **đúng 1** cover: raw dataset + **file Logo chính kit** + màu kit. `pick_photos`. Đăng album 1 lần. CẤM `fb_page_post`. CẤM caption dưới 45 dòng. CẤM gen logo. CẤM 2 poster AI.
+4. **Đọc** `skills/viet-bai-facebook/SKILL.md`. Caption 32-45 dòng hoặc 45-70 dòng nếu ads đầy đủ, giọng = kit. Dán CHAN_TRANG (mỗi cơ sở một dòng). Gen **đúng 1** cover. Nếu kit/brief dùng OpenAI/GPT Image/ai_render_brand/ai_full thì gọi thẳng `javis_generate_image`; nếu không thì raw dataset + logo kit. `pick_photos` nếu cần album. Đăng 1 lần. CẤM `fb_page_post`. CẤM gen 2 poster AI.
 5. `--ok` hoặc `--fail`. Không đăng lần 2.
 
 ## Fail / rollback

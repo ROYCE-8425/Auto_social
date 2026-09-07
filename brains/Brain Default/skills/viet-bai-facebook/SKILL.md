@@ -280,12 +280,10 @@ Nếu chân trang quá dài, thân bài càng phải gọn để tổng thể kh
 
 ## 9. Tài liệu giọng mẫu
 
-Khi viết caption tuyển sinh cho Sao Việt, đọc thêm các reference sau trước khi viết:
+Không bắt buộc đọc reference dài trong mỗi bài. Chỉ mở thêm khi brief yêu cầu học sâu từ bài mẫu hoặc cần xử lý ngành mới:
 
-- `references/corpus-sao-viet-1txt.md`
-- `references/giong-tu-bai-mau-user.md`
-
-Ưu tiên `corpus-sao-viet-1txt.md` để lấy vốn từ theo ngành và cấu trúc bài. Dùng `giong-tu-bai-mau-user.md` để nhớ các lỗi phải tránh sau khi user đã phản hồi bài bị máy móc.
+- `references/giong-tu-bai-mau-user.md` cho lỗi văn AI cần tránh.
+- `references/corpus-sao-viet-1txt.md` khi cần vốn từ ngành chi tiết.
 
 ## 10. Checklist tự kiểm trước khi đăng
 

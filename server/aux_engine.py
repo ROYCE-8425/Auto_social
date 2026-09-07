@@ -381,8 +381,9 @@ class _ApiAuxEngine:
             "style_preference=authentic_photo nếu tool hỗ trợ; CẤM AI vẽ lại người/lớp học, CẤM AI full poster). "
             "fb_page_album (đăng album 2-10 ảnh: tham số 'photos' BẮT BUỘC là mảng JSON [\"path1\", \"path2\"], "
             "KHÔNG bọc thành chuỗi string). CẤM gọi qua javis_run_tool khi đã có tool trực tiếp. "
-            "Đọc ĐÚNG 1 kit wiki/brand-kits/<kit page> (logo, màu, font, giọng, CHAN_TRANG). "
-            "Caption 60-120 dòng. 1 cover AI từ raw+file logo kit. Album ảnh gốc. "
+            "FAST_PATH: đọc ĐÚNG 1 kit wiki/brand-kits/<kit page> (logo, màu, font, giọng, CHAN_TRANG) "
+            "và skill đăng bài ngắn; không đọc corpus/reference dài trừ khi brief yêu cầu. "
+            "Caption 32-45 dòng, ads đầy đủ 45-70 dòng. 1 cover mới. "
             "CẤM fb_page_post. CẤM địa chỉ |. CẤM [[NEEDS_INPUT]] 'không có tool'."
         )
         tool_names = [str(t.get("fn") or t.get("name") or "") for t in (tools or [])]

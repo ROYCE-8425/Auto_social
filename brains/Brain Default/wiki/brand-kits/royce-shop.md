@@ -88,7 +88,7 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Vẽ kỹ th
   + Kiểu B (không có ảnh ngành, lịch lễ): bám mẫu attachments/dataset/_mau/mau-lich-le-tu-gen.png (poster đủ họa tiết đỏ vàng lễ hội, đèn lồng, trăng, 2 khối lịch nghỉ và học lại, logo Sao Việt; cấm vẽ poster tối giản).
 - Album tỷ lệ 7/3: Ảnh 1 = banner quảng cáo (gen từ 1 raw dataset đúng thẻ + logo kit, HOẶC gen AI full). Tối đa 3 ảnh gen/bài; phần còn lại (~7) ảnh raw folder thẻ. Cover luôn _xuat.
 - Nơi lưu ảnh gen: attachments/dataset/_xuat/
-- Gen cover: nếu brief hoặc model hiện tại yêu cầu ChatGPT/OpenAI/GPT Image/gpt-image/javis_generate_image/ai_render_brand=true/ai_full hoặc AI tự render logo/tiêu đề/hotline thì dùng javis_generate_image, truyền page_id=royce-shop, save_under=attachments/dataset/_xuat, ai_render_brand=true; nhánh này để GPT Image tự render poster hoàn chỉnh, KHÔNG bám Kiểu A/B, KHÔNG dùng template code, KHÔNG overlay Javis, KHÔNG split-panel/panel navy/card trắng kiểu cũ. Nếu không opt-in AI full thì mặc định dùng gemini_generate_image cho ảnh thật/template, logo= file Logo chính kit nếu có, images= 1 raw folder thẻ. Tin học = attachments/dataset/tin-hoc _ai/ — CẤM tin-hoc/. Album 7/3.
+- Gen cover: nếu brief/model yêu cầu ChatGPT/OpenAI/GPT Image/gpt-image/javis_generate_image/ai_render_brand=true/ai_full hoặc AI tự render logo/tiêu đề/hotline thì dùng trực tiếp javis_generate_image với page_id đúng kit, save_under=attachments/dataset/_xuat, ai_render_brand=true; brand kit page được đưa thẳng vào prompt tạo ảnh. Nhánh này KHÔNG bám mẫu A/B, KHÔNG template code, KHÔNG overlay Javis. Nếu không opt-in AI full thì dùng ảnh thật/template mặc định với logo kit và ảnh raw đúng thẻ.
 - Đối chiếu số liệu: caption và chữ trên ảnh bắt buộc cùng ngày/giờ và số liệu. Nếu lệch phải sửa caption trước khi đăng, không đăng lệch
 - Đăng đúng 1 lần: chỉ gọi fb_page_photo hoặc fb_page_post 1 lần. CẤM gọi fb_page_delete trừ khi user bảo xóa đúng post_id
 
@@ -100,7 +100,7 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Vẽ kỹ th
 - CTA: Nhắn tin Fanpage hoặc liên hệ Hotline/Zalo: 0823 552 558 để được tư vấn lộ trình và xếp lịch học
 
 ## Quy chuẩn thống nhất độ dài
-- Toàn bộ các Fanpage (kể cả page chính lẫn page test Royce Shop) áp dụng chuẩn bài viết Facebook đọc lướt: hook thật, nỗi đau chọn lọc, thành quả cụ thể, quyền lợi chính, CTA rõ và chân trang đúng kit. Không ép 60-120 dòng cho mọi bài; chỉ viết dài khi brief yêu cầu bài ads/landing đầy đủ.
+- Chuẩn caption: viết tự nhiên, đọc lướt mobile, đủ hook - nỗi đau chọn lọc - thành quả - quyền lợi - CTA - chân trang đúng kit. Không ép 60-120 dòng cho mọi bài; chỉ viết dài khi brief yêu cầu ads/landing đầy đủ.
 
 ## Cấm
 - Viết bài quá ngắn, cụt ý (dưới 28 dòng thân bài với bài tuyển sinh)
