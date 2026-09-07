@@ -212,6 +212,8 @@ def main(argv):
     if mark_ok:
         if mark_ok not in st["ok"]:
             st["ok"].append(mark_ok)
+        if len(argv) > argv.index("--ok") + 2 and not argv[argv.index("--ok") + 2].startswith("-"):
+            st["last_course"] = argv[argv.index("--ok") + 2].strip()
         st["skip"] = [x for x in st.get("skip") or [] if x.get("id") != mark_ok]
         save_state(st)
         print("MARK_OK", mark_ok)
@@ -265,7 +267,10 @@ def main(argv):
     row = eligible[cur]
     st["cursor"] = (cur + 1) % max(len(eligible), 1)
     save_state(st)
-    tag = random.choice(row["tags"])
+    last_tag = st.get("last_course") or ""
+    all_tags = row.get("tags") or list(registry_tags())
+    available_tags = [t for t in all_tags if t != last_tag] if len(all_tags) > 1 else all_tags
+    tag = random.choice(available_tags or all_tags)
     print("NEXT=1")
     print("page_id=" + row["page_id"])
     print("ten=" + row["name"])
