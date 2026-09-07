@@ -664,6 +664,98 @@ def _extract_gencontent_image_b64(data: dict) -> Optional[str]:
     return None
 
 
+def generate_antigravity_cli_image(
+    prompt: str,
+    aspect_ratio: str = "square",
+    vault_root: Optional[str] = None,
+    prefix: str = "agy-img",
+    save_under: Optional[str] = None,
+    logo_path: Optional[str] = None,
+    course_id: Optional[str] = None,
+    hotline: Optional[str] = None,
+    footer_text: Optional[str] = None,
+    timeout_s: float = 120.0,
+) -> Optional[dict]:
+    """Tận dụng trực tiếp Antigravity CLI (binary `agy`) đã kết nối trên VPS để tạo ảnh AI miễn phí 100%.
+    Chạy lệnh `agy --dangerously-skip-permissions -p` gọi tool `generate_image` của Google Imagen."""
+    try:
+        from antigravity_cli import find_antigravity_cli
+    except ImportError:
+        try:
+            from server.antigravity_cli import find_antigravity_cli
+        except ImportError:
+            find_antigravity_cli = None
+
+    if not find_antigravity_cli:
+        return None
+
+    cli = find_antigravity_cli()
+    if not cli or not Path(cli).is_file():
+        return None
+
+    import subprocess, time, glob, os, shutil
+
+    v_root = _resolve_vault(vault_root)
+    clean_p = prompt.replace('"', '').replace("'", "")
+    art_prompt = (
+        f"Commercial advertising photography, professional tech education: {clean_p}. "
+        "Modern computer lab, confident Vietnamese students, bright studio key lighting, 8k resolution, photorealistic, realistic skin texture, cinematic"
+    )
+
+    t0 = time.time()
+    cmd = [
+        cli,
+        "--dangerously-skip-permissions",
+        "-p",
+        f"Dùng tool generate_image tạo 1 bức ảnh với Prompt: '{art_prompt}', ImageName='sao_viet_ai'",
+    ]
+
+    try:
+        r = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=timeout_s)
+    except Exception as e:
+        print(f"[image_gen] Lỗi chạy agy generate_image: {e}", file=sys.stderr)
+        return None
+
+    home = Path.home()
+    search_pattern = str(home / ".gemini" / "antigravity-cli" / "brain" / "*" / "*.jpg")
+    files = [f for f in glob.glob(search_pattern) if os.path.getmtime(f) >= t0 - 5]
+    if not files:
+        search_pattern2 = str(home / ".gemini" / "antigravity-ide" / "brain" / "*" / "*.jpg")
+        files = [f for f in glob.glob(search_pattern2) if os.path.getmtime(f) >= t0 - 5]
+
+    if not files:
+        return None
+
+    latest_file = max(files, key=os.path.getmtime)
+    with open(latest_file, "rb") as rf:
+        raw_bytes = rf.read()
+
+    # Dán logo thương hiệu Sao Việt nếu có
+    if logo_path:
+        raw_bytes = overlay_logo(raw_bytes, logo_path, vault_root=vault_root)
+
+    saved = save_image_bytes(
+        raw_bytes, vault_root, prefix=prefix, ext=".jpg",
+        subdir=save_under or "attachments/dataset/_xuat",
+    )
+    if not saved.get("ok"):
+        return None
+
+    return {
+        "ok": True,
+        "rel_path": saved["rel_path"],
+        "abs_path": saved["abs_path"],
+        "file": saved["file"],
+        "aspect": aspect_ratio or "1:1",
+        "provider": "antigravity-cli-imagen",
+        "model": "google-imagen-via-agy",
+        "prompt": prompt,
+        "hotline": hotline,
+        "footer_text": footer_text,
+        "course_id": course_id,
+    }
+
+
 def _kit_field(md: str, *labels: str) -> str:
     """Trích xuất giá trị trường trong file markdown dạng '- Nhãn: Giá trị'."""
     for lab in labels:
@@ -1521,6 +1613,22 @@ async def generate_gemini(
                         }
         except Exception as e:
             err = str(e)
+    else:
+        # Nếu không có Google AI Studio API Key: TẬN DỤNG TRỰC TIẾP ANTIGRAVITY CLI ĐANG KẾT NỐI TRÊN VPS!
+        agy_res = generate_antigravity_cli_image(
+            prompt=full_prompt,
+            aspect_ratio=aspect,
+            vault_root=vault_root,
+            prefix=prefix,
+            save_under=save_under,
+            logo_path=logo_file,
+            course_id=course_id,
+            hotline=resolved_hotline,
+            footer_text=resolved_footer,
+            timeout_s=timeout_s,
+        )
+        if agy_res and agy_res.get("ok"):
+            return agy_res
 
     # 3. TỰ ĐỘNG CỨU HỘ: Tạo Cover Kiểu 2 từ ảnh thật lớp học dataset + logo Sao Việt chuẩn
     fallback_res = create_dataset_fallback_cover(
