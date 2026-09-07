@@ -404,7 +404,8 @@ async def generate_chatgpt(prompt: str, aspect_ratio: str = "square", quality: s
                            vault_root: Optional[str] = None, timeout_s: float = 300.0,
                            images: Optional[list] = None, page_id: Optional[str] = None,
                            brand_kit: Optional[dict] = None,
-                           save_under: Optional[str] = None) -> dict:
+                           save_under: Optional[str] = None,
+                           ai_render_brand: bool = False) -> dict:
     """Tạo 1 ảnh bằng gói ChatGPT. Trả {ok, rel_path, abs_path, size, quality, aspect} hoặc {ok:False, error}.
 
     `images` = danh sách đường dẫn ảnh MẪU trong brain. Có ảnh thì ChatGPT NHÌN THẤY ảnh thật
@@ -423,7 +424,15 @@ async def generate_chatgpt(prompt: str, aspect_ratio: str = "square", quality: s
 
     vault = _resolve_vault(vault_root)
     kit = brand_kit if isinstance(brand_kit, dict) else load_brand_kit_info(page_id, vault_root=vault)
-    prompt = apply_brand_guidelines(prompt, kit, provider="openai")
+    wants_ai_render_brand = bool(
+        ai_render_brand or re.search(
+            r"(gpt|chatgpt|openai).{0,40}(tự|tu|render|vẽ|ve|ghi|gắn|gan|thêm|them).{0,40}(logo|chữ|chu|tiêu đề|tieu de|hotline)"
+            r"|gen luôn|gen luon|xử lý tạo ảnh gắn logo|xu ly tao anh gan logo|thêm tiêu đề|them tieu de",
+            prompt,
+            re.I,
+        )
+    )
+    prompt = apply_brand_guidelines(prompt, kit, provider="openai", ai_render_brand=wants_ai_render_brand)
 
     creds = openai_oauth.valid_creds()
     if not creds or not creds.get("access_token"):
@@ -433,6 +442,11 @@ async def generate_chatgpt(prompt: str, aspect_ratio: str = "square", quality: s
     # thay vì đốt một lượt gọi rồi trả về một tấm vẽ từ mô tả suông mà người dùng tưởng là
     # đã dựng theo ảnh của mình.
     ds_anh = [x for x in (images or []) if str(x or "").strip()]
+    if wants_ai_render_brand and kit and kit.get("logo_path"):
+        logo_rel = str(kit["logo_path"]).strip()
+        logo_abs = vault / logo_rel
+        if logo_abs.is_file() and logo_rel not in ds_anh:
+            ds_anh = [logo_rel] + ds_anh
     if len(ds_anh) > MAX_REF_IMAGES:
         return {"ok": False, "error": f"Gửi tối đa {MAX_REF_IMAGES} ảnh mẫu một lượt (đang gửi {len(ds_anh)})."}
     data_urls = []
@@ -479,7 +493,7 @@ async def generate_chatgpt(prompt: str, aspect_ratio: str = "square", quality: s
     if not b64:
         return {"ok": False, "error": err or "ChatGPT không trả ảnh (gói ChatGPT có thể chưa hỗ trợ tạo ảnh qua Codex)."}
 
-    should_overlay_cover = bool(
+    should_overlay_cover = (not wants_ai_render_brand) and bool(
         save_under or page_id or re.search(r"cover|bìa|bia|facebook|fanpage|khóa học|khoa hoc", prompt, re.I)
     )
     if should_overlay_cover:
@@ -548,7 +562,8 @@ async def generate_chatgpt(prompt: str, aspect_ratio: str = "square", quality: s
         return saved
     return {"ok": True, "rel_path": saved["rel_path"], "abs_path": saved["abs_path"],
             "file": saved["file"], "size": size, "quality": quality, "aspect": aspect,
-            "provider": "openai-codex", "model": IMAGE_MODEL, "prompt": prompt, "refs": len(data_urls)}
+            "provider": "openai-codex", "model": IMAGE_MODEL, "prompt": prompt,
+            "refs": len(data_urls), "ai_render_brand": wants_ai_render_brand}
 
 
 # ---------------------------------------------------------------------------
@@ -909,7 +924,8 @@ def _clean_kit_value(value: Any, limit: int = 260) -> str:
     return s
 
 
-def build_brand_guideline_prompt(kit: Optional[dict], provider: str = "") -> str:
+def build_brand_guideline_prompt(kit: Optional[dict], provider: str = "",
+                                 ai_render_brand: bool = False) -> str:
     """Build a compact mandatory prompt block from wiki/brand-kits/*.md."""
     if not isinstance(kit, dict) or not kit:
         return ""
@@ -938,8 +954,15 @@ def build_brand_guideline_prompt(kit: Optional[dict], provider: str = "") -> str
     lines.extend([
         "- Keep safe margins around all important subjects; never cover faces, hands, screens, or the main learning activity.",
         "- Use the brand palette and a premium modern education advertising look; avoid random colors, fake brands, clutter, and gimmicky stock-photo effects.",
-        "- Do not render Vietnamese text inside the AI image. Leave clean copy space; Javis will overlay final Vietnamese text, logo, hotline, and badges by code.",
     ])
+    if ai_render_brand:
+        lines.extend([
+            "- Render the final brand cover directly in the image, including the official logo, Vietnamese title, short subtitle/bullets, and hotline if available.",
+            "- Text must be sharp, readable, correctly spelled Vietnamese, with no mojibake, no broken accents, no fake phone numbers, and no invented addresses.",
+            "- Use the attached official logo reference if provided; keep it recognizable and faithful.",
+        ])
+    else:
+        lines.append("- Do not render Vietnamese text inside the AI image. Leave clean copy space; Javis will overlay final Vietnamese text, logo, hotline, and badges by code.")
     if provider == "google":
         lines.append("- If generating a full AI poster/background, make it realistic and usable as an ad cover background, not a fantasy illustration.")
     elif provider == "openai":
@@ -947,10 +970,11 @@ def build_brand_guideline_prompt(kit: Optional[dict], provider: str = "") -> str
     return "\n".join(lines)
 
 
-def apply_brand_guidelines(prompt: str, kit: Optional[dict], provider: str = "") -> str:
+def apply_brand_guidelines(prompt: str, kit: Optional[dict], provider: str = "",
+                           ai_render_brand: bool = False) -> str:
     """Append Brand Kit rules to an image prompt without changing the user's core brief."""
     base = (prompt or "").strip()
-    guide = build_brand_guideline_prompt(kit, provider=provider)
+    guide = build_brand_guideline_prompt(kit, provider=provider, ai_render_brand=ai_render_brand)
     if not guide:
         return base
     return (base + "\n\n" + guide).strip()

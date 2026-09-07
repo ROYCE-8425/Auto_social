@@ -233,6 +233,29 @@ check("ChatGPT image prompt tự gắn BRAND KIT RULES theo page_id",
 check("ChatGPT image lưu đúng thư mục _xuat khi truyền save_under",
       r_brand.get("rel_path", "").startswith("attachments/dataset/_xuat/"))
 
+# Chế độ thử nghiệm: để GPT Image tự render luôn logo/chữ/hotline thay vì Javis overlay bằng code.
+os.makedirs(os.path.join(vault, "attachments", "dataset", "chung"), exist_ok=True)
+with open(os.path.join(vault, "attachments", "dataset", "chung", "thsv-logo-2025.png"), "wb") as f:
+    f.write(base64.b64decode(_PNG_B64))
+_install_bat_payload(sse)
+r_ai_brand = asyncio.run(image_gen.generate_chatgpt(
+    "GPT tự render luôn logo, tiêu đề và hotline cho cover Royce Shop",
+    vault_root=vault,
+    page_id="royce-shop",
+    save_under="attachments/dataset/_xuat",
+    ai_render_brand=True,
+))
+_content_ai_brand = ((_goi.get("input") or [{}])[0].get("content") or [])
+_text_ai_brand = next((c.get("text", "") for c in _content_ai_brand if c.get("type") == "input_text"), "")
+check("ai_render_brand: không overlay bằng code, lưu ảnh GPT thô vào _xuat",
+      r_ai_brand.get("ok") is True and r_ai_brand.get("ai_render_brand") is True
+      and not r_ai_brand.get("overlay") and r_ai_brand.get("rel_path", "").startswith("attachments/dataset/_xuat/"))
+check("ai_render_brand: prompt cho phép GPT render chữ/logo",
+      "Render the final brand cover directly" in _text_ai_brand
+      and "Do not render Vietnamese text" not in _text_ai_brand)
+check("ai_render_brand: tự gửi logo kit làm ảnh tham chiếu",
+      any(c.get("type") == "input_image" for c in _content_ai_brand))
+
 # Ảnh mẫu thật nằm trong brain
 _anh_that = os.path.join(vault, "attachments", "chai-mau.png")
 os.makedirs(os.path.dirname(_anh_that), exist_ok=True)

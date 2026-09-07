@@ -34,6 +34,11 @@ def register(ctx):
         save_under = str(args.get("save_under") or args.get("subdir") or "").strip() or None
         if save_under:
             save_under = save_under.replace("\\", "/").strip().strip("/")
+        ai_render_brand = args.get("ai_render_brand")
+        if isinstance(ai_render_brand, str):
+            ai_render_brand = ai_render_brand.strip().lower() in ("1", "true", "yes", "on", "co", "có")
+        else:
+            ai_render_brand = bool(ai_render_brand)
         # `images`: đường dẫn ảnh MẪU trong brain. Nhận cả chuỗi một ảnh lẫn mảng nhiều ảnh -
         # engine nào cũng có lúc gửi kiểu này kiểu kia, ép một kiểu là thỉnh thoảng lại hỏng.
         raw = args.get("images") or args.get("image") or []
@@ -46,7 +51,8 @@ def register(ctx):
             anh = [logo] + [x for x in anh if image_gen.fix_dataset_path(x) != logo]
         res = await image_gen.generate_chatgpt(prompt, aspect, quality,
                                                vault_root=cctx.vault_root, images=anh,
-                                               page_id=page_id, save_under=save_under)
+                                               page_id=page_id, save_under=save_under,
+                                               ai_render_brand=ai_render_brand)
         if not res.get("ok"):
             return "ERROR: " + str(res.get("error") or "tạo ảnh thất bại")
         rel = res["rel_path"]
@@ -63,6 +69,7 @@ def register(ctx):
                      "nhãn, khuôn mặt, bố cục), logo (đường dẫn logo tham chiếu nếu cần), "
                      "page_id/page (để tự áp Brand Kit từ wiki/brand-kits), "
                      "save_under (vd attachments/dataset/_xuat để lưu đúng thư mục xuất), "
+                     "ai_render_brand=true nếu muốn GPT Image tự render luôn logo/chữ/hotline trong ảnh thay vì Javis overlay bằng code, "
                      "aspect_ratio (square|landscape|portrait), quality (low|medium|high). "
                      "Người dùng đưa ảnh và bảo 'dựng theo ảnh này' thì "
                      "PHẢI truyền đường dẫn ảnh đó vào images, đừng tả lại ảnh bằng lời. "
@@ -81,6 +88,7 @@ def register(ctx):
             "page_id": {"type": "string", "description": "ID hoặc slug Fanpage để nạp wiki/brand-kits/<page>.md"},
             "page": {"type": "string", "description": "Tên/slug Fanpage thay cho page_id"},
             "save_under": {"type": "string", "description": "Thư mục lưu ảnh tương đối trong brain, vd attachments/dataset/_xuat"},
-            "subdir": {"type": "string", "description": "Alias của save_under"}},
+            "subdir": {"type": "string", "description": "Alias của save_under"},
+            "ai_render_brand": {"type": "boolean", "description": "True = GPT Image tự render logo, tiêu đề, hotline trong ảnh; False = Javis overlay bằng code"}},
             "required": ["prompt"]},
     )
