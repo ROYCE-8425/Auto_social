@@ -34,24 +34,39 @@ def run_tests():
         print(f"  OK: '{inp}' -> '{ckey}'")
 
     print("\n=== TEST 2: Strict Cover Guard (Chặn cover sai ngành) ===")
-    # Thử truyền cover đồ họa vào bài tin-hoc
-    photos, err = plugin._auto_prepare_album("tin-hoc", "attachments/dataset/_xuat/test-dohoa-pro-poster.jpg", ctx)
-    assert err is not None and "VIOLATION_ASSET_GUARD" in err, f"Chưa chặn cover sai ngành: {err}"
-    print(f"  OK: Đã chặn cover đồ họa khi đăng tin-hoc: {err[:60]}...")
+    dummy_dohoa = Path(ctx.vault_root) / "attachments" / "dataset" / "do-hoa" / "temp_dohoa_poster.png"
+    dummy_cad = Path(ctx.vault_root) / "attachments" / "dataset" / "ve-ky-thuat" / "temp_autocad_poster.png"
+    dummy_dohoa.write_bytes(b"\x89PNG\r\n\x1a\nfake")
+    dummy_cad.write_bytes(b"\x89PNG\r\n\x1a\nfake")
+    try:
+        # Thử truyền cover đồ họa vào bài tin-hoc
+        photos, err = plugin._auto_prepare_album("tin-hoc", str(dummy_dohoa.relative_to(ctx.vault_root)), ctx)
+        assert err is not None and "VIOLATION_ASSET_GUARD" in err, f"Chưa chặn cover sai ngành: {err}"
+        print(f"  OK: Đã chặn cover đồ họa khi đăng tin-hoc: {err[:60]}...")
 
-    # Thử truyền cover autocad vào bài ke-toan
-    photos, err = plugin._auto_prepare_album("ke-toan", "attachments/dataset/_xuat/test-autocad-pro-poster.jpg", ctx)
-    assert err is not None and "VIOLATION_ASSET_GUARD" in err, f"Chưa chặn cover sai ngành: {err}"
-    print(f"  OK: Đã chặn cover AutoCAD khi đăng ke-toan: {err[:60]}...")
+        # Thử truyền cover autocad vào bài ke-toan
+        photos, err = plugin._auto_prepare_album("ke-toan", str(dummy_cad.relative_to(ctx.vault_root)), ctx)
+        assert err is not None and "VIOLATION_ASSET_GUARD" in err, f"Chưa chặn cover sai ngành: {err}"
+        print(f"  OK: Đã chặn cover AutoCAD khi đăng ke-toan: {err[:60]}...")
+    finally:
+        if dummy_dohoa.exists(): dummy_dohoa.unlink()
+        if dummy_cad.exists(): dummy_cad.unlink()
 
     print("\n=== TEST 3: Auto Prepare Album theo từng khóa (Chuẩn hóa & Đúng ngành) ===")
-    for course in ["tin-hoc", "ve-ky-thuat", "do-hoa", "ke-toan"]:
-        photos, err = plugin._auto_prepare_album(course, "auto", ctx)
-        assert err is None, f"Lỗi tạo album cho {course}: {err}"
-        assert len(photos) >= 5, f"Album {course} không đủ ảnh: {len(photos)}"
-        print(f"  OK: [{course}] Đã tạo album {len(photos)} ảnh chuẩn hóa:")
-        for i, p in enumerate(photos[:3]):
-            print(f"       Ảnh #{i}: {Path(p).name}")
+    dummy_dohoa_poster = Path(ctx.vault_root) / "attachments" / "dataset" / "do-hoa" / "poster-thiet-ke-do-hoa-chuyen-nghiep.jpg"
+    first_dohoa = next((f for f in (Path(ctx.vault_root) / "attachments" / "dataset" / "do-hoa").iterdir() if f.is_file() and f.suffix.lower() == ".jpg"), None)
+    if first_dohoa:
+        dummy_dohoa_poster.write_bytes(first_dohoa.read_bytes())
+    try:
+        for course in ["tin-hoc", "ve-ky-thuat", "do-hoa", "ke-toan"]:
+            photos, err = plugin._auto_prepare_album(course, "auto", ctx)
+            assert err is None, f"Lỗi tạo album cho {course}: {err}"
+            assert len(photos) >= 5, f"Album {course} không đủ ảnh: {len(photos)}"
+            print(f"  OK: [{course}] Đã tạo album {len(photos)} ảnh chuẩn hóa:")
+            for i, p in enumerate(photos[:3]):
+                print(f"       Ảnh #{i}: {Path(p).name}")
+    finally:
+        if dummy_dohoa_poster.exists(): dummy_dohoa_poster.unlink()
 
     print("\n=== TEST 4: Hub Call Auto Post Guard ===")
     hub_call_path = repo_root / "brains" / "Brain Default" / "scratch" / "hub_call.py"
