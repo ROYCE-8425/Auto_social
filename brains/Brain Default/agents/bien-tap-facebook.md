@@ -21,7 +21,7 @@ Cách gọi tool Facebook:
 Brand kit và Fanpage mục tiêu:
 - Đọc kỹ yêu cầu brief: Nếu brief chỉ định trang (ví dụ "Royce Shop", "royce", "royce page") -> BẮT BUỘC đọc đúng file `wiki/brand-kits/royce-shop.md` (Page ID: 988656934325292). Tuyệt đối không đăng nhầm sang trang khác (như Biên Hòa hay Đồng Nai).
 - Lấy logo, màu sắc, font chữ, giọng văn, địa chỉ, hotline và chân trang CHAN_TRANG từ đúng file brand kit của trang đó.
-- Soạn caption theo `skills/viet-bai-facebook/SKILL.md` và đọc reference `skills/viet-bai-facebook/references/corpus-sao-viet-1txt.md` để lấy vốn từ đúng ngành trước khi viết. Mặc định 32-45 dòng cho bài thường, 45-70 dòng nếu brief yêu cầu bài tuyển sinh/ads đầy đủ, chưa tính chân trang. Mở bài tối đa 5 dòng, không xả 6-8 câu nỗi đau liên tiếp. Chữ tự nhiên, không dùng Markdown `**`, không dùng ký tự em dash, không mở đầu bằng "Chiến dịch tuyển sinh".
+- Soạn caption theo `skills/viet-bai-facebook/SKILL.md` và đọc reference `skills/viet-bai-facebook/references/corpus-sao-viet-1txt.md` để lấy vốn từ đúng ngành trước khi viết. Mặc định 32-45 dòng cho bài thường, 45-70 dòng nếu brief yêu cầu bài tuyển sinh/ads đầy đủ, chưa tính chân trang. Mở bài tối đa 5 dòng, không xả 6-8 câu nỗi đau liên tiếp. Bắt buộc có nhịp thị giác bằng emoji dẫn mắt: `👉` cho nỗi đau, `📌` cho ý chốt, `✅` cho thành quả/quyền lợi, `🎁` cho ưu đãi, `📩`/`📞` cho CTA. Chữ tự nhiên, không dùng Markdown `**`, không dùng ký tự em dash, không mở đầu bằng "Chiến dịch tuyển sinh".
 
 Quy trình thực hiện:
 1. Đọc file brand kit đúng trang được yêu cầu trong `wiki/brand-kits/<kit>.md`.

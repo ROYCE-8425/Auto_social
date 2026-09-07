@@ -20,6 +20,7 @@ Bài phải bán được khóa học, nhưng đọc lên vẫn giống người
 - Không dùng ký tự em dash. Chỉ dùng dấu `-`.
 - Không tự bịa học phí, số tiền quà tặng, cam kết pháp lý, số suất nếu brand kit hoặc brief không có.
 - Không trộn nhiều ngành trong một bài. Tin học văn phòng thì không lôi AutoCAD/Kế toán vào thân bài, trừ khi brief yêu cầu.
+- Phải có nhịp thị giác Facebook bằng emoji dẫn mắt vừa đủ. Không viết một bài toàn chữ trơn với gạch đầu dòng `-` từ đầu tới cuối.
 
 ## 2. Cấm văn mẫu AI
 
@@ -197,7 +198,61 @@ Luân phiên 5 kiểu bài, không phải bài nào cũng là tuyển sinh dài:
 
 Nếu bài có album ảnh lớp thật, nên ưu tiên kiểu 3 hoặc kiểu 1. Đừng viết như tờ rơi chung chung.
 
-## 6. Hashtag
+## 6. Nhịp thị giác bắt buộc cho Facebook
+
+Caption phải có icon dẫn mắt theo cụm, nhưng không spam.
+
+Mẫu phân vai emoji:
+
+- Dòng tiêu đề/hook: dùng 1 icon đúng ngành như `💻`, `📐`, `🎨`, `🤖`, `📊`.
+- Nỗi đau: dùng `👉` cho 2-4 dòng ngắn.
+- Ý chốt/điểm khác biệt: dùng `📌`.
+- Thành quả sau khóa: dùng `✅`.
+- Lộ trình/nội dung học: dùng `📚` hoặc `1️⃣ 2️⃣ 3️⃣ 4️⃣`.
+- Ưu đãi: dùng `🎁`.
+- CTA: dùng `📩` và `📞`.
+
+Quy tắc:
+
+- Không dùng quá 2 emoji trong một dòng.
+- Không dùng một loại emoji cho toàn bài.
+- Không để toàn bộ các mục đều bắt đầu bằng dấu `-`. Với các khối chính, ưu tiên `👉`, `✅`, `📌`, `🎁`.
+- Mỗi khối chỉ 3-5 dòng. Nếu một khối vượt 6 dòng, phải gộp hoặc cắt.
+
+Khung gợi ý:
+
+```text
+💻 [Tên khóa học/ngành]
+
+[Hook 1-3 dòng]
+
+👉 [Nỗi đau 1]
+👉 [Nỗi đau 2]
+👉 [Nỗi đau 3]
+
+📌 [Câu chuyển ý: học đúng bài cần làm, có giáo viên kèm]
+
+🎯 Sau khóa học, bạn có thể:
+✅ ...
+✅ ...
+✅ ...
+✅ ...
+
+📚 Nội dung học trọng tâm:
+1️⃣ ...
+2️⃣ ...
+3️⃣ ...
+4️⃣ ...
+
+🎁 Ưu đãi / quyền lợi:
+✅ ...
+✅ ...
+
+📩 Nhắn Fanpage để được tư vấn lộ trình phù hợp.
+📞 Hotline/Zalo: [số đúng kit]
+```
+
+## 7. Hashtag
 
 Cuối bài chỉ dùng 3-6 hashtag.
 
@@ -212,7 +267,7 @@ Hashtag phải gọn, đúng ngành:
 
 Không nhồi quá nhiều hashtag vì nhìn spam.
 
-## 7. Chân trang
+## 8. Chân trang
 
 Chân trang lấy đúng từ brand kit của Fanpage đang đăng.
 
@@ -223,7 +278,7 @@ Chân trang lấy đúng từ brand kit của Fanpage đang đăng.
 
 Nếu chân trang quá dài, thân bài càng phải gọn để tổng thể không ngợp.
 
-## 8. Tài liệu giọng mẫu
+## 9. Tài liệu giọng mẫu
 
 Khi viết caption tuyển sinh cho Sao Việt, đọc thêm các reference sau trước khi viết:
 
@@ -232,13 +287,14 @@ Khi viết caption tuyển sinh cho Sao Việt, đọc thêm các reference sau 
 
 Ưu tiên `corpus-sao-viet-1txt.md` để lấy vốn từ theo ngành và cấu trúc bài. Dùng `giong-tu-bai-mau-user.md` để nhớ các lỗi phải tránh sau khi user đã phản hồi bài bị máy móc.
 
-## 9. Checklist tự kiểm trước khi đăng
+## 10. Checklist tự kiểm trước khi đăng
 
 Trước khi gọi tool đăng Facebook, tự kiểm:
 
 - 3 dòng đầu có giống người thật viết không?
 - Có cụm "Chiến dịch tuyển sinh" hoặc "tối ưu hiệu suất vượt trội" không? Nếu có, sửa.
 - Có quá 7 gạch đầu dòng trong một mục không? Nếu có, cắt.
+- Có bài toàn chữ trơn/dấu `-` mà thiếu `👉`, `📌`, `✅`, `🎁`, `📩` không? Nếu có, thêm nhịp thị giác.
 - Có lặp "thành thạo/chuyên nghiệp/thực chiến" quá nhiều không? Nếu có, thay bằng việc cụ thể.
 - Nội dung đúng một khóa học, không lạc ngành.
 - Ưu đãi, địa chỉ, hotline lấy đúng kit.
