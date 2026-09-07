@@ -853,7 +853,7 @@
       }).join("") +
       "</div>" +
       '<div class="ds-tag-add">' +
-      '<input type="text" class="ds-input" id="dsNewTagName" placeholder="Thẻ mới, vd: Marketing">' +
+      '<input type="text" class="ds-input" id="dsNewTagName" placeholder="Thẻ mới, ví dụ: Marketing">' +
       '<button type="button" class="s-btn-ghost" id="dsAddTag">Thêm thẻ</button>' +
       "</div></div>";
 

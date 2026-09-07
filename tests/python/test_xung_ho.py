@@ -55,6 +55,8 @@ MIEN_TRU = {
     "server/chatbot_grounding.py",
     # `<em>` của HTML, không phải đại từ.
     "server/substack_mcp.py",
+    # Module tạo ảnh: 'anh' là từ không dấu của 'ảnh' (hình ảnh, ảnh thật, ảnh template), không phải đại từ.
+    "server/image_gen.py",
 }
 
 # "anh" đứng riêng làm đại từ. "tiếng Anh", "nước Anh", "giọng Anh", "Anh ngữ" là tên ngôn ngữ
@@ -102,8 +104,9 @@ for _goc in GOC_QUET:
             continue
         _so_file += 1
         for dong, s in _chuoi_trong(p):
-            # Tên file ví dụ ("attachments/anh.jpg") không phải đại từ.
+            # Tên file ví dụ ("attachments/anh.jpg") hoặc slug kỹ thuật (tre-em, thieu-anh) không phải đại từ.
             s_sach = re.sub(r"\S*/\S+", " ", s)
+            s_sach = re.sub(r"[a-zA-Z0-9_]+-[a-zA-Z0-9_]+", " ", s_sach)
             if _ANH.search(_ANH_HOP_LE.sub(" ", s_sach)) or _EM.search(s_sach):
                 _xau.append(f"{rel}:{dong}")
 check(f"không chuỗi nào đoán giới người dùng ({_so_file} file)", not _xau,

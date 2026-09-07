@@ -369,7 +369,7 @@ def save_image_bytes(raw: bytes, vault_root: Optional[str], prefix: str = "javis
                      ext: str = ".jpg", subdir: Optional[str] = None) -> dict:
     """Luu bytes anh vao vault (mac dinh attachments/). Tra {ok, rel_path, abs_path, file}."""
     if not raw:
-        return {"ok": False, "error": "Du lieu anh rong."}
+        return {"ok": False, "error": "Dữ liệu ảnh rỗng."}
     vault = _resolve_vault(vault_root)
     adir = (vault / subdir) if subdir else _attachments_dir(vault)
     try:
@@ -381,7 +381,7 @@ def save_image_bytes(raw: bytes, vault_root: Optional[str], prefix: str = "javis
     try:
         fpath.write_bytes(raw)
     except Exception as e:
-        return {"ok": False, "error": f"Luu anh loi: {e}"}
+        return {"ok": False, "error": f"Lưu ảnh lỗi: {e}"}
     rel = os.path.relpath(fpath, vault).replace(os.sep, "/")
     return {"ok": True, "rel_path": rel, "abs_path": str(fpath), "file": fname}
 
@@ -427,7 +427,7 @@ async def generate_chatgpt(prompt: str, aspect_ratio: str = "square", quality: s
     wants_ai_render_brand = bool(
         ai_render_brand or re.search(
             r"(gpt|chatgpt|openai).{0,40}(tự|tu|render|vẽ|ve|ghi|gắn|gan|thêm|them).{0,40}(logo|chữ|chu|tiêu đề|tieu de|hotline)"
-            r"|gen luôn|gen luon|xử lý tạo ảnh gắn logo|xu ly tao anh gan logo|thêm tiêu đề|them tieu de",
+            r"|gen luôn|gen luon|xử lý tạo ảnh gắn logo|xu ly tao poster gan logo|thêm tiêu đề|them tieu de",
             prompt,
             re.I,
         )
@@ -813,7 +813,7 @@ def generate_antigravity_cli_image(
 
     effective_timeout = max(timeout_s or 90.0, 120.0)
     try:
-        r = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=effective_timeout)
+        r = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=effective_timeout, creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
     except Exception as e:
         print(f"[image_gen] Lỗi chạy agy generate_image: {e}", file=sys.stderr)
         return None
@@ -983,7 +983,7 @@ def build_brand_guideline_prompt(kit: Optional[dict], provider: str = "",
             "- Text must be sharp, readable, correctly spelled Vietnamese, with no mojibake, no broken accents, no fake phone numbers, and no invented addresses.",
             "- Use the attached official logo reference if provided; keep it recognizable and faithful.",
             "- Use a fresh premium technology advertising composition. Do not follow old dataset/template layouts.",
-            "- Avoid split-panel layouts, large navy side panels, boxed template cards, rigid half-photo half-text layouts, and any layout that looks copied from mau-khoa-hoc-co-anh-goc or A-split.",
+            "- Avoid split-panel layouts, large navy side panels, boxed template cards, rigid half-photo half-text layouts, and any layout that looks copied from mau-khoa-hoc-co-hinh-goc or A-split.",
         ])
     else:
         lines.append("- Do not render Vietnamese text inside the AI image. Leave clean copy space; Javis will overlay final Vietnamese text, logo, hotline, and badges by code.")
@@ -1181,7 +1181,7 @@ def load_brand_kit_info(page_identifier: Optional[str] = None, vault_root: Optio
     brand_color = _kit_field(md, "Màu chính")
     secondary_color = _kit_field(md, "Màu phụ")
     font = _kit_field(md, "Font", "Fonts")
-    image_style = _kit_field(md, "Phong cách hình ảnh", "Phong cach hinh anh", "Image style")
+    image_style = _kit_field(md, "Phong cách hình ảnh", "Phong cach hinh", "Image style")
     tone = _kit_field(md, "Tone of voice", "Giọng văn", "Giong van", "Tone")
     layout_rules = _kit_field(md, "Quy tắc bố cục", "Quy tac bo cuc", "Layout rules")
     donts = _kit_field(md, "Điều không được làm", "Dieu khong duoc lam", "Không được làm", "Khong duoc lam", "Do not do")
@@ -1287,7 +1287,7 @@ def parse_banner_content(
 
     # Template
     tpl = None
-    if any(k in p_lower for k in ("cinematic", "photo_first", "ảnh thật", "anh that", "nguyên bản", "nguyen ban", "tự nhiên", "tu nhien")):
+    if any(k in p_lower for k in ("cinematic", "photo_first", "ảnh thật", "hinh that", "nguyên bản", "nguyen ban", "tự nhiên", "tu nhien")):
         tpl = "photo_first_cinematic"
     elif "bauhaus" in p_lower:
         tpl = "bauhaus_grid"
