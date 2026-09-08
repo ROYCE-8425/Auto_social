@@ -800,31 +800,6 @@ def _auto_prepare_album(course, cover_ref, cctx):
             cover_path = Path(cp)
 
     if not cover_path:
-        # Tự động cứu hộ: tìm ảnh AI vừa tạo trong vòng 20 phút gần nhất trong _xuat
-        import time
-        now_ts = time.time()
-        cand_covers = []
-        for r in roots:
-            xuat = r / "attachments" / "dataset" / "_xuat"
-            if xuat.is_dir():
-                for f in xuat.iterdir():
-                    if f.is_file() and f.suffix.lower() in (".png", ".jpg", ".jpeg", ".webp"):
-                        if "javis-img" in f.name or "gemini-img" in f.name or "cover" in f.name:
-                            try:
-                                mtime = f.stat().st_mtime
-                                if now_ts - mtime < 1200:
-                                    cand_covers.append((mtime, f))
-                            except Exception:
-                                pass
-        if cand_covers:
-            cand_covers.sort(key=lambda x: x[0], reverse=True)
-            for _, f_cand in cand_covers:
-                c_stem = f_cand.stem.lower().replace(" ", "").replace("_", "").replace("-", "")
-                if not (spec and any(forb in c_stem for forb in spec["forbidden"])):
-                    cover_path = f_cand
-                    break
-
-    if not cover_path:
         return None, ("ERROR: POST_SKIP ly-do=thieu-cover-ai khong-retry=1. "
                       "BẮT BUỘC phải gọi javis_generate_image (GPT Image) hoặc gemini_generate_image (Imagen 3) "
                       "để tạo ảnh cover vuông 1:1 mới tinh trước, rồi truyền rõ đường dẫn vào 'cover'. "
