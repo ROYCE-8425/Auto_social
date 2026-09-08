@@ -909,31 +909,34 @@ CẤM [[NEEDS_INPUT]] vì 'không có tool / Royce chưa MCP'. CẤM địa ch�
         if m_ph:
             photos = m_ph.group(1)
 
+        combined_text = (t + " " + str((task or {}).get("title") or "") + " " + str((task or {}).get("intent") or "")).lower()
+
         page = ""
-        m_page = re.search(r'page["\s:=]+([^\n\|,]+)', t, re.I)
+        m_page = re.search(r'(?:page|trang)["\s:=]+([^\n\|,]+)', t, re.I)
         if m_page:
             raw_p = m_page.group(1).strip()
             raw_p = re.split(r'\s+(?:với|post_id|post|có|link|id|course|gồm|kết quả)\b|[.]', raw_p, flags=re.I)[0].strip()
             raw_p = raw_p.rstrip(".,;:")
             page = raw_p
+        elif "royce" in combined_text:
+            page = "Royce Shop"
 
         course = ""
-        low_t = t.lower()
-        if "do-hoa" in low_t or "do_hoa" in low_t or "đồ họa" in low_t or "photoshop" in low_t or "illustrator" in low_t:
+        if "do-hoa" in combined_text or "do_hoa" in combined_text or "đồ họa" in combined_text or "photoshop" in combined_text or "illustrator" in combined_text:
             course = "do-hoa"
-        elif "tin-hoc" in low_t or "tin_hoc" in low_t or "tin học" in low_t or "excel" in low_t or "word" in low_t or "powerpoint" in low_t:
+        elif "tin-hoc" in combined_text or "tin_hoc" in combined_text or "tin học" in combined_text or "excel" in combined_text or "word" in combined_text or "powerpoint" in combined_text:
             course = "tin-hoc _ai"
-        elif "ke-toan" in low_t or "ke_toan" in low_t or "kế toán" in low_t or "misa" in low_t:
+        elif "ke-toan" in combined_text or "ke_toan" in combined_text or "kế toán" in combined_text or "misa" in combined_text:
             course = "ke-toan"
-        elif "ve-ky-thuat" in low_t or "autocad" in low_t or "vẽ kỹ thuật" in low_t or "solidworks" in low_t:
+        elif "ve-ky-thuat" in combined_text or "autocad" in combined_text or "vẽ kỹ thuật" in combined_text or "solidworks" in combined_text:
             course = "ve-ky-thuat"
-        elif "tre-em" in low_t or "scratch" in low_t or "trẻ em" in low_t or "nhí" in low_t:
+        elif "tre-em" in combined_text or "scratch" in combined_text or "trẻ em" in combined_text or "nhí" in combined_text:
             course = "tre-em"
         else:
             m_c = re.search(r'(?:course|khóa học|ngành)["\s:=]+([^\n\|,]+)', t, re.I)
             if m_c:
                 raw_c = m_c.group(1).strip()
-                if not any(k in raw_c.lower() for k in ("wiki", "brand kit", "royce", "từ", "theo")):
+                if not any(k in raw_c.lower() for k in ("wiki", "brand kit", "royce", "từ", "theo", "trang")):
                     course = raw_c
 
         parts = ["OK"]
