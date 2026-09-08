@@ -6,12 +6,12 @@ group: Facebook
 
 # Đăng bài Facebook - 1 Bài = 1 Ảnh AI Tạo Mới 100%
 
-Mục tiêu: Mỗi bài đăng Fanpage có đúng **1 ảnh độc quyền do AI (GPT Image / Imagen 3) tạo mới 100%**, đăng nhanh bằng `fb_page_photo` kèm caption 7 nhịp chuẩn brand kit. Không ghép album, không dùng ảnh cũ từ dataset.
+Mục tiêu: Mỗi bài đăng Fanpage có đúng **1 ảnh độc quyền do GPT Image 2 (`javis_generate_image`) tạo mới 100%**, đăng nhanh bằng `fb_page_photo` kèm caption 7 nhịp chuẩn brand kit. Không ghép album, không dùng ảnh cũ từ dataset.
 
 ## Luồng thực hiện chuẩn 2 bước:
 
-### Bước 1: BẮT BUỘC tạo 1 ảnh AI mới 100%
-- Gọi tool tạo ảnh AI `javis_generate_image` (dùng GPT Image) hoặc `gemini_generate_image` (dùng Imagen 3):
+### Bước 1: BẮT BUỘC tạo 1 ảnh AI mới 100% bằng GPT Image 2
+- GỌI THẲNG TOOL DUY NHẤT: `javis_generate_image` (CẤM phân vân chọn model khác để tránh tốn token và thời gian suy nghĩ):
   ```text
   javis_generate_image(
     prompt="Banner tuyển sinh thực chiến khóa học <tên_khóa_học> Sao Việt, phong cách thiết kế hiện đại, không gian học tập công nghệ, màu sắc thương hiệu xanh dương và cam, ánh sáng chuyên nghiệp, độ nét cao",

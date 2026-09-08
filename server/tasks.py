@@ -799,9 +799,9 @@ Nếu thiếu một quyết định hoặc dữ liệu mà không thể suy ra a
 bằng [[NEEDS_INPUT]] và nêu đúng một lý do cụ thể. Nếu hoàn thành, báo cáo ngắn: đã làm
 gì, dữ liệu/file/artifact nào được tạo và cách đã kiểm chứng.
 
-Đăng Facebook chuẩn 2 bước:
-Bước 1 - Tạo Cover độc quyền bằng AI: BẮT BUỘC gọi tool javis_generate_image (dùng GPT Image) hoặc gemini_generate_image (dùng Google Imagen 3) với save_under="attachments/dataset/_xuat" + ai_render_brand=true để tạo 1 ảnh cover mới tinh 100%, đúng chủ đề khóa học và nhận diện thương hiệu. CẤM dùng template code cũ, CẤM bịa đặt học phí.
-Bước 2 - Đăng Album Facebook: Gọi fb_page_album(page="<page>", course="<course>", cover="<ảnh vừa gen>", message="<caption>", photos="auto") để hệ thống tự động ghép cover AI vừa tạo với 4-6 ảnh thật từ dataset của đúng ngành đó, chuẩn hóa layout 1:1 và 3:2 rồi đăng công khai lấy post_id thật. CẤM ReAct dò file hay crop ảnh thủ công.
+Đăng Facebook chuẩn 2 bước (1 bài = 1 ảnh AI tạo mới 100%):
+Bước 1 - Tạo ảnh độc quyền bằng GPT Image 2: BẮT BUỘC gọi thẳng tool javis_generate_image (GPT Image 2) với save_under="attachments/dataset/_xuat" + ai_render_brand=true để tạo đúng 1 ảnh mới tinh 100% đúng chủ đề khóa học và nhận diện thương hiệu. CẤM đắn đo chọn model khác, CẤM dùng template code cũ, CẤM bịa đặt học phí.
+Bước 2 - Đăng bài Facebook: Gọi fb_page_photo(page="<page>", photo="<ảnh vừa gen>", message="<caption>") để đăng bài kèm caption 7 nhịp brand kit lên Fanpage công khai lấy post_id thật. CẤM ghép album, CẤM bốc ảnh dataset cũ.
 TUYỆT ĐỐI CẤM dừng lại ở bản nháp, CẤM hỏi "vui lòng xem xét/xác nhận", CẤM hỏi người dùng.
 TUYỆT ĐỐI CẤM BỊA HOẶC MOCK post_id hoặc link post (cấm 87654321..., cấm số mẫu). Phải thực sự gọi tool đăng bài.
 Hàng ngày: chạy pick_next_fanpage.py, đọc ĐÚNG wiki/brand-kits/<kit> (không mặc định royce-shop).

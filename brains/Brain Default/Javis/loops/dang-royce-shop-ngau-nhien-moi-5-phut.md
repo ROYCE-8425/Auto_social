@@ -20,12 +20,12 @@ Tuyệt đối KHÔNG đọc loop-log hoặc transcript cũ để tránh phình 
 1. **Chọn khóa học xoay vòng**:
    `python "brains/Brain Default/skills/dang-bai-facebook/scripts/pick_next_fanpage.py" --include-royce --page "Royce Shop"`
    Lấy kết quả: `the=<khoa_hoc>` và `CHAN_TRANG`.
-2. **AI Sáng Tạo 1 Ảnh Mới 100%**:
-   Gọi tool `javis_generate_image` (dùng GPT Image) hoặc `gemini_generate_image` (dùng Google Imagen 3):
+2. **Tạo 1 Ảnh Mới 100% bằng GPT Image 2**:
+   Gọi thẳng tool `javis_generate_image` (GPT Image 2):
    - `prompt`: Banner tuyển sinh khóa học `<the>` Sao Việt, phong cách hiện đại công nghệ, màu sắc thương hiệu xanh & cam Sao Việt, độ nét cao.
    - `save_under`: `"attachments/dataset/_xuat"`
    - `ai_render_brand`: true
-   Lấy đường dẫn ảnh vừa sinh: `photo_rel`.
+   Lấy đường dẫn ảnh vừa sinh: `photo_rel`. (NẾU lỗi tạo ảnh: dừng ngay).
 3. **Đăng Bài Facebook (`fb_page_photo`)**:
    Soạn caption chuẩn 7 nhịp Sao Việt kèm `CHAN_TRANG`.
    Gọi tool đăng đúng 1 ảnh:
