@@ -725,6 +725,12 @@ COURSE_SPECS = {
         "forbidden": ["dohoa", "do-hoa", "do_hoa", "photoshop", "illustrator", "autocad", "cad", "vekythuat", "ve-ky-thuat", "solidworks", "tinhoc", "tin-hoc", "vanphong", "office", "word", "excel"],
         "display": "Kế toán thực hành",
     },
+    "tre-em": {
+        "folder": "tin-hoc _ai",
+        "aliases": ["treem", "tre-em", "tre_em", "scratch", "python-junior", "lap-trinh-nhi", "tinhoc-treem", "kid", "kids"],
+        "forbidden": ["autocad", "cad", "vekythuat", "ve-ky-thuat", "solidworks", "ketoan", "ke-toan", "ke_toan", "misa", "tax"],
+        "display": "Tin học & Lập trình Trẻ em",
+    },
 }
 
 
