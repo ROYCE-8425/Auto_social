@@ -697,41 +697,11 @@ def main():
                 return
 
         if not cover:
-            # CẤM TUYỆT ĐỐI bốc file mới nhất theo mtime nếu không lọc ngành!
-            # CHỈ tìm cover trong _xuat nếu tên file khớp alias của course và KHÔNG chứa forbidden
-            cand_covers = []
-            xuat_p = Path(VAULT) / "attachments" / "dataset" / "_xuat"
-            if xuat_p.is_dir():
-                for f in sorted(xuat_p.iterdir(), key=lambda x: x.stat().st_mtime, reverse=True):
-                    if f.is_file() and f.suffix.lower() in _IMG_EXT and "album_ready" not in str(f):
-                        f_stem = f.stem.lower().replace(" ", "").replace("_", "").replace("-", "")
-                        if spec:
-                            if any(al in f_stem for al in spec["aliases"]) and not any(forb in f_stem for forb in spec["forbidden"]):
-                                cand_covers.append(f)
-                        else:
-                            cand_covers.append(f)
-            if cand_covers:
-                cover = str(cand_covers[0].relative_to(Path(VAULT))).replace("\\", "/")
-
-        # Fallback an toàn sang poster có sẵn trong folder dataset của chính ngành đó
-        if not cover and spec:
-            ds_f = Path(VAULT) / "attachments" / "dataset" / spec["folder"]
-            if ds_f.is_dir():
-                posters = []
-                for f in ds_f.iterdir():
-                    if f.is_file() and f.suffix.lower() in _IMG_EXT:
-                        f_low = f.stem.lower().replace(" ", "").replace("_", "").replace("-", "")
-                        if any(k in f_low for k in ("poster", "banner", "uudai", "khaigiang", "daotao", "khoahoc")):
-                            if not any(forb in f_low for forb in spec["forbidden"]):
-                                posters.append(f)
-                if posters:
-                    cover = str(sorted(posters, key=lambda x: x.name.lower())[0].relative_to(Path(VAULT))).replace("\\", "/")
-
-        # Nếu vẫn không có cover đúng khóa: FAIL NGAY, cấm bốc cover khóa khác!
-        if not cover:
             print(json.dumps({
                 "ok": False,
-                "error": f"POST_SKIP ly-do=thieu-cover-dung-khoa khong-retry=1. Không tìm thấy cover nào cho khóa học '{raw_course}' trong _xuat. CẤM lấy cover của khóa học khác."
+                "error": ("POST_SKIP ly-do=thieu-cover-ai khong-retry=1. "
+                          "BẮT BUỘC phải truyền cover do AI vừa tạo mới (GPT Image / Imagen 3). "
+                          "TUYỆT ĐỐI CẤM để trống cover, CẤM tự bốc cover cũ trong _xuat hay poster dataset.")
             }, ensure_ascii=False))
             return
 

@@ -52,21 +52,33 @@ def run_tests():
         if dummy_dohoa.exists(): dummy_dohoa.unlink()
         if dummy_cad.exists(): dummy_cad.unlink()
 
-    print("\n=== TEST 3: Auto Prepare Album theo từng khóa (Chuẩn hóa & Đúng ngành) ===")
-    dummy_dohoa_poster = Path(ctx.vault_root) / "attachments" / "dataset" / "do-hoa" / "poster-thiet-ke-do-hoa-chuyen-nghiep.jpg"
-    first_dohoa = next((f for f in (Path(ctx.vault_root) / "attachments" / "dataset" / "do-hoa").iterdir() if f.is_file() and f.suffix.lower() == ".jpg"), None)
-    if first_dohoa:
-        dummy_dohoa_poster.write_bytes(first_dohoa.read_bytes())
+    print("\n=== TEST 3: Auto Prepare Album - Chặn thiếu cover AI & Thành công khi có cover AI ===")
+    # 3.1: Thử gọi không truyền cover hoặc cover='auto' -> PHẢI trả về POST_SKIP ly-do=thieu-cover-ai
+    for course in ["tin-hoc", "ve-ky-thuat", "do-hoa", "ke-toan"]:
+        photos, err = plugin._auto_prepare_album(course, "auto", ctx)
+        assert err is not None and "POST_SKIP ly-do=thieu-cover-ai" in err, f"Chưa chặn thiếu cover AI cho {course}: {err}"
+        print(f"  OK: Đã chặn thành công khi không có cover AI cho '{course}'")
+
+    # 3.2: Khi có cover AI hợp lệ -> Tạo album thành công 100%, ảnh cover làm photos[0]
+    dummy_covers = {}
+    for course, alias in [("tin-hoc", "tinhoc"), ("ve-ky-thuat", "cad"), ("do-hoa", "dohoa"), ("ke-toan", "ketoan")]:
+        cov_p = Path(ctx.vault_root) / "attachments" / "dataset" / "_xuat" / f"ai_gen_cover_{alias}_test.png"
+        cov_p.write_bytes(b"\x89PNG\r\n\x1a\nfake_ai_cover")
+        dummy_covers[course] = cov_p
+
     try:
         for course in ["tin-hoc", "ve-ky-thuat", "do-hoa", "ke-toan"]:
-            photos, err = plugin._auto_prepare_album(course, "auto", ctx)
+            cov_p = dummy_covers[course]
+            photos, err = plugin._auto_prepare_album(course, str(cov_p.relative_to(ctx.vault_root)), ctx)
             assert err is None, f"Lỗi tạo album cho {course}: {err}"
             assert len(photos) >= 5, f"Album {course} không đủ ảnh: {len(photos)}"
-            print(f"  OK: [{course}] Đã tạo album {len(photos)} ảnh chuẩn hóa:")
-            for i, p in enumerate(photos[:3]):
+            assert "ai_gen_cover" in Path(photos[0]).name, f"Ảnh đầu không phải cover AI: {photos[0]}"
+            print(f"  OK: [{course}] Đã tạo album {len(photos)} ảnh chuẩn hóa với cover AI:")
+            for i, p in enumerate(photos[:2]):
                 print(f"       Ảnh #{i}: {Path(p).name}")
     finally:
-        if dummy_dohoa_poster.exists(): dummy_dohoa_poster.unlink()
+        for p in dummy_covers.values():
+            if p.exists(): p.unlink()
 
     print("\n=== TEST 4: Hub Call Auto Post Guard ===")
     hub_call_path = repo_root / "brains" / "Brain Default" / "scratch" / "hub_call.py"

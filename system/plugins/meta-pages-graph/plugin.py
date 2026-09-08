@@ -767,45 +767,10 @@ def _auto_prepare_album(course, cover_ref, cctx):
             cover_path = Path(cp)
 
     if not cover_path:
-        # CẤM TUYỆT ĐỐI bốc file mới nhất theo mtime nếu không lọc ngành!
-        # CHỈ chọn file trong _xuat nếu tên file khớp alias của course và KHÔNG chứa forbidden
-        cand_covers = []
-        for r in roots:
-            xuat_dir = r / "attachments" / "dataset" / "_xuat"
-            if xuat_dir.is_dir():
-                for f in sorted(xuat_dir.iterdir(), key=lambda x: x.stat().st_mtime, reverse=True):
-                    if f.is_file() and f.suffix.lower() in (".jpg", ".jpeg", ".png", ".webp") and "album_ready" not in str(f):
-                        f_stem = f.stem.lower().replace(" ", "").replace("_", "").replace("-", "")
-                        if spec:
-                            if any(al in f_stem for al in spec["aliases"]) and not any(forb in f_stem for forb in spec["forbidden"]):
-                                cand_covers.append(f)
-                        else:
-                            cand_covers.append(f)
-            if cand_covers:
-                cover_path = cand_covers[0]
-                break
-
-    # Nếu vẫn chưa có cover trong _xuat: Fallback an toàn sang poster có sẵn trong folder dataset của CHÍNH NGÀNH ĐÓ
-    if not cover_path and spec:
-        for r in roots:
-            ds_f = r / "attachments" / "dataset" / spec["folder"]
-            if ds_f.is_dir():
-                posters = []
-                for f in ds_f.iterdir():
-                    if f.is_file() and f.suffix.lower() in (".jpg", ".jpeg", ".png", ".webp"):
-                        f_low = f.stem.lower().replace(" ", "").replace("_", "").replace("-", "")
-                        if any(k in f_low for k in ("poster", "banner", "uudai", "khaigiang", "daotao", "khoahoc")):
-                            if not any(forb in f_low for forb in spec["forbidden"]):
-                                posters.append(f)
-                if posters:
-                    cover_path = sorted(posters, key=lambda x: x.name.lower())[0]
-                    break
-
-    # Nếu vẫn không có cover đúng khóa học: FAIL NGAY, cấm bốc cover khóa khác!
-    if not cover_path:
-        return None, (f"ERROR: POST_SKIP ly-do=thieu-cover-dung-khoa khong-retry=1. "
-                      f"Không tìm thấy ảnh cover/poster nào phù hợp cho khóa học '{course}'. "
-                      f"CẤM lấy cover của khóa học khác.")
+        return None, ("ERROR: POST_SKIP ly-do=thieu-cover-ai khong-retry=1. "
+                      "BẮT BUỘC phải gọi javis_generate_image (GPT Image) hoặc gemini_generate_image (Imagen 3) "
+                      "để tạo ảnh cover vuông 1:1 mới tinh trước, rồi truyền rõ đường dẫn vào 'cover'. "
+                      "TUYỆT ĐỐI CẤM để trống cover, TUYỆT ĐỐI CẤM tự bốc cover cũ trong _xuat hoặc poster trong dataset.")
 
     dataset_dir = None
     target_folder_name = spec["folder"] if spec else ""
@@ -1148,12 +1113,12 @@ def register(ctx):
     ctx.register_tool(
         name="fb_page_album", min_mode="full", check_fn=_check, handler=_publish_album,
         description=("ĐĂNG ALBUM: nhiều ảnh (2-10) gom vào MỘT bài trên Trang - hành động THẬT, công khai. "
-                     "photos = danh sách đường dẫn ảnh hoặc 'auto' kèm course để hệ thống tự động chuẩn bị album. "
-                     "message = caption chung."),
+                     "Khi photos='auto': BẮT BUỘC truyền cover do AI vừa tạo (javis_generate_image/gemini_generate_image) "
+                     "và tên course để hệ thống tự động chuẩn bị album chuẩn 100% đúng ngành."),
         schema={"type": "object", "properties": {
             "photos": {"description": "Danh sách 2-10 ảnh trong vault hoặc URL http(s), hoặc 'auto'"},
             "course": {"type": "string", "description": "Tên khóa học hoặc ngành (vd: 'tin-hoc', 've-ky-thuat', 'do-hoa', 'ke-toan') để tự động chuẩn bị album"},
-            "cover": {"type": "string", "description": "Đường dẫn ảnh cover 1:1 (tuỳ chọn, nếu bỏ trống sẽ tự lấy cover mới nhất trong _xuat)"},
+            "cover": {"type": "string", "description": "BẮT BUỘC khi photos='auto': Đường dẫn ảnh cover vuông 1:1 do AI vừa tạo mới (GPT Image / Imagen 3) lưu trong _xuat. TUYỆT ĐỐI CẤM để trống, CẤM bốc cover cũ."},
             "message": {"type": "string", "description": "Caption chung của album (tuỳ chọn)"},
             "page_id": {"type": "string", "description": "id Trang (bỏ trống nếu chỉ có 1 Trang)"},
             "page": {"type": "string", "description": "tên Trang (thay cho page_id)"}},
