@@ -915,9 +915,23 @@ CẤM [[NEEDS_INPUT]] vì 'không có tool / Royce chưa MCP'. CẤM địa ch�
             page = m_page.group(1).strip()
 
         course = ""
-        m_c = re.search(r'(?:course|khóa học|ngành)["\s:=]+([^\n\|,]+)', t, re.I)
-        if m_c:
-            course = m_c.group(1).strip()
+        low_t = t.lower()
+        if "do-hoa" in low_t or "do_hoa" in low_t or "đồ họa" in low_t or "photoshop" in low_t or "illustrator" in low_t:
+            course = "do-hoa"
+        elif "tin-hoc" in low_t or "tin_hoc" in low_t or "tin học" in low_t or "excel" in low_t or "word" in low_t or "powerpoint" in low_t:
+            course = "tin-hoc _ai"
+        elif "ke-toan" in low_t or "ke_toan" in low_t or "kế toán" in low_t or "misa" in low_t:
+            course = "ke-toan"
+        elif "ve-ky-thuat" in low_t or "autocad" in low_t or "vẽ kỹ thuật" in low_t or "solidworks" in low_t:
+            course = "ve-ky-thuat"
+        elif "tre-em" in low_t or "scratch" in low_t or "trẻ em" in low_t or "nhí" in low_t:
+            course = "tre-em"
+        else:
+            m_c = re.search(r'(?:course|khóa học|ngành)["\s:=]+([^\n\|,]+)', t, re.I)
+            if m_c:
+                raw_c = m_c.group(1).strip()
+                if not any(k in raw_c.lower() for k in ("wiki", "brand kit", "royce", "từ", "theo")):
+                    course = raw_c
 
         parts = ["OK"]
         if page:

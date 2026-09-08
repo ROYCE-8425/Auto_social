@@ -474,36 +474,56 @@ def _media_roots(cctx):
         except OSError:
             pass
 
+    # Luôn bao gồm /brains/Brain Default và /brains trên Docker / VPS
+    for dv in ("/brains/Brain Default", "/brains", "/data/vaults", "/data/brains", "/data/vaults/default"):
+        try:
+            dp = Path(dv).resolve()
+            if dp.is_dir() and dp not in roots:
+                roots.append(dp)
+        except Exception:
+            pass
+
+    # Thư mục vault mà image_gen sử dụng
+    try:
+        import image_gen
+        iv = image_gen._resolve_vault(None)
+        if iv and Path(iv).is_dir() and Path(iv).resolve() not in roots:
+            roots.append(Path(iv).resolve())
+    except Exception:
+        pass
+
     # Fallback vault root khi cctx thiếu vault_root hoặc chạy trên Docker volume
     try:
         import config
         st = config.read_settings()
         cur_brain = st.get("brain") or "Brain Default"
-        b_dir = getattr(config, "BRAINS_DIR", None)
+        b_dir = getattr(config, "BRAINS_DIR", None) or os.getenv("BRAINS_DIR")
         if b_dir:
-            cand = Path(b_dir) / cur_brain
-            if cand.is_dir() and cand.resolve() not in roots:
-                roots.append(cand.resolve())
+            cand = (Path(b_dir) / cur_brain).resolve()
+            if cand.is_dir() and cand not in roots:
+                roots.append(cand)
             for sub in Path(b_dir).iterdir():
                 if sub.is_dir() and sub.resolve() not in roots:
                     roots.append(sub.resolve())
         v_env = os.getenv("JAVIS_VAULT")
         if v_env and Path(v_env).is_dir() and Path(v_env).resolve() not in roots:
             roots.append(Path(v_env).resolve())
-        for dv in ("/data/vaults", "/data/brains", "/data/vaults/default"):
-            dp = Path(dv)
-            if dp.is_dir() and dp.resolve() not in roots:
-                roots.append(dp.resolve())
     except Exception:
         pass
 
     try:
         repo_root = Path(__file__).resolve().parents[3]
-        default_brain = repo_root / "brains" / "Brain Default"
-        if default_brain.is_dir() and default_brain.resolve() not in roots:
-            roots.append(default_brain.resolve())
-        if repo_root.is_dir() and repo_root.resolve() not in roots:
-            roots.append(repo_root.resolve())
+        for cand in (repo_root / "brains" / "Brain Default", repo_root / "brains", repo_root):
+            if cand.is_dir() and cand.resolve() not in roots:
+                roots.append(cand.resolve())
+    except Exception:
+        pass
+
+    try:
+        cwd = Path.cwd().resolve()
+        for cand in (cwd / "brains" / "Brain Default", cwd / "brains", cwd):
+            if cand.is_dir() and cand not in roots:
+                roots.append(cand)
     except Exception:
         pass
 
@@ -535,34 +555,41 @@ def _resolve_media(ref, cctx):
         pref = Path(ref)
         if pref.is_absolute():
             rp = pref.resolve()
-            if any(str(rp).startswith(str(r)) for r in roots) and rp.is_file():
-                return None, rp, None
             if rp.is_file():
+                if any(str(rp).startswith(str(r)) for r in roots) or str(rp).startswith(("/brains", "/data", "/app")):
+                    return None, rp, None
                 for r in roots:
                     try:
                         rp.relative_to(r)
                         return None, rp, None
                     except ValueError:
                         pass
+                # Nếu file tồn tại tuyệt đối và là file ảnh an toàn
+                if rp.suffix.lower() in (".jpg", ".jpeg", ".png", ".webp"):
+                    return None, rp, None
         else:
             clean_ref = str(ref).replace("\\", "/").lstrip("/")
             for r in roots:
                 cand = (r / clean_ref).resolve()
                 if cand.is_file():
                     return None, cand, None
-                for marker in ("attachments/", "dataset/", "album_ready/"):
+                for marker in ("attachments/", "dataset/", "_xuat/", "album_ready/"):
                     if marker in clean_ref:
                         sub_ref = clean_ref[clean_ref.find(marker):]
                         cand2 = (r / sub_ref).resolve()
                         if cand2.is_file():
                             return None, cand2, None
-            # Quét tìm trực tiếp trong thư mục album_ready nếu truyền tên file
+                        cand3 = (r / "attachments" / sub_ref).resolve()
+                        if cand3.is_file():
+                            return None, cand3, None
+            # Quét tìm trực tiếp trong thư mục _xuat và album_ready nếu truyền tên file
             fname = Path(clean_ref).name
             if fname.lower().endswith((".jpg", ".jpeg", ".png", ".webp")):
                 for r in roots:
-                    cand_ar = (r / "attachments" / "dataset" / "_xuat" / "album_ready" / fname).resolve()
-                    if cand_ar.is_file():
-                        return None, cand_ar, None
+                    for sub in ("attachments/dataset/_xuat/album_ready", "attachments/dataset/_xuat", "attachments"):
+                        cand_ar = (r / sub / fname).resolve()
+                        if cand_ar.is_file():
+                            return None, cand_ar, None
     except OSError as e:
         return None, None, f"ERROR: không đọc được đường dẫn ({type(e).__name__})."
     return None, None, (f"ERROR: không thấy '{ref}' trong vault hay vùng nhận file của chat. "
@@ -771,6 +798,31 @@ def _auto_prepare_album(course, cover_ref, cctx):
                 return None, (f"ERROR: VIOLATION_ASSET_GUARD: File cover '{Path(cp).name}' chứa từ khóa cấm của ngành khác, "
                               f"không thuộc khóa học '{course}'. Dừng đăng để bảo vệ trang.")
             cover_path = Path(cp)
+
+    if not cover_path:
+        # Tự động cứu hộ: tìm ảnh AI vừa tạo trong vòng 20 phút gần nhất trong _xuat
+        import time
+        now_ts = time.time()
+        cand_covers = []
+        for r in roots:
+            xuat = r / "attachments" / "dataset" / "_xuat"
+            if xuat.is_dir():
+                for f in xuat.iterdir():
+                    if f.is_file() and f.suffix.lower() in (".png", ".jpg", ".jpeg", ".webp"):
+                        if "javis-img" in f.name or "gemini-img" in f.name or "cover" in f.name:
+                            try:
+                                mtime = f.stat().st_mtime
+                                if now_ts - mtime < 1200:
+                                    cand_covers.append((mtime, f))
+                            except Exception:
+                                pass
+        if cand_covers:
+            cand_covers.sort(key=lambda x: x[0], reverse=True)
+            for _, f_cand in cand_covers:
+                c_stem = f_cand.stem.lower().replace(" ", "").replace("_", "").replace("-", "")
+                if not (spec and any(forb in c_stem for forb in spec["forbidden"])):
+                    cover_path = f_cand
+                    break
 
     if not cover_path:
         return None, ("ERROR: POST_SKIP ly-do=thieu-cover-ai khong-retry=1. "
