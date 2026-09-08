@@ -15,7 +15,7 @@ Mục tiêu: Mỗi bài đăng Fanpage là một **ALBUM chuẩn Tỷ Lệ Vàng
 - GỌI THẲNG TOOL DUY NHẤT: `javis_generate_image`:
   ```text
   javis_generate_image(
-    prompt="Banner tuyển sinh thực chiến khóa học <tên_khóa_học_chuẩn> Sao Việt, tiêu đề '<tiêu_đề>', các điểm nổi bật '<highlights>', phong cách thiết kế hiện đại, không gian học tập công nghệ, nhận diện xanh dương & cam Sao Việt, độ nét cao",
+    prompt="Banner tuyển sinh thực chiến khóa học <tên_khóa_học_chuẩn> Sao Việt, tiêu đề '<tiêu_đề>', các điểm nổi bật '<highlights>', bố cục chữ và logo nằm trọn trong vùng an toàn cách đều 4 mép ảnh 15-20% (tuyệt đối không để chữ sát mép hay bị cắt mất chữ), phong cách thiết kế hiện đại, không gian học tập công nghệ, nhận diện xanh dương & cam Sao Việt, độ nét cao",
     save_under="attachments/dataset/_xuat",
     ai_render_brand=true
   )

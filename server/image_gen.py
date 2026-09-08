@@ -28,6 +28,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
 import httpx
+from PIL import Image
 
 _CUR_DIR = Path(__file__).resolve().parent
 if str(_CUR_DIR) not in sys.path:
@@ -40,7 +41,12 @@ CODEX_RESPONSES_URL = "https://chatgpt.com/backend-api/codex/responses"
 HOST_MODEL = os.getenv("JAVIS_IMAGE_HOST_MODEL", "gpt-5.5")
 IMAGE_MODEL = os.getenv("JAVIS_IMAGE_MODEL", "gpt-image-2")
 INSTRUCTIONS = ("You are an assistant that must fulfill image generation and image editing "
-                "requests by using the image_generation tool when provided.")
+                "requests by using the image_generation tool when provided. "
+                "CRITICAL TYPOGRAPHY & MARGIN RULE: When generating banners, posters, or graphics with text, headlines, "
+                "logos, or UI buttons, ensure all text and graphic elements are strictly placed inside a safe zone with "
+                "at least 15%-20% padding from all canvas borders (left, right, top, bottom). Never place text touching or "
+                "bleeding off the canvas edges (do not start text at x=0). All words and letters must be 100% complete, fully visible, "
+                "and have generous breathing room inside the canvas.")
 
 _SIZES = {"landscape": "1536x1024", "square": "1024x1024", "portrait": "1024x1536"}
 _QUALITIES = {"low", "medium", "high"}
@@ -928,6 +934,12 @@ def build_brand_guideline_prompt(kit: Optional[dict], provider: str = "",
                                  ai_render_brand: bool = False) -> str:
     """Build a compact mandatory prompt block from wiki/brand-kits/*.md."""
     if not isinstance(kit, dict) or not kit:
+        if ai_render_brand:
+            return (
+                "BRAND & TYPOGRAPHY CONSTRAINTS:\n"
+                "- STRICT SAFE MARGIN (15%-20%): All text, headlines, logo, badges, and CTA buttons MUST be placed strictly inside the inner 75% safe area of the image. Leave at least 15% padding from the LEFT, RIGHT, TOP, and BOTTOM edges. NEVER place text touching or bleeding off the canvas edges (never start text at x=0). Every letter and word must be fully visible and intact with ample breathing room.\n"
+                "- CRITICAL TYPOGRAPHY RULE: Keep all typography indented safely away from the left border (at least 15% margin from the left edge). Never cut off the beginning letters of words. Every title and bullet must be 100% complete and legible inside the canvas."
+            )
         return ""
 
     visible_brand = _clean_kit_value(kit.get("brand_name")) or "Trung Tâm Tin Học Sao Việt"
@@ -971,7 +983,7 @@ def build_brand_guideline_prompt(kit: Optional[dict], provider: str = "",
         lines.append(f"- Official logo/reference asset: {logo}. Do not alter, recolor, distort, or invent a replacement logo.")
 
     lines.extend([
-        "- Keep safe margins around all important subjects; never cover faces, hands, screens, or the main learning activity.",
+        "- STRICT SAFE MARGIN (15%-20%): All text, headlines, logo, badges, and CTA buttons MUST be placed strictly inside the inner 75% safe area of the image. Leave at least 15% padding from the LEFT, RIGHT, TOP, and BOTTOM edges. NEVER place text touching or bleeding off the canvas edges (never start text at x=0). Every letter and word must be fully visible and intact with ample breathing room.",
         "- Use the brand palette and a premium modern education advertising look; avoid random colors, fake brands, clutter, and gimmicky stock-photo effects.",
     ])
     if ai_render_brand:
@@ -980,6 +992,7 @@ def build_brand_guideline_prompt(kit: Optional[dict], provider: str = "",
             '- The Fanpage/page name is only the backend posting target; do NOT render the page name as a logo, badge, brand, watermark, or headline unless it already contains "Sao Việt".',
             '- Never render "Royce Shop" as the visual brand on the poster.',
             "- Render the final brand cover directly in the image, including the official logo, Vietnamese title, short subtitle/bullets, and hotline if available.",
+            "- CRITICAL TYPOGRAPHY RULE: Keep all typography indented safely away from the left border (at least 15% margin from the left edge). Never cut off the beginning letters of words. Every title and bullet must be 100% complete and legible inside the canvas.",
             "- Text must be sharp, readable, correctly spelled Vietnamese, with no mojibake, no broken accents, no fake phone numbers, and no invented addresses.",
             "- Use the attached official logo reference if provided; keep it recognizable and faithful.",
             "- Use a fresh premium technology advertising composition. Do not follow old dataset/template layouts.",

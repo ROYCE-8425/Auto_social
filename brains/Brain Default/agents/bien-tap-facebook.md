@@ -30,7 +30,7 @@ TUYỆT ĐỐI CẤM TỰ BỊA KHÓA HỌC KHÔNG CÓ TRONG DATASET: CẤM "Kin
 1. **Bước 1: BẮT BUỘC gọi thẳng `javis_generate_image` (GPT Image 2) tạo 1 ảnh bìa mới 100%**:
    - Lấy Tiêu đề gợi ý và Highlights từ `wiki/courses/<khoa_hoc>.md`.
    - GỌI THẲNG TOOL DUY NHẤT: `javis_generate_image` (CẤM phân vân hay chọn tool khác làm tốn thời gian suy nghĩ):
-     `javis_generate_image(prompt="Banner tuyển sinh thực chiến khóa học <tên_khóa_học_chuẩn_trong_dataset> Sao Việt, tiêu đề '<tiêu_đề_trong_wiki>', các điểm nổi bật '<highlights_trong_wiki>', phong cách thiết kế hiện đại, không gian học tập công nghệ, nhận diện xanh dương & cam Sao Việt, độ nét cao", save_under="attachments/dataset/_xuat", ai_render_brand=true)`
+     `javis_generate_image(prompt="Banner tuyển sinh thực chiến khóa học <tên_khóa_học_chuẩn_trong_dataset> Sao Việt, tiêu đề '<tiêu_đề_trong_wiki>', các điểm nổi bật '<highlights_trong_wiki>', bố cục chữ và logo nằm trọn trong vùng an toàn cách đều 4 mép ảnh 15-20% (tuyệt đối không để chữ sát mép hay bị cắt mất chữ), phong cách thiết kế hiện đại, nhận diện xanh dương & cam Sao Việt, độ nét cao", save_under="attachments/dataset/_xuat", ai_render_brand=true)`
    - Nhận kết quả và lấy đường dẫn ảnh vừa tạo (ví dụ: `res["rel_path"]` dạng `attachments/dataset/_xuat/cover_...png`).
    - NẾU tạo ảnh AI thất bại hoặc không có file: Dừng ngay và trả về `POST_SKIP ly-do=thieu-cover-ai khong-retry=1`. TUYỆT ĐỐI CẤM lấy ảnh cũ thay thế.
 

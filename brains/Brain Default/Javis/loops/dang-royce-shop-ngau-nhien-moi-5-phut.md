@@ -24,7 +24,7 @@ Tuyệt đối KHÔNG đọc loop-log hoặc transcript cũ để tránh phình 
    TUYỆT ĐỐI CẤM đăng khóa học ngoài dataset (CẤM kinh doanh online, CẤM bán hàng).
 2. **Tạo 1 Ảnh Mới 100% bằng GPT Image 2**:
    Gọi thẳng tool `javis_generate_image` (GPT Image 2):
-   - `prompt`: Banner tuyển sinh thực chiến khóa học <the> Sao Việt, tiêu đề '<tiêu_đề_trong_wiki>', các điểm nổi bật '<highlights_trong_wiki>', phong cách hiện đại công nghệ, màu sắc thương hiệu xanh & cam Sao Việt, độ nét cao.
+   - `prompt`: Banner tuyển sinh thực chiến khóa học <the> Sao Việt, tiêu đề '<tiêu_đề_trong_wiki>', các điểm nổi bật '<highlights_trong_wiki>', bố cục chữ và logo nằm trọn trong vùng an toàn cách đều 4 mép ảnh 15-20% (tuyệt đối không để chữ sát mép hay bị cắt mất chữ), phong cách hiện đại công nghệ, màu sắc thương hiệu xanh & cam Sao Việt, độ nét cao.
    - `save_under`: `"attachments/dataset/_xuat"`
    - `ai_render_brand`: true
    Lấy đường dẫn ảnh vừa sinh: `photo_rel`. (NẾU lỗi tạo ảnh: dừng ngay).
