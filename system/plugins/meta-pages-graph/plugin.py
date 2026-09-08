@@ -820,13 +820,13 @@ def _auto_prepare_album(course, cover_ref, cctx):
     if len(pool) < 2:
         return None, f"ERROR: Thư mục dataset '{dataset_dir.name}' không đủ ảnh đạt chuẩn để tạo album (cần ít nhất 2 ảnh)."
 
-    # Chọn 4-6 ảnh raw để album đạt 5-7 ảnh
-    n_raw = min(len(pool), random.choice([4, 5, 6]))
+    # Chọn ngẫu nhiên 5, 6 hoặc 7 ảnh raw để tổng album đạt đúng 6, 7 hoặc 8 ảnh (1 cover + 5..7 ảnh thật)
+    n_raw = min(len(pool), random.choice([5, 6, 7]))
     chosen_raw = random.sample(pool, n_raw)
 
     final_photos = [str(cover_path.resolve())] + [str(cr.resolve()) for cr in chosen_raw]
 
-    # Chuẩn hóa ảnh sang album_ready (fb_norm_00..06.jpg)
+    # Chuẩn hóa ảnh sang album_ready (fb_norm_00..07.jpg) theo Tỷ Lệ Vàng Facebook 2026
     try:
         from PIL import Image
         out_dir = None
@@ -842,32 +842,17 @@ def _auto_prepare_album(course, cover_ref, cctx):
             return final_photos, None
 
         norm_list = []
-        n_tot = len(final_photos)
         for idx, p_in in enumerate(final_photos):
             out_file = out_dir / f"fb_norm_{idx:02d}.jpg"
             with Image.open(p_in) as im:
-                if n_tot >= 5:
-                    if idx in (0, 1):
-                        side = min(im.width, im.height)
-                        l = (im.width - side) // 2
-                        t = (im.height - side) // 2
-                        c = im.crop((l, t, l + side, t + side)).resize((2000, 2000), Image.Resampling.LANCZOS)
-                    else:
-                        target_ratio = 2000 / 1330
-                        cur_ratio = im.width / im.height
-                        if cur_ratio > target_ratio:
-                            w = int(im.height * target_ratio)
-                            l = (im.width - w) // 2
-                            c = im.crop((l, 0, l + w, im.height)).resize((2000, 1330), Image.Resampling.LANCZOS)
-                        else:
-                            h = int(im.width / target_ratio)
-                            t = (im.height - h) // 2
-                            c = im.crop((0, t, im.width, t + h)).resize((2000, 1330), Image.Resampling.LANCZOS)
-                else:
-                    side = min(im.width, im.height)
-                    l = (im.width - side) // 2
-                    t = (im.height - side) // 2
-                    c = im.crop((l, t, l + side, t + side)).resize((2000, 2000), Image.Resampling.LANCZOS)
+                # Tỷ Lệ Vàng Facebook Album 2026: Đồng bộ 100% tỷ lệ vuông 1:1 (2000x2000px)
+                # Cho toàn bộ ảnh trong album (1 cover AI + 5..7 ảnh thật).
+                # Giúp lưới hiển thị 4 ô vuông trên mobile/desktop hoàn hảo tuyệt đối,
+                # không bị co kéo hay cắt mép, ô thứ 4 hiển thị badge (+2, +3, +4) kích thích tương tác cao nhất.
+                side = min(im.width, im.height)
+                l = (im.width - side) // 2
+                t = (im.height - side) // 2
+                c = im.crop((l, t, l + side, t + side)).resize((2000, 2000), Image.Resampling.LANCZOS)
                 c.convert("RGB").save(out_file, "JPEG", quality=95)
             norm_list.append(str(out_file.resolve()))
         return norm_list, None

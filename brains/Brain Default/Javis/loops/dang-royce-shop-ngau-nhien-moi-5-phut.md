@@ -28,11 +28,11 @@ Tuyệt đối KHÔNG đọc loop-log hoặc transcript cũ để tránh phình 
    - `save_under`: `"attachments/dataset/_xuat"`
    - `ai_render_brand`: true
    Lấy đường dẫn ảnh vừa sinh: `photo_rel`. (NẾU lỗi tạo ảnh: dừng ngay).
-3. **Đăng Bài Facebook (`fb_page_photo`)**:
+3. **Đăng ALBUM Facebook Tỷ Lệ Vàng 2026 (Random 6, 7 hoặc 8 ảnh)**:
    Soạn caption chuẩn 7 nhịp Sao Việt kèm `CHAN_TRANG`.
-   Gọi tool đăng đúng 1 ảnh:
-   `fb_page_photo(page="Royce Shop", photo="<photo_rel>", message="<caption>")`
-   *(Hoàn toàn không ghép album, không lấy ảnh cũ từ dataset)*.
+   Gọi tool đăng ALBUM:
+   `fb_page_album(page="Royce Shop", photos="auto", course="<the>", cover="<photo_rel>", message="<caption>")`
+   *(Hệ thống tự động ghép ảnh bìa AI mới + 5-7 ảnh lớp học thật từ dataset của đúng khóa học đó, chuẩn hóa 100% tỷ lệ vuông 1:1 đồng bộ, tổng 6, 7 hoặc 8 ảnh)*.
 4. **Đánh dấu hoàn thành**:
    `python "brains/Brain Default/skills/dang-bai-facebook/scripts/pick_next_fanpage.py" --ok 988656934325292 <the>`
 5. **Trả về kết quả 1 dòng**:
