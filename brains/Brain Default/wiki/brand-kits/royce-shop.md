@@ -28,16 +28,13 @@ Gốc cho mọi Fanpage. Tạo page mới = copy khối Nhận diện thương h
 ## Giới thiệu (dùng khi cần đoạn about, không nhồi cả khối vào mọi caption)
 Trung tâm Tin học Sao Việt là một trong những Trung tâm Tin học hàng đầu tại Việt Nam, hơn 10 năm xây dựng và phát triển. Tầm nhìn: không ngừng nâng cao chất lượng đào tạo nhân lực. Uy tín trong đào tạo tin học cho người đi làm, học sinh, sinh viên, doanh nghiệp.
 
-## Khóa học (chỉ nêu khoá đúng brief, không liệt kê hết mỗi bài)
-- Tin học văn phòng: Word, Excel, Máy tính, PowerPoint
-- Ứng dụng AI Agents
-- Vẽ kỹ thuật AutoCAD 2D, AutoCAD 3D
-- SolidWorks, SketchUP, 3Ds Max, Vray, thiết kế nội thất
-- Kế toán thực hành
-- Đồ họa: Photoshop, Illustrator, CorelDraw
-- MOS, IC3
-- Lập trình trẻ em: Python, Scratch
-- Quảng cáo Google, Facebook
+## Khóa học chuẩn (Bắt buộc chọn trong 5 nhóm dataset: wiki/courses/):
+- Tin học văn phòng & Ứng dụng AI: Word, Excel, PowerPoint, ChatGPT, Copilot, MOS, IC3 (wiki/courses/tin-hoc _ai.md)
+- Thiết kế đồ họa: Photoshop, Illustrator, CorelDraw, InDesign (wiki/courses/do-hoa.md)
+- Kế toán thực hành: MISA, Excel kế toán, BCTC, Thuế (wiki/courses/ke-toan.md)
+- Vẽ kỹ thuật: AutoCAD 2D, AutoCAD 3D, SolidWorks, SketchUP (wiki/courses/ve-ky-thuat.md)
+- Tin học trẻ em: Scratch, Python thiếu nhi, IC3 Spark (wiki/courses/tre-em.md)
+TUYỆT ĐỐI CẤM tự bịa khóa học ngoài dataset (như kinh doanh online, bán hàng online).
 
 Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Vẽ kỹ thuật AutoCAD, Kế toán thực hành, Thiết kế đồ họa, Tin học quốc tế MOS.
 

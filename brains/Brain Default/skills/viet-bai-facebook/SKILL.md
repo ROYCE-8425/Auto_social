@@ -19,6 +19,7 @@ Bài phải bán được khóa học, nhưng đọc lên vẫn giống người
 - Không dùng Markdown: không `**`, không heading `#`.
 - Không dùng ký tự em dash. Chỉ dùng dấu `-`.
 - Không tự bịa học phí, số tiền quà tặng, cam kết pháp lý, số suất nếu brand kit hoặc brief không có.
+- Không tự bịa ngành hay khóa học không có trong dataset. Hệ thống Sao Việt CHỈ ĐÀO TẠO 5 KHÓA HỌC CHUẨN trong `wiki/courses/`: Tin học văn phòng & AI (`tin-hoc _ai`), Thiết kế đồ họa (`do-hoa`), Kế toán thực hành (`ke-toan`), Bản vẽ kỹ thuật (`ve-ky-thuat`), Tin học & Lập trình trẻ em (`tre-em`). TUYỆT ĐỐI CẤM viết về khóa học Kinh doanh online, Bán hàng online.
 - Không trộn nhiều ngành trong một bài. Tin học văn phòng thì không lôi AutoCAD/Kế toán vào thân bài, trừ khi brief yêu cầu.
 - Phải có nhịp thị giác Facebook bằng emoji dẫn mắt vừa đủ. Không viết một bài toàn chữ trơn với gạch đầu dòng `-` từ đầu tới cuối.
 
@@ -294,6 +295,6 @@ Trước khi gọi tool đăng Facebook, tự kiểm:
 - Có quá 7 gạch đầu dòng trong một mục không? Nếu có, cắt.
 - Có bài toàn chữ trơn/dấu `-` mà thiếu `👉`, `📌`, `✅`, `🎁`, `📩` không? Nếu có, thêm nhịp thị giác.
 - Có lặp "thành thạo/chuyên nghiệp/thực chiến" quá nhiều không? Nếu có, thay bằng việc cụ thể.
-- Nội dung đúng một khóa học, không lạc ngành.
+- Nội dung đúng một khóa học thuộc 5 nhóm chuẩn dataset (tin-hoc _ai, do-hoa, ke-toan, ve-ky-thuat, tre-em), không lạc ngành, CẤM bịa khóa kinh doanh online.
 - Ưu đãi, địa chỉ, hotline lấy đúng kit.
 - Không Markdown, không em dash.

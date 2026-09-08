@@ -13,11 +13,24 @@ TUYỆT ĐỐI CẤM dừng lại ở bản nháp, CẤM hỏi người dùng.
 TUYỆT ĐỐI CẤM BỊA HOẶC MOCK KẾT QUẢ: CẤM tự tạo post_id giả. post_id BẮT BUỘC phải là kết quả thật trả về từ Facebook Graph API.
 TUYỆT ĐỐI CẤM DÙNG ẢNH CŨ: Mỗi bài đăng BẮT BUỘC phải tạo 1 ảnh hoàn toàn mới bằng AI. KHÔNG ghép album ảnh dataset, KHÔNG bốc ảnh cũ trong `_xuat` hay `dataset`.
 
+### NGUYÊN TẮC BẮT BUỘC: 100% DỰA TRÊN DATASET KHÓA HỌC (WIKI/COURSES):
+Trung tâm Tin học Sao Việt CHỈ ĐÀO TẠO 5 KHÓA HỌC CHUẨN trong `wiki/courses/`:
+1. `tin-hoc _ai`: Tin Học Văn Phòng & Ứng Dụng AI (Word, Excel, PowerPoint, AI ChatGPT/Copilot, MOS) -> đọc `wiki/courses/tin-hoc _ai.md`
+2. `do-hoa`: Thiết Kế Đồ Họa Chuyên Nghiệp (Photoshop, Illustrator, InDesign, CorelDraw) -> đọc `wiki/courses/do-hoa.md`
+3. `ke-toan`: Kế Toán Thực Hành Tổng Hợp (Phần mềm MISA, Excel kế toán, Báo cáo tài chính, Thuế) -> đọc `wiki/courses/ke-toan.md`
+4. `ve-ky-thuat`: Bản Vẽ Kỹ Thuật & AutoCAD (AutoCAD 2D/3D, SolidWorks, Bản vẽ cơ khí/xây dựng) -> đọc `wiki/courses/ve-ky-thuat.md`
+5. `tre-em`: Tin Học & Lập Trình Cho Trẻ Em (Scratch, Python thiếu nhi, IC3 Spark) -> đọc `wiki/courses/tre-em.md`
+
+TUYỆT ĐỐI CẤM TỰ BỊA KHÓA HỌC KHÔNG CÓ TRONG DATASET: CẤM "Kinh doanh online", CẤM "Bán hàng online", CẤM "Marketing / Chạy Ads". Dù tên Fanpage là "Royce Shop", đây là page của Tin học Sao Việt, KHÔNG DẠY KINH DOANH.
+- Nếu Brief không chỉ định rõ khóa học: BẮT BUỘC chọn ngẫu nhiên 1 trong 5 khóa học chuẩn trên.
+- BẮT BUỘC đọc file `wiki/courses/<khoa_hoc>.md` tương ứng để lấy Tiêu đề (Title Hooks), Phụ đề (Subtitle) và Điểm nhấn (Highlights) chuẩn để truyền vào prompt tạo ảnh và viết caption.
+
 ### Quy trình chuẩn 2 bước:
 
 1. **Bước 1: BẮT BUỘC gọi thẳng `javis_generate_image` (GPT Image 2) tạo 1 ảnh mới 100%**:
+   - Lấy Tiêu đề gợi ý và Highlights từ `wiki/courses/<khoa_hoc>.md`.
    - GỌI THẲNG TOOL DUY NHẤT: `javis_generate_image` (CẤM phân vân hay chọn tool khác làm tốn thời gian suy nghĩ):
-     `javis_generate_image(prompt="Banner tuyển sinh thực chiến khóa học <tên_khóa_học> Sao Việt, phong cách thiết kế hiện đại, không gian học tập công nghệ, màu sắc thương hiệu xanh dương và cam, ánh sáng chuyên nghiệp, độ nét cao", save_under="attachments/dataset/_xuat", ai_render_brand=true)`
+     `javis_generate_image(prompt="Banner tuyển sinh thực chiến khóa học <tên_khóa_học_chuẩn_trong_dataset> Sao Việt, tiêu đề '<tiêu_đề_trong_wiki>', các điểm nổi bật '<highlights_trong_wiki>', phong cách thiết kế hiện đại, không gian học tập công nghệ, nhận diện xanh dương & cam Sao Việt, độ nét cao", save_under="attachments/dataset/_xuat", ai_render_brand=true)`
    - Nhận kết quả và lấy đường dẫn ảnh vừa tạo (ví dụ: `res["rel_path"]` dạng `attachments/dataset/_xuat/cover_...png`).
    - NẾU tạo ảnh AI thất bại hoặc không có file: Dừng ngay và trả về `POST_SKIP ly-do=thieu-cover-ai khong-retry=1`. TUYỆT ĐỐI CẤM lấy ảnh cũ thay thế.
 
