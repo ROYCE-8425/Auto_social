@@ -912,7 +912,10 @@ CẤM [[NEEDS_INPUT]] vì 'không có tool / Royce chưa MCP'. CẤM địa ch�
         page = ""
         m_page = re.search(r'page["\s:=]+([^\n\|,]+)', t, re.I)
         if m_page:
-            page = m_page.group(1).strip()
+            raw_p = m_page.group(1).strip()
+            raw_p = re.split(r'\s+(?:với|post_id|post|có|link|id|course|gồm|kết quả)\b|[.]', raw_p, flags=re.I)[0].strip()
+            raw_p = raw_p.rstrip(".,;:")
+            page = raw_p
 
         course = ""
         low_t = t.lower()
