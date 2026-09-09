@@ -28,7 +28,7 @@ if VAULT.name != "Brain Default" and not (VAULT / "wiki" / "brand-kits").is_dir(
     VAULT = Path(__file__).resolve().parents[4]
 KITS = VAULT / "wiki" / "brand-kits"
 STATE = VAULT / "Javis" / "dang-hang-ngay.json"
-SKIP_FILES = {"royce-shop.md"}  # test page: không vào hàng ngày trừ khi --include-royce
+SKIP_FILES = {"royce-shop.md", "royce.md"}  # test page: không vào hàng ngày trừ khi --include-royce
 
 
 def registry_tags():
@@ -105,14 +105,46 @@ def load_pages(include_royce=False):
     return rows
 
 
+def _canonical_tag(t: str) -> str:
+    s = (t or "").strip().lower()
+    if re.search(r"tin[\s_-]*hoc[\s_-]*ai|tin[\s_-]*hoc\b", s):
+        return "tin-hoc _ai"
+    if re.search(r"do[\s_-]*hoa", s):
+        return "do-hoa"
+    if re.search(r"ke[\s_-]*toan", s):
+        return "ke-toan"
+    if re.search(r"ve[\s_-]*ky[\s_-]*thuat|autocad", s):
+        return "ve-ky-thuat"
+    if re.search(r"tre[\s_-]*em", s):
+        return "tin-hoc _ai"
+    return (t or "").strip()
+
+
 def load_state(today):
-    st = {"date": today, "ok": [], "skip": [], "cursor": 0}
+    st = {
+        "date": today,
+        "ok": [],
+        "skip": [],
+        "cursor": 0,
+        "page_last_course": {},
+        "pending_course": {},
+    }
     if STATE.exists():
         try:
             raw = json.loads(STATE.read_text(encoding="utf-8"))
+            if isinstance(raw.get("page_last_course"), dict):
+                st["page_last_course"] = raw["page_last_course"]
+            if isinstance(raw.get("pending_course"), dict):
+                st["pending_course"] = raw["pending_course"]
+            if "cursor" in raw:
+                try:
+                    st["cursor"] = int(raw.get("cursor") or 0)
+                except Exception:
+                    pass
             if raw.get("date") == today:
-                st.update(raw)
-                st["date"] = today
+                st["ok"] = list(raw.get("ok") or [])
+                st["skip"] = list(raw.get("skip") or [])
+                st["last_course"] = raw.get("last_course", "")
         except Exception:
             pass
     return st
@@ -127,6 +159,7 @@ def main(argv):
     now = datetime.now(TZ)
     today = now.strftime("%Y-%m-%d")
     include_royce = "--include-royce" in argv
+    st = load_state(today)
     specific_page = None
     if "--page" in argv:
         i = argv.index("--page")
@@ -160,7 +193,23 @@ def main(argv):
         if not row:
             print(f"ERROR: khong-tim-thay-page query={specific_page}")
             return 1
-        tag = random.choice(row["tags"]) if row.get("tags") else "tin-hoc _ai"
+        page_last = (st.get("page_last_course") or {}).get(row["page_id"]) or ""
+        all_tags = [_canonical_tag(t) for t in (row.get("tags") or registry_tags())]
+        unique_tags = []
+        for t in all_tags:
+            if t not in unique_tags:
+                unique_tags.append(t)
+        if len(unique_tags) > 1 and page_last:
+            available_tags = [t for t in unique_tags if _canonical_tag(t) != _canonical_tag(page_last)]
+            if not available_tags:
+                available_tags = unique_tags
+        else:
+            available_tags = unique_tags
+        tag = random.choice(available_tags or ["tin-hoc _ai"])
+        if "pending_course" not in st or not isinstance(st["pending_course"], dict):
+            st["pending_course"] = {}
+        st["pending_course"][row["page_id"]] = tag
+        save_state(st)
         print("NEXT=1")
         print("page_id=" + row["page_id"])
         print("ten=" + row["name"])
@@ -207,17 +256,28 @@ def main(argv):
         return 0
 
     pages = load_pages(include_royce=include_royce)
-    st = load_state(today)
 
     if mark_ok:
         if mark_ok not in st["ok"]:
             st["ok"].append(mark_ok)
+        course_done = None
         if len(argv) > argv.index("--ok") + 2 and not argv[argv.index("--ok") + 2].startswith("-"):
-            st["last_course"] = argv[argv.index("--ok") + 2].strip()
+            course_done = argv[argv.index("--ok") + 2].strip()
+        elif mark_ok in (st.get("pending_course") or {}):
+            course_done = st["pending_course"].get(mark_ok)
+
+        if course_done:
+            course_done = _canonical_tag(course_done)
+            st["last_course"] = course_done
+            if "page_last_course" not in st or not isinstance(st["page_last_course"], dict):
+                st["page_last_course"] = {}
+            st["page_last_course"][mark_ok] = course_done
+
         st["skip"] = [x for x in st.get("skip") or [] if x.get("id") != mark_ok]
         save_state(st)
-        print("MARK_OK", mark_ok)
+        print("MARK_OK", mark_ok, f"course={st.get('page_last_course', {}).get(mark_ok, '')}")
         return 0
+
     if mark_fail:
         skips = list(st.get("skip") or [])
         prev = next((x for x in skips if x.get("id") == mark_fail), None)
@@ -240,9 +300,15 @@ def main(argv):
 
     ok = set(st.get("ok") or [])
     skip_map = {x.get("id"): x for x in (st.get("skip") or []) if x.get("id")}
-    eligible = []
-    for row in pages:
-        pid = row["page_id"]
+    n_all = len(pages)
+    start_idx = int(st.get("cursor") or 0) % max(n_all, 1)
+    selected_row = None
+    selected_idx = None
+
+    for offset in range(n_all):
+        idx = (start_idx + offset) % max(n_all, 1)
+        cand = pages[idx]
+        pid = cand["page_id"]
         if pid in ok:
             continue
         sk = skip_map.get(pid)
@@ -256,21 +322,50 @@ def main(argv):
                 ra_dt = now
             if now < ra_dt:
                 continue
-        eligible.append(row)
-    n_all = len(pages)
+        selected_row = cand
+        selected_idx = idx
+        break
+
+    eligible_count = sum(
+        1 for p in pages
+        if p["page_id"] not in ok and not (
+            skip_map.get(p["page_id"]) and (
+                skip_map[p["page_id"]].get("bo_toi_mai") or
+                now < datetime.strptime(skip_map[p["page_id"]].get("retry_after", "2099-01-01 00:00"), "%Y-%m-%d %H:%M").replace(tzinfo=TZ)
+            )
+        )
+    )
+
     print("HANG_NGAY date=" + today)
-    print("tong_page=" + str(n_all) + " da_ok=" + str(len(ok)) + " cho=" + str(len(eligible)))
-    if not eligible:
+    print("tong_page=" + str(n_all) + " da_ok=" + str(len(ok)) + " cho=" + str(eligible_count))
+    if not selected_row:
         print("NEXT=NONE het-hang-hom-nay")
         return 0
-    cur = int(st.get("cursor") or 0) % len(eligible)
-    row = eligible[cur]
-    st["cursor"] = (cur + 1) % max(len(eligible), 1)
+
+    row = selected_row
+    st["cursor"] = (selected_idx + 1) % max(n_all, 1)
+
+    page_last = (st.get("page_last_course") or {}).get(row["page_id"]) or ""
+    all_tags = [_canonical_tag(t) for t in (row.get("tags") or registry_tags())]
+    unique_tags = []
+    for t in all_tags:
+        if t not in unique_tags:
+            unique_tags.append(t)
+
+    # Luật chống trùng: Nếu page có > 1 khóa học thì CẤM trùng khóa vừa đăng lần trước
+    # Nếu page chỉ có đúng 1 khóa học thì được phép đăng trùng khóa duy nhất đó
+    if len(unique_tags) > 1 and page_last:
+        available_tags = [t for t in unique_tags if _canonical_tag(t) != _canonical_tag(page_last)]
+        if not available_tags:
+            available_tags = unique_tags
+    else:
+        available_tags = unique_tags
+
+    tag = random.choice(available_tags or ["tin-hoc _ai"])
+    if "pending_course" not in st or not isinstance(st["pending_course"], dict):
+        st["pending_course"] = {}
+    st["pending_course"][row["page_id"]] = tag
     save_state(st)
-    last_tag = st.get("last_course") or ""
-    all_tags = row.get("tags") or list(registry_tags())
-    available_tags = [t for t in all_tags if t != last_tag] if len(all_tags) > 1 else all_tags
-    tag = random.choice(available_tags or all_tags)
     print("NEXT=1")
     print("page_id=" + row["page_id"])
     print("ten=" + row["name"])
