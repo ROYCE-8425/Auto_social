@@ -135,7 +135,24 @@ def _in_quiet_hours(spec: str, hour: int) -> bool:
     return (a <= hour < b) if a < b else (hour >= a or hour < b)
 
 
+def _this_week() -> str:
+    now = _now_vn()
+    return f"{now.year}-W{now.isocalendar()[1]:02d}"
+
+
+def _calc_sleep_until_tomorrow(quiet_hours: str) -> float:
+    now = _now_vn()
+    tomorrow = now.date() + timedelta(days=1)
+    target_hour = 0
+    m = _QH_RE.match(quiet_hours or "")
+    if m:
+        target_hour = int(m.group(2)) % 24
+    dt_target = datetime(tomorrow.year, tomorrow.month, tomorrow.day, target_hour, 0, tzinfo=now.tzinfo)
+    return dt_target.timestamp()
+
+
 @dataclass
+
 class LoopDeps:
     """Các helper của main.py được tiêm vào (tránh import vòng)."""
     build_system_prompt: Callable[[str], str]
@@ -288,6 +305,10 @@ class LoopFeature:
             maxr = max(0, int(fm.get("max_runs_per_day", 0)))
         except (TypeError, ValueError):
             maxr = 0
+        try:
+            maxw = max(0, int(fm.get("max_runs_per_week", 0)))
+        except (TypeError, ValueError):
+            maxw = 0
         prof = "code" if str(fm.get("tools_profile", "") or "").strip().lower() == "code" else "vault-safe"
         # notify: mặc định BẬT (báo Telegram mỗi vòng cho chủ loop). Chỉ tắt khi ghi rõ false/0/no.
         notify_raw = fm.get("notify", True)
@@ -306,6 +327,7 @@ class LoopFeature:
             "tools_profile": prof,
             "quiet_hours": str(fm.get("quiet_hours", "") or "").strip(),
             "max_runs_per_day": maxr,
+            "max_runs_per_week": maxw,
             # owner_chat = chat_id người YÊU CẦU loop (để báo về đúng người). Rỗng = web → ID đầu.
             "owner_chat": str(fm.get("owner_chat", "") or "").strip(),
             "notify": notify,
@@ -564,12 +586,25 @@ class LoopFeature:
             return None
         if _in_quiet_hours(loop["quiet_hours"], hour):
             return None
-        if loop["max_runs_per_day"] > 0:
-            runs = int(st.get("runs_today", 0)) if st.get("day") == _today() else 0
+        today = _today()
+        # Đã hoàn thành nhiệm vụ/hết bài cho ngày hôm nay: tự dừng đến ngày mai (0 token lãng phí)
+        if st.get("done_day") == today:
+            return None
+        # Đang trong thời gian ngủ định thời (vd tới 07:00 sáng mai):
+        if st.get("sleep_until") and now_ts < float(st.get("sleep_until", 0)):
+            return None
+        if loop.get("max_runs_per_day", 0) > 0:
+            runs = int(st.get("runs_today", 0)) if st.get("day") == today else 0
             if runs >= loop["max_runs_per_day"]:
+                return None
+        if loop.get("max_runs_per_week", 0) > 0:
+            week_str = _this_week()
+            runs_week = int(st.get("runs_this_week", 0)) if st.get("week") == week_str else 0
+            if runs_week >= loop["max_runs_per_week"]:
                 return None
         overdue = now_ts - float(st.get("last_run", 0)) - loop["interval_min"] * 60
         return overdue if overdue >= 0 else None
+
 
     def _pick_due(self) -> Optional[Tuple[str, dict]]:
         now, hour = time.time(), _now_vn().hour
@@ -823,22 +858,30 @@ class LoopFeature:
         vault_root = self.deps.brain_root(brain)
         goal, mode = loop["goal"], loop["mode"]
         today = _today()
+        week_str = _this_week()
 
-        # Run now thủ công = user chủ động → xoá auto-pause + reset chuỗi lỗi
+        # Run now thủ công = user chủ động → xoá auto-pause, done_day, sleep_until + reset chuỗi lỗi
         st0 = self.read_state(brain).get(slug, {})
-        if reason == "manual" and (st0.get("auto_paused_reason") or st0.get("fail_streak")):
-            self._update_state(brain, slug, auto_paused_reason="", fail_streak=0)
+        if reason == "manual" and (st0.get("auto_paused_reason") or st0.get("fail_streak") or st0.get("done_day") or st0.get("sleep_until")):
+            self._update_state(brain, slug, auto_paused_reason="", fail_streak=0, done_day="", sleep_until=0)
 
         def _finish(summary: str, verify_line: str, failed: bool) -> dict:
             st = self.read_state(brain).get(slug, {})
             runs = (int(st.get("runs_today", 0)) if st.get("day") == today else 0) + 1
+            runs_week = (int(st.get("runs_this_week", 0)) if st.get("week") == week_str else 0) + 1
             streak = (int(st.get("fail_streak", 0)) + 1) if failed else 0
             patch = {
                 "last_run": time.time(), "last_summary": summary[:1000],
                 "last_status": verify_line or ("lỗi" if failed else "ok"),
                 "runs_today": runs, "day": today, "fail_streak": streak,
+                "runs_this_week": runs_week, "week": week_str,
             }
+            # Tự động nhận diện khi loop đã hoàn thành xong nhiệm vụ cho ngày hôm nay:
+            if any(k in summary.lower() for k in ("next=none", "het-hang-hom-nay", "page-da-ok-hom-nay", "da-du-bai", "hoan-thanh-hom-nay", "đã đủ bài", "đã hoàn thành hôm nay")):
+                patch["done_day"] = today
+                patch["sleep_until"] = _calc_sleep_until_tomorrow(loop.get("quiet_hours", ""))
             paused_now = False
+
             if streak >= 3 and not st.get("auto_paused_reason"):
                 patch["auto_paused_reason"] = (f"Tự tạm dừng {_now_vn().strftime('%d/%m %H:%M')}: "
                                                "3 lần lỗi/kiểm chứng không đạt liên tiếp")
@@ -904,7 +947,34 @@ class LoopFeature:
                                last_status="no-data")
             return {"ok": True, "summary": skip}
 
+        # Zero-Token Preflight Check: nếu loop đăng bài Facebook và chạy tự động (reason != "manual"),
+        # chạy thử picker qua Python thuần (0 token, ~0.2s) xem có page nào cần đăng hôm nay không.
+        # Nếu đã đủ bài (NEXT=NONE), lập tức dừng và đặt trạng thái ngủ tới ngày mai.
+        if reason != "manual" and (slug == "dang-bai-hang-ngay" or "pick_next_fanpage.py" in loop.get("body", "")):
+            picker_script = Path(vault_root) / "skills" / "dang-bai-facebook" / "scripts" / "pick_next_fanpage.py"
+            if picker_script.is_file():
+                try:
+                    import sys as _sys
+                    proc = await asyncio.create_subprocess_exec(
+                        _sys.executable, str(picker_script),
+                        stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+                    )
+                    out_b, _ = await asyncio.wait_for(proc.communicate(), timeout=10.0)
+                    out_str = out_b.decode("utf-8", errors="ignore")
+                    if "NEXT=NONE" in out_str:
+                        sleep_ts = _calc_sleep_until_tomorrow(loop.get("quiet_hours", ""))
+                        skip_msg = "Toàn bộ Fanpage đã đủ bài cho hôm nay (NEXT=NONE). Tự động dừng đến ngày mai (0 token tiêu tốn)."
+                        self._update_state(brain, slug, last_run=time.time(), done_day=today,
+                                           sleep_until=sleep_ts,
+                                           last_summary=skip_msg,
+                                           last_status="ok")
+                        self._log_append(brain, {"title": f"{slug} · loop ({goal}/{mode}) - {reason}", "body": skip_msg})
+                        return {"ok": True, "summary": skip_msg}
+                except Exception:
+                    pass
+
         sysprompt = self.deps.build_system_prompt(brain)
+
         gcli = self._make_cli(loop, cwd, sysprompt, brain=brain)
         if gcli is None:
             return _finish("Lỗi: không tạo được file MCP rỗng để cô lập (profile code từ chối chạy)", "", True)
@@ -998,11 +1068,19 @@ class LoopFeature:
             "last_summary": st.get("last_summary", ""),
             "last_status": st.get("last_status", ""),
             "runs_today": int(st.get("runs_today", 0)) if st.get("day") == today else 0,
+            "runs_this_week": int(st.get("runs_this_week", 0)) if st.get("week") == week_str else 0,
             "fail_streak": int(st.get("fail_streak", 0)),
             "auto_paused_reason": st.get("auto_paused_reason", ""),
-            "next_run": (last_run + lp["interval_min"] * 60) if (lp["enabled"] and not st.get("auto_paused_reason")) else 0,
+            "done_day": st.get("done_day", ""),
+            "sleep_until": float(st.get("sleep_until", 0)),
+            "next_run": (
+                float(st["sleep_until"]) if (st.get("sleep_until") and time.time() < float(st.get("sleep_until", 0)))
+                else (_calc_sleep_until_tomorrow(lp.get("quiet_hours", "")) if st.get("done_day") == today
+                else (last_run + lp["interval_min"] * 60))
+            ) if (lp["enabled"] and not st.get("auto_paused_reason")) else 0,
             "running": running,
         }
+
 
     def toggle(self, brain: str, slug: str) -> Optional[dict]:
         lp = self.get_loop(brain, slug)
