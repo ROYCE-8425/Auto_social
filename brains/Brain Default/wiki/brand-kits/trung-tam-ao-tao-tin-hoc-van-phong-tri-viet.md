@@ -50,9 +50,7 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 - Bản đồ các cơ sở, Sitemap
 
 ## Cơ sở đào tạo của trang này (địa chỉ đúng Fanpage này)
-- 968 Pham Van Thuan, Biên Hòa, Đồng Nai 76108
-- Mới (Fanpage, dùng khi đăng bài): 968 Pham Van Thuan, Biên Hòa, Đồng Nai 76108
-- Cũ (list _mac-dinh trước đây, chỉ đối chiếu): (không nằm trong list 12 cơ sở cũ)
+- 968 Phạm Văn Thuận, P. Tân Mai, TP. Biên Hòa, Đồng Nai
 
 ## USP chuẩn từ Fanpage thực tế
 - Học thực hành 100% trên máy tính và chứng từ thực tế của doanh nghiệp
@@ -95,8 +93,8 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 - Dùng ký tự em dash
 
 ## Chân trang caption (bắt buộc)
-Trung Tâm Đào Tạo Kế Toán Sao Việt (hoặc Trung Tâm Tin Học Sao Việt tùy khóa)
-968 Pham Van Thuan, Biên Hòa, Đồng Nai 76108
+Trung Tâm Đào Tạo Tin Học Văn Phòng Trí Việt
+968 Phạm Văn Thuận, P. Tân Mai, TP. Biên Hòa, Đồng Nai
 Hotline: 0363 753 692
 Email: trungtamtinhocvanphong.edu@gmail.com
 Web: https://trungtamtinhocvanphong.edu.vn
@@ -106,8 +104,7 @@ Web: https://trungtamtinhocvanphong.edu.vn
 - slug: trung-tam-ao-tao-tin-hoc-van-phong-tri-viet
 - Page ID: 102164822445357
 - Thẻ khoá học: tin-hoc _ai
-- Cơ sở / địa chỉ: 968 Pham Van Thuan, Biên Hòa, Đồng Nai 76108
-- Địa chỉ cũ (list trước): (không nằm trong list 12 cơ sở cũ)
+- Cơ sở / địa chỉ: 968 Phạm Văn Thuận, P. Tân Mai, TP. Biên Hòa, Đồng Nai
 - Hotline / Zalo: 0363 753 692
 - Email Fanpage: trungtamtinhocvanphong.edu@gmail.com
 - Web Fanpage: https://trungtamtinhocvanphong.edu.vn

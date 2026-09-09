@@ -132,19 +132,31 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 - Dùng ký tự em dash
 
 ## Chân trang caption (bắt buộc)
-Trung Tâm Đào Tạo Kế Toán Sao Việt (hoặc Trung Tâm Tin Học Sao Việt tùy khóa)
-510 Đường Kinh Dương Vương, P. An Lạc A, quận Bình Tân, Thành phố Hồ Chí Minh 700000, Ho Chi Minh City
-Hotline: 0931 144 858
-Email: trungtamtinhocsaoviet@gmail.com
-Web: https://khoahocai.edu.vn
+Trung Tâm Đào Tạo AI Sao Việt
+📍 HỆ THỐNG 13 CHI NHÁNH TIN HỌC SAO VIỆT
+🏫 Bình Thạnh: 21/12 Lê Trực, P.7, Bình Thạnh, TP.HCM
+🏫 Quận 7: Căn hộ Florita Quận 7, Khu đô thị Him Lam, Tân Hưng, TP.HCM
+🏫 Bình Tân: TM-0.39, 510 Kinh Dương Vương, An Lạc, Bình Tân
+🏫 Quận 12: A23 Lê Thị Riêng, KDC Thới An, Quận 12
+🏫 TP. Thủ Đức: 133/2 Đ. Đỗ Xuân Hợp, Phước Long B
+🏫 Tân Bình: 2A Nguyễn Sỹ Sách, P.15, Tân Bình
+🏫 Biên Hòa: 91 Đoàn Văn Cự, P. Tam Hòa
+🏫 Long Thành: 72 Đinh Bộ Lĩnh, Lộc An
+🏫 Dĩ An: 184/19/11 Đặng Văn Mây, KP Đông Chiêu
+🏫 Thuận An: 8 Đường NA8, Khu Dân Cư Viet Sing
+🏫 Thủ Dầu Một: 107 D5, KDC Phú Hòa 1
+🏫 Tân Uyên: Số 20 Đường ĐX12, Tân Vĩnh Hiệp
+🏫 Vũng Tàu: 293 Bình Giã, P.8, TP. Vũng Tàu
+📞 Hotline/Zalo: 0931 144 858
+📧 Email: trungtamtinhocsaoviet@gmail.com
+🌐 Website: https://khoahocai.edu.vn
 
 ## Tuỳ biến trang
 - Tên Fanpage: Trung Tâm Đào Tạo AI Sao Việt
 - slug: trung-tam-ao-tao-ai-sao-viet
 - Page ID: 975355049004598
 - Thẻ khoá học: tin-hoc _ai
-- Cơ sở / địa chỉ: 510 Đường Kinh Dương Vương, P. An Lạc A, quận Bình Tân, TP.HCM
-- Địa chỉ cũ (list trước): Số 16, 21/12 Lê Trực, Phường 7, Q. Bình Thạnh (Chung Cư Lê Trực) | Số 515 B2/12, Lê Văn Lương, Tân Phong, Quận 7 | Phòng A206 số 189 Kinh Dương Vương, Phường 12, Quận 6 (Trường CĐ GTVT Trung Ương VI) | 247/31 Hà Huy Giáp, Thạnh Lộc, Quận 12 | 49 Đường Số 3, Tăng Nhơn Phú B, Tp. Thủ Đức | 180 Phạm Văn Bạch, Phường 15, Tân Bình, Thành phố Hồ Chí Minh | 1/513 KDC TÀI LỰC, Tổ 9, Khu phố Hòa Lân 2, Thuận An - Bình Dương | 184/19/11 Đặng Văn Mây, KP. Đông Chiêu, P. Tân Đông Hiệp, Dĩ An - Bình Dương | Số 107, D5, KDC Phú Hòa 1, Khu 4, Thủ Dầu Một, Bình Dương | 70 Đ. ĐX-03A, Tân Vĩnh Hiệp, Tân Uyên, Bình Dương | 91 Đoàn Văn Cự, P. Tam Hòa, Biên Hòa, Đồng Nai | 72 Đinh Bộ Lĩnh, Lộc An, Long Thành, Đồng Nai | 293 Bình Giã, Phường 8, TP. Vũng Tàu, Bà Rịa - Vũng Tàu | (chưa có trong list 12 cơ sở cũ)
+- Cơ sở / địa chỉ: 📍 HỆ THỐNG 13 CHI NHÁNH TIN HỌC SAO VIỆT | 🏫 Bình Thạnh: 21/12 Lê Trực, P.7, Bình Thạnh, TP.HCM | 🏫 Quận 7: Căn hộ Florita Quận 7, Khu đô thị Him Lam, Tân Hưng, TP.HCM | 🏫 Bình Tân: TM-0.39, 510 Kinh Dương Vương, An Lạc, Bình Tân | 🏫 Quận 12: A23 Lê Thị Riêng, KDC Thới An, Quận 12 | 🏫 TP. Thủ Đức: 133/2 Đ. Đỗ Xuân Hợp, Phước Long B | 🏫 Tân Bình: 2A Nguyễn Sỹ Sách, P.15, Tân Bình | 🏫 Biên Hòa: 91 Đoàn Văn Cự, P. Tam Hòa | 🏫 Long Thành: 72 Đinh Bộ Lĩnh, Lộc An | 🏫 Dĩ An: 184/19/11 Đặng Văn Mây, KP Đông Chiêu | 🏫 Thuận An: 8 Đường NA8, Khu Dân Cư Viet Sing | 🏫 Thủ Dầu Một: 107 D5, KDC Phú Hòa 1 | 🏫 Tân Uyên: Số 20 Đường ĐX12, Tân Vĩnh Hiệp | 🏫 Vũng Tàu: 293 Bình Giã, P.8, TP. Vũng Tàu
 - Hotline / Zalo: 0931 144 858
 - Email Fanpage: trungtamtinhocsaoviet@gmail.com
 - Web Fanpage: https://khoahocai.edu.vn

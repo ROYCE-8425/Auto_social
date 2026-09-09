@@ -15,6 +15,7 @@ import json
 import random
 import re
 import sys
+import unicodedata
 from datetime import datetime, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -275,78 +276,58 @@ BRANCHES_KE_TOAN = [
 ]
 
 
-def get_page_branches(row, tag=None):
-    """Xác định danh sách địa chỉ cơ sở theo đúng quy tắc vùng miền:
-    1. Cơ sở TP.HCM (Bình Thạnh, Quận 12, Thủ Đức, Tân Bình, Quận 7, Bình Tân/Quận 6):
-       Chỉ hiện DUY NHẤT 1 địa chỉ của chi nhánh đó.
-    2. Bình Dương (toàn tỉnh hoặc các chi nhánh Dĩ An, Thuận An, Thủ Dầu Một, Tân Uyên):
-       Hiện ĐẦY ĐỦ cả 4 địa chỉ thuộc tỉnh Bình Dương.
-    3. Đồng Nai (toàn tỉnh hoặc các chi nhánh Biên Hòa, Long Thành):
-       Hiện ĐẦY ĐỦ cả 2 địa chỉ thuộc tỉnh Đồng Nai.
-    4. Vũng Tàu (hoặc Bà Rịa):
-       Hiện địa chỉ cơ sở tại Vũng Tàu.
-    5. Hệ thống chung / Royce Shop:
-       Hiện toàn bộ 13 chi nhánh (hoặc 12 chi nhánh kế toán nếu là khóa kế toán).
-    """
-    slug = (row.get("slug") or "").lower()
-    name = (row.get("name") or "").lower()
-    file_stem = (row.get("file") or "").lower()
-    addr_raw = (row.get("address") or "")
-    combined = f"{slug} {name} {file_stem}"
+def remove_accents(text: str) -> str:
+    if not text:
+        return ""
+    text = unicodedata.normalize("NFD", text.lower())
+    return "".join(c for c in text if unicodedata.category(c) != "Mn").replace("đ", "d")
 
-    # 1. Cơ sở TP.HCM: chỉ hiện 1 chi nhánh tương ứng
-    if any(k in combined for k in ["binh-thanh", "bình thạnh", "binh thanh"]):
+
+def get_page_branches(row, tag=None):
+    """Xác định danh sách địa chỉ cơ sở theo đúng TÊN FANPAGE (name):
+    1. Nếu Tên Fanpage có chi nhánh TP.HCM (Bình Thạnh, Quận 12, Thủ Đức, Tân Bình, Quận 7, Bình Tân/Quận 6):
+       Chỉ hiện DUY NHẤT 1 địa chỉ của chi nhánh đó.
+    2. Nếu Tên Fanpage có Bình Dương (hoặc Dĩ An, Thuận An, Thủ Dầu Một, Tân Uyên):
+       Hiện ĐẦY ĐỦ cả 4 địa chỉ thuộc tỉnh Bình Dương.
+    3. Nếu Tên Fanpage có Đồng Nai (hoặc Biên Hòa, Long Thành):
+       Hiện ĐẦY ĐỦ cả 2 địa chỉ thuộc tỉnh Đồng Nai.
+    4. Nếu Tên Fanpage có Vũng Tàu (hoặc Bà Rịa):
+       Hiện địa chỉ cơ sở tại Vũng Tàu.
+    5. Nếu Tên Fanpage KHÔNG ĐỀ CẬP địa danh nào (như Trung Tâm Đào Tạo AI Sao Việt, Tin Học Sao Việt, Royce Shop):
+       ĐĂNG HẾT TẤT CẢ ĐỊA CHỈ (Hệ thống 13 chi nhánh, hoặc 12 cơ sở kế toán nếu là khóa kế toán).
+    """
+    page_name = row.get("name") or row.get("slug") or ""
+    norm_name = remove_accents(page_name)
+
+    # 1. Cơ sở TP.HCM: chỉ hiện 1 chi nhánh tương ứng theo tên page
+    if "binh thanh" in norm_name:
         return [BRANCHES_HCM["binh_thanh"]]
-    if any(k in combined for k in ["quan-12", "quận 12", "quan 12"]):
+    if re.search(r"\b(quan\s*12|q\.?\s*12)\b", norm_name):
         return [BRANCHES_HCM["quan_12"]]
-    if any(k in combined for k in ["thu-uc", "thủ đức", "thu-duc", "thu duc"]):
+    if "thu duc" in norm_name:
         return [BRANCHES_HCM["thu_duc"]]
-    if any(k in combined for k in ["tan-binh", "tân bình", "tan binh"]):
+    if "tan binh" in norm_name:
         return [BRANCHES_HCM["tan_binh"]]
-    if any(k in combined for k in ["quan-7", "quận 7", "quan 7"]):
+    if re.search(r"\b(quan\s*7|q\.?\s*7)\b", norm_name):
         return [BRANCHES_HCM["quan_7"]]
-    if any(k in combined for k in ["quan-6", "quận 6", "binh-tan", "bình tân", "binh tan"]):
+    if re.search(r"\b(quan\s*6|q\.?\s*6|binh tan)\b", norm_name):
         return [BRANCHES_HCM["binh_tan"]]
 
-    # 2. Bình Dương: hiện hết cả 4 cơ sở tại Bình Dương
-    if any(k in combined for k in [
-        "binh-duong", "bình dương", "binh duong",
-        "di-an", "dĩ an", "di an",
-        "thuan-an", "thuận an", "thuan an",
-        "thu-dau-mot", "thủ dầu một", "thu dau mot",
-        "tan-uyen", "tân uyên", "tan uyen",
-    ]):
+    # 2. Bình Dương: hiện hết cả 4 cơ sở tại Bình Dương nếu tên page có đề cập Bình Dương / huyện thị
+    if any(k in norm_name for k in ["binh duong", "di an", "thuan an", "thu dau mot", "tan uyen"]):
         return BRANCHES_BINH_DUONG
 
-    # 3. Đồng Nai: hiện hết cả 2 cơ sở tại Đồng Nai
-    if any(k in combined for k in [
-        "dong-nai", "đồng nai", "ong-nai", "dong nai",
-        "bien-hoa", "biên hòa", "bien hoa",
-        "long-thanh", "long thành", "long thanh",
-    ]):
+    # 3. Đồng Nai: hiện hết cả 2 cơ sở tại Đồng Nai nếu tên page có đề cập Đồng Nai / Biên Hòa / Long Thành
+    if any(k in norm_name for k in ["dong nai", "bien hoa", "long thanh"]):
         return BRANCHES_DONG_NAI
 
-    # 4. Vũng Tàu / Bà Rịa: hiện cơ sở Vũng Tàu
-    if any(k in combined for k in ["vung-tau", "vũng tàu", "vung tau", "ba-ria", "bà rịa", "ba ria"]):
+    # 4. Vũng Tàu / Bà Rịa: hiện cơ sở Vũng Tàu nếu tên page có đề cập Vũng Tàu / Bà Rịa
+    if any(k in norm_name for k in ["vung tau", "ba ria"]):
         return BRANCHES_VUNG_TAU
 
-    # 5. Nếu kit có địa chỉ cụ thể không thuộc các mẫu trên: làm sạch zip code và trả về
-    if addr_raw:
-        branches = []
-        for raw_part in addr_raw.replace("|", "\n").splitlines():
-            cleaned = re.sub(r",?\s*\b\d{5,6}\b.*$", "", raw_part.strip()).strip()
-            cleaned = re.sub(r",\s*(Di An|Thu Dau Mot|Vung Tau|Ho Chi Minh City|Việt Nam\.?)$", "", cleaned, flags=re.I).strip()
-            if not cleaned:
-                continue
-            if not cleaned.startswith("🏫"):
-                cleaned = f"🏫 {cleaned}"
-            if cleaned not in branches:
-                branches.append(cleaned)
-        if branches:
-            return branches
-
-    # 6. Fallback cho trang hệ thống / trung tâm chung
+    # 5. KHÔNG ĐỀ CẬP ĐỊA DANH GÌ Ở TÊN FANPAGE -> ĐĂNG HẾT TẤT CẢ CÁC ĐỊA CHỈ
     canon_tag = _canonical_tag(tag or "")
+    slug = (row.get("slug") or "").lower()
     if canon_tag == "ke-toan" or ("ke-toan" in slug and not canon_tag):
         return BRANCHES_KE_TOAN
     return ["📍 HỆ THỐNG 13 CHI NHÁNH TIN HỌC SAO VIỆT"] + BRANCHES_13_STANDARD
