@@ -23,19 +23,14 @@ from zoneinfo import ZoneInfo
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
-try:
-    from zoneinfo import ZoneInfo
-    TZ = ZoneInfo("Asia/Ho_Chi_Minh")
-except Exception:
-    from datetime import timezone, timedelta
-    TZ = timezone(timedelta(hours=7))
-
+TZ = ZoneInfo("Asia/Ho_Chi_Minh")
 VAULT = Path(__file__).resolve().parents[3]
 if VAULT.name != "Brain Default" and not (VAULT / "wiki" / "brand-kits").is_dir():
     VAULT = Path(__file__).resolve().parents[4]
 KITS = VAULT / "wiki" / "brand-kits"
 STATE = VAULT / "Javis" / "dang-hang-ngay.json"
-SKIP_FILES = {"royce-shop.md", "royce.md"}  # test page: không vào hàng ngày trừ khi --include-royce
+# test page: không vào hàng ngày trừ khi --include-royce
+SKIP_FILES = {"royce-shop.md", "royce.md"}
 
 
 def registry_tags():
@@ -56,7 +51,8 @@ def registry_tags():
 
 def field(md, *labels):
     for lab in labels:
-        m = re.search(r"^[ \t]*[-*][ \t]*" + re.escape(lab) + r":[ \t]*(.*)$", md, re.M)
+        m = re.search(r"^[ \t]*[-*][ \t]*" +
+                      re.escape(lab) + r":[ \t]*(.*)$", md, re.M)
         if m and m.group(1).strip():
             return m.group(1).strip()
     return ""
@@ -97,7 +93,8 @@ def get_connected_page_tokens() -> dict[str, str]:
             try:
                 md = p.read_text(encoding="utf-8")
                 pid = field(md, "Page ID", "page_id")
-                tok = field(md, "Access Token", "access_token", "Page Token", "Token")
+                tok = field(md, "Access Token", "access_token",
+                            "Page Token", "Token")
                 if pid and tok and str(pid) not in tokens:
                     tokens[str(pid)] = str(tok).strip()
             except Exception:
@@ -113,7 +110,8 @@ def verify_token_live(page_id: str, token: str) -> tuple[bool, str]:
     import urllib.error
     url = f"https://graph.facebook.com/v21.0/{page_id}?fields=id,name&access_token={token}"
     try:
-        req = urllib.request.Request(url, headers={"User-Agent": "JavisOS/1.0"})
+        req = urllib.request.Request(
+            url, headers={"User-Agent": "JavisOS/1.0"})
         with urllib.request.urlopen(req, timeout=4) as res:
             if res.status == 200:
                 return True, "active"
@@ -146,7 +144,8 @@ def load_pages(include_royce=False, connected_only=True):
             continue
         if connected_only and pid not in connected_tokens:
             continue
-        tok = connected_tokens.get(pid, "") or field(md, "Access Token", "access_token", "Page Token", "Token")
+        tok = connected_tokens.get(pid, "") or field(
+            md, "Access Token", "access_token", "Page Token", "Token")
         rows.append({
             "file": p.name,
             "slug": field(md, "slug") or p.stem,
@@ -214,7 +213,8 @@ def load_state(today):
             # Tự động dọn dẹp các page_id trong pending_course đã nằm trong ok
             if isinstance(st.get("pending_course"), dict) and st.get("ok"):
                 ok_set = set(str(x) for x in st["ok"])
-                st["pending_course"] = {k: v for k, v in st["pending_course"].items() if str(k) not in ok_set}
+                st["pending_course"] = {
+                    k: v for k, v in st["pending_course"].items() if str(k) not in ok_set}
         except Exception:
             pass
     return st
@@ -362,7 +362,8 @@ def print_chan_trang(row, tag=None):
     if row.get("hotline"):
         hl = row["hotline"].strip()
         if not hl.startswith("📞") and not hl.startswith("☎"):
-            hl_val = re.sub(r"^(Hotline/Zalo|Hotline|Zalo)[:\s]*", "", hl, flags=re.I).strip()
+            hl_val = re.sub(
+                r"^(Hotline/Zalo|Hotline|Zalo)[:\s]*", "", hl, flags=re.I).strip()
             print("📞 Hotline/Zalo: " + hl_val)
         else:
             print(hl)
@@ -376,7 +377,8 @@ def print_chan_trang(row, tag=None):
     if row.get("web"):
         wb = row["web"].strip()
         if not wb.startswith("🌐"):
-            wb_val = re.sub(r"^(Website|Web)[:\s]*", "", wb, flags=re.I).strip()
+            wb_val = re.sub(
+                r"^(Website|Web)[:\s]*", "", wb, flags=re.I).strip()
             print("🌐 Website: " + wb_val)
         else:
             print(wb)
@@ -402,7 +404,7 @@ def main(argv):
     if "--fail" in argv:
         i = argv.index("--fail")
         mark_fail = argv[i + 1] if i + 1 < len(argv) else ""
-        reason = " ".join(argv[i + 2 :]) if i + 2 < len(argv) else "POST_SKIP"
+        reason = " ".join(argv[i + 2:]) if i + 2 < len(argv) else "POST_SKIP"
 
     if specific_page:
         all_pages = load_pages(include_royce=True, connected_only=False)
@@ -412,27 +414,33 @@ def main(argv):
             import kit_tim
             best = kit_tim.resolve_kit(specific_page)
             if best:
-                row = next((p for p in all_pages if p["file"] == best["filename"]), None)
+                row = next(
+                    (p for p in all_pages if p["file"] == best["filename"]), None)
         except Exception:
             pass
         if not row:
             q_clean = specific_page.lower().strip()
-            row = next((p for p in all_pages if q_clean in p["name"].lower() or q_clean in p["slug"].lower() or q_clean in p["file"].lower() or q_clean == p["page_id"]), None)
+            row = next((p for p in all_pages if q_clean in p["name"].lower() or q_clean in p["slug"].lower(
+            ) or q_clean in p["file"].lower() or q_clean == p["page_id"]), None)
         if not row:
             print(f"ERROR: khong-tim-thay-page query={specific_page}")
             return 1
         force = "--force" in argv
         if not force and row["page_id"] in (st.get("ok") or []):
-            print(f"NEXT=NONE page-da-ok-hom-nay id={row['page_id']} name={row['name']}")
+            print(
+                f"NEXT=NONE page-da-ok-hom-nay id={row['page_id']} name={row['name']}")
             return 0
-        page_last = (st.get("page_last_course") or {}).get(row["page_id"]) or ""
-        all_tags = [_canonical_tag(t) for t in (row.get("tags") or registry_tags())]
+        page_last = (st.get("page_last_course") or {}
+                     ).get(row["page_id"]) or ""
+        all_tags = [_canonical_tag(t) for t in (
+            row.get("tags") or registry_tags())]
         unique_tags = []
         for t in all_tags:
             if t not in unique_tags:
                 unique_tags.append(t)
         if len(unique_tags) > 1 and page_last:
-            available_tags = [t for t in unique_tags if _canonical_tag(t) != _canonical_tag(page_last)]
+            available_tags = [t for t in unique_tags if _canonical_tag(
+                t) != _canonical_tag(page_last)]
             if not available_tags:
                 available_tags = unique_tags
         else:
@@ -454,7 +462,8 @@ def main(argv):
         branches = get_page_branches(row, tag)
         print("dia_chi=" + " | ".join(branches))
         print("folder=attachments/dataset/" + tag + "/")
-        print("luat_anh=album 5-8 anh neu du dataset: photos[0]=cover AI moi, photos[1..]=anh that dung folder; chi fb_page_photo khi khong du anh")
+        print(
+            "luat_anh=album 5-8 anh neu du dataset: photos[0]=cover AI moi, photos[1..]=anh that dung folder; chi fb_page_photo khi khong du anh")
         print("doc_he_thong=FAST_PATH:skills/dang-bai-facebook/SKILL.md + đúng 1 brand kit; không đọc _y-chu/_quy-trinh/_the-khoa-hoc nếu không thiếu dữ liệu")
         print("logo=" + (row.get("logo") or ""))
         print("logo_white=" + (row.get("logo_white") or ""))
@@ -467,7 +476,8 @@ def main(argv):
         print("cam=" + (row.get("donts") or ""))
         print("KIT_VISUAL")
         print("Dung dung logo file: " + (row.get("logo") or ""))
-        print("Mau poster: " + (row.get("color_pri") or "") + " + " + (row.get("color_sec") or ""))
+        print("Mau poster: " + (row.get("color_pri") or "") +
+              " + " + (row.get("color_sec") or ""))
         print("Font: " + (row.get("fonts") or ""))
         print("Giong caption: " + (row.get("voice") or ""))
         print("Bo cuc: " + (row.get("layout") or ""))
@@ -479,7 +489,8 @@ def main(argv):
 
     connected_only = "--all-pages" not in argv
     no_verify = "--no-verify" in argv
-    pages = load_pages(include_royce=include_royce, connected_only=connected_only)
+    pages = load_pages(include_royce=include_royce,
+                       connected_only=connected_only)
 
     if mark_ok:
         if mark_ok not in st["ok"]:
@@ -502,9 +513,11 @@ def main(argv):
             st["pending_course"].pop(str(mark_ok), None)
             st["pending_course"].pop(mark_ok, None)
 
-        st["skip"] = [x for x in st.get("skip") or [] if x.get("id") != mark_ok]
+        st["skip"] = [x for x in st.get(
+            "skip") or [] if x.get("id") != mark_ok]
         save_state(st)
-        print("MARK_OK", mark_ok, f"course={st.get('page_last_course', {}).get(mark_ok, '')}")
+        print("MARK_OK", mark_ok,
+              f"course={st.get('page_last_course', {}).get(mark_ok, '')}")
         return 0
 
     if mark_fail:
@@ -520,7 +533,8 @@ def main(argv):
             r"chan-trang|khong-retry|chua-co-brand-kit|khong-dung-the",
             reason, re.I))
         retry_at = (now + timedelta(hours=2)).strftime("%Y-%m-%d %H:%M")
-        rec = {"id": mark_fail, "ly_do": reason[:200], "lan": lan, "retry_after": retry_at}
+        rec = {"id": mark_fail,
+               "ly_do": reason[:200], "lan": lan, "retry_after": retry_at}
         skips = [x for x in skips if x.get("id") != mark_fail]
         if hard or lan >= 2:
             rec["retry_after"] = today + " 23:59"
@@ -551,7 +565,8 @@ def main(argv):
                 continue
             ra = sk.get("retry_after") or ""
             try:
-                ra_dt = datetime.strptime(ra, "%Y-%m-%d %H:%M").replace(tzinfo=TZ)
+                ra_dt = datetime.strptime(
+                    ra, "%Y-%m-%d %H:%M").replace(tzinfo=TZ)
             except ValueError:
                 ra_dt = now
             if now < ra_dt:
@@ -561,9 +576,11 @@ def main(argv):
         if not no_verify and cand.get("token"):
             is_alive, live_msg = verify_token_live(pid, cand["token"])
             if not is_alive:
-                print(f"SKIP_EXPIRED_TOKEN page_id={pid} ten={cand['name']} ly_do={live_msg}")
+                print(
+                    f"SKIP_EXPIRED_TOKEN page_id={pid} ten={cand['name']} ly_do={live_msg}")
                 skips = [x for x in st.get("skip") or [] if x.get("id") != pid]
-                skips.append({"id": pid, "ly_do": f"token-het-han: {live_msg[:100]}", "lan": 2, "bo_toi_mai": True})
+                skips.append(
+                    {"id": pid, "ly_do": f"token-het-han: {live_msg[:100]}", "lan": 2, "bo_toi_mai": True})
                 st["skip"] = skips
                 save_state(st)
                 continue
@@ -577,13 +594,15 @@ def main(argv):
         if p["page_id"] not in ok and not (
             skip_map.get(p["page_id"]) and (
                 skip_map[p["page_id"]].get("bo_toi_mai") or
-                now < datetime.strptime(skip_map[p["page_id"]].get("retry_after", "2099-01-01 00:00"), "%Y-%m-%d %H:%M").replace(tzinfo=TZ)
+                now < datetime.strptime(skip_map[p["page_id"]].get(
+                    "retry_after", "2099-01-01 00:00"), "%Y-%m-%d %H:%M").replace(tzinfo=TZ)
             )
         )
     )
 
     print("HANG_NGAY date=" + today)
-    print("tong_page_ket_noi=" + str(n_all) + " da_ok=" + str(len(ok)) + " cho=" + str(eligible_count))
+    print("tong_page_ket_noi=" + str(n_all) + " da_ok=" +
+          str(len(ok)) + " cho=" + str(eligible_count))
     if not selected_row:
         print("NEXT=NONE het-hang-hom-nay")
         return 0
@@ -592,7 +611,8 @@ def main(argv):
     st["cursor"] = (selected_idx + 1) % max(n_all, 1)
 
     page_last = (st.get("page_last_course") or {}).get(row["page_id"]) or ""
-    all_tags = [_canonical_tag(t) for t in (row.get("tags") or registry_tags())]
+    all_tags = [_canonical_tag(t)
+                for t in (row.get("tags") or registry_tags())]
     unique_tags = []
     for t in all_tags:
         if t not in unique_tags:
@@ -601,7 +621,8 @@ def main(argv):
     # Luật chống trùng: Nếu page có > 1 khóa học thì CẤM trùng khóa vừa đăng lần trước
     # Nếu page chỉ có đúng 1 khóa học thì được phép đăng trùng khóa duy nhất đó
     if len(unique_tags) > 1 and page_last:
-        available_tags = [t for t in unique_tags if _canonical_tag(t) != _canonical_tag(page_last)]
+        available_tags = [t for t in unique_tags if _canonical_tag(
+            t) != _canonical_tag(page_last)]
         if not available_tags:
             available_tags = unique_tags
     else:
@@ -624,7 +645,8 @@ def main(argv):
     branches = get_page_branches(row, tag)
     print("dia_chi=" + " | ".join(branches))
     print("folder=attachments/dataset/" + tag + "/")
-    print("luat_anh=album 5-8 anh neu du dataset: photos[0]=cover AI moi, photos[1..]=anh that dung folder; chi fb_page_photo khi khong du anh")
+    print(
+        "luat_anh=album 5-8 anh neu du dataset: photos[0]=cover AI moi, photos[1..]=anh that dung folder; chi fb_page_photo khi khong du anh")
     print("doc_he_thong=FAST_PATH:skills/dang-bai-facebook/SKILL.md + đúng 1 brand kit; không đọc _y-chu/_quy-trinh/_the-khoa-hoc nếu không thiếu dữ liệu")
     print("logo=" + (row.get("logo") or ""))
     print("logo_white=" + (row.get("logo_white") or ""))
@@ -637,7 +659,8 @@ def main(argv):
     print("cam=" + (row.get("donts") or ""))
     print("KIT_VISUAL")
     print("Dung dung logo file: " + (row.get("logo") or ""))
-    print("Mau poster: " + (row.get("color_pri") or "") + " + " + (row.get("color_sec") or ""))
+    print("Mau poster: " + (row.get("color_pri") or "") +
+          " + " + (row.get("color_sec") or ""))
     print("Font: " + (row.get("fonts") or ""))
     print("Giong caption: " + (row.get("voice") or ""))
     print("Bo cuc: " + (row.get("layout") or ""))

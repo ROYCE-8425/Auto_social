@@ -134,6 +134,7 @@ Trung Tâm Đào Tạo Tin Học Sao Việt
 - Tên Fanpage: Royce Shop
 - slug: royce-shop
 - Page ID: 988656934325292
+- Access Token: EAAYrB1nymYkBSRKa7Mkk7PtL6f4oa6Y5MswuiJQbYtg7NMYyVixtfVJi4BvS6PJuvTZAUGGrwG7AOCkEKFZC0rc1lonJt10alXY0kDA1GMDB0H7DjP9eNqL6pcBdW9waXLLmv8Tz8GLXDZB6UeLZAXEOigT45857LkG5yNOfjgoJNwnd4E2LrErdWX5hx03bktzCL5PayLbLv1F9JHAgCXIO
 - Page test: true
 - Cơ sở / địa chỉ: 🏫 Bình Thạnh: 193 Nguyễn Xí, phường Bình Thạnh, Hồ Chí Minh (Tầng 1) | 🏫 Quận 7: Căn hộ Florita, KĐT Him Lam, Tân Hưng, Hồ Chí Minh | 🏫 Bình Tân: 510 Kinh Dương Vương, An Lạc, Bình Tân | 🏫 Quận 12: A23 Lê Thị Riêng, KDC Thới An | 🏫 TP. Thủ Đức: 133/2 Đỗ Xuân Hợp, Phước Long B | 🏫 CN Tây Thạnh (Q. Tân Phú): 11/23 Hồ Đắc Di, P. Tây Thạnh, TP. Hồ Chí Minh | 🏫 Biên Hòa: 91 Đoàn Văn Cự, Tam Hòa | 🏫 Long Thành: 72 Đinh Bộ Lĩnh, Lộc An | 🏫 Dĩ An: 184/19/11 Đặng Văn Mây | 🏫 Thuận An: 69 D32, Làng chuyên gia Oasis, phường An Phú, Thuận An | 🏫 Thủ Dầu Một: 107 D5, KDC Phú Hòa 1 | 🏫 Tân Uyên: 20 Đường ĐX12, Tân Vĩnh Hiệp | 🏫 Vũng Tàu: 293 Bình Giã, P.8
 - Hotline / Zalo: 0823 552 558 - 093 11 44 858

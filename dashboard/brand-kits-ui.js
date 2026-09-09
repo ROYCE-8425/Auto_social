@@ -479,6 +479,33 @@
     return md;
   }
 
+  function extractFormVals(area, f) {
+    if (!area) return {};
+    return {
+      name: (area.querySelector("#dsFldPageName") || {}).value || "",
+      pageId: (area.querySelector("#dsFldPageId") || {}).value || "",
+      accessToken: ((area.querySelector("#dsFldAccessToken") || {}).value || "").trim(),
+      tagsLine: (function () {
+        if (f && f.kind === "default") return "all";
+        var ids = [];
+        area.querySelectorAll("#dsTagList input[data-tag]").forEach(function (c) {
+          if (c.checked) ids.push(c.getAttribute("data-tag"));
+        });
+        return ids.join(", ");
+      })(),
+      colorPrimary: (area.querySelector("#dsFldColorPri") || {}).value || "",
+      colorSecondary: (area.querySelector("#dsFldColorSec") || {}).value || "",
+      fonts: (area.querySelector("#dsFldFonts") || {}).value || "",
+      logoMain: (area.querySelector("#dsFldLogoMain") || {}).value || "",
+      logoWhite: (area.querySelector("#dsFldLogoWhite") || {}).value || "",
+      logoIcon: (area.querySelector("#dsFldLogoIcon") || {}).value || "",
+      imageStyle: (area.querySelector("#dsFldImageStyle") || {}).value || "",
+      voice: (area.querySelector("#dsFldVoice") || {}).value || "",
+      layout: (area.querySelector("#dsFldLayout") || {}).value || "",
+      donts: (area.querySelector("#dsFldDonts") || {}).value || ""
+    };
+  }
+
   async function render(el) {
     el.innerHTML =
       '<div class="cview-section ds-page">' +
@@ -1134,29 +1161,7 @@
     }
 
     function getFormVals() {
-      return {
-        name: (area.querySelector("#dsFldPageName") || {}).value || "",
-        pageId: (area.querySelector("#dsFldPageId") || {}).value || "",
-        accessToken: ((area.querySelector("#dsFldAccessToken") || {}).value || "").trim(),
-        tagsLine: (function () {
-          if (f.kind === "default") return "all";
-          var ids = [];
-          area.querySelectorAll("#dsTagList input[data-tag]").forEach(function (c) {
-            if (c.checked) ids.push(c.getAttribute("data-tag"));
-          });
-          return ids.join(", ");
-        })(),
-        colorPrimary: (area.querySelector("#dsFldColorPri") || {}).value || "",
-        colorSecondary: (area.querySelector("#dsFldColorSec") || {}).value || "",
-        fonts: (area.querySelector("#dsFldFonts") || {}).value || "",
-        logoMain: (area.querySelector("#dsFldLogoMain") || {}).value || "",
-        logoWhite: (area.querySelector("#dsFldLogoWhite") || {}).value || "",
-        logoIcon: (area.querySelector("#dsFldLogoIcon") || {}).value || "",
-        imageStyle: (area.querySelector("#dsFldImageStyle") || {}).value || "",
-        voice: (area.querySelector("#dsFldVoice") || {}).value || "",
-        layout: (area.querySelector("#dsFldLayout") || {}).value || "",
-        donts: (area.querySelector("#dsFldDonts") || {}).value || ""
-      };
+      return extractFormVals(area, f);
     }
 
     function syncFormToMarkdown() {
@@ -1385,9 +1390,10 @@
     var st = body.querySelector("#dsKitStatus");
     var save = body.querySelector("#dsKitSave");
 
+    var vals = extractFormVals(area, f);
     var ta = area.querySelector("#dsKitText");
     var contentToSave = (ta && ta.value) ? ta.value : f.content;
-    var vals = getFormVals();
+    contentToSave = updatePageKitMarkdown(contentToSave, vals);
 
     st.textContent = "Đang lưu…";
     st.className = "ds-status-text dim";
