@@ -2,11 +2,8 @@
   "date": "2026-09-09",
   "ok": [],
   "skip": [],
-  "cursor": 2,
+  "cursor": 0,
   "page_last_course": {},
-  "pending_course": {
-    "975355049004598": "tin-hoc _ai",
-    "107108788759946": "tin-hoc _ai"
-  },
+  "pending_course": {},
   "last_course": ""
 }
