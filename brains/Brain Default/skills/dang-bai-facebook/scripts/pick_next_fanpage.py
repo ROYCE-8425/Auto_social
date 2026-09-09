@@ -193,6 +193,10 @@ def main(argv):
         if not row:
             print(f"ERROR: khong-tim-thay-page query={specific_page}")
             return 1
+        force = "--force" in argv
+        if not force and row["page_id"] in (st.get("ok") or []):
+            print(f"NEXT=NONE page-da-ok-hom-nay id={row['page_id']} name={row['name']}")
+            return 0
         page_last = (st.get("page_last_course") or {}).get(row["page_id"]) or ""
         all_tags = [_canonical_tag(t) for t in (row.get("tags") or registry_tags())]
         unique_tags = []

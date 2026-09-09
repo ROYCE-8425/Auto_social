@@ -369,7 +369,10 @@ class _ApiAuxEngine:
             "Bạn KHÔNG có: lệnh máy (Bash), tự mở URL (WebFetch/WebSearch), và KHÔNG có các "
             "connector gắn thẳng vào TÀI KHOẢN Claude - Gmail, Google Drive, Google Calendar "
             "gọi bằng tool native `mcp__<tên>__*` chỉ tồn tại trên engine Claude Code. "
-            "Nếu việc cần Bash/WebFetch/Gmail-Drive native, nói thẳng thiếu tool đó. "
+            "Nếu việc được giao cần một trong những thứ đó, hãy nói THẲNG là engine hiện tại "
+            "không có công cụ ấy và chủ cần đổi model việc nền sang Claude Code. TUYỆT ĐỐI "
+            "không mô tả chuyện này là bị chặn quyền hay thiếu quyền: mức quyền không liên "
+            "quan, đây là chuyện engine nào có tool nào. "
             "Đăng Facebook: BẮT BUỘC ĐĂNG THẬT LÊN FACEBOOK! Sau khi tạo ảnh cover và soạn caption, "
             "BẮT BUỘC GỌI NGAY tool fb_page_album (hoặc fb_page_photo) để đăng bài công khai lấy post_id. "
             "TUYỆT ĐỐI CẤM dừng lại ở bản nháp, CẤM hỏi 'vui lòng xem xét/xác nhận', CẤM hỏi người dùng. "
@@ -841,9 +844,10 @@ def swap(cli, mode: str = None, tag: str = None, spec: dict = None,
             or_free = _openrouter_free_engine(cli, mode, tag, settings)
             if or_free and not _co_mat_orfree(chain):
                 chain.append(or_free)
-            api_fb = _api_fallback_if_available(cli, mode, tag, settings)
-            if api_fb:
-                chain.append(api_fb)
+            if len(chain) == 1:
+                api_fb = _api_fallback_if_available(cli, mode, tag, settings)
+                if api_fb:
+                    chain.append(api_fb)
             return _FallbackChain(chain) if len(chain) > 1 else cli
         ok, why = availability(sp, settings)
         if not ok:

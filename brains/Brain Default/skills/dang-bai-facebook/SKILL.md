@@ -21,7 +21,8 @@ Mục tiêu: Mỗi bài đăng Fanpage là một **ALBUM chuẩn Tỷ Lệ Vàng
   )
   ```
 - Lấy đường dẫn file AI trả về: `res["rel_path"]` (dạng `attachments/dataset/_xuat/cover_...png`).
-- Nếu tạo ảnh thất bại: dừng ngay với `POST_SKIP ly-do=thieu-cover-ai`. **TUYỆT ĐỐI CẤM lấy ảnh cũ thay thế.**
+- **Quy tắc 1-Shot cho Cover AI**: Chỉ gọi `javis_generate_image` đúng 1 lần duy nhất. TUYỆT ĐỐI CẤM loop tạo lại ảnh nhiều lần để soi chính tả hay chữ logo (mô hình khuếch tán AI không thể render typography chính xác 100%, việc cố tạo lại sẽ đốt hàng triệu token và làm nghẽn tiến trình). Dùng trực tiếp ảnh AI sinh ra; phần logo và nhận diện đã có `ai_render_brand=true` xử lý.
+- Nếu tool báo lỗi exception hoặc không sinh được file: tối đa retry 1 lần duy nhất. Nếu vẫn thất bại: dừng ngay với `POST_SKIP ly-do=thieu-cover-ai`. TUYỆT ĐỐI CẤM lấy ảnh cũ thay thế và CẤM viết script chèn logo thủ công.
 
 ### Bước 2: Soạn Caption & Đăng ALBUM bằng `fb_page_album`
 1. **Xác định Fanpage & Brand Kit**: Đọc đúng 1 file `wiki/brand-kits/<kit-page>.md`. Lấy Page ID, hotline, địa chỉ và chân trang CHAN_TRANG.
@@ -44,7 +45,10 @@ Mục tiêu: Mỗi bài đăng Fanpage là một **ALBUM chuẩn Tỷ Lệ Vàng
    `OK | <Trang> | <Khóa học> | Album 6-8 ảnh (1 cover AI + ảnh dataset) | post_id: <post_id> | link: <link>`
 
 ## Quy định nghiêm ngặt:
+- Nếu `pick_next_fanpage.py` trả về `NEXT=NONE` (ví dụ `page-da-ok-hom-nay` hoặc `het-hang-hom-nay`): DỪNG NGAY TIẾN TRÌNH, không được dùng `--page` để bypass hoặc cố đăng tiếp.
 - TUYỆT ĐỐI CẤM dùng cover cũ trong `_xuat`. Cover luôn luôn là ảnh AI mới tạo 100%.
+- CẤM loop retry tạo cover AI vì lý do chữ nhỏ hay logo. Đúng 1 lần tạo là dùng.
+- CẤM tự viết script Python (Pillow/cv2) để dán logo hay crop ghép ảnh, CẤM đọc code nguồn `hub_call.py` hay debug backend (dùng trực tiếp tool API đã cấp).
 - CẤM tự chạy vòng lặp ReAct dò tìm file ảnh hay crop ảnh thủ công (đã có tool tự động hóa).
 - CẤM gọi subagent kiểm chứng độc lập (verifier) vì Graph API đã tự động verify kết quả.
 - CẤM dán nguyên văn caption dài hay nhật ký suy luận vào kết quả cuối.

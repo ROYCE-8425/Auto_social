@@ -553,35 +553,34 @@ def _resolve_media(ref, cctx):
         return None, None, "ERROR: không xác định được vault/vùng nhận file để tìm media."
     try:
         pref = Path(ref)
-        if pref.is_absolute():
+        if pref.is_absolute() and pref.is_file():
             rp = pref.resolve()
-            if rp.is_file():
-                if any(str(rp).startswith(str(r)) for r in roots) or str(rp).startswith(("/brains", "/data", "/app")):
-                    return None, rp, None
-                for r in roots:
-                    try:
-                        rp.relative_to(r)
-                        return None, rp, None
-                    except ValueError:
-                        pass
-                # Nếu file tồn tại tuyệt đối và là file ảnh an toàn
-                if rp.suffix.lower() in (".jpg", ".jpeg", ".png", ".webp"):
-                    return None, rp, None
-        else:
-            clean_ref = str(ref).replace("\\", "/").lstrip("/")
+            if any(str(rp).startswith(str(r)) for r in roots) or str(rp).startswith(("/brains", "/data", "/app")):
+                return None, rp, None
             for r in roots:
-                cand = (r / clean_ref).resolve()
-                if cand.is_file():
-                    return None, cand, None
-                for marker in ("attachments/", "dataset/", "_xuat/", "album_ready/"):
-                    if marker in clean_ref:
-                        sub_ref = clean_ref[clean_ref.find(marker):]
-                        cand2 = (r / sub_ref).resolve()
-                        if cand2.is_file():
-                            return None, cand2, None
-                        cand3 = (r / "attachments" / sub_ref).resolve()
-                        if cand3.is_file():
-                            return None, cand3, None
+                try:
+                    rp.relative_to(r)
+                    return None, rp, None
+                except ValueError:
+                    pass
+            # Nếu file tồn tại tuyệt đối và là file ảnh an toàn
+            if rp.suffix.lower() in (".jpg", ".jpeg", ".png", ".webp"):
+                return None, rp, None
+        
+        clean_ref = str(ref).replace("\\", "/").lstrip("/")
+        for r in roots:
+            cand = (r / clean_ref).resolve()
+            if cand.is_file():
+                return None, cand, None
+            for marker in ("attachments/", "dataset/", "_xuat/", "album_ready/"):
+                if marker in clean_ref:
+                    sub_ref = clean_ref[clean_ref.find(marker):]
+                    cand2 = (r / sub_ref).resolve()
+                    if cand2.is_file():
+                        return None, cand2, None
+                    cand3 = (r / "attachments" / sub_ref).resolve()
+                    if cand3.is_file():
+                        return None, cand3, None
             # Quét tìm trực tiếp trong thư mục _xuat và album_ready nếu truyền tên file
             fname = Path(clean_ref).name
             if fname.lower().endswith((".jpg", ".jpeg", ".png", ".webp")):

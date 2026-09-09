@@ -1846,6 +1846,7 @@ async def generate_gemini(
                     # Ghép Logo 3D và chữ tiếng Việt Unicode chuẩn nét căng lên visual Imagen
                     try:
                         import banner_templates
+                        from PIL import Image
                         ai_base_img = Image.open(io.BytesIO(raw_bytes))
                         content = parse_banner_content(prompt, course_id=course_id, vault_root=v_root)
                         lp = Path(logo_file) if logo_file else None
