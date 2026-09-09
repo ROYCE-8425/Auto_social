@@ -962,10 +962,13 @@
       '<div class="ds-field" style="margin-top:10px">' +
       '<div style="display:flex;justify-content:space-between;align-items:center">' +
       '<label class="ds-label" for="dsFldAccessToken">Page Access Token (Graph API riêng của Trang)</label>' +
+      '<div style="display:flex;gap:6px">' +
+      '<button type="button" class="s-btn-ghost ds-btn-xs" id="dsCheckTokenBtn" title="Kiểm tra kết nối và hạn dùng token với Facebook">⚡ Kiểm tra kết nối</button>' +
       '<button type="button" class="s-btn-ghost ds-btn-xs" id="dsToggleTok" title="Hiện hoặc ẩn Token">👁️ Hiện/Ẩn</button>' +
-      '</div>' +
+      '</div></div>' +
       '<input type="password" class="ds-input ds-token-input" id="dsFldAccessToken" value="' + esc(p.accessToken || "") + '" placeholder="Dán mã Page Access Token (bắt đầu bằng EAAY...) để nạp vĩnh viễn" autocomplete="off" spellcheck="false">' +
-      '<div class="ds-token-tip">💡 Token này giúp Javis đăng bài tự động bằng Graph API trực tiếp lên Trang mà không bị chặn bởi Facebook App. Nạp xong nhấn <b>Lưu Brand Kit</b> ở góc trên.</div>' +
+      '<div id="dsTokenLiveMsg" style="margin-top:4px"></div>' +
+      '<div class="ds-token-tip">💡 Token này giúp Javis đăng bài tự động bằng Graph API trực tiếp lên Trang mà không bị chặn bởi Facebook App. Bấm <b>⚡ Kiểm tra kết nối</b> để biết ngay token còn sống hay hết hạn. Nạp xong nhấn <b>Lưu Brand Kit</b> ở góc trên.</div>' +
       '</div>' +
       '<div class="ds-field" style="margin-top:8px">' +
       '<label class="ds-label">Slug (tên file kit, không phải ID Facebook)</label>' +
@@ -1212,6 +1215,55 @@
         } else {
           tokInp.type = "password";
           togBtn.textContent = "👁️ Hiện";
+        }
+      };
+    }
+
+    var checkBtn = area.querySelector("#dsCheckTokenBtn");
+    var liveMsg = area.querySelector("#dsTokenLiveMsg");
+    if (checkBtn && tokInp) {
+      checkBtn.onclick = async function () {
+        var tVal = tokInp.value.trim();
+        var pIdVal = (area.querySelector("#dsFldPageId") || {}).value || "";
+        if (!tVal) {
+          if (liveMsg) liveMsg.innerHTML = '<span style="color:var(--warn-ink,#f59e0b);font-size:12px">⚠️ Vui lòng dán Access Token vào ô trên trước khi kiểm tra.</span>';
+          return;
+        }
+        checkBtn.disabled = true;
+        checkBtn.textContent = "⏳ Đang ping Facebook…";
+        if (liveMsg) liveMsg.innerHTML = '<span style="color:var(--text3);font-size:12px">Đang kết nối Facebook Graph API để xác minh token…</span>';
+        try {
+          var r = await fetch("/connect/facebook/verify-token", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ token: tVal, page_id: pIdVal })
+          });
+          var res = await r.json();
+          if (res.ok && res.is_valid) {
+            liveMsg.innerHTML = '<div class="ds-token-status ok" style="display:inline-flex;margin-top:2px">🟢 ' + esc(res.status_text) + '</div>';
+            var headStatus = area.querySelector(".ds-section-head .ds-token-status");
+            if (headStatus) {
+              headStatus.className = "ds-token-status ok";
+              headStatus.style.background = "";
+              headStatus.style.color = "";
+              headStatus.textContent = "🟢 " + res.status_text;
+            }
+          } else {
+            var errMsg = res.error || res.status_text || "Token không hợp lệ hoặc đã hết hạn";
+            liveMsg.innerHTML = '<div class="ds-token-status warn" style="display:inline-flex;margin-top:2px;background:rgba(239,68,68,0.18);color:#ef4444;border-color:rgba(239,68,68,0.35)">🔴 ' + esc(errMsg) + '</div>';
+            var headStatus2 = area.querySelector(".ds-section-head .ds-token-status");
+            if (headStatus2) {
+              headStatus2.className = "ds-token-status warn";
+              headStatus2.style.background = "rgba(239,68,68,0.18)";
+              headStatus2.style.color = "#ef4444";
+              headStatus2.textContent = "🔴 Mất kết nối: Token đã hết hạn / không hợp lệ";
+            }
+          }
+        } catch (eCheck) {
+          liveMsg.innerHTML = '<span style="color:var(--red,#ef4444);font-size:12px">Lỗi kết nối máy chủ: ' + esc(eCheck.message) + '</span>';
+        } finally {
+          checkBtn.disabled = false;
+          checkBtn.textContent = "⚡ Kiểm tra kết nối";
         }
       };
     }

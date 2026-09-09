@@ -3301,6 +3301,90 @@ async def connect_facebook_pages():
     return {"ok": True, "pages": pages}
 
 
+@app.post("/connect/facebook/verify-token")
+async def connect_facebook_verify_token(request: Request):
+    """Kiểm tra tính sống còn và hạn sử dụng của một Page Access Token trực tiếp với Facebook Graph API."""
+    import time
+    data = await request.json()
+    token = (data.get("token") or "").strip()
+    page_id = str(data.get("page_id") or "").strip()
+    if not token:
+        return {"ok": False, "is_valid": False, "error": "Thiếu mã Access Token để kiểm tra"}
+
+    import httpx
+    try:
+        async with httpx.AsyncClient(timeout=15) as client:
+            target = page_id if page_id else "me"
+            r = await client.get(
+                f"https://graph.facebook.com/v25.0/{target}",
+                params={"fields": "id,name", "access_token": token}
+            )
+            d = r.json()
+            if isinstance(d, dict) and d.get("error"):
+                err = d["error"]
+                msg = err.get("message") if isinstance(err, dict) else str(err)
+                code = err.get("code") if isinstance(err, dict) else None
+                return {
+                    "ok": False,
+                    "is_valid": False,
+                    "error": msg,
+                    "code": code,
+                    "status_text": f"Token không hợp lệ hoặc đã hết hạn: {msg}"
+                }
+
+            page_name = d.get("name") or ""
+            ret_id = str(d.get("id") or "")
+
+            expires_at = None
+            is_permanent = False
+            days_left = None
+            scopes = []
+            try:
+                r_dbg = await client.get(
+                    "https://graph.facebook.com/v25.0/debug_token",
+                    params={"input_token": token, "access_token": token}
+                )
+                dbg_data = r_dbg.json().get("data") or {}
+                if dbg_data:
+                    exp = dbg_data.get("expires_at", 0)
+                    expires_at = exp
+                    scopes = dbg_data.get("scopes") or []
+                    if exp == 0:
+                        is_permanent = True
+                    elif exp and exp > time.time():
+                        days_left = max(0, int((exp - time.time()) / 86400))
+                    elif exp and exp <= time.time():
+                        return {
+                            "ok": False,
+                            "is_valid": False,
+                            "error": "Token đã hết hạn",
+                            "status_text": "Token đã hết hạn sử dụng. Cần nạp token mới."
+                        }
+            except Exception:
+                pass
+
+            if is_permanent:
+                status_desc = "Token vĩnh viễn (Never expires) — Sẵn sàng đăng bài Graph API"
+            elif days_left is not None:
+                status_desc = f"Token đang hoạt động — Còn lại {days_left} ngày"
+            else:
+                status_desc = "Token đang hoạt động bình thường — Sẵn sàng đăng bài"
+
+            return {
+                "ok": True,
+                "is_valid": True,
+                "page_id": ret_id,
+                "page_name": page_name,
+                "is_permanent": is_permanent,
+                "expires_at": expires_at,
+                "days_left": days_left,
+                "scopes": scopes,
+                "status_text": status_desc
+            }
+    except Exception as e:
+        return {"ok": False, "is_valid": False, "error": f"Lỗi kết nối Facebook: {e}"}
+
+
 @app.post("/connect/add")
 async def connect_add(request: Request):
     """Thêm tài khoản cho 1 connector trong kho: lưu tạm → VALIDATE ngay (gọi tool xác minh,
