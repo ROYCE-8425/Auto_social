@@ -29,19 +29,26 @@ Mục tiêu ngày: mỗi Fanpage có Brand Kit + Page ID được tối đa 1 b�
 
 ## Quy trình 1 vòng
 
-0. FAST_PATH: đọc `skills/dang-bai-facebook/SKILL.md`; không đọc tài liệu hệ thống/reference dài trong mỗi vòng trừ khi thiếu dữ liệu bắt buộc.
-1. `python "brains/Brain Default/skills/dang-bai-facebook/scripts/pick_next_fanpage.py"`
-2. `NEXT=NONE` → hết hàng, dừng.
-3. `NEXT=1` → đọc **đúng 1 file** `wiki/brand-kits/<kit>` (dòng kit=) **và** khối `KIT_VISUAL` (logo file, màu, font, giọng, bố cục). Lấy địa chỉ/hotline từ `CHAN_TRANG`. CẤM bỏ qua kit. CẤM đọc 56 kit. Không `fb_pages_list`.
-4. **Đọc** `skills/viet-bai-facebook/SKILL.md`. Caption 32-45 dòng hoặc 45-70 dòng nếu ads đầy đủ, giọng = kit. Dán CHAN_TRANG (mỗi cơ sở một dòng). Gen **đúng 1** cover. Nếu kit/brief dùng OpenAI/GPT Image/ai_render_brand/ai_full thì gọi thẳng `javis_generate_image`; nếu không thì raw dataset + logo kit. `pick_photos` nếu cần album. Đăng 1 lần. CẤM `fb_page_post`. CẤM gen 2 poster AI.
-5. `--ok` hoặc `--fail`. Không đăng lần 2.
+0. FAST_PATH: Lệnh `pick_next_fanpage.py` đã tự động lọc CHỈ Fanpage ĐANG HOẠT ĐỘNG (có Access Token hợp lệ & live-check 200 OK trên Meta Graph API). Không quét các trang chưa kết nối.
+1. Chạy lệnh lấy Fanpage và khoá học:
+   `python "brains/Brain Default/skills/dang-bai-facebook/scripts/pick_next_fanpage.py"`
+2. Nếu `NEXT=NONE`: Toàn bộ Fanpage đã đủ bài hoặc chưa có thêm Fanpage kết nối, DỪNG ngay.
+3. Nếu `NEXT=1`:
+   - Đọc đúng 1 file `wiki/brand-kits/<kit>` được chỉ định và đọc `skills/dang-bai-facebook/SKILL.md`.
+   - Lấy thông tin hotline, địa chỉ từ khối `CHAN_TRANG`. Cấm bịa ngoài brand kit.
+   - Bước 1 (Cover AI): Gọi tool `javis_generate_image` tạo 1 cover AI mới 100% chuẩn tỉ lệ vuông 1:1, phong cách công nghệ Sao Việt, đúng chủ đề khoá học `<the>`. CẤM dùng lại cover cũ trong `_xuat`.
+   - Bước 2 (Đăng Album): Soạn caption 7 nhịp (35-45 dòng) kèm `CHAN_TRANG`, sau đó gọi tool `fb_page_album`:
+     `fb_page_album(page="<page_id>", photos="auto", course="<the>", cover="<đường_dẫn_cover_vừa_tạo>", message="<caption_đầy_đủ>")`
+4. Kết thúc vòng:
+   - Thành công: `python "brains/Brain Default/skills/dang-bai-facebook/scripts/pick_next_fanpage.py" --ok <page_id> <the>`
+     Báo cáo: `OK | <tên_page> | <the> | post_id: <post_id>`
+   - Thất bại: `python "brains/Brain Default/skills/dang-bai-facebook/scripts/pick_next_fanpage.py" --fail <page_id> "<lý_do_lỗi>"`
+     Báo cáo: `FAIL | <tên_page> | lý do: <lý_do_lỗi>`
 
 ## Fail / rollback
-
 - Fail = không có post_id. Không coi là đã đăng. Lịch sẽ đưa page đó lại sau 2 giờ (1 lần).
 - Nếu bài đã lên tường (có post_id) thì KHÔNG rollback, KHÔNG xóa, đánh --ok.
-- Cấm gọi fb_page_delete.
+- Tuyệt đối CẤM gọi fb_page_delete.
 
-## Đầu ra vòng (ngắn)
-
-`VONG page=<ten> id=<page_id> the=<the> ket_qua=OK|SKIP post_id=... ly_do=...`
+## Đầu ra vòng
+Báo cáo đúng 1 dòng duy nhất rồi kết thúc vòng.

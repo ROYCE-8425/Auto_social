@@ -69,10 +69,65 @@ def parse_tags(raw):
     return out or list(registry_tags())
 
 
-def load_pages(include_royce=False):
+def get_connected_page_tokens() -> dict[str, str]:
+    """Lấy danh sách các Page ID đang có Access Token (từ Javis/page_tokens.json hoặc wiki/brand-kits/*.md)."""
+    tokens = {}
+    tok_file = VAULT / "Javis" / "page_tokens.json"
+    if tok_file.is_file():
+        try:
+            data = json.loads(tok_file.read_text(encoding="utf-8"))
+            if isinstance(data, dict):
+                for pid, info in data.items():
+                    if isinstance(info, dict) and info.get("access_token"):
+                        tokens[str(pid)] = str(info["access_token"]).strip()
+        except Exception:
+            pass
+
+    if KITS.is_dir():
+        for p in KITS.glob("*.md"):
+            if p.name.startswith("_"):
+                continue
+            try:
+                md = p.read_text(encoding="utf-8")
+                pid = field(md, "Page ID", "page_id")
+                tok = field(md, "Access Token", "access_token", "Page Token", "Token")
+                if pid and tok and str(pid) not in tokens:
+                    tokens[str(pid)] = str(tok).strip()
+            except Exception:
+                pass
+    return tokens
+
+
+def verify_token_live(page_id: str, token: str) -> tuple[bool, str]:
+    """Kiểm tra nhanh qua Facebook Graph API xem token còn sống hay đã hết hạn (timeout 4s)."""
+    if not token:
+        return False, "chua-co-token"
+    import urllib.request
+    import urllib.error
+    url = f"https://graph.facebook.com/v21.0/{page_id}?fields=id,name&access_token={token}"
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "JavisOS/1.0"})
+        with urllib.request.urlopen(req, timeout=4) as res:
+            if res.status == 200:
+                return True, "active"
+            return False, f"http-{res.status}"
+    except urllib.error.HTTPError as e:
+        try:
+            body = json.loads(e.read().decode("utf-8", errors="ignore"))
+            err_msg = body.get("error", {}).get("message", str(e))
+            return False, f"facebook-error: {err_msg}"
+        except Exception:
+            return False, f"http-error-{e.code}"
+    except Exception as e:
+        # Nếu mạng chập chờn hoặc timeout tạm thời thì vẫn cho qua để không chặn tiến trình
+        return True, f"network-warning: {e}"
+
+
+def load_pages(include_royce=False, connected_only=True):
     rows = []
     if not KITS.is_dir():
         return rows
+    connected_tokens = get_connected_page_tokens() if connected_only else {}
     for p in sorted(KITS.glob("*.md")):
         if p.name.startswith("_"):
             continue
@@ -82,11 +137,15 @@ def load_pages(include_royce=False):
         pid = field(md, "Page ID", "page_id")
         if not re.fullmatch(r"\d+", pid or ""):
             continue
+        if connected_only and pid not in connected_tokens:
+            continue
+        tok = connected_tokens.get(pid, "") or field(md, "Access Token", "access_token", "Page Token", "Token")
         rows.append({
             "file": p.name,
             "slug": field(md, "slug") or p.stem,
             "name": field(md, "Tên Fanpage") or p.stem,
             "page_id": pid,
+            "token": tok,
             "tags": parse_tags(field(md, "Thẻ khoá học")),
             "address": field(md, "Cơ sở / địa chỉ"),
             "hotline": field(md, "Hotline / Zalo", "Hotline riêng", "Hotline"),
@@ -259,7 +318,9 @@ def main(argv):
         print("HET_CHAN_TRANG")
         return 0
 
-    pages = load_pages(include_royce=include_royce)
+    connected_only = "--all-pages" not in argv
+    no_verify = "--no-verify" in argv
+    pages = load_pages(include_royce=include_royce, connected_only=connected_only)
 
     if mark_ok:
         if mark_ok not in st["ok"]:
@@ -326,6 +387,18 @@ def main(argv):
                 ra_dt = now
             if now < ra_dt:
                 continue
+
+        # Kiểm tra nhanh token còn sống trên Graph API
+        if not no_verify and cand.get("token"):
+            is_alive, live_msg = verify_token_live(pid, cand["token"])
+            if not is_alive:
+                print(f"SKIP_EXPIRED_TOKEN page_id={pid} ten={cand['name']} ly_do={live_msg}")
+                skips = [x for x in st.get("skip") or [] if x.get("id") != pid]
+                skips.append({"id": pid, "ly_do": f"token-het-han: {live_msg[:100]}", "lan": 2, "bo_toi_mai": True})
+                st["skip"] = skips
+                save_state(st)
+                continue
+
         selected_row = cand
         selected_idx = idx
         break
@@ -341,7 +414,7 @@ def main(argv):
     )
 
     print("HANG_NGAY date=" + today)
-    print("tong_page=" + str(n_all) + " da_ok=" + str(len(ok)) + " cho=" + str(eligible_count))
+    print("tong_page_ket_noi=" + str(n_all) + " da_ok=" + str(len(ok)) + " cho=" + str(eligible_count))
     if not selected_row:
         print("NEXT=NONE het-hang-hom-nay")
         return 0
