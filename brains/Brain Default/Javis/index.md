@@ -2,10 +2,10 @@
 
 > Tự sinh từ file - ĐỪNG sửa tay. Chỉ mục mọi năng lực của Javis trong brain này để bất kỳ AI/engine đọc 1 chỗ là hiểu Javis làm được gì. Song song `wiki/index.md` (tri thức).
 
-**Tổng quan:** 1 agents · 9 skills · 1 workflows (0 bật) · 1 loops (0 bật) · 12 plugins (11 chạy)
+**Tổng quan:** 1 agents · 9 skills · 1 workflows (0 bật) · 2 loops (0 bật) · 12 plugins (11 chạy)
 
 ## Agents
-- **Biên tập Facebook** (`bien-tap-facebook`) - Soạn caption Fanpage đúng brand kit và tự động đăng album công khai lên Facebook. · model gemini-3.8-flash-high · skills: dang-bai-facebook, viet-bai-facebook
+- **Biên tập Facebook** (`bien-tap-facebook`) - Tạo 1 ảnh AI độc quyền mới 100%, soạn caption đúng brand kit và đăng lên Fanpage Facebook. · skills: dang-bai-facebook, viet-bai-facebook
 
 ## Skills
 ### AI
@@ -16,16 +16,18 @@
 - **Query Wiki** (`query-wiki`) - Khai thác tri thức trong Second Brain: tổng hợp, so sánh, giả thuyết. Trả lời có trích dẫn.
 - **Kiểm tra lại năng lực của chính mình** (`verify-own-capabilities`) - Khi không chắc về một năng lực (vd: tạo ảnh), hãy kiểm tra danh sách tool/plugin đang hoạt động thay vì khẳng định là không có.
 ### Content
-- **Viết bài Facebook** (`viet-bai-facebook`) - Bộ skill chuyên sâu viết bài Facebook: 4 trụ cột nội dung, 50 mẫu Hook thực chiến, sườn Hook-Body-CTA, cấm văn mẫu AI, tối ưu đọc lướt di động.
+- **Viết bài Facebook** (`viet-bai-facebook`) - Skill viết caption Facebook cho hệ thống Sao Việt: rõ người học, rõ việc làm được, giọng tự nhiên, không văn mẫu AI, tối ưu đọc lướt trên di động.
+### Facebook
+- **Đăng bài Facebook** (`dang-bai-facebook`) - Đăng bài Fanpage Sao Việt: Album 6-8 ảnh chuẩn Tỷ Lệ Vàng 2026 (1 cover AI mới 100% + ảnh lớp học thật dataset), đăng bằng fb_page_album kèm caption 7 nhịp brand kit.
 ### Marketing
-- **Đăng bài Facebook** (`dang-bai-facebook`) - Co anh dataset: album tat ca goc (cam 1 anh, cam gen). Khong anh lien quan: moi gen 1 tam.
 - **HTML sang Webcake** (`html-to-webcake`) - Chuyển trang HTML thành file .pke mở được trong trình dựng Webcake, giữ đúng màu, cỡ chữ, ảnh và bố cục của bản gốc.
 
 ## Workflows
-- **Đăng Facebook** (`dang-bai-that-facebook`) - True · 1 bước [bien-tap-facebook] · Co anh dataset thi album goc. Khong anh lien quan moi gen 1 tam.
+- **Đăng Facebook** (`dang-bai-that-facebook`) - True · 1 bước [bien-tap-facebook] · Đăng bài Fanpage Facebook: Album 6-8 ảnh chuẩn Tỷ Lệ Vàng 2026 (1 cover AI mới 100% bằng GPT Image 2 + ảnh lớp học thật từ dataset), đăng bằng fb_page_album.
 
 ## Loops
 - **Đăng bài hàng ngày 1 page** (`dang-bai-hang-ngay`) - tắt · custom/full · mỗi 18 phút
+- **Đăng Royce Shop ngẫu nhiên** (`dang-royce-shop-ngau-nhien-moi-5-phut`) - tắt · custom/full · mỗi 5 phút
 
 ## Plugins (tool/hook native cho mọi engine)
 - **Thời gian & ngày** (`datetime-vn`) - bundled/chạy · tools: javis_now, javis_date_add · Xem ngày giờ hiện tại theo múi giờ đã cấu hình và tính ngày tương đối (mai, mốt, N ngày nữa, tuần trước). Thuần stdlib, chỉ đọc, không cần mạng.

@@ -23,7 +23,13 @@ from zoneinfo import ZoneInfo
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
-TZ = ZoneInfo("Asia/Ho_Chi_Minh")
+try:
+    from zoneinfo import ZoneInfo
+    TZ = ZoneInfo("Asia/Ho_Chi_Minh")
+except Exception:
+    from datetime import timezone, timedelta
+    TZ = timezone(timedelta(hours=7))
+
 VAULT = Path(__file__).resolve().parents[3]
 if VAULT.name != "Brain Default" and not (VAULT / "wiki" / "brand-kits").is_dir():
     VAULT = Path(__file__).resolve().parents[4]

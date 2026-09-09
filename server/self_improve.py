@@ -1059,6 +1059,7 @@ class LoopFeature:
         """Định nghĩa + state + next_run + running - cho GET /loops và tab Lịch."""
         st = (st_all if st_all is not None else self.read_state(brain)).get(lp["slug"], {})
         today = _today()
+        week_str = _this_week()
         last_run = float(st.get("last_run", 0))
         running = bool(self._running and self._running[1] == lp["slug"]
                        and self._running[0] == str(Path(self.deps.brain_root(brain)).resolve()))
