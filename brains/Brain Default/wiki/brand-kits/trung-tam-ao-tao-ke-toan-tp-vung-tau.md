@@ -94,7 +94,7 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 - Dùng ký tự em dash
 
 ## Chân trang caption (bắt buộc)
-Trung Tâm Đào Tạo Kế Toán Sao Việt (hoặc Trung Tâm Tin Học Sao Việt tùy khóa)
+Trung Tâm Đào Tạo Kế Toán TP. Vũng Tàu
 🏫 Vũng Tàu: 293 Bình Giã, phường Tam Thắng, TP.HCM (TP. Vũng Tàu, Bà Rịa - Vũng Tàu cũ)
 
 Hotline: 0931 144 858
@@ -105,7 +105,7 @@ Web: https://khoahocketoan.com.vn
 - Tên Fanpage: Trung Tâm Đào Tạo Kế Toán TP. Vũng Tàu
 - slug: trung-tam-ao-tao-ke-toan-tp-vung-tau
 - Page ID: 420281764511555
-- Thẻ khoá học: tin-hoc _ai, ke-toan
+- Thẻ khoá học: ke-toan
 - Cơ sở / địa chỉ: 🏫 Vũng Tàu: 293 Bình Giã, phường Tam Thắng, TP.HCM (TP. Vũng Tàu, Bà Rịa - Vũng Tàu cũ)
 - Hotline / Zalo: 0931 144 858
 - Email Fanpage: trungtamtinhocsaoviet@gmail.com
@@ -113,5 +113,5 @@ Web: https://khoahocketoan.com.vn
 - Link Fanpage: https://www.facebook.com/420281764511555
 - Khoá thế mạnh: Tin học / AI, Kế toán thực hành
 - Góc địa phương: Vũng Tàu (địa chỉ Fanpage)
-- Folder ảnh (dataset): tin-hoc _ai | ke-toan
+- Folder ảnh (dataset): ke-toan
 - Hashtag thêm:

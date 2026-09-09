@@ -95,7 +95,7 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 - Dùng ký tự em dash
 
 ## Chân trang caption (bắt buộc)
-Trung Tâm Đào Tạo Kế Toán Sao Việt (hoặc Trung Tâm Tin Học Sao Việt tùy khóa)
+Trung Tâm Đào Tạo Autocad Quận 6 - TPHCM
 🏫 Bình Tân: 510 Kinh Dương Vương, phường An Lạc, TP.HCM (Quận Bình Tân cũ)
 
 Hotline: 0823 552 558
@@ -107,7 +107,7 @@ Web: https://blogdaytinhoc.com/khoa-hoc-autocad-quan-6-427
 - Tên Fanpage: Trung Tâm Đào Tạo Autocad Quận 6 - TPHCM
 - slug: trung-tam-ao-tao-autocad-quan-6-tphcm
 - Page ID: 139538609253068
-- Thẻ khoá học: tin-hoc _ai, ve-ky-thuat
+- Thẻ khoá học: ve-ky-thuat
 - Cơ sở / địa chỉ: 🏫 Bình Tân: 510 Kinh Dương Vương, phường An Lạc, TP.HCM (Quận Bình Tân cũ)
 - Hotline / Zalo: 0823 552 558
 - Email Fanpage: trungtamtinhocsaoviet@gmail.com
@@ -115,5 +115,5 @@ Web: https://blogdaytinhoc.com/khoa-hoc-autocad-quan-6-427
 - Link Fanpage: https://www.facebook.com/139538609253068
 - Khoá thế mạnh: Tin học / AI, AutoCAD / vẽ kỹ thuật
 - Góc địa phương: Quận 6 / Bình Tân (địa chỉ Fanpage)
-- Folder ảnh (dataset): tin-hoc _ai | ve-ky-thuat
+- Folder ảnh (dataset): ve-ky-thuat
 - Hashtag thêm:

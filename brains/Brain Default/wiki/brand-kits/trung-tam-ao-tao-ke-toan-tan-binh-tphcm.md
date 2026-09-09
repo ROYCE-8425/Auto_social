@@ -94,7 +94,7 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 - Dùng ký tự em dash
 
 ## Chân trang caption (bắt buộc)
-Trung Tâm Đào Tạo Kế Toán Sao Việt (hoặc Trung Tâm Tin Học Sao Việt tùy khóa)
+Trung Tâm Đào Tạo Kế Toán Tân Bình - TPHCM
 🏫 CN Tây Thạnh: 11/23 Hồ Đắc Di, phường Tây Thạnh, TP.HCM (Quận Tân Phú cũ)
 
 Hotline: 0946 426 536
@@ -106,7 +106,7 @@ Web: https://www.blogdaytinhoc.com/lop-hoc-ke-toan-891
 - Tên Fanpage: Trung Tâm Đào Tạo Kế Toán Tân Bình - TPHCM
 - slug: trung-tam-ao-tao-ke-toan-tan-binh-tphcm
 - Page ID: 279274611932317
-- Thẻ khoá học: tin-hoc _ai, ke-toan
+- Thẻ khoá học: ke-toan
 - Cơ sở / địa chỉ: 🏫 CN Tây Thạnh: 11/23 Hồ Đắc Di, phường Tây Thạnh, TP.HCM (Quận Tân Phú cũ)
 - Hotline / Zalo: 0946 426 536
 - Email Fanpage: trungtamtinhocsaoviet@gmail.com
@@ -114,5 +114,5 @@ Web: https://www.blogdaytinhoc.com/lop-hoc-ke-toan-891
 - Link Fanpage: https://www.facebook.com/279274611932317
 - Khoá thế mạnh: Tin học / AI, Kế toán thực hành
 - Góc địa phương: Tân Bình (địa chỉ Fanpage)
-- Folder ảnh (dataset): tin-hoc _ai | ke-toan
+- Folder ảnh (dataset): ke-toan
 - Hashtag thêm:

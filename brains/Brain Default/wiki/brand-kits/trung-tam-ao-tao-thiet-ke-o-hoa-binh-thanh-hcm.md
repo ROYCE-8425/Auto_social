@@ -94,7 +94,7 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 - Dùng ký tự em dash
 
 ## Chân trang caption (bắt buộc)
-Trung Tâm Đào Tạo Kế Toán Sao Việt (hoặc Trung Tâm Tin Học Sao Việt tùy khóa)
+Trung Tâm Đào Tạo Thiết Kế Đồ Hoạ Bình Thạnh, HCM
 🏫 Bình Thạnh: 193 Nguyễn Xí, phường Bình Thạnh, TP.HCM (Quận Bình Thạnh cũ)
 
 Hotline: 0388 271 707
@@ -105,7 +105,7 @@ Web: https://tinhocsaoviet.com
 - Tên Fanpage: Trung Tâm Đào Tạo Thiết Kế Đồ Hoạ Bình Thạnh, HCM
 - slug: trung-tam-ao-tao-thiet-ke-o-hoa-binh-thanh-hcm
 - Page ID: 456191890920291
-- Thẻ khoá học: tin-hoc _ai, do-hoa
+- Thẻ khoá học: do-hoa
 - Cơ sở / địa chỉ: 🏫 Bình Thạnh: 193 Nguyễn Xí, phường Bình Thạnh, TP.HCM (Quận Bình Thạnh cũ)
 - Hotline / Zalo: 0388 271 707
 - Email Fanpage: tinhocsaovietbinhthanh@gmail.com
@@ -113,5 +113,5 @@ Web: https://tinhocsaoviet.com
 - Link Fanpage: https://www.facebook.com/456191890920291
 - Khoá thế mạnh: Tin học / AI, Thiết kế đồ họa
 - Góc địa phương: Bình Thạnh (địa chỉ Fanpage)
-- Folder ảnh (dataset): tin-hoc _ai | do-hoa
+- Folder ảnh (dataset): do-hoa
 - Hashtag thêm:

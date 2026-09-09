@@ -93,7 +93,7 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 - Dùng ký tự em dash
 
 ## Chân trang caption (bắt buộc)
-Trung Tâm Đào Tạo Kế Toán Sao Việt (hoặc Trung Tâm Tin Học Sao Việt tùy khóa)
+Trung Tâm Tin học Sao Việt Quận 7 - TPHCM
 🏫 Quận 7: Căn hộ Florita, KĐT Him Lam, phường Tân Hưng, TP.HCM (Quận 7 cũ)
 
 Hotline: 0935 195 118

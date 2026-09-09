@@ -128,6 +128,39 @@ def verify_token_live(page_id: str, token: str) -> tuple[bool, str]:
         return True, f"network-warning: {e}"
 
 
+def remove_accents(text: str) -> str:
+    if not text:
+        return ""
+    text = unicodedata.normalize("NFD", text.lower())
+    return "".join(c for c in text if unicodedata.category(c) != "Mn").replace("đ", "d")
+
+
+def infer_specialized_tag(name: str, slug: str = "", raw_tags: str = "") -> list[str]:
+    """Nhận diện tự động và KHÓA CHẶT chuyên môn từng Fanpage theo Tên / Slug:
+    - AutoCAD / Vẽ Kỹ Thuật: 've-ky-thuat' (CẤM đăng tin học/kế toán/đồ họa)
+    - Thiết Kế Đồ Họa: 'do-hoa' (CẤM đăng tin học/kế toán/autocad)
+    - Kế Toán: 'ke-toan' (CẤM đăng tin học/autocad/đồ họa)
+    - Trẻ em: 'tre-em' hoặc 'tin-hoc _ai'
+    - Tin học Sao Việt / AI / Chung: 'tin-hoc _ai'
+    """
+    norm = remove_accents(f"{name} {slug}")
+    if any(k in norm for k in ["autocad", "cad", "ve ky thuat", "ban ve", "solidwork", "revit"]):
+        return ["ve-ky-thuat"]
+    if any(k in norm for k in ["do hoa", "thiet ke do hoa", "photoshop", "illustrator", "corel", "indesign"]):
+        return ["do-hoa"]
+    if any(k in norm for k in ["ke toan", "ketoan", "thue", "misa"]):
+        return ["ke-toan"]
+    if any(k in norm for k in ["tre em", "kid", "scratch"]):
+        return ["tin-hoc _ai"]
+
+    if raw_tags:
+        parsed = parse_tags(raw_tags)
+        if parsed and len(parsed) == 1 and parsed[0] in registry_tags():
+            return [_canonical_tag(parsed[0])]
+
+    return ["tin-hoc _ai"]
+
+
 def load_pages(include_royce=False, connected_only=True):
     rows = []
     if not KITS.is_dir():
@@ -146,13 +179,16 @@ def load_pages(include_royce=False, connected_only=True):
             continue
         tok = connected_tokens.get(pid, "") or field(
             md, "Access Token", "access_token", "Page Token", "Token")
+        page_name = field(md, "Tên Fanpage") or p.stem
+        page_slug = field(md, "slug") or p.stem
+        spec_tags = infer_specialized_tag(page_name, page_slug, field(md, "Thẻ khoá học"))
         rows.append({
             "file": p.name,
-            "slug": field(md, "slug") or p.stem,
-            "name": field(md, "Tên Fanpage") or p.stem,
+            "slug": page_slug,
+            "name": page_name,
             "page_id": pid,
             "token": tok,
-            "tags": parse_tags(field(md, "Thẻ khoá học")),
+            "tags": spec_tags,
             "address": field(md, "Cơ sở / địa chỉ"),
             "hotline": field(md, "Hotline / Zalo", "Hotline riêng", "Hotline"),
             "email": field(md, "Email Fanpage", "Email"),
@@ -298,13 +334,6 @@ BRANCHES_13_STANDARD = [
 BRANCHES_KE_TOAN = [
     "📍 HỆ THỐNG 13 CHI NHÁNH TIN HỌC SAO VIỆT",
 ] + BRANCHES_13_STANDARD
-
-
-def remove_accents(text: str) -> str:
-    if not text:
-        return ""
-    text = unicodedata.normalize("NFD", text.lower())
-    return "".join(c for c in text if unicodedata.category(c) != "Mn").replace("đ", "d")
 
 
 def get_page_branches(row, tag=None):

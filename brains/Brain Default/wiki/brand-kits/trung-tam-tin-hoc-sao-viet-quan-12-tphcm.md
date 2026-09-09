@@ -93,7 +93,7 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 - Dùng ký tự em dash
 
 ## Chân trang caption (bắt buộc)
-Trung Tâm Tin Học Sao Việt Quận 12
+Trung Tâm Tin Học Sao Việt Quận 12 - TPHCM
 🏫 Quận 12: A23 Lê Thị Riêng, KDC Thới An, phường Thới An, TP.HCM (Quận 12 cũ)
 
 📞 Hotline/Zalo: 0904 860 899

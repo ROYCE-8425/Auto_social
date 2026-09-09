@@ -94,7 +94,7 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 - Dùng ký tự em dash
 
 ## Chân trang caption (bắt buộc)
-Trung Tâm Đào Tạo Kế Toán Sao Việt (hoặc Trung Tâm Tin Học Sao Việt tùy khóa)
+Trung Tâm Đào Tạo Kế Toán Bình Thạnh - TPHCM
 🏫 Bình Thạnh: 193 Nguyễn Xí, phường Bình Thạnh, TP.HCM (Quận Bình Thạnh cũ)
 
 Hotline: 0931 144 858
@@ -106,7 +106,7 @@ Web: https://blogdaytinhoc.com/khoa-hoc-ke-toan-tai-binh-thanh-423
 - Tên Fanpage: Trung Tâm Đào Tạo Kế Toán Bình Thạnh - TPHCM
 - slug: trung-tam-ao-tao-ke-toan-binh-thanh-tphcm
 - Page ID: 202448916275419
-- Thẻ khoá học: tin-hoc _ai, ke-toan
+- Thẻ khoá học: ke-toan
 - Cơ sở / địa chỉ: 🏫 Bình Thạnh: 193 Nguyễn Xí, phường Bình Thạnh, TP.HCM (Quận Bình Thạnh cũ)
 - Hotline / Zalo: 0931 144 858
 - Email Fanpage: trungtamtinhocsaoviet@gmail.com
@@ -114,5 +114,5 @@ Web: https://blogdaytinhoc.com/khoa-hoc-ke-toan-tai-binh-thanh-423
 - Link Fanpage: https://www.facebook.com/202448916275419
 - Khoá thế mạnh: Tin học / AI, Kế toán thực hành
 - Góc địa phương: Bình Thạnh (địa chỉ Fanpage)
-- Folder ảnh (dataset): tin-hoc _ai | ke-toan
+- Folder ảnh (dataset): ke-toan
 - Hashtag thêm:

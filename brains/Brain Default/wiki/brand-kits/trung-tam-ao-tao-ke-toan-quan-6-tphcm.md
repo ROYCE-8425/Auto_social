@@ -94,7 +94,7 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 - Dùng ký tự em dash
 
 ## Chân trang caption (bắt buộc)
-Trung Tâm Đào Tạo Kế Toán Sao Việt (hoặc Trung Tâm Tin Học Sao Việt tùy khóa)
+Trung Tâm Đào Tạo Kế Toán Quận 6 - TPHCM
 🏫 Bình Tân: 510 Kinh Dương Vương, phường An Lạc, TP.HCM (Quận Bình Tân cũ)
 
 Hotline: 0812 114 345
@@ -106,7 +106,7 @@ Web: https://blogdaytinhoc.com/trung-tam-dao-tao-ke-toan-tai-quan-6-417
 - Tên Fanpage: Trung Tâm Đào Tạo Kế Toán Quận 6 - TPHCM
 - slug: trung-tam-ao-tao-ke-toan-quan-6-tphcm
 - Page ID: 202396629612701
-- Thẻ khoá học: tin-hoc _ai, ke-toan
+- Thẻ khoá học: ke-toan
 - Cơ sở / địa chỉ: 🏫 Bình Tân: 510 Kinh Dương Vương, phường An Lạc, TP.HCM (Quận Bình Tân cũ)
 - Hotline / Zalo: 0812 114 345
 - Email Fanpage: trungtamtinhocsaoviet@gmail.com
@@ -114,5 +114,5 @@ Web: https://blogdaytinhoc.com/trung-tam-dao-tao-ke-toan-tai-quan-6-417
 - Link Fanpage: https://www.facebook.com/202396629612701
 - Khoá thế mạnh: Tin học / AI, Kế toán thực hành
 - Góc địa phương: Quận 6 / Bình Tân (địa chỉ Fanpage)
-- Folder ảnh (dataset): tin-hoc _ai | ke-toan
+- Folder ảnh (dataset): ke-toan
 - Hashtag thêm:

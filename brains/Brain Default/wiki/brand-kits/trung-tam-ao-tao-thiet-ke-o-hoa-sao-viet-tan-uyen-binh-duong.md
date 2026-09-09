@@ -97,7 +97,7 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 - Dùng ký tự em dash
 
 ## Chân trang caption (bắt buộc)
-Trung Tâm Đào Tạo Kế Toán Sao Việt (hoặc Trung Tâm Tin Học Sao Việt tùy khóa)
+Trung Tâm Đào Tạo Thiết Kế Đồ Hoạ Sao Việt Tân Uyên Bình Dương
 🏫 Dĩ An: 184/19/11 Đặng Văn Mây, phường Dĩ An, TP.HCM (TP. Dĩ An, Bình Dương cũ)
 🏫 Thuận An: 69 D32, Làng chuyên gia Oasis, phường An Phú, TP.HCM (Thuận An, Bình Dương cũ)
 🏫 Thủ Dầu Một: 107 D5, KDC Phú Hòa 1, phường Phú Lợi, TP.HCM (TP. Thủ Dầu Một, Bình Dương cũ)
@@ -111,7 +111,7 @@ Web: https://blogdaytinhoc.com
 - Tên Fanpage: Trung Tâm Đào Tạo Thiết Kế Đồ Hoạ Sao Việt Tân Uyên Bình Dương
 - slug: trung-tam-ao-tao-thiet-ke-o-hoa-sao-viet-tan-uyen-binh-duong
 - Page ID: 547537075102600
-- Thẻ khoá học: tin-hoc _ai, do-hoa
+- Thẻ khoá học: do-hoa
 - Cơ sở / địa chỉ: 🏫 Dĩ An: 184/19/11 Đặng Văn Mây, phường Dĩ An, TP.HCM (TP. Dĩ An, Bình Dương cũ) | 🏫 Thuận An: 69 D32, Làng chuyên gia Oasis, phường An Phú, TP.HCM (Thuận An, Bình Dương cũ) | 🏫 Thủ Dầu Một: 107 D5, KDC Phú Hòa 1, phường Phú Lợi, TP.HCM (TP. Thủ Dầu Một, Bình Dương cũ) | 🏫 Tân Uyên: 20 Đường ĐX12, phường Tân Khánh, TP.HCM (TP. Tân Uyên, Bình Dương cũ)
 - Hotline / Zalo: 0931 144 858
 - Email Fanpage: trungtamtinhocsaoviet@gmail.com
@@ -119,5 +119,5 @@ Web: https://blogdaytinhoc.com
 - Link Fanpage: https://www.facebook.com/547537075102600
 - Khoá thế mạnh: Tin học / AI, Thiết kế đồ họa
 - Góc địa phương: Tân Uyên (địa chỉ Fanpage)
-- Folder ảnh (dataset): tin-hoc _ai | do-hoa
+- Folder ảnh (dataset): do-hoa
 - Hashtag thêm:

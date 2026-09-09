@@ -95,7 +95,7 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 - Dùng ký tự em dash
 
 ## Chân trang caption (bắt buộc)
-Trung Tâm Đào Tạo Kế Toán Sao Việt (hoặc Trung Tâm Tin Học Sao Việt tùy khóa)
+Trung Tâm Đào Tạo Autocad TP. Vũng Tàu
 🏫 Vũng Tàu: 293 Bình Giã, phường Tam Thắng, TP.HCM (TP. Vũng Tàu, Bà Rịa - Vũng Tàu cũ)
 
 Hotline: 0931 144 858
@@ -106,7 +106,7 @@ Web: https://blogdaytinhoc.com/khoa-hoc-autocad-o-vung-tau-lop-thiet-ke-ban-ve-k
 - Tên Fanpage: Trung Tâm Đào Tạo Autocad TP. Vũng Tàu
 - slug: trung-tam-ao-tao-autocad-tp-vung-tau
 - Page ID: 495275060330808
-- Thẻ khoá học: tin-hoc _ai, ve-ky-thuat
+- Thẻ khoá học: ve-ky-thuat
 - Cơ sở / địa chỉ: 🏫 Vũng Tàu: 293 Bình Giã, phường Tam Thắng, TP.HCM (TP. Vũng Tàu, Bà Rịa - Vũng Tàu cũ)
 - Hotline / Zalo: 0931 144 858
 - Email Fanpage: trungtamtinhocsaoviet@gmail.com
@@ -114,5 +114,5 @@ Web: https://blogdaytinhoc.com/khoa-hoc-autocad-o-vung-tau-lop-thiet-ke-ban-ve-k
 - Link Fanpage: https://www.facebook.com/495275060330808
 - Khoá thế mạnh: Tin học / AI, AutoCAD / vẽ kỹ thuật
 - Góc địa phương: Vũng Tàu (địa chỉ Fanpage)
-- Folder ảnh (dataset): tin-hoc _ai | ve-ky-thuat
+- Folder ảnh (dataset): ve-ky-thuat
 - Hashtag thêm:

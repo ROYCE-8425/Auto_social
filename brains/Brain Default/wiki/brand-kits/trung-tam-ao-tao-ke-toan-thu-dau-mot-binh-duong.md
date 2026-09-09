@@ -97,7 +97,7 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 - Dùng ký tự em dash
 
 ## Chân trang caption (bắt buộc)
-Trung Tâm Đào Tạo Kế Toán Sao Việt (hoặc Trung Tâm Tin Học Sao Việt tùy khóa)
+Trung Tâm Đào Tạo Kế Toán Thủ Dầu Một - Bình Dương
 🏫 Dĩ An: 184/19/11 Đặng Văn Mây, phường Dĩ An, TP.HCM (TP. Dĩ An, Bình Dương cũ)
 🏫 Thuận An: 69 D32, Làng chuyên gia Oasis, phường An Phú, TP.HCM (Thuận An, Bình Dương cũ)
 🏫 Thủ Dầu Một: 107 D5, KDC Phú Hòa 1, phường Phú Lợi, TP.HCM (TP. Thủ Dầu Một, Bình Dương cũ)
@@ -112,7 +112,7 @@ Web: https://blogdaytinhoc.com/hoc-ke-toan-tai-thu-dau-mot-binh-duong-day-thuc-h
 - Tên Fanpage: Trung Tâm Đào Tạo Kế Toán Thủ Dầu Một - Bình Dương
 - slug: trung-tam-ao-tao-ke-toan-thu-dau-mot-binh-duong
 - Page ID: 180054785193451
-- Thẻ khoá học: tin-hoc _ai, ke-toan
+- Thẻ khoá học: ke-toan
 - Cơ sở / địa chỉ: 🏫 Dĩ An: 184/19/11 Đặng Văn Mây, phường Dĩ An, TP.HCM (TP. Dĩ An, Bình Dương cũ) | 🏫 Thuận An: 69 D32, Làng chuyên gia Oasis, phường An Phú, TP.HCM (Thuận An, Bình Dương cũ) | 🏫 Thủ Dầu Một: 107 D5, KDC Phú Hòa 1, phường Phú Lợi, TP.HCM (TP. Thủ Dầu Một, Bình Dương cũ) | 🏫 Tân Uyên: 20 Đường ĐX12, phường Tân Khánh, TP.HCM (TP. Tân Uyên, Bình Dương cũ)
 - Hotline / Zalo: 0823 552 558
 - Email Fanpage: trungtamtinhocsaoviet@gmail.com
@@ -120,5 +120,5 @@ Web: https://blogdaytinhoc.com/hoc-ke-toan-tai-thu-dau-mot-binh-duong-day-thuc-h
 - Link Fanpage: https://www.facebook.com/180054785193451
 - Khoá thế mạnh: Tin học / AI, Kế toán thực hành
 - Góc địa phương: Thủ Dầu Một (địa chỉ Fanpage)
-- Folder ảnh (dataset): tin-hoc _ai | ke-toan
+- Folder ảnh (dataset): ke-toan
 - Hashtag thêm:

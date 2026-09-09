@@ -93,7 +93,7 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 - Dùng ký tự em dash
 
 ## Chân trang caption (bắt buộc)
-Trung Tâm Tin Học Sao Việt Quận Bình Thạnh
+Trung Tâm Tin học Sao Việt Quận Bình Thạnh - TPHCM
 🏫 Bình Thạnh: 193 Nguyễn Xí, phường Bình Thạnh, TP.HCM (Quận Bình Thạnh cũ)
 
 📞 Hotline/Zalo: 0904 860 899

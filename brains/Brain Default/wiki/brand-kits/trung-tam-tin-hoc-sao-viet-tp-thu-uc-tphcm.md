@@ -93,7 +93,7 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 - Dùng ký tự em dash
 
 ## Chân trang caption (bắt buộc)
-Trung Tâm Tin Học Sao Việt TP. Thủ Đức
+Trung Tâm Tin Học Sao Việt TP. Thủ Đức - TPHCM
 🏫 TP. Thủ Đức: 133/2 Đỗ Xuân Hợp, phường Phước Long, TP.HCM (TP. Thủ Đức cũ)
 
 📞 Hotline/Zalo: 0935 946 407

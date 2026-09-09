@@ -95,7 +95,7 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 - Dùng ký tự em dash
 
 ## Chân trang caption (bắt buộc)
-Trung Tâm Đào Tạo Kế Toán Sao Việt (hoặc Trung Tâm Tin Học Sao Việt tùy khóa)
+Trung Tâm Đào Tạo Thiết Kế Đồ Hoạ Sao Việt Long Thành
 🏫 Biên Hòa: 91 Đoàn Văn Cự, phường Tam Hiệp, TP. Đồng Nai (TP. Biên Hòa cũ)
 🏫 Long Thành: 72 Đinh Bộ Lĩnh, xã Long Thành, TP. Đồng Nai (Lộc An, huyện Long Thành cũ)
 
@@ -107,7 +107,7 @@ Web: https://khoahocthietke.com
 - Tên Fanpage: Trung Tâm Đào Tạo Thiết Kế Đồ Hoạ Sao Việt Long Thành
 - slug: trung-tam-ao-tao-thiet-ke-o-hoa-sao-viet-long-thanh
 - Page ID: 497403593461404
-- Thẻ khoá học: tin-hoc _ai, do-hoa
+- Thẻ khoá học: do-hoa
 - Cơ sở / địa chỉ: 🏫 Biên Hòa: 91 Đoàn Văn Cự, phường Tam Hiệp, TP. Đồng Nai (TP. Biên Hòa cũ) | 🏫 Long Thành: 72 Đinh Bộ Lĩnh, xã Long Thành, TP. Đồng Nai (Lộc An, huyện Long Thành cũ)
 - Hotline / Zalo: 0363 753 692
 - Email Fanpage: hocthietkedohoasaoviet@gmail.com
@@ -115,5 +115,5 @@ Web: https://khoahocthietke.com
 - Link Fanpage: https://www.facebook.com/497403593461404
 - Khoá thế mạnh: Tin học / AI, Thiết kế đồ họa
 - Góc địa phương: Long Thành (địa chỉ Fanpage)
-- Folder ảnh (dataset): tin-hoc _ai | do-hoa
+- Folder ảnh (dataset): do-hoa
 - Hashtag thêm:

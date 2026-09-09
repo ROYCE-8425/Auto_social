@@ -94,7 +94,7 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 - Dùng ký tự em dash
 
 ## Chân trang caption (bắt buộc)
-Trung Tâm Đào Tạo Kế Toán Sao Việt (hoặc Trung Tâm Tin Học Sao Việt tùy khóa)
+Trung Tâm Đào Tạo Thiết Kế Đồ Hoạ Sao Việt Quận 7
 🏫 Quận 7: Căn hộ Florita, KĐT Him Lam, phường Tân Hưng, TP.HCM (Quận 7 cũ)
 
 Hotline: 0812 114 345
@@ -105,7 +105,7 @@ Web: https://www.blogdaytinhoc.com
 - Tên Fanpage: Trung Tâm Đào Tạo Thiết Kế Đồ Hoạ Sao Việt Quận 7
 - slug: trung-tam-ao-tao-thiet-ke-o-hoa-sao-viet-quan-7
 - Page ID: 553428417845247
-- Thẻ khoá học: tin-hoc _ai, do-hoa
+- Thẻ khoá học: do-hoa
 - Cơ sở / địa chỉ: 🏫 Quận 7: Căn hộ Florita, KĐT Him Lam, phường Tân Hưng, TP.HCM (Quận 7 cũ)
 - Hotline / Zalo: 0812 114 345
 - Email Fanpage: trungtamtinhocsaoviet@gmail.com
@@ -113,5 +113,5 @@ Web: https://www.blogdaytinhoc.com
 - Link Fanpage: https://www.facebook.com/553428417845247
 - Khoá thế mạnh: Tin học / AI, Thiết kế đồ họa
 - Góc địa phương: Quận 7 (địa chỉ Fanpage)
-- Folder ảnh (dataset): tin-hoc _ai | do-hoa
+- Folder ảnh (dataset): do-hoa
 - Hashtag thêm:

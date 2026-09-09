@@ -95,7 +95,7 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 - Dùng ký tự em dash
 
 ## Chân trang caption (bắt buộc)
-Trung Tâm Đào Tạo Kế Toán Sao Việt (hoặc Trung Tâm Tin Học Sao Việt tùy khóa)
+Trung Tâm Đào Tạo Kế Toán Đồng Nai
 🏫 Biên Hòa: 91 Đoàn Văn Cự, phường Tam Hiệp, TP. Đồng Nai (TP. Biên Hòa cũ)
 🏫 Long Thành: 72 Đinh Bộ Lĩnh, xã Long Thành, TP. Đồng Nai (Lộc An, huyện Long Thành cũ)
 
@@ -108,7 +108,7 @@ Web: https://blogdaytinhoc.com/hoc-ke-toan-tai-bien-hoa-191
 - Tên Fanpage: Trung Tâm Đào Tạo Kế Toán Đồng Nai
 - slug: trung-tam-ao-tao-ke-toan-ong-nai
 - Page ID: 207745372422173
-- Thẻ khoá học: tin-hoc _ai, ke-toan
+- Thẻ khoá học: ke-toan
 - Cơ sở / địa chỉ: 🏫 Biên Hòa: 91 Đoàn Văn Cự, phường Tam Hiệp, TP. Đồng Nai (TP. Biên Hòa cũ) | 🏫 Long Thành: 72 Đinh Bộ Lĩnh, xã Long Thành, TP. Đồng Nai (Lộc An, huyện Long Thành cũ)
 - Hotline / Zalo: 0823 552 558
 - Email Fanpage: trungtamtinhocsaoviet@gmail.com
@@ -116,5 +116,5 @@ Web: https://blogdaytinhoc.com/hoc-ke-toan-tai-bien-hoa-191
 - Link Fanpage: https://www.facebook.com/207745372422173
 - Khoá thế mạnh: Tin học / AI, Kế toán thực hành
 - Góc địa phương: Đồng Nai (địa chỉ các Fanpage Biên Hòa + Long Thành)
-- Folder ảnh (dataset): tin-hoc _ai | ke-toan
+- Folder ảnh (dataset): ke-toan
 - Hashtag thêm:

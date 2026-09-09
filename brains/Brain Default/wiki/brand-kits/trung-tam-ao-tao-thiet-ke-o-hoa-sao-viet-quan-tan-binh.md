@@ -94,7 +94,7 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 - Dùng ký tự em dash
 
 ## Chân trang caption (bắt buộc)
-Trung Tâm Đào Tạo Kế Toán Sao Việt (hoặc Trung Tâm Tin Học Sao Việt tùy khóa)
+Trung Tâm Đào Tạo Thiết Kế Đồ Hoạ Sao Việt Quận Tân Bình
 🏫 CN Tây Thạnh: 11/23 Hồ Đắc Di, phường Tây Thạnh, TP.HCM (Quận Tân Phú cũ)
 
 Hotline: 0946 426 536
@@ -105,7 +105,7 @@ Web: https://blogdaytinhoc.com
 - Tên Fanpage: Trung Tâm Đào Tạo Thiết Kế Đồ Hoạ Sao Việt Quận Tân Bình
 - slug: trung-tam-ao-tao-thiet-ke-o-hoa-sao-viet-quan-tan-binh
 - Page ID: 529126083615941
-- Thẻ khoá học: tin-hoc _ai, do-hoa
+- Thẻ khoá học: do-hoa
 - Cơ sở / địa chỉ: 🏫 CN Tây Thạnh: 11/23 Hồ Đắc Di, phường Tây Thạnh, TP.HCM (Quận Tân Phú cũ)
 - Hotline / Zalo: 0946 426 536
 - Email Fanpage: tanbinh@tinhocsaoviet.edu.vn
@@ -113,5 +113,5 @@ Web: https://blogdaytinhoc.com
 - Link Fanpage: https://www.facebook.com/529126083615941
 - Khoá thế mạnh: Tin học / AI, Thiết kế đồ họa
 - Góc địa phương: Tân Bình (địa chỉ Fanpage)
-- Folder ảnh (dataset): tin-hoc _ai | do-hoa
+- Folder ảnh (dataset): do-hoa
 - Hashtag thêm:

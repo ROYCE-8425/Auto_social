@@ -94,7 +94,7 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 - Dùng ký tự em dash
 
 ## Chân trang caption (bắt buộc)
-Trung Tâm Đào Tạo Kế Toán Sao Việt (hoặc Trung Tâm Tin Học Sao Việt tùy khóa)
+Trung Tâm Đào Tạo Kế Toán Quận 7 - TPHCM
 🏫 Quận 7: Căn hộ Florita, KĐT Him Lam, phường Tân Hưng, TP.HCM (Quận 7 cũ)
 
 Hotline: 0812 114 345
@@ -105,7 +105,7 @@ Web: https://blogdaytinhoc.com/khoa-hoc-ke-toan-quan-7-424
 - Tên Fanpage: Trung Tâm Đào Tạo Kế Toán Quận 7 - TPHCM
 - slug: trung-tam-ao-tao-ke-toan-quan-7-tphcm
 - Page ID: 136020516272405
-- Thẻ khoá học: tin-hoc _ai, ke-toan
+- Thẻ khoá học: ke-toan
 - Cơ sở / địa chỉ: 🏫 Quận 7: Căn hộ Florita, KĐT Him Lam, phường Tân Hưng, TP.HCM (Quận 7 cũ)
 - Hotline / Zalo: 0812 114 345
 - Email Fanpage: trungtamtinhocsaoviet@gmail.com
@@ -113,5 +113,5 @@ Web: https://blogdaytinhoc.com/khoa-hoc-ke-toan-quan-7-424
 - Link Fanpage: https://www.facebook.com/136020516272405
 - Khoá thế mạnh: Tin học / AI, Kế toán thực hành
 - Góc địa phương: Quận 7 (địa chỉ Fanpage)
-- Folder ảnh (dataset): tin-hoc _ai | ke-toan
+- Folder ảnh (dataset): ke-toan
 - Hashtag thêm:

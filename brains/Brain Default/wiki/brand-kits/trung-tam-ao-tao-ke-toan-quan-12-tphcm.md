@@ -94,7 +94,7 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 - Dùng ký tự em dash
 
 ## Chân trang caption (bắt buộc)
-Trung Tâm Đào Tạo Kế Toán Sao Việt (hoặc Trung Tâm Tin Học Sao Việt tùy khóa)
+Trung Tâm Đào Tạo Kế Toán Quận 12 - TPHCM
 🏫 Quận 12: A23 Lê Thị Riêng, KDC Thới An, phường Thới An, TP.HCM (Quận 12 cũ)
 
 Hotline: 0931 144 858
@@ -106,7 +106,7 @@ Web: https://blogdaytinhoc.com/khoa-hoc-ke-toan-quan-12-582
 - Tên Fanpage: Trung Tâm Đào Tạo Kế Toán Quận 12 - TPHCM
 - slug: trung-tam-ao-tao-ke-toan-quan-12-tphcm
 - Page ID: 170994556103234
-- Thẻ khoá học: tin-hoc _ai, ke-toan
+- Thẻ khoá học: ke-toan
 - Cơ sở / địa chỉ: 🏫 Quận 12: A23 Lê Thị Riêng, KDC Thới An, phường Thới An, TP.HCM (Quận 12 cũ)
 - Hotline / Zalo: 0931 144 858
 - Email Fanpage: trungtamtinhocsaoviet@gmail.com
@@ -114,5 +114,5 @@ Web: https://blogdaytinhoc.com/khoa-hoc-ke-toan-quan-12-582
 - Link Fanpage: https://www.facebook.com/170994556103234
 - Khoá thế mạnh: Tin học / AI, Kế toán thực hành
 - Góc địa phương: Quận 12 (địa chỉ Fanpage)
-- Folder ảnh (dataset): tin-hoc _ai | ke-toan
+- Folder ảnh (dataset): ke-toan
 - Hashtag thêm:
