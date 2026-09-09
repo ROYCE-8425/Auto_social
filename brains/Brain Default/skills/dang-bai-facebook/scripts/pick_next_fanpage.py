@@ -214,6 +214,48 @@ def save_state(st):
     STATE.write_text(json.dumps(st, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
+def print_chan_trang(row):
+    print("CHAN_TRANG")
+    print(row["name"])
+    if row.get("address"):
+        seen = set()
+        for raw_part in [p.strip() for p in row["address"].replace("|", "\n").splitlines() if p.strip()]:
+            # Loại bỏ mã bưu chính và các đoạn thừa do Google places / geocoding
+            cleaned = re.sub(r",?\s*\b\d{5,6}\b.*$", "", raw_part).strip()
+            cleaned = re.sub(r",\s*(Di An|Thu Dau Mot|Vung Tau|Ho Chi Minh City|Việt Nam\.?)$", "", cleaned, flags=re.I).strip()
+            if not cleaned:
+                continue
+            norm = re.sub(r"^[🏫\s\-\*]+", "", cleaned).lower().strip()
+            if norm in seen:
+                continue
+            seen.add(norm)
+            if not cleaned.startswith("🏫"):
+                cleaned = f"🏫 {cleaned}"
+            print(cleaned)
+    if row.get("hotline"):
+        hl = row["hotline"].strip()
+        if not hl.startswith("📞"):
+            hl_val = re.sub(r"^(Hotline/Zalo|Hotline|Zalo)[:\s]*", "", hl, flags=re.I).strip()
+            print("📞 Hotline/Zalo: " + hl_val)
+        else:
+            print(hl)
+    if row.get("email"):
+        em = row["email"].strip()
+        if not em.startswith("📧"):
+            em_val = re.sub(r"^Email[:\s]*", "", em, flags=re.I).strip()
+            print("📧 Email: " + em_val)
+        else:
+            print(em)
+    if row.get("web"):
+        wb = row["web"].strip()
+        if not wb.startswith("🌐"):
+            wb_val = re.sub(r"^(Website|Web)[:\s]*", "", wb, flags=re.I).strip()
+            print("🌐 Website: " + wb_val)
+        else:
+            print(wb)
+    print("HET_CHAN_TRANG")
+
+
 def main(argv):
     now = datetime.now(TZ)
     today = now.strftime("%Y-%m-%d")
@@ -304,18 +346,7 @@ def main(argv):
         print("Phong cach anh: " + (row.get("image_style") or ""))
         print("Cam: " + (row.get("donts") or ""))
         print("HET_KIT_VISUAL")
-        print("CHAN_TRANG")
-        print(row["name"])
-        if row.get("address"):
-            for part in [p.strip() for p in row["address"].replace("|", "\n").splitlines() if p.strip()]:
-                print(part)
-        if row.get("hotline"):
-            print("Hotline/Zalo: " + row["hotline"])
-        if row.get("email"):
-            print("Email: " + row["email"])
-        if row.get("web"):
-            print("Web: " + row["web"])
-        print("HET_CHAN_TRANG")
+        print_chan_trang(row)
         return 0
 
     connected_only = "--all-pages" not in argv
@@ -474,18 +505,7 @@ def main(argv):
     print("Phong cach anh: " + (row.get("image_style") or ""))
     print("Cam: " + (row.get("donts") or ""))
     print("HET_KIT_VISUAL")
-    print("CHAN_TRANG")
-    print(row["name"])
-    if row.get("address"):
-        for part in [p.strip() for p in row["address"].replace("|", "\n").splitlines() if p.strip()]:
-            print(part)
-    if row.get("hotline"):
-        print("Hotline/Zalo: " + row["hotline"])
-    if row.get("email"):
-        print("Email: " + row["email"])
-    if row.get("web"):
-        print("Web: " + row["web"])
-    print("HET_CHAN_TRANG")
+    print_chan_trang(row)
     return 0
 
 

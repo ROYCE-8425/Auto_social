@@ -199,59 +199,50 @@ Luân phiên 5 kiểu bài, không phải bài nào cũng là tuyển sinh dài:
 
 Nếu bài có album ảnh lớp thật, nên ưu tiên kiểu 3 hoặc kiểu 1. Đừng viết như tờ rơi chung chung.
 
-## 6. Nhịp thị giác bắt buộc cho Facebook
+## 6. Nhịp thị giác bắt buộc cho Facebook (Highlight theo mẫu chuẩn Sao Việt)
 
-Caption phải có icon dẫn mắt theo cụm, nhưng không spam.
+Caption BẮT BUỘC phải có highlight icon dẫn mắt theo từng khối cụ thể, không được viết trơn toàn bộ bằng chữ hay dấu gạch ngang `-`.
 
-Mẫu phân vai emoji:
-
-- Dòng tiêu đề/hook: dùng 1 icon đúng ngành như `💻`, `📐`, `🎨`, `🤖`, `📊`.
-- Nỗi đau: dùng `👉` cho 2-4 dòng ngắn.
-- Ý chốt/điểm khác biệt: dùng `📌`.
-- Thành quả sau khóa: dùng `✅`.
-- Lộ trình/nội dung học: dùng `📚` hoặc `1️⃣ 2️⃣ 3️⃣ 4️⃣`.
-- Ưu đãi: dùng `🎁`.
-- CTA: dùng `📩` và `📞`.
+Mẫu phân vai emoji chuẩn thực tế:
+- **Tiêu đề / Hook**: Tên khóa học IN HOA kèm icon chủ đề (`💻`, `📊`, `🎨`, `📐`, `🤖`).
+- **Nỗi đau / Vấn đề**: 2-4 dòng ngắn gọn, có thể mở đầu bằng câu hỏi hoặc `👉`.
+- **Nội dung / Module học**: Nêu ngắn gọn các kỹ năng cụ thể làm được (Word, Excel, PowerPoint, AI thực chiến, AutoCAD, MISA...).
+- **Khối Cam kết & Điểm mạnh đào tạo (BẮT BUỘC dùng `📌` cho từng dòng, 4-5 dòng)**:
+  ```text
+  📌 Học theo nhu cầu thật, không ép học đại trà.
+  📌 Học đến khi thành thạo, không giới hạn số buổi.
+  📌 Lịch học linh hoạt sáng, chiều, tối từ Thứ 2 đến Thứ 7.
+  📌 Có thể đăng ký học ngay, không cần chờ đủ lớp.
+  📌 Phù hợp người bận rộn, người đi làm, sinh viên chuẩn bị ra trường.
+  ```
+- **Khối Quyền lợi & Ưu đãi học viên (BẮT BUỘC dùng `🎁` cho từng dòng, 3-4 dòng)**:
+  ```text
+  🎁 Khi đăng ký, học viên được tư vấn lộ trình theo trình độ hiện tại.
+  🎁 Được định hướng bộ kỹ năng cần học theo mục tiêu công việc.
+  🎁 Được hỗ trợ giải đáp nghiệp vụ sau khóa học.
+  🎁 Ưu tiên xếp lịch học linh hoạt theo thời gian cá nhân.
+  ```
+- **Khối Kêu gọi hành động / CTA (BẮT BUỘC dùng `👉`, `📞`, `📌`)**:
+  ```text
+  👉 Muốn học nhanh để dùng được ngay trong công việc?
+  📞 Nhắn tin Fanpage hoặc gọi Hotline/Zalo để được tư vấn lộ trình phù hợp.
+  📌 Trung Tâm Tin Học Sao Việt nhận học viên mới mỗi tuần.
+  📌 Đăng ký sớm để được xếp ca học gần nhất.
+  ```
+- **Khối Chân trang CHAN_TRANG (BẮT BUỘC dùng `🏫`, `📞`, `📧`, `🌐`)**:
+  CẤM dùng các chuỗi địa chỉ có mã bưu điện Google Maps/geocoding (như 700000, 75300, 75411, Di An, Ho Chi Minh City...). Lấy nguyên vẹn khối CHAN_TRANG sạch từ script `pick_next_fanpage.py` hoặc brand kit:
+  ```text
+  [Tên Fanpage]
+  🏫 [Tên cơ sở]: [Địa chỉ sạch gọn gàng không zip code]
+  📞 Hotline/Zalo: [Số điện thoại]
+  📧 Email: [Email]
+  🌐 Website: [Website]
+  ```
 
 Quy tắc:
-
-- Không dùng quá 2 emoji trong một dòng.
-- Không dùng một loại emoji cho toàn bài.
-- Không để toàn bộ các mục đều bắt đầu bằng dấu `-`. Với các khối chính, ưu tiên `👉`, `✅`, `📌`, `🎁`.
-- Mỗi khối chỉ 3-5 dòng. Nếu một khối vượt 6 dòng, phải gộp hoặc cắt.
-
-Khung gợi ý:
-
-```text
-💻 [Tên khóa học/ngành]
-
-[Hook 1-3 dòng]
-
-👉 [Nỗi đau 1]
-👉 [Nỗi đau 2]
-👉 [Nỗi đau 3]
-
-📌 [Câu chuyển ý: học đúng bài cần làm, có giáo viên kèm]
-
-🎯 Sau khóa học, bạn có thể:
-✅ ...
-✅ ...
-✅ ...
-✅ ...
-
-📚 Nội dung học trọng tâm:
-1️⃣ ...
-2️⃣ ...
-3️⃣ ...
-4️⃣ ...
-
-🎁 Ưu đãi / quyền lợi:
-✅ ...
-✅ ...
-
-📩 Nhắn Fanpage để được tư vấn lộ trình phù hợp.
-📞 Hotline/Zalo: [số đúng kit]
-```
+- Không để toàn bộ bài chỉ toàn chữ trơn. Các khối cam kết (`📌`), quyền lợi (`🎁`), CTA (`👉`/`📞`), cơ sở (`🏫`) bắt buộc phải có icon chuẩn như trên.
+- Mỗi khối cách nhau 1 dòng trống để thoáng mắt trên điện thoại.
+- Độ dài vừa vặn 32-45 dòng.
 
 ## 7. Hashtag
 

@@ -26,9 +26,13 @@ Mục tiêu: Mỗi bài đăng Fanpage là một **ALBUM chuẩn Tỷ Lệ Vàng
 
 ### Bước 2: Soạn Caption & Đăng ALBUM bằng `fb_page_album`
 1. **Xác định Fanpage & Brand Kit**: Đọc đúng 1 file `wiki/brand-kits/<kit-page>.md`. Lấy Page ID, hotline, địa chỉ và chân trang CHAN_TRANG.
-2. **Sáng tạo Caption (Luồng 7 nhịp Sao Việt)**:
-   - Bài thường: 32-45 dòng. Bài tuyển sinh/ads: 45-70 dòng (chưa tính chân trang).
-   - Nhịp điệu: Móc câu -> Nỗi đau (`👉`) -> Giải pháp/thành quả (`✅`) -> Quyền lợi (`📌`) -> Ưu đãi/quà tặng (`🎁`) -> CTA (`📩`/`📞`) -> Chân trang CHAN_TRANG.
+2. **Sáng tạo Caption (Luồng nhịp điệu Sao Việt & Highlight chuẩn)**:
+   - Bài chuẩn chuyển đổi: 32-45 dòng (chưa tính chân trang).
+   - **BẮT BUỘC có highlight emoji theo từng khối** (tuyệt đối không viết toàn chữ trơn hay gạch ngang `-`):
+     * Khối cam kết/điểm mạnh: 4-5 dòng, mỗi dòng bắt đầu bằng `📌` (ví dụ: `📌 Học theo nhu cầu thật, không ép học đại trà.`, `📌 Học đến khi thành thạo, không giới hạn số buổi.`, `📌 Lịch học linh hoạt sáng, chiều, tối từ Thứ 2 đến Thứ 7.`, `📌 Có thể đăng ký học ngay, không cần chờ đủ lớp.`, `📌 Phù hợp người bận rộn, người đi làm...`).
+     * Khối quyền lợi/ưu đãi: 3-4 dòng, mỗi dòng bắt đầu bằng `🎁` (ví dụ: `🎁 Khi đăng ký, học viên được tư vấn lộ trình...`, `🎁 Được định hướng bộ kỹ năng cần học...`, `🎁 Được hỗ trợ giải đáp nghiệp vụ sau khóa học...`).
+     * Khối kêu gọi hành động: `👉 Muốn học nhanh để dùng được ngay trong công việc?` -> `📞 Nhắn tin Fanpage hoặc gọi Hotline/Zalo để được tư vấn...` -> `📌 Nhận học viên mới mỗi tuần...`.
+     * Chân trang CHAN_TRANG: BẮT BUỘC dùng đúng định dạng sạch từ `pick_next_fanpage.py` hoặc brand kit: mỗi cơ sở có icon `🏫 [Chi nhánh]: [Địa chỉ]`, `📞 Hotline/Zalo: ...`, `📧 Email: ...`, `🌐 Website: ...`. TUYỆT ĐỐI CẤM dùng chuỗi địa chỉ rác có mã bưu điện (như 700000, 75300, 75411, Di An, Ho Chi Minh City...).
    - Không Markdown `**`, không em dash, CẤM bịa học phí, CẤM bịa khóa kinh doanh online.
 3. **Đăng ALBUM (Tỷ Lệ Vàng 2026 - Random 6, 7 hoặc 8 ảnh vuông 1:1 đồng bộ)**:
    ```text

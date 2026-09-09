@@ -35,10 +35,10 @@ TUYỆT ĐỐI CẤM TỰ BỊA KHÓA HỌC KHÔNG CÓ TRONG DATASET: CẤM "Kin
    - NẾU tạo ảnh AI thất bại hoặc không có file: Dừng ngay và trả về `POST_SKIP ly-do=thieu-cover-ai khong-retry=1`. TUYỆT ĐỐI CẤM lấy ảnh cũ thay thế.
 
 2. **Bước 2: Soạn caption 7 nhịp & Đăng ALBUM bằng `fb_page_album`**:
-   - Đọc đúng 1 file brand kit của trang trong `wiki/brand-kits/<kit>.md` (ví dụ `wiki/brand-kits/royce-shop.md` nếu brief là Royce Shop). Lấy Page ID, hotline, địa chỉ và chân trang CHAN_TRANG.
+   - Đọc đúng 1 file brand kit của trang trong `wiki/brand-kits/<kit>.md`. Lấy Page ID, hotline, địa chỉ và chân trang CHAN_TRANG (CẤM địa chỉ có mã bưu điện zip code).
    - Soạn caption theo skill `viet-bai-facebook`:
-     * Độ dài: 32-45 dòng cho bài thường, 45-70 dòng nếu brief tuyển sinh/ads, chưa tính chân trang.
-     * Nhịp điệu 7 phần: Móc câu -> Nỗi đau (2-4 câu, emoji 👉) -> Thành quả/giải pháp (4-6 câu, emoji ✅) -> Quyền lợi (3-5 câu, emoji 📌) -> Ưu đãi/quà tặng (emoji 🎁) -> Kêu gọi hành động (emoji 📩/📞) -> Chân trang CHAN_TRANG từ kit.
+     * Độ dài: 32-45 dòng (chưa tính chân trang).
+     * Nhịp điệu và Highlight emoji chuẩn bắt buộc: Móc câu -> Nỗi đau (`👉`) -> Giải pháp kỹ năng -> Khối cam kết điểm mạnh đào tạo (4-5 dòng, BẮT BUỘC mỗi dòng bắt đầu bằng `📌`) -> Khối quyền lợi/ưu đãi học viên (3-4 dòng, BẮT BUỘC mỗi dòng bắt đầu bằng `🎁`) -> Khối kêu gọi hành động (`👉 Muốn học nhanh...` + `📞 Nhắn tin Fanpage hoặc gọi Hotline/Zalo...` + `📌 Nhận học viên mới mỗi tuần...`) -> Chân trang CHAN_TRANG từ kit (mỗi cơ sở `🏫`, `📞 Hotline/Zalo:`, `📧 Email:`, `🌐 Website:`).
      * Không Markdown `**`, không em dash, không mở đầu bằng "Chiến dịch tuyển sinh", CẤM bịa học phí không có trong tài liệu.
    - Gọi tool đăng ALBUM (Tự động chuẩn bị 6-8 ảnh chuẩn Tỷ Lệ Vàng 2026):
      `fb_page_album(page="<tên_page_hoặc_page_id>", photos="auto", course="<tên_khóa_học_chuẩn>", cover="<đường_dẫn_ảnh_AI_vừa_tạo_ở_bước_1>", message="<toàn_bộ_caption>")`

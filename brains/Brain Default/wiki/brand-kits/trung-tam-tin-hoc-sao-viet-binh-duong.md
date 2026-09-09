@@ -49,20 +49,13 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 - Điều khoản sử dụng, Chính sách bảo mật, Xử lý khiếu nại
 - Bản đồ các cơ sở, Sitemap
 
-## Cơ sở đào tạo của trang này (toàn bộ Bình Dương — địa chỉ quét từ Fanpage)
-- 184/19/11 Đặng Văn Mây, KP. Đông Chiêu, P. Tân Đông Hiệp, Dĩ An, Bình Dương, Dĩ An, Bình Dương 75300, Di An
-- Số 20 Đường ĐX 12, Phường Tân Khánh, TP. Hồ Chí Minh, Tân Uyên, Bình Dương 75411
-- Số 107, D5, KDC Phú Hòa 1, Khu 4, Thủ Dầu Một, Bình Dương, Thủ Dầu Một, Bình Dương, Thu Dau Mot
-- 69 D32, Làng chuyên gia Oasis, phường An Phú, TP. HCM (Thuận An, Bình Dương cũ), An Thuan, Bình Dương Province 820000
-- Số 107, D5, KDC Phú Hòa 1, Khu 4, Thủ Dầu Một, Bình Dương
-- Số 20 Đường ĐX 12, Phường Tân Khánh, TP. Hồ Chí Minh, Tân Uyên, Bình Dương 820000
-- 184/19/11 Đặng Văn Mây, KP.Đông Chiêu, Phường Tân Đông Hiệp, Thành Phố Dĩ An, Tỉnh Bình Dương, Dĩ An, Bình Dương 820000, Di An
-- 69 D32, Làng chuyên gia Oasis, phường An Phú, TP. HCM (Thuận An, Bình Dương cũ), An Thuan, Bình Dương Province 75200
-- 69 D32, Làng chuyên gia Oasis, phường An Phú, TP. HCM (Thuận An, Bình Dương cũ), An Thuan, Bình Dương Province 75211
-- Số 107, D5, KDC Phú Hòa 1, Khu 4, Thủ Dầu Một, Bình Dương, Thủ Dầu Một, Bình Dương 75100, Thu Dau Mot
-- 184/19/11 Đặng Văn Mây, KP. Đông Chiêu, P. Tân Đông Hiệp, Dĩ An, Bình Dương 75300, Di An
-- Mới (Fanpage, dùng khi đăng bài): 184/19/11 Đặng Văn Mây, KP. Đông Chiêu, P. Tân Đông Hiệp, Dĩ An, Bình Dương, Dĩ An, Bình Dương 75300, Di An | Số 20 Đường ĐX 12, Phường Tân Khánh, TP. Hồ Chí Minh, Tân Uyên, Bình Dương 75411 | Số 107, D5, KDC Phú Hòa 1, Khu 4, Thủ Dầu Một, Bình Dương, Thủ Dầu Một, Bình Dương, Thu Dau Mot | 69 D32, Làng chuyên gia Oasis, phường An Phú, TP. HCM (Thuận An, Bình Dương cũ), An Thuan, Bình Dương Province 820000 | Số 107, D5, KDC Phú Hòa 1, Khu 4, Thủ Dầu Một, Bình Dương | Số 20 Đường ĐX 12, Phường Tân Khánh, TP. Hồ Chí Minh, Tân Uyên, Bình Dương 820000 | 184/19/11 Đặng Văn Mây, KP.Đông Chiêu, Phường Tân Đông Hiệp, Thành Phố Dĩ An, Tỉnh Bình Dương, Dĩ An, Bình Dương 820000, Di An | 69 D32, Làng chuyên gia Oasis, phường An Phú, TP. HCM (Thuận An, Bình Dương cũ), An Thuan, Bình Dương Province 75200 | 69 D32, Làng chuyên gia Oasis, phường An Phú, TP. HCM (Thuận An, Bình Dương cũ), An Thuan, Bình Dương Province 75211 | Số 107, D5, KDC Phú Hòa 1, Khu 4, Thủ Dầu Một, Bình Dương, Thủ Dầu Một, Bình Dương 75100, Thu Dau Mot | 184/19/11 Đặng Văn Mây, KP. Đông Chiêu, P. Tân Đông Hiệp, Dĩ An, Bình Dương 75300, Di An
-- Cũ (list _mac-dinh trước đây, chỉ đối chiếu): 1/513 KDC TÀI LỰC, Tổ 9, Khu phố Hòa Lân 2, Thuận An - Bình Dương | 184/19/11 Đặng Văn Mây, KP. Đông Chiêu, P. Tân Đông Hiệp, Dĩ An - Bình Dương | Số 107, D5, KDC Phú Hòa 1, Khu 4, Thủ Dầu Một, Bình Dương | 70 Đ. ĐX-03A, Tân Vĩnh Hiệp, Tân Uyên, Bình Dương
+## Cơ sở đào tạo của trang này (toàn bộ Bình Dương)
+- 🏫 Dĩ An: 184/19/11 Đặng Văn Mây, KP. Đông Chiêu, P. Tân Đông Hiệp, TP. Dĩ An
+- 🏫 Thuận An: 69 D32, Làng chuyên gia Oasis, P. An Phú, TP. Thuận An
+- 🏫 Thủ Dầu Một: 107 D5, KDC Phú Hòa 1, TP. Thủ Dầu Một
+- 🏫 Tân Uyên: 20 Đường ĐX 12, P. Tân Vĩnh Hiệp, TP. Tân Uyên
+- Mới (Fanpage, dùng khi đăng bài): 🏫 Dĩ An: 184/19/11 Đặng Văn Mây, KP. Đông Chiêu, P. Tân Đông Hiệp, TP. Dĩ An | 🏫 Thuận An: 69 D32, Làng chuyên gia Oasis, P. An Phú, TP. Thuận An | 🏫 Thủ Dầu Một: 107 D5, KDC Phú Hòa 1, TP. Thủ Dầu Một | 🏫 Tân Uyên: 20 Đường ĐX 12, P. Tân Vĩnh Hiệp, TP. Tân Uyên
+- Cũ (list _mac-dinh trước đây, chỉ đối chiếu): 1/513 KDC TÀI LỰC, Thuận An | 184/19/11 Đặng Văn Mây, Dĩ An | Số 107, D5, KDC Phú Hòa 1, Thủ Dầu Một | 70 Đ. ĐX-03A, Tân Uyên
 - Đăng bài chỉ dùng dòng Mới (Fanpage). Dòng Cũ chỉ để đối chiếu, không nhét vào caption.
 
 ## USP chuẩn từ Fanpage thực tế
@@ -106,11 +99,14 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 - Dùng ký tự em dash
 
 ## Chân trang caption (bắt buộc)
-Trung Tâm Đào Tạo Kế Toán Sao Việt (hoặc Trung Tâm Tin Học Sao Việt tùy khóa)
-184/19/11 Đặng Văn Mây, KP. Đông Chiêu, P. Tân Đông Hiệp, Dĩ An, Bình Dương, Dĩ An, Bình Dương 75300, Di An | Số 20 Đường ĐX 12, Phường Tân Khánh, TP. Hồ Chí Minh, Việt Nam., Tân Uyên, Bình Dương 75411 | Số 107, D5, KDC Phú Hòa 1, Khu 4, Thủ Dầu Một, Bình Dương, Thủ Dầu Một, Bình Dương, Thu Dau Mot | 69 D32, Làng chuyên gia Oasis, phường An Phú, TP. HCM (Thuận An, Bình Dương cũ), An Thuan, Bình Dương Province 820000 | Số 107, D5, KDC Phú Hòa 1, Khu 4, Thủ Dầu Một, Bình Dương | Số 20 Đường ĐX 12, Phường Tân Khánh, TP. Hồ Chí Minh, Việt Nam., Tân Uyên, Bình Dương 820000 | 184/19/11 Đặng Văn Mây, KP.Đông Chiêu, Phường Tân Đông Hiệp, Thành Phố Dĩ An, Tỉnh Bình Dương, Dĩ An, Bình Dương 820000, Di An | 69 D32, Làng chuyên gia Oasis, phường An Phú, TP. HCM (Thuận An, Bình Dương cũ), An Thuan, Bình Dương Province 75200 | 69 D32, Làng chuyên gia Oasis, phường An Phú, TP. HCM (Thuận An, Bình Dương cũ), An Thuan, Bình Dương Province 75211 | Số 107, D5, KDC Phú Hòa 1, Khu 4, Thủ Dầu Một, Bình Dương, Thủ Dầu Một, Bình Dương 75100, Thu Dau Mot | 184/19/11 Đặng Văn Mây, KP. Đông Chiêu, P. Tân Đông Hiệp, Dĩ An, Dĩ An, Bình Dương 75300, Di An
-Hotline: 0812 114 345
-Email: trungtamtinhocsaoviet@gmail.com
-Web: https://blogdaytinhoc.com
+Trung Tâm Đào Tạo Tin Học Sao Việt Bình Dương
+🏫 Dĩ An: 184/19/11 Đặng Văn Mây, KP. Đông Chiêu, P. Tân Đông Hiệp, TP. Dĩ An
+🏫 Thuận An: 69 D32, Làng chuyên gia Oasis, P. An Phú, TP. Thuận An
+🏫 Thủ Dầu Một: 107 D5, KDC Phú Hòa 1, TP. Thủ Dầu Một
+🏫 Tân Uyên: 20 Đường ĐX 12, P. Tân Vĩnh Hiệp, TP. Tân Uyên
+📞 Hotline/Zalo: 0812 114 345
+📧 Email: trungtamtinhocsaoviet@gmail.com
+🌐 Website: https://blogdaytinhoc.com
 
 ## Tuỳ biến trang
 - Tên Fanpage: Trung Tâm Tin Học Sao Việt Bình Dương
@@ -118,8 +114,8 @@ Web: https://blogdaytinhoc.com
 - Page ID: 109128125071092
 - Access Token: EAAYrB1nymYkBSY8fMg2FEEZCNqZAClUV2FZA2yIF4Tr5M0u5uSZBtm4ZBjXZB6P4G8vIdkW36r1oxbKblWqcx1A0P0V4zUfNtKuUVk0eJtQozdQ4TDqjubtsrv65ErjP016yCj4ops0I7SyAkZBBU0bKhT23u6pR9Yh9vEqweeGAOpVeVHZBLHehZCZBayyxL0iL0gH3qrlp7d4cUCVbIq5p4ZD
 - Thẻ khoá học: tin-hoc _ai
-- Cơ sở / địa chỉ: 184/19/11 Đặng Văn Mây, KP. Đông Chiêu, P. Tân Đông Hiệp, Dĩ An, Bình Dương, Dĩ An, Bình Dương 75300, Di An | Số 20 Đường ĐX 12, Phường Tân Khánh, TP. Hồ Chí Minh, Tân Uyên, Bình Dương 75411 | Số 107, D5, KDC Phú Hòa 1, Khu 4, Thủ Dầu Một, Bình Dương, Thủ Dầu Một, Bình Dương, Thu Dau Mot | 69 D32, Làng chuyên gia Oasis, phường An Phú, TP. HCM (Thuận An, Bình Dương cũ), An Thuan, Bình Dương Province 820000 | Số 107, D5, KDC Phú Hòa 1, Khu 4, Thủ Dầu Một, Bình Dương | Số 20 Đường ĐX 12, Phường Tân Khánh, TP. Hồ Chí Minh, Tân Uyên, Bình Dương 820000 | 184/19/11 Đặng Văn Mây, KP.Đông Chiêu, Phường Tân Đông Hiệp, Thành Phố Dĩ An, Tỉnh Bình Dương, Dĩ An, Bình Dương 820000, Di An | 69 D32, Làng chuyên gia Oasis, phường An Phú, TP. HCM (Thuận An, Bình Dương cũ), An Thuan, Bình Dương Province 75200 | 69 D32, Làng chuyên gia Oasis, phường An Phú, TP. HCM (Thuận An, Bình Dương cũ), An Thuan, Bình Dương Province 75211 | Số 107, D5, KDC Phú Hòa 1, Khu 4, Thủ Dầu Một, Bình Dương, Thủ Dầu Một, Bình Dương 75100, Thu Dau Mot | 184/19/11 Đặng Văn Mây, KP. Đông Chiêu, P. Tân Đông Hiệp, Dĩ An, Bình Dương 75300, Di An
-- Địa chỉ cũ (list trước): 1/513 KDC TÀI LỰC, Tổ 9, Khu phố Hòa Lân 2, Thuận An - Bình Dương | 184/19/11 Đặng Văn Mây, KP. Đông Chiêu, P. Tân Đông Hiệp, Dĩ An - Bình Dương | Số 107, D5, KDC Phú Hòa 1, Khu 4, Thủ Dầu Một, Bình Dương | 70 Đ. ĐX-03A, Tân Vĩnh Hiệp, Tân Uyên, Bình Dương
+- Cơ sở / địa chỉ: 🏫 Dĩ An: 184/19/11 Đặng Văn Mây, KP. Đông Chiêu, P. Tân Đông Hiệp, TP. Dĩ An | 🏫 Thuận An: 69 D32, Làng chuyên gia Oasis, P. An Phú, TP. Thuận An | 🏫 Thủ Dầu Một: 107 D5, KDC Phú Hòa 1, TP. Thủ Dầu Một | 🏫 Tân Uyên: 20 Đường ĐX 12, P. Tân Vĩnh Hiệp, TP. Tân Uyên
+- Địa chỉ cũ (list trước): 1/513 KDC TÀI LỰC, Thuận An | 184/19/11 Đặng Văn Mây, Dĩ An | Số 107, D5, KDC Phú Hòa 1, Thủ Dầu Một | 70 Đ. ĐX-03A, Tân Uyên
 - Hotline / Zalo: 0812 114 345
 - Email Fanpage: trungtamtinhocsaoviet@gmail.com
 - Web Fanpage: https://blogdaytinhoc.com

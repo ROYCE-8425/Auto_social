@@ -96,11 +96,11 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 - Dùng ký tự em dash
 
 ## Chân trang caption (bắt buộc)
-Trung Tâm Đào Tạo Kế Toán Sao Việt (hoặc Trung Tâm Tin Học Sao Việt tùy khóa)
-193 Nguyễn Xí, phường Bình Thạnh, Thành phố Hồ Chí Minh 700000, Ho Chi Minh City
-Hotline: 0904 860 899
-Email: tinhocsaovietbinhthanh@gmail.com
-Web: https://blogdaytinhoc.com
+Trung Tâm Tin Học Sao Việt Quận Bình Thạnh
+🏫 Bình Thạnh: 193 Nguyễn Xí, Phường 26, Q. Bình Thạnh, TP.HCM (Tầng 1)
+📞 Hotline/Zalo: 0904 860 899
+📧 Email: tinhocsaovietbinhthanh@gmail.com
+🌐 Website: https://blogdaytinhoc.com
 
 ## Tuỳ biến trang
 - Tên Fanpage: Trung Tâm Tin học Sao Việt Quận Bình Thạnh - TPHCM
@@ -108,7 +108,7 @@ Web: https://blogdaytinhoc.com
 - Page ID: 101084059225733
 - Access Token: EAAYrB1nymYkBSZAoZBn1RmrA4Y98XoTfv7DMoHSXfvZAlTBwxAFX4lOn33QrKHYioktQx66pZAJULhvZBbUyJSbEYCyZB2Icdkp44P4xLJovoKeDgIRde2I5hZCSdtv3ZBRIiMQRvV2Omf5b9PEgIuv9ZAwhhSPCj9yg4P7DRpFBKSwZADgpDMGiZCOe9SfwaL7F9HGsUK2noOOSt9o1PNI5VNYgtgZD
 - Thẻ khoá học: tin-hoc _ai
-- Cơ sở / địa chỉ: 193 Nguyễn Xí, phường Bình Thạnh, TP.HCM
+- Cơ sở / địa chỉ: 🏫 Bình Thạnh: 193 Nguyễn Xí, Phường 26, Q. Bình Thạnh, TP.HCM (Tầng 1)
 - Địa chỉ cũ (list trước): Số 16, 21/12 Lê Trực, Phường 7, Q. Bình Thạnh (Chung Cư Lê Trực)
 - Hotline / Zalo: 0904 860 899
 - Email Fanpage: tinhocsaovietbinhthanh@gmail.com

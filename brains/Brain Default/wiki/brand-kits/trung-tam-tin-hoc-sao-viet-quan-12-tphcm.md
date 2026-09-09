@@ -96,11 +96,11 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 - Dùng ký tự em dash
 
 ## Chân trang caption (bắt buộc)
-Trung Tâm Đào Tạo Kế Toán Sao Việt (hoặc Trung Tâm Tin Học Sao Việt tùy khóa)
-A23 KDC Thới An, Đường Lê Thị Riêng, Phường Thới An, Quận 12, Thành phố Hồ Chí Minh 700000, Ho Chi Minh City
-Hotline: 0904 860 899
-Email: trungtamtinhocsaoviet@gmail.com
-Web: https://blogdaytinhoc.com
+Trung Tâm Tin Học Sao Việt Quận 12
+🏫 Quận 12: A23 KDC Thới An, Đường Lê Thị Riêng, P. Thới An, Quận 12, TP.HCM
+📞 Hotline/Zalo: 0904 860 899
+📧 Email: trungtamtinhocsaoviet@gmail.com
+🌐 Website: https://blogdaytinhoc.com
 
 ## Tuỳ biến trang
 - Tên Fanpage: Trung Tâm Tin Học Sao Việt Quận 12 - TPHCM
@@ -108,7 +108,7 @@ Web: https://blogdaytinhoc.com
 - Page ID: 107108788759946
 - Access Token: EAAYrB1nymYkBSbsSSn62WXnKWTi0eUHgPXh5343ygSVOGhJ5kIyk7trn7nY6lDkzbcKCBlMK0oLt34r2F7yycZA2PKOobz45XprZAMi4rO6itkwnlLOSZBp3H5wqh3ZB7McLg5GWlTZA0Yo8FHxgRmOP88Rf8QJFpTRqwsZACZAZCzxL029lwC4Oxqt7HlicRPXuifNJZBUDVNmCbsbqJIaBhny8ZD
 - Thẻ khoá học: tin-hoc _ai
-- Cơ sở / địa chỉ: A23 KDC Thới An, Đường Lê Thị Riêng, Phường Thới An, Quận 12, TP.HCM
+- Cơ sở / địa chỉ: 🏫 Quận 12: A23 KDC Thới An, Đường Lê Thị Riêng, P. Thới An, Quận 12, TP.HCM
 - Địa chỉ cũ (list trước): 247/31 Hà Huy Giáp, Thạnh Lộc, Quận 12
 - Hotline / Zalo: 0904 860 899
 - Email Fanpage: trungtamtinhocsaoviet@gmail.com
