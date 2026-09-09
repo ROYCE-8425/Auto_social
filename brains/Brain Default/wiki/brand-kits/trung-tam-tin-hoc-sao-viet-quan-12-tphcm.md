@@ -106,6 +106,7 @@ Web: https://blogdaytinhoc.com
 - Tên Fanpage: Trung Tâm Tin Học Sao Việt Quận 12 - TPHCM
 - slug: trung-tam-tin-hoc-sao-viet-quan-12-tphcm
 - Page ID: 107108788759946
+- Access Token: EAAYrB1nymYkBSbsSSn62WXnKWTi0eUHgPXh5343ygSVOGhJ5kIyk7trn7nY6lDkzbcKCBlMK0oLt34r2F7yycZA2PKOobz45XprZAMi4rO6itkwnlLOSZBp3H5wqh3ZB7McLg5GWlTZA0Yo8FHxgRmOP88Rf8QJFpTRqwsZACZAZCzxL029lwC4Oxqt7HlicRPXuifNJZBUDVNmCbsbqJIaBhny8ZD
 - Thẻ khoá học: tin-hoc _ai
 - Cơ sở / địa chỉ: A23 KDC Thới An, Đường Lê Thị Riêng, Phường Thới An, Quận 12, TP.HCM
 - Địa chỉ cũ (list trước): 247/31 Hà Huy Giáp, Thạnh Lộc, Quận 12
