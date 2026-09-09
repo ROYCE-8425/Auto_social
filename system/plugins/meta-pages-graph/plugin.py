@@ -247,10 +247,24 @@ def _connected_id():
     return ids[0] if ids else None
 
 
-def _manual_pages():
+def _manual_pages(cctx=None):
     """Nạp Page Access Token trực tiếp từ Javis/page_tokens.json hoặc wiki/brand-kits/*.md."""
     pages = {}
     roots = []
+    # 1. Từ context nếu có
+    vault = getattr(cctx, "vault_root", None) if cctx is not None else None
+    if vault:
+        try:
+            roots.append(Path(vault).resolve())
+        except Exception:
+            pass
+    # 2. Cwd và thư mục xung quanh
+    try:
+        cur = Path.cwd().resolve()
+        roots.extend([cur, cur.parent, cur / "brains" / "Brain Default", cur.parent / "brains" / "Brain Default"])
+    except Exception:
+        pass
+    # 3. Từ vị trí file plugin này
     try:
         repo = Path(__file__).resolve().parents[3]
         default_brain = repo / "brains" / "Brain Default"
@@ -259,8 +273,30 @@ def _manual_pages():
         roots.append(repo)
     except Exception:
         pass
+    # 4. Từ biến môi trường
+    import os
+    for env_k in ("JAVIS_VAULT", "BRAINS_DIR", "JAVIS_STATE_DIR"):
+        v = os.getenv(env_k)
+        if v:
+            try:
+                roots.append(Path(v).resolve())
+                roots.append((Path(v) / "Brain Default").resolve())
+                roots.append((Path(v) / "brains" / "Brain Default").resolve())
+            except Exception:
+                pass
+    # 5. Đường dẫn chuẩn trên máy chủ Linux
+    for p_fix in ("/opt/projects/javissocial.aisaoviet.com/brains/Brain Default",
+                  "/opt/projects/javissocial.aisaoviet.com",
+                  "/brains/Brain Default", "/brains"):
+        try:
+            dp = Path(p_fix).resolve()
+            if dp.is_dir() and dp not in roots:
+                roots.append(dp)
+        except Exception:
+            pass
+
     for r in roots:
-        # 1. Quét file Javis/page_tokens.json
+        # Quét file Javis/page_tokens.json
         tok_file = r / "Javis" / "page_tokens.json"
         if tok_file.is_file():
             try:
@@ -277,7 +313,7 @@ def _manual_pages():
                             }
             except Exception:
                 pass
-        # 2. Quét wiki/brand-kits/*.md
+        # Quét wiki/brand-kits/*.md
         bk_dir = r / "wiki" / "brand-kits"
         if bk_dir.is_dir():
             for p in bk_dir.glob("*.md"):
@@ -302,7 +338,7 @@ def _manual_pages():
 
 
 def _check():
-    if not _connected_ids() and not _manual_pages():
+    if not _manual_pages() and not _connected_ids():
         return ("Chưa kết nối Facebook Trang. Vào trang Kết nối, chọn 'Facebook Trang (tự tạo app - "
                 "Graph API)', làm theo hướng dẫn tạo Facebook App rồi đăng nhập (nhớ tick chọn Trang), "
                 "hoặc nạp Page Access Token vào brand kit / page_tokens.json. "
@@ -310,7 +346,9 @@ def _check():
     return None
 
 
-async def _token():
+async def _token(cctx=None):
+    if _manual_pages(cctx):
+        return "manual"
     cid = _connected_id()
     if cid:
         try:
@@ -321,8 +359,6 @@ async def _token():
                 return tok
         except Exception:
             pass
-    if _manual_pages():
-        return "manual"
     return None
 
 
@@ -389,10 +425,11 @@ def _fmt(d):
     return json.dumps(d, ensure_ascii=False, default=str)
 
 
-async def _pages(user_token=None):
+async def _pages(user_token=None, cctx=None):
     """Gộp Trang từ MỌI kết nối facebook-pages và Page Token nạp thủ công. Trả (list, err). Không lộ trùng page."""
     by_id, last_err = {}, None
 
+    # 1. Quét từ OAuth nếu có token hợp lệ
     toks = await _tokens()
     if user_token and user_token not in toks and user_token != "manual":
         toks = [user_token] + toks
@@ -406,8 +443,8 @@ async def _pages(user_token=None):
             if pid:
                 by_id[pid] = p
 
-    # Luôn ưu tiên ghi đè bằng Page Access Token nạp trực tiếp từ page_tokens.json / brand-kits
-    for pid, p in _manual_pages().items():
+    # 2. Luôn ưu tiên ghi đè bằng Page Access Token nạp trực tiếp từ page_tokens.json / brand-kits
+    for pid, p in _manual_pages(cctx).items():
         by_id[pid] = p
 
     if not by_id:
@@ -415,28 +452,52 @@ async def _pages(user_token=None):
     return list(by_id.values()), None
 
 
-async def _resolve_page(args, user_token):
+async def _resolve_page(args, user_token, cctx=None):
     """Chọn Trang thao tác. Trả (page_id, page_token, page_name, err).
-    - page_id / page (tên) trong args → khớp; nếu bỏ trống mà chỉ có 1 Trang → tự lấy;
-    - nhiều Trang mà không chỉ rõ → lỗi kèm danh sách Trang để user chọn."""
-    pages, err = await _pages(user_token)
-    if err:
+    ƯU TIÊN TUYỆT ĐỐI: Dùng ngay Page Access Token trong page_tokens.json / brand-kits nếu có,
+    không gọi OAuth me/accounts và không fallback về app cũ."""
+    manual = _manual_pages(cctx)
+    ref = str((args or {}).get("page_id") or (args or {}).get("page") or "").strip()
+    if ref and manual:
+        # Khớp theo ID
+        if ref in manual:
+            p = manual[ref]
+            return p.get("id"), p.get("access_token"), p.get("name"), None
+        # Khớp theo tên
+        rl = ref.lower()
+        for pid, p in manual.items():
+            if str(pid) == ref or rl in str(p.get("name", "")).lower():
+                return p.get("id"), p.get("access_token"), p.get("name"), None
+
+    if not ref and len(manual) == 1:
+        p = next(iter(manual.values()))
+        return p.get("id"), p.get("access_token"), p.get("name"), None
+
+    pages, err = await _pages(user_token, cctx)
+    if err and not manual:
         return None, None, None, err
-    if not pages:
+    all_pages_dict = {}
+    for pid, p in (manual or {}).items():
+        all_pages_dict[pid] = p
+    for p in (pages or []):
+        pid = str(p.get("id") or "")
+        if pid and pid not in all_pages_dict:
+            all_pages_dict[pid] = p
+    all_pages = list(all_pages_dict.values())
+    if not all_pages:
         return None, None, None, ("ERROR: Không thấy Trang nào bạn quản lý. Kiểm tra: bạn là Admin của Trang, "
                                   "và khi đăng nhập Facebook đã TICK chọn Trang đó cho app.")
-    ref = str((args or {}).get("page_id") or (args or {}).get("page") or "").strip()
     if ref:
         rl = ref.lower()
-        for p in pages:
+        for p in all_pages:
             if str(p.get("id")) == ref or rl in str(p.get("name", "")).lower():
                 return p.get("id"), p.get("access_token"), p.get("name"), None
-        avail = ", ".join(f"{p.get('name')} ({p.get('id')})" for p in pages)
+        avail = ", ".join(f"{p.get('name')} ({p.get('id')})" for p in all_pages)
         return None, None, None, f"ERROR: Không khớp Trang '{ref}'. Trang bạn có: {avail}"
-    if len(pages) == 1:
-        p = pages[0]
+    if len(all_pages) == 1:
+        p = all_pages[0]
         return p.get("id"), p.get("access_token"), p.get("name"), None
-    avail = ", ".join(f"{p.get('name')} ({p.get('id')})" for p in pages)
+    avail = ", ".join(f"{p.get('name')} ({p.get('id')})" for p in all_pages)
     return None, None, None, f"ERROR: Bạn có nhiều Trang, cần chỉ rõ page_id hoặc page (tên). Trang: {avail}"
 
 
@@ -1010,7 +1071,7 @@ async def _publish_album(args, cctx):
     extra = _extra_ai_err(photos)
     if extra:
         return extra
-    pid, ptok, pname, perr = await _resolve_page(args, token)
+    pid, ptok, pname, perr = await _resolve_page(args, token, cctx)
     if perr:
         return perr
     msg = _fb_plain_caption(str(args.get("message") or "").strip())
