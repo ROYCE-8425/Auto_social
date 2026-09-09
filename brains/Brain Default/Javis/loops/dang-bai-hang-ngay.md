@@ -5,9 +5,9 @@ slug: dang-bai-hang-ngay
 enabled: false
 mode: full
 goal: custom
-interval_min: 18
+interval_min: 5
 quiet_hours: 22-07
-max_runs_per_day: 48
+max_runs_per_day: 100
 notify: false
 updated: 2026-09-05
 ---
