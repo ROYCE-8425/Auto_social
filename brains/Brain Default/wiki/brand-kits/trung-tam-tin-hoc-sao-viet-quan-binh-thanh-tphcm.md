@@ -106,6 +106,7 @@ Web: https://blogdaytinhoc.com
 - Tên Fanpage: Trung Tâm Tin học Sao Việt Quận Bình Thạnh - TPHCM
 - slug: trung-tam-tin-hoc-sao-viet-quan-binh-thanh-tphcm
 - Page ID: 101084059225733
+- Access Token: EAAYrB1nymYkBSZAoZBn1RmrA4Y98XoTfv7DMoHSXfvZAlTBwxAFX4lOn33QrKHYioktQx66pZAJULhvZBbUyJSbEYCyZB2Icdkp44P4xLJovoKeDgIRde2I5hZCSdtv3ZBRIiMQRvV2Omf5b9PEgIuv9ZAwhhSPCj9yg4P7DRpFBKSwZADgpDMGiZCOe9SfwaL7F9HGsUK2noOOSt9o1PNI5VNYgtgZD
 - Thẻ khoá học: tin-hoc _ai
 - Cơ sở / địa chỉ: 193 Nguyễn Xí, phường Bình Thạnh, TP.HCM
 - Địa chỉ cũ (list trước): Số 16, 21/12 Lê Trực, Phường 7, Q. Bình Thạnh (Chung Cư Lê Trực)
