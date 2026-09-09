@@ -392,8 +392,6 @@ def _fmt(d):
 async def _pages(user_token=None):
     """Gộp Trang từ MỌI kết nối facebook-pages và Page Token nạp thủ công. Trả (list, err). Không lộ trùng page."""
     by_id, last_err = {}, None
-    for pid, p in _manual_pages().items():
-        by_id[pid] = p
 
     toks = await _tokens()
     if user_token and user_token not in toks and user_token != "manual":
@@ -407,6 +405,11 @@ async def _pages(user_token=None):
             pid = str(p.get("id") or "")
             if pid:
                 by_id[pid] = p
+
+    # Luôn ưu tiên ghi đè bằng Page Access Token nạp trực tiếp từ page_tokens.json / brand-kits
+    for pid, p in _manual_pages().items():
+        by_id[pid] = p
+
     if not by_id:
         return None, last_err or "ERROR: Không thấy Trang nào."
     return list(by_id.values()), None
