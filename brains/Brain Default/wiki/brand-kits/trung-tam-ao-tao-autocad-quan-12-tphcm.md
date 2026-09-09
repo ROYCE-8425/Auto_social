@@ -103,6 +103,7 @@ Email: trungtamtinhocsaoviet@gmail.com
 Web: https://tinhocsaoviet.com
 
 ## Tuỳ biến trang
+- Access Token: EAAXIakKPeYYBSTVUZBQTuV3vfxZCnWh0HfJrEvRYMuP8eqkOBZC8R5pWQ8JXZCk8Fc2ZB8Maun4akMqgQGKUGVCxT0sZC6ZBXVY3gv0dEnQZCCUZCBGhahXHFYlqki6mRG6N83ZCyzmM6lqHcnuVKNDf2FsGYBKWZACDWZBN6P9TpAh4ytarhfNitlmYI72mUF1NiRZAHbvaZClZA1N8HbVeDZCdxJsZD
 - Tên Fanpage: Trung Tâm Đào Tạo Autocad Quận 12 - TPHCM
 - slug: trung-tam-ao-tao-autocad-quan-12-tphcm
 - Page ID: 246780635193685

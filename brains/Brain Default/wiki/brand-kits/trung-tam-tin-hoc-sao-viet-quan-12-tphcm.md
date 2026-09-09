@@ -104,7 +104,7 @@ Trung Tâm Tin Học Sao Việt Quận 12
 - Tên Fanpage: Trung Tâm Tin Học Sao Việt Quận 12 - TPHCM
 - slug: trung-tam-tin-hoc-sao-viet-quan-12-tphcm
 - Page ID: 107108788759946
-- Access Token: EAAYrB1nymYkBSbsSSn62WXnKWTi0eUHgPXh5343ygSVOGhJ5kIyk7trn7nY6lDkzbcKCBlMK0oLt34r2F7yycZA2PKOobz45XprZAMi4rO6itkwnlLOSZBp3H5wqh3ZB7McLg5GWlTZA0Yo8FHxgRmOP88Rf8QJFpTRqwsZACZAZCzxL029lwC4Oxqt7HlicRPXuifNJZBUDVNmCbsbqJIaBhny8ZD
+- Access Token: EAAYrB1nymYkBSfrDhnMblxYSohjj4xDnZBpjwzcMPmUYRVVnyF8IcyaoJLz8yazfKRtwQMs0KiZAeOWyDsI7yAFZCLa69pzhpjaWSDVwHaoev7yYA202HsLWOjoces7RoYCw3HeZBuQJHYa2nMCj2FCrgnvqitX7k8oMsnuqI9eeGumman8qcxJIBDBlivIMtVKnD42ZB5BHqz4BtiFAZD
 - Thẻ khoá học: tin-hoc _ai
 - Cơ sở / địa chỉ: 🏫 Quận 12: A23 Lê Thị Riêng, KDC Thới An, phường Thới An, TP.HCM (Quận 12 cũ)
 - Hotline / Zalo: 0904 860 899

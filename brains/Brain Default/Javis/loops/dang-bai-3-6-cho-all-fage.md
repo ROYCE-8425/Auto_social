@@ -1,0 +1,41 @@
+---
+type: loop
+name: đăng bài cho t3 t6 cho all fage
+slug: dang-bai-3-6-cho-all-fage
+enabled: false
+goal: custom
+mode: full
+interval_min: 18
+workspace: vault
+tools_profile: vault-safe
+quiet_hours: ''
+max_runs_per_day: 0
+owner_chat: ''
+notify: true
+updated: '2026-09-09'
+---
+
+Mỗi vòng CHỈ đăng 1 bài cho 1 Fanpage rồi DỪNG. Cấm đăng 2 page trong 1 vòng.
+
+1. ĐIỀU PHỐI FANPAGE (Chỉ chạy Thứ 3 và Thứ 6, mỗi page tối đa 1 bài/ngày):
+Chạy script:
+python "brains/Brain Default/skills/dang-bai-facebook/scripts/pick_next_fanpage.py"
+- Nếu xuất hiện "NEXT=NONE": Hôm nay là ngày nghỉ HOẶC toàn bộ Fanpage đã đăng xong -> DỪNG NGAY.
+- Nếu xuất hiện "NEXT=1": Lấy page_id, ten, the (khóa học), kit, CHAN_TRANG.
+
+2. QUY LUẬT KHÓA HỌC:
+- Thứ 3: Đăng khóa 'tin-hoc _ai' (hoặc 'ke-toan' theo tuần)
+- Thứ 6: Đăng khóa 'do-hoa' (hoặc 've-ky-thuat' theo tuần)
+(Ưu tiên theo biến the mà script đã chọn theo đúng Brand Kit của trang).
+
+3. XUẤT BẢN BÀI VIẾT (TỶ LỆ VÀNG 2026):
+- Đọc file wiki/courses/<the>.md lấy Tiêu đề và Highlights chuẩn.
+- Gọi javis_generate_image (GPT Image 2) tạo 1 ảnh bìa AI vuông 1:1, lề an toàn cách đều 4 mép 15-20%.
+- Soạn caption 7 nhịp kèm CHAN_TRANG của đúng Trang này.
+- Gọi tool đăng album:
+  fb_page_album(page="<ten>", photos="auto", course="<the>", cover="<ảnh_ai_vừa_tạo>", message="<caption>")
+
+4. XỬ LÝ KẾT QUẢ & CHỊU LỖI:
+- ĐĂNG THÀNH CÔNG: Chạy python "brains/Brain Default/skills/dang-bai-facebook/scripts/pick_next_fanpage.py" --ok <page_id> <the>
+- BỊ LỖI: Bỏ qua ngay để không kẹt vòng bằng lệnh:
+  python "brains/Brain Default/skills/dang-bai-facebook/scripts/pick_next_fanpage.py" --fail <page_id> "<lý_do>"

@@ -108,6 +108,7 @@ Email: trungtamtinhocsaoviet@gmail.com
 Web: https://blogdaytinhoc.com/hoc-ke-toan-tai-thu-dau-mot-binh-duong-day-thuc-hanh-thuc-te-cho-nguoi-moi-bat-dau-355
 
 ## Tuỳ biến trang
+- Access Token: EAAVQyewNx24BSUoLV6ZCHNqf2IZCcbx4dZBmeOBElB6OC9ojwcpzX3yLINPoWvZAH4kZCAymEWZBZB9yfEVdDTWSIwLZCwRA99hFk6nOl4hKZBffmTVrJZBYryow1jMOCSYVbGm26wFlAcET4BZCudXul213SqcDvab19wbxRkfGZAgllXzLwO1RcHXVoCEY7M9WZBAONGROf21bmD4fEYuwbnZBcZD
 - Tên Fanpage: Trung Tâm Đào Tạo Kế Toán Thủ Dầu Một - Bình Dương
 - slug: trung-tam-ao-tao-ke-toan-thu-dau-mot-binh-duong
 - Page ID: 180054785193451

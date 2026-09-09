@@ -103,6 +103,7 @@ Email: tinhocsaovietbinhthanh@gmail.com
 Web: https://blogdaytinhoc.com
 
 ## Tuỳ biến trang
+- Access Token: EAAXIakKPeYYBSeGXCr6tsY3WzhFTWWIkhVZBw6F9YMjmG7yqJ2U2aHYAl6OIjpeCG852fZBNs91fZAeKqIjjbIown6q2i2hoXYUjmuhyMZCMLLMIjAyqgn1PWlXuMJo32ezOqeCqZAHBIYJaUqKl8iGdnfCej7gJ0w9iHx4RZAtCZCcsTdRTE0aOZBBXuXIZA7jNkHWAjldnwFmiJMpn64N41
 - Tên Fanpage: Trung Tâm Đào Tạo Autocad Quận Bình Thạnh - TPHCM
 - slug: trung-tam-ao-tao-autocad-quan-binh-thanh-tphcm
 - Page ID: 281702171693245

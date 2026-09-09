@@ -109,6 +109,7 @@ Email: trungtamtinhocsaoviet@gmail.com
 Web: https://tinhocsaoviet.com
 
 ## Tuỳ biến trang
+- Access Token: EAAXIakKPeYYBSaVtVrrzbjWEc6NKUjEMbum32IFaUJDuMPOnnhDjTP7EVdZBTYzpcrv9p7ZBpHRwhZCIAtPkmKFesn21bx1WpSNGDUxa6USVyADMPpb8CDZChakW4kS0wqRh7NymtPejQwZBfrgX5hECzzRNSfGiZBL2VZCBvqlTyqQyNHFUX6Q6p5IwWCEswQiTRahjq9DbNH8oAMJHUh6
 - Tên Fanpage: Trung Tâm Đào Tạo AutoCad Dĩ An - Bình Dương
 - slug: trung-tam-ao-tao-autocad-di-an-binh-duong
 - Page ID: 290400614148885

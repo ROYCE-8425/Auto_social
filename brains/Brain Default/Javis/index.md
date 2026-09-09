@@ -2,15 +2,17 @@
 
 > Tự sinh từ file - ĐỪNG sửa tay. Chỉ mục mọi năng lực của Javis trong brain này để bất kỳ AI/engine đọc 1 chỗ là hiểu Javis làm được gì. Song song `wiki/index.md` (tri thức).
 
-**Tổng quan:** 1 agents · 9 skills · 1 workflows (0 bật) · 2 loops (0 bật) · 12 plugins (11 chạy)
+**Tổng quan:** 1 agents · 15 skills · 1 workflows (0 bật) · 5 loops (0 bật) · 12 plugins (11 chạy)
 
 ## Agents
 - **Biên tập Facebook** (`bien-tap-facebook`) - Tạo 1 ảnh AI độc quyền mới 100%, soạn caption đúng brand kit và đăng lên Fanpage Facebook. · model gpt-5.5 · skills: dang-bai-facebook, viet-bai-facebook
 
 ## Skills
 ### AI
+- **Đánh giá report model trước deploy** (`danh-gia-report-model-truoc-deploy`) - Đối chiếu report của model khác với code local, test và rủi ro trước khi đưa thay đổi lên VPS.
 - **Ingest Source** (`ingest-source`) - Tiêu hoá một source thô vào Second Brain, chưng cất thành tri thức wiki tích luỹ.
 - **Javis Builder** (`javis-builder`) - Tạo hoặc sửa năng lực của Javis: agent, skill, workflow, loop, plugin. Kèm mẫu file chuẩn và luật chống trùng.
+- **Kiểm tra token workflow Javis** (`kiem-tra-token-workflow-javis`) - Rà soát workflow Javis để tìm nơi phình context, log, result và skill gây tốn token.
 - **Lint Wiki** (`lint-wiki`) - Rà soát sức khoẻ wiki của Second Brain, trả về danh sách vấn đề. Không tự sửa hàng loạt.
 - **Notes** (`notes`) - Lưu tin nhắn hiện tại nguyên văn vào sources/ (kèm ảnh), tự chưng cất lên wiki nếu note đáng.
 - **Query Wiki** (`query-wiki`) - Khai thác tri thức trong Second Brain: tổng hợp, so sánh, giả thuyết. Trả lời có trích dẫn.
@@ -19,15 +21,22 @@
 - **Viết bài Facebook** (`viet-bai-facebook`) - Skill viết caption Facebook cho hệ thống Sao Việt: rõ người học, rõ việc làm được, giọng tự nhiên, không văn mẫu AI, tối ưu đọc lướt trên di động.
 ### Facebook
 - **Đăng bài Facebook** (`dang-bai-facebook`) - Đăng bài Fanpage Sao Việt: Album 6-8 ảnh chuẩn Tỷ Lệ Vàng 2026 (1 cover AI mới 100% + ảnh lớp học thật dataset), đăng bằng fb_page_album kèm caption 7 nhịp brand kit.
+- **Kiểm tra goal đăng bài Facebook** (`kiem-tra-goal-dang-bai-facebook`) - Kiểm tra goal Facebook vừa chạy: thời gian, token, post_id, ảnh đã dùng và lỗi sai khóa học.
+- **Kiểm tra loop đăng bài Facebook** (`kiem-tra-loop-dang-bai-facebook`) - Kiểm tra loop đăng bài Facebook: trạng thái, lần chạy, treo ở đâu, token, post_id, ảnh và lỗi lặp page.
+- **Xử lý token Meta Facebook an toàn** (`xu-ly-token-meta-facebook-an-toan`) - Tư vấn và kiểm tra token Meta/Facebook mà không lộ secret, ưu tiên OAuth và Page Token đúng chuẩn.
 ### Marketing
 - **HTML sang Webcake** (`html-to-webcake`) - Chuyển trang HTML thành file .pke mở được trong trình dựng Webcake, giữ đúng màu, cỡ chữ, ảnh và bố cục của bản gốc.
+- **Tạo poster Facebook khóa học** (`tao-poster-facebook-khoa-hoc`) - Tạo poster Facebook 1:1 cho khóa học bằng javis_generate_image, lưu vào vault và trả markdown ảnh.
 
 ## Workflows
 - **Đăng Facebook** (`dang-bai-that-facebook`) - True · 1 bước [bien-tap-facebook] · Đăng bài Fanpage Facebook: Album 6-8 ảnh chuẩn Tỷ Lệ Vàng 2026 (1 cover AI mới 100% bằng GPT Image 2 + ảnh lớp học thật từ dataset), đăng bằng fb_page_album.
 
 ## Loops
+- **đăng bài cho t3 t6 cho all fage** (`dang-bai-3-6-cho-all-fage`) - tắt · custom/full · mỗi 18 phút
+- **Đăng bài Facebook tự động (Xoay tua 1 Fanpage)** (`dang-bai-facebook-tu-dong-xoay-tua-1-fanpage-nho-dien-ten-fa`) - tắt · custom/full · mỗi 5 phút
 - **Đăng bài hàng ngày 1 page** (`dang-bai-hang-ngay`) - tắt · custom/full · mỗi 5 phút
 - **Đăng Royce Shop ngẫu nhiên** (`dang-royce-shop-ngau-nhien-moi-5-phut`) - tắt · custom/full · mỗi 5 phút
+- **s** (`s`) - tắt · custom/suggest · mỗi 120 phút
 
 ## Plugins (tool/hook native cho mọi engine)
 - **Thời gian & ngày** (`datetime-vn`) - bundled/chạy · tools: javis_now, javis_date_add · Xem ngày giờ hiện tại theo múi giờ đã cấu hình và tính ngày tương đối (mai, mốt, N ngày nữa, tuần trước). Thuần stdlib, chỉ đọc, không cần mạng.

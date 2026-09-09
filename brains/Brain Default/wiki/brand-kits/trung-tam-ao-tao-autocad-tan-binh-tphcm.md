@@ -103,6 +103,7 @@ Email: trungtamtinhocsaoviet@gmail.com
 Web: https://blogdaytinhoc.com/vkt001-autocad-2d-co-ban-751
 
 ## Tuỳ biến trang
+- Access Token: EAAXIakKPeYYBSWvFUX2EH5x1B02EZBFeGTuZCsZCocW4mwjhZAWrQVRlUd4JZApXorJ6fLfqRL05Q0WISHca0wtQnQEqHv3ZC129ElZCK10lajAiQAkMUivr58VAewfE9q2trKIMgAhGRzB1b4zKZCJlvcOBwP6roRUz3wGNa2atdKT5Dpxg0ZBz3tpe2hsHK0eAtaKxzMoZCErLyom9HicPUZD
 - Tên Fanpage: Trung Tâm Đào Tạo Autocad Tân Bình - TPHCM
 - slug: trung-tam-ao-tao-autocad-tan-binh-tphcm
 - Page ID: 273432059183494

@@ -109,6 +109,7 @@ Email: trungtamtinhocsaoviettanuyen@gmail.com
 Web: https://tinhocsaoviet.com
 
 ## Tuỳ biến trang
+- Access Token: EAAXIakKPeYYBSUstxiEmZBxnfueAx4FT6iL4ORpTG8VZB05i7puIxFhOb7xyW4ku7v1VGZBozBeIN9duN4n0DYpoYa3K3bDTGBjGr0EJlGkEhfT0LwZCId5DDUbq3RZC2mTiEtSQ4tchb4rTClXPLA3jhb6ZAsh1ZBFbHKx0fYeeaVQX3lMfqeAiWMgMRPMonxpCoZBbZAN8syrGxZCZAp2Sbf8o4TB
 - Tên Fanpage: Trung Tâm Đào Tạo AutoCad Tân Uyên - Bình Dương
 - slug: trung-tam-ao-tao-autocad-tan-uyen-binh-duong
 - Page ID: 347101481809822

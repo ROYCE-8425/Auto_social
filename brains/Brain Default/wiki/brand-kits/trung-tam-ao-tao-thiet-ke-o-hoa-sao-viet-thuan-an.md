@@ -108,6 +108,7 @@ Email: trungtamtinhocsaoviet@gmail.com
 Web: https://tinhocsaoviet.com
 
 ## Tuỳ biến trang
+- Access Token: EAAU5TdnqxOABScYPrUo4niStUfFfnyZBrMWqMKU3FEzBUXUVMqU6rPBDDGwixu1VuhHasLj9AKPvOL7qJNYIzxLwLKkl6t3PyV7YbG8FQIvHeTIjeXBKZAqNRym6l2qi07trLg6zHPz7oGZCQdTmV3IgKXKCjGTQynDrmcqsMInZBq7p284Q7gEaRoqmgcZBWBD6tR0aFMS3NzjKBm61gKYez
 - Tên Fanpage: Trung Tâm Đào Tạo Thiết Kế Đồ Hoạ Sao Việt Thuận An
 - slug: trung-tam-ao-tao-thiet-ke-o-hoa-sao-viet-thuan-an
 - Page ID: 521888511005213

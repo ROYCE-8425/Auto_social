@@ -102,6 +102,7 @@ Email: trungtamtinhocsaoviet@gmail.com
 Web: https://blogdaytinhoc.com/khoa-hoc-ke-toan-tai-binh-thanh-423
 
 ## Tuỳ biến trang
+- Access Token: EAAVQyewNx24BSWxEMdH9jomDgqnMcZAxptQyM8Or68v6cWpnxj1pzocHJ2rOd35OGsEzx1YNCsqFzXQe7gXZAVq8FDwm2gOJLZCCZAdZCYSN2eEd0X19fBrj6l14TBAVBmJpuo7CsKHMTEAFvUTwtTvXAEERZA4oLicE4s2ZCv4fLsTiJOXMxZCeEENInRT7ZAKao0zURG3fBDJZASZBvMuNql8RioZD
 - Tên Fanpage: Trung Tâm Đào Tạo Kế Toán Bình Thạnh - TPHCM
 - slug: trung-tam-ao-tao-ke-toan-binh-thanh-tphcm
 - Page ID: 202448916275419

@@ -104,6 +104,7 @@ Email: trungtamtinhocsaovietbienhoa@gmail.com
 Web: https://tinhocsaoviet.com
 
 ## Tuỳ biến trang
+- Access Token: EAAU5TdnqxOABSUQRNhHMH7NsRZA5Su3kXrR5gQ51xL4teR5laYkkHDp0bZAJe9V0gvwzNHnH9SrqZCxMO9aXSP2ZB29ZCu5IErtF9ZBjozyxSDM7GKZCWv7VwktitOZBuYECZC3LnuORqsKtgpodFxH7eO1cSWYTLuYCvLhqsKnqJZA4cgMnntFAZCc7EV7v2KTZAJ7n5xOUBWMiPhIEFdir5lW7
 - Tên Fanpage: Trung Tâm Đào Tạo Thiết Kế Đồ Hoạ Sao Việt Biên Hòa - Đồng Nai
 - slug: trung-tam-ao-tao-thiet-ke-o-hoa-sao-viet-bien-hoa-ong-nai
 - Page ID: 502884369578098
