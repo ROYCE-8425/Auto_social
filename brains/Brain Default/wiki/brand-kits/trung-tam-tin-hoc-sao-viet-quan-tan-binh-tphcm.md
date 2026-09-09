@@ -50,7 +50,7 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 - Bản đồ các cơ sở, Sitemap
 
 ## Cơ sở đào tạo của trang này (địa chỉ đúng Fanpage này)
-- 180 Phạm Văn Bạch, phường 15, Tân Bình, TP.HCM
+- 🏫 CN Tây Thạnh: 11/23 Hồ Đắc Di, phường Tây Thạnh, TP.HCM (Quận Tân Phú cũ)
 
 ## USP chuẩn từ Fanpage thực tế
 - Học thực hành 100% trên máy tính và chứng từ thực tế của doanh nghiệp
@@ -94,7 +94,7 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 
 ## Chân trang caption (bắt buộc)
 Trung Tâm Đào Tạo Kế Toán Sao Việt (hoặc Trung Tâm Tin Học Sao Việt tùy khóa)
-🏫 Tân Bình: 2A Nguyễn Sỹ Sách, P.15, Tân Bình, TP.HCM
+🏫 CN Tây Thạnh: 11/23 Hồ Đắc Di, phường Tây Thạnh, TP.HCM (Quận Tân Phú cũ)
 
 Hotline: 0904 860 899
 Email: trungtamtinhocsaoviet@gmail.com
@@ -105,7 +105,7 @@ Web: https://tinhocsaoviet.com
 - slug: trung-tam-tin-hoc-sao-viet-quan-tan-binh-tphcm
 - Page ID: 248901814978755
 - Thẻ khoá học: tin-hoc _ai
-- Cơ sở / địa chỉ: 🏫 Tân Bình: 2A Nguyễn Sỹ Sách, P.15, Tân Bình, TP.HCM
+- Cơ sở / địa chỉ: 🏫 CN Tây Thạnh: 11/23 Hồ Đắc Di, phường Tây Thạnh, TP.HCM (Quận Tân Phú cũ)
 - Hotline / Zalo: 0904 860 899
 - Email Fanpage: trungtamtinhocsaoviet@gmail.com
 - Web Fanpage: https://tinhocsaoviet.com

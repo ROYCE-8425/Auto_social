@@ -50,7 +50,8 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 - Bản đồ các cơ sở, Sitemap
 
 ## Cơ sở đào tạo của trang này (địa chỉ đúng Fanpage này)
-- Tổ 36, Ấp Hàng Gòn, Xã Lộc An Long Thành Đồng Nai, Long Thành, Đồng Nai 76200
+- 🏫 Biên Hòa: 91 Đoàn Văn Cự, phường Tam Hiệp, TP. Đồng Nai (TP. Biên Hòa cũ)
+- 🏫 Long Thành: 72 Đinh Bộ Lĩnh, xã Long Thành, TP. Đồng Nai (Lộc An, huyện Long Thành cũ)
 
 ## USP chuẩn từ Fanpage thực tế
 - Học thực hành 100% trên máy tính và chứng từ thực tế của doanh nghiệp
@@ -94,8 +95,8 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 
 ## Chân trang caption (bắt buộc)
 Trung Tâm Đào Tạo Kế Toán Sao Việt (hoặc Trung Tâm Tin Học Sao Việt tùy khóa)
-🏫 Biên Hòa: 91 Đoàn Văn Cự, P. Tam Hòa, TP. Biên Hòa
-🏫 Long Thành: 72 Đinh Bộ Lĩnh, Lộc An, Long Thành
+🏫 Biên Hòa: 91 Đoàn Văn Cự, phường Tam Hiệp, TP. Đồng Nai (TP. Biên Hòa cũ)
+🏫 Long Thành: 72 Đinh Bộ Lĩnh, xã Long Thành, TP. Đồng Nai (Lộc An, huyện Long Thành cũ)
 
 Hotline: 0812 114 345
 Email: trungtamtinhocsaoviet@gmail.com
@@ -106,7 +107,7 @@ Web: https://blogdaytinhoc.com
 - slug: trung-tam-tin-hoc-sao-viet-long-thanh
 - Page ID: 100597179296791
 - Thẻ khoá học: tin-hoc _ai
-- Cơ sở / địa chỉ: 🏫 Biên Hòa: 91 Đoàn Văn Cự, P. Tam Hòa, TP. Biên Hòa | 🏫 Long Thành: 72 Đinh Bộ Lĩnh, Lộc An, Long Thành
+- Cơ sở / địa chỉ: 🏫 Biên Hòa: 91 Đoàn Văn Cự, phường Tam Hiệp, TP. Đồng Nai (TP. Biên Hòa cũ) | 🏫 Long Thành: 72 Đinh Bộ Lĩnh, xã Long Thành, TP. Đồng Nai (Lộc An, huyện Long Thành cũ)
 - Hotline / Zalo: 0812 114 345
 - Email Fanpage: trungtamtinhocsaoviet@gmail.com
 - Web Fanpage: https://blogdaytinhoc.com

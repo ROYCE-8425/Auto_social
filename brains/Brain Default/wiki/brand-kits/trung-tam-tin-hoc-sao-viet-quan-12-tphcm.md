@@ -50,7 +50,7 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 - Bản đồ các cơ sở, Sitemap
 
 ## Cơ sở đào tạo của trang này (địa chỉ đúng Fanpage này)
-- 🏫 Quận 12: A23 KDC Thới An, Đường Lê Thị Riêng, P. Thới An, Quận 12, TP.HCM
+- 🏫 Quận 12: A23 Lê Thị Riêng, KDC Thới An, phường Thới An, TP.HCM (Quận 12 cũ)
 
 ## USP chuẩn từ Fanpage thực tế
 - Học thực hành 100% trên máy tính và chứng từ thực tế của doanh nghiệp
@@ -94,7 +94,7 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 
 ## Chân trang caption (bắt buộc)
 Trung Tâm Tin Học Sao Việt Quận 12
-🏫 Quận 12: A23 Lê Thị Riêng, KDC Thới An, Quận 12, TP.HCM
+🏫 Quận 12: A23 Lê Thị Riêng, KDC Thới An, phường Thới An, TP.HCM (Quận 12 cũ)
 
 📞 Hotline/Zalo: 0904 860 899
 📧 Email: trungtamtinhocsaoviet@gmail.com
@@ -106,7 +106,7 @@ Trung Tâm Tin Học Sao Việt Quận 12
 - Page ID: 107108788759946
 - Access Token: EAAYrB1nymYkBSbsSSn62WXnKWTi0eUHgPXh5343ygSVOGhJ5kIyk7trn7nY6lDkzbcKCBlMK0oLt34r2F7yycZA2PKOobz45XprZAMi4rO6itkwnlLOSZBp3H5wqh3ZB7McLg5GWlTZA0Yo8FHxgRmOP88Rf8QJFpTRqwsZACZAZCzxL029lwC4Oxqt7HlicRPXuifNJZBUDVNmCbsbqJIaBhny8ZD
 - Thẻ khoá học: tin-hoc _ai
-- Cơ sở / địa chỉ: 🏫 Quận 12: A23 Lê Thị Riêng, KDC Thới An, Quận 12, TP.HCM
+- Cơ sở / địa chỉ: 🏫 Quận 12: A23 Lê Thị Riêng, KDC Thới An, phường Thới An, TP.HCM (Quận 12 cũ)
 - Hotline / Zalo: 0904 860 899
 - Email Fanpage: trungtamtinhocsaoviet@gmail.com
 - Web Fanpage: https://blogdaytinhoc.com

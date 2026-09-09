@@ -51,7 +51,10 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 - Bản đồ các cơ sở, Sitemap
 
 ## Cơ sở đào tạo của trang này (địa chỉ đúng Fanpage này)
-- 184/19/11 Đặng Văn Mây, KP. Đông Chiêu, P. Tân Đông Hiệp, Dĩ An, Bình Dương, Dĩ An, Bình Dương 75300, Di An
+- 🏫 Dĩ An: 184/19/11 Đặng Văn Mây, phường Dĩ An, TP.HCM (TP. Dĩ An, Bình Dương cũ)
+- 🏫 Thuận An: 69 D32, Làng chuyên gia Oasis, phường An Phú, TP.HCM (Thuận An, Bình Dương cũ)
+- 🏫 Thủ Dầu Một: 107 D5, KDC Phú Hòa 1, phường Phú Lợi, TP.HCM (TP. Thủ Dầu Một, Bình Dương cũ)
+- 🏫 Tân Uyên: 20 Đường ĐX12, phường Tân Khánh, TP.HCM (TP. Tân Uyên, Bình Dương cũ)
 
 ## USP chuẩn từ Fanpage thực tế
 - Học thực hành 100% trên máy tính và chứng từ thực tế của doanh nghiệp
@@ -95,10 +98,10 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 
 ## Chân trang caption (bắt buộc)
 Trung Tâm Đào Tạo Kế Toán Sao Việt (hoặc Trung Tâm Tin Học Sao Việt tùy khóa)
-🏫 Dĩ An: 184/19/11 Đặng Văn Mây, KP. Đông Chiêu, P. Tân Đông Hiệp, TP. Dĩ An
-🏫 Thuận An: 8 Đường NA8, Khu Dân Cư Viet Sing, TP. Thuận An
-🏫 Thủ Dầu Một: 107 D5, KDC Phú Hòa 1, TP. Thủ Dầu Một
-🏫 Tân Uyên: Số 20 Đường ĐX12, P. Tân Vĩnh Hiệp, TP. Tân Uyên
+🏫 Dĩ An: 184/19/11 Đặng Văn Mây, phường Dĩ An, TP.HCM (TP. Dĩ An, Bình Dương cũ)
+🏫 Thuận An: 69 D32, Làng chuyên gia Oasis, phường An Phú, TP.HCM (Thuận An, Bình Dương cũ)
+🏫 Thủ Dầu Một: 107 D5, KDC Phú Hòa 1, phường Phú Lợi, TP.HCM (TP. Thủ Dầu Một, Bình Dương cũ)
+🏫 Tân Uyên: 20 Đường ĐX12, phường Tân Khánh, TP.HCM (TP. Tân Uyên, Bình Dương cũ)
 
 Hotline: 0815 552 558
 Email: trungtamtinhocsaoviet@gmail.com
@@ -109,7 +112,7 @@ Web: https://blogdaytinhoc.com/hoc-ke-toan-tai-di-an-binh-duong-392
 - slug: trung-tam-ao-tao-ke-toan-di-an-binh-duong
 - Page ID: 175410262326552
 - Thẻ khoá học: tin-hoc _ai, ke-toan
-- Cơ sở / địa chỉ: 🏫 Dĩ An: 184/19/11 Đặng Văn Mây, KP. Đông Chiêu, P. Tân Đông Hiệp, TP. Dĩ An | 🏫 Thuận An: 8 Đường NA8, Khu Dân Cư Viet Sing, TP. Thuận An | 🏫 Thủ Dầu Một: 107 D5, KDC Phú Hòa 1, TP. Thủ Dầu Một | 🏫 Tân Uyên: Số 20 Đường ĐX12, P. Tân Vĩnh Hiệp, TP. Tân Uyên
+- Cơ sở / địa chỉ: 🏫 Dĩ An: 184/19/11 Đặng Văn Mây, phường Dĩ An, TP.HCM (TP. Dĩ An, Bình Dương cũ) | 🏫 Thuận An: 69 D32, Làng chuyên gia Oasis, phường An Phú, TP.HCM (Thuận An, Bình Dương cũ) | 🏫 Thủ Dầu Một: 107 D5, KDC Phú Hòa 1, phường Phú Lợi, TP.HCM (TP. Thủ Dầu Một, Bình Dương cũ) | 🏫 Tân Uyên: 20 Đường ĐX12, phường Tân Khánh, TP.HCM (TP. Tân Uyên, Bình Dương cũ)
 - Hotline / Zalo: 0815 552 558
 - Email Fanpage: trungtamtinhocsaoviet@gmail.com
 - Web Fanpage: https://blogdaytinhoc.com/hoc-ke-toan-tai-di-an-binh-duong-392

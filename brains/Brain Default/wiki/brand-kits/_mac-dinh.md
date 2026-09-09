@@ -54,28 +54,26 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Vẽ kỹ th
 ## Hệ thống chi nhánh chuẩn Tin Học Sao Việt (theo bài mẫu thực tế)
 
 ### Quy tắc hiển thị địa chỉ cơ sở khi đăng bài:
-1. **Fanpage cơ sở TP.HCM** (Bình Thạnh, Quận 12, Thủ Đức, Tân Bình, Quận 7, Bình Tân / Quận 6): Chỉ hiển thị DUY NHẤT 1 địa chỉ của đúng cơ sở đó (ví dụ: Fanpage Bình Thạnh chỉ hiện địa chỉ Bình Thạnh, Fanpage Quận 12 chỉ hiện địa chỉ Quận 12).
-2. **Fanpage Bình Dương** (toàn tỉnh hoặc các chi nhánh Bình Dương): Hiển thị ĐẦY ĐỦ cả 4 địa chỉ thuộc tỉnh Bình Dương (Dĩ An, Thuận An, Thủ Dầu Một, Tân Uyên).
-3. **Fanpage Đồng Nai** (toàn tỉnh hoặc các chi nhánh Đồng Nai): Hiển thị ĐẦY ĐỦ cả 2 địa chỉ thuộc tỉnh Đồng Nai (Biên Hòa, Long Thành).
+1. **Fanpage cơ sở TP.HCM** (Bình Thạnh, Quận 12, Thủ Đức, Tây Thạnh / Tân Bình, Quận 7, Bình Tân / Quận 6): Chỉ hiển thị DUY NHẤT 1 địa chỉ của đúng cơ sở đó (ví dụ: Fanpage Bình Thạnh chỉ hiện địa chỉ Bình Thạnh, Fanpage Quận 12 chỉ hiện địa chỉ Quận 12).
+2. **Fanpage Bình Dương** (toàn tỉnh hoặc các chi nhánh Bình Dương: Dĩ An, Thuận An, Thủ Dầu Một, Tân Uyên): Hiển thị ĐẦY ĐỦ cả 4 địa chỉ thuộc tỉnh Bình Dương.
+3. **Fanpage Đồng Nai** (toàn tỉnh hoặc các chi nhánh Đồng Nai: Biên Hòa, Long Thành): Hiển thị ĐẦY ĐỦ cả 2 địa chỉ thuộc tỉnh Đồng Nai.
 4. **Fanpage Vũng Tàu**: Hiển thị địa chỉ cơ sở tại Vũng Tàu.
 5. **Fanpage tổng hệ thống / trung tâm chung**: Hiển thị toàn bộ 13 chi nhánh.
 
 📍 HỆ THỐNG 13 CHI NHÁNH TIN HỌC SAO VIỆT
-- 🏫 Bình Thạnh: 21/12 Lê Trực, P.7, Bình Thạnh, TP.HCM
-- 🏫 Quận 7: Căn hộ Florita Quận 7, Khu đô thị Him Lam, Tân Hưng, TP.HCM
-- 🏫 Bình Tân: TM-0.39, 510 Kinh Dương Vương, An Lạc, Bình Tân
-- 🏫 Quận 12: A23 Lê Thị Riêng, KDC Thới An, Quận 12
-- 🏫 TP. Thủ Đức: 133/2 Đ. Đỗ Xuân Hợp, Phước Long B
-- 🏫 Tân Bình: 2A Nguyễn Sỹ Sách, P.15, Tân Bình
-- 🏫 Biên Hòa: 91 Đoàn Văn Cự, P. Tam Hòa
-- 🏫 Long Thành: 72 Đinh Bộ Lĩnh, Lộc An
-- 🏫 Dĩ An: 184/19/11 Đặng Văn Mây, KP Đông Chiêu
-- 🏫 Thuận An: 8 Đường NA8, Khu Dân Cư Viet Sing
-- 🏫 Thủ Dầu Một: 107 D5, KDC Phú Hòa 1
-- 🏫 Tân Uyên: Số 20 Đường ĐX12, Tân Vĩnh Hiệp
-- 🏫 Vũng Tàu: 293 Bình Giã, P.8, TP. Vũng Tàu
-
-*(Ghi chú: Đối với các khóa Kế Toán riêng biệt của trang hệ thống, dùng hệ thống 12 cơ sở chuyên kế toán tại TP.HCM, Bình Dương, Đồng Nai theo mẫu kế toán).*
+- 🏫 Bình Thạnh: 193 Nguyễn Xí, phường Bình Thạnh, TP.HCM (Quận Bình Thạnh cũ)
+- 🏫 Quận 7: Căn hộ Florita, KĐT Him Lam, phường Tân Hưng, TP.HCM (Quận 7 cũ)
+- 🏫 Bình Tân: 510 Kinh Dương Vương, phường An Lạc, TP.HCM (Quận Bình Tân cũ)
+- 🏫 Quận 12: A23 Lê Thị Riêng, KDC Thới An, phường Thới An, TP.HCM (Quận 12 cũ)
+- 🏫 TP. Thủ Đức: 133/2 Đỗ Xuân Hợp, phường Phước Long, TP.HCM (TP. Thủ Đức cũ)
+- 🏫 CN Tây Thạnh: 11/23 Hồ Đắc Di, phường Tây Thạnh, TP.HCM (Quận Tân Phú cũ)
+- 🏫 Biên Hòa: 91 Đoàn Văn Cự, phường Tam Hiệp, TP. Đồng Nai (TP. Biên Hòa cũ)
+- 🏫 Long Thành: 72 Đinh Bộ Lĩnh, xã Long Thành, TP. Đồng Nai (Lộc An, huyện Long Thành cũ)
+- 🏫 Dĩ An: 184/19/11 Đặng Văn Mây, phường Dĩ An, TP.HCM (TP. Dĩ An, Bình Dương cũ)
+- 🏫 Thuận An: 69 D32, Làng chuyên gia Oasis, phường An Phú, TP.HCM (Thuận An, Bình Dương cũ)
+- 🏫 Thủ Dầu Một: 107 D5, KDC Phú Hòa 1, phường Phú Lợi, TP.HCM (TP. Thủ Dầu Một, Bình Dương cũ)
+- 🏫 Tân Uyên: 20 Đường ĐX12, phường Tân Khánh, TP.HCM (TP. Tân Uyên, Bình Dương cũ)
+- 🏫 Vũng Tàu: 293 Bình Giã, phường Tam Thắng, TP.HCM (TP. Vũng Tàu, Bà Rịa - Vũng Tàu cũ)
 
 
 ## USP chuẩn từ Fanpage thực tế
@@ -121,19 +119,19 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Vẽ kỹ th
 ## Chân trang caption (bắt buộc)
 Trung Tâm Đào Tạo Tin Học Sao Việt
 📍 HỆ THỐNG 13 CHI NHÁNH TIN HỌC SAO VIỆT
-🏫 Bình Thạnh: 21/12 Lê Trực, P.7, Bình Thạnh, TP.HCM
-🏫 Quận 7: Căn hộ Florita Quận 7, Khu đô thị Him Lam, Tân Hưng, TP.HCM
-🏫 Bình Tân: TM-0.39, 510 Kinh Dương Vương, An Lạc, Bình Tân
-🏫 Quận 12: A23 Lê Thị Riêng, KDC Thới An, Quận 12
-🏫 TP. Thủ Đức: 133/2 Đ. Đỗ Xuân Hợp, Phước Long B
-🏫 Tân Bình: 2A Nguyễn Sỹ Sách, P.15, Tân Bình
-🏫 Biên Hòa: 91 Đoàn Văn Cự, P. Tam Hòa
-🏫 Long Thành: 72 Đinh Bộ Lĩnh, Lộc An
-🏫 Dĩ An: 184/19/11 Đặng Văn Mây, KP Đông Chiêu
-🏫 Thuận An: 8 Đường NA8, Khu Dân Cư Viet Sing
-🏫 Thủ Dầu Một: 107 D5, KDC Phú Hòa 1
-🏫 Tân Uyên: Số 20 Đường ĐX12, Tân Vĩnh Hiệp
-🏫 Vũng Tàu: 293 Bình Giã, P.8, TP. Vũng Tàu
+🏫 Bình Thạnh: 193 Nguyễn Xí, phường Bình Thạnh, TP.HCM (Quận Bình Thạnh cũ)
+🏫 Quận 7: Căn hộ Florita, KĐT Him Lam, phường Tân Hưng, TP.HCM (Quận 7 cũ)
+🏫 Bình Tân: 510 Kinh Dương Vương, phường An Lạc, TP.HCM (Quận Bình Tân cũ)
+🏫 Quận 12: A23 Lê Thị Riêng, KDC Thới An, phường Thới An, TP.HCM (Quận 12 cũ)
+🏫 TP. Thủ Đức: 133/2 Đỗ Xuân Hợp, phường Phước Long, TP.HCM (TP. Thủ Đức cũ)
+🏫 CN Tây Thạnh: 11/23 Hồ Đắc Di, phường Tây Thạnh, TP.HCM (Quận Tân Phú cũ)
+🏫 Biên Hòa: 91 Đoàn Văn Cự, phường Tam Hiệp, TP. Đồng Nai (TP. Biên Hòa cũ)
+🏫 Long Thành: 72 Đinh Bộ Lĩnh, xã Long Thành, TP. Đồng Nai (Lộc An, huyện Long Thành cũ)
+🏫 Dĩ An: 184/19/11 Đặng Văn Mây, phường Dĩ An, TP.HCM (TP. Dĩ An, Bình Dương cũ)
+🏫 Thuận An: 69 D32, Làng chuyên gia Oasis, phường An Phú, TP.HCM (Thuận An, Bình Dương cũ)
+🏫 Thủ Dầu Một: 107 D5, KDC Phú Hòa 1, phường Phú Lợi, TP.HCM (TP. Thủ Dầu Một, Bình Dương cũ)
+🏫 Tân Uyên: 20 Đường ĐX12, phường Tân Khánh, TP.HCM (TP. Tân Uyên, Bình Dương cũ)
+🏫 Vũng Tàu: 293 Bình Giã, phường Tam Thắng, TP.HCM (TP. Vũng Tàu, Bà Rịa - Vũng Tàu cũ)
 📞 Hotline/Zalo: 0823 552 558 - 093 11 44 858
 📧 Email: trungtamtinhocsaoviet@gmail.com
 🌐 Website: https://tinhocsaoviet.com

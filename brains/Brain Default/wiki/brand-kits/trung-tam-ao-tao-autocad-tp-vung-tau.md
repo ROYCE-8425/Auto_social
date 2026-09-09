@@ -52,7 +52,7 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 - Bản đồ các cơ sở, Sitemap
 
 ## Cơ sở đào tạo của trang này (địa chỉ đúng Fanpage này)
-- 293 Bình Giã, Phường 8, TP. Vũng Tàu, Bà Rịa - Vũng Tàu, Vũng Tàu, Bà Rịa - Vũng Tàu 78000
+- 🏫 Vũng Tàu: 293 Bình Giã, phường Tam Thắng, TP.HCM (TP. Vũng Tàu, Bà Rịa - Vũng Tàu cũ)
 
 ## USP chuẩn từ Fanpage thực tế
 - Học thực hành 100% trên máy tính và chứng từ thực tế của doanh nghiệp
@@ -96,7 +96,7 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 
 ## Chân trang caption (bắt buộc)
 Trung Tâm Đào Tạo Kế Toán Sao Việt (hoặc Trung Tâm Tin Học Sao Việt tùy khóa)
-🏫 Vũng Tàu: 293 Bình Giã, P.8, TP. Vũng Tàu
+🏫 Vũng Tàu: 293 Bình Giã, phường Tam Thắng, TP.HCM (TP. Vũng Tàu, Bà Rịa - Vũng Tàu cũ)
 
 Hotline: 0931 144 858
 Email: trungtamtinhocsaoviet@gmail.com
@@ -107,7 +107,7 @@ Web: https://blogdaytinhoc.com/khoa-hoc-autocad-o-vung-tau-lop-thiet-ke-ban-ve-k
 - slug: trung-tam-ao-tao-autocad-tp-vung-tau
 - Page ID: 495275060330808
 - Thẻ khoá học: tin-hoc _ai, ve-ky-thuat
-- Cơ sở / địa chỉ: 🏫 Vũng Tàu: 293 Bình Giã, P.8, TP. Vũng Tàu
+- Cơ sở / địa chỉ: 🏫 Vũng Tàu: 293 Bình Giã, phường Tam Thắng, TP.HCM (TP. Vũng Tàu, Bà Rịa - Vũng Tàu cũ)
 - Hotline / Zalo: 0931 144 858
 - Email Fanpage: trungtamtinhocsaoviet@gmail.com
 - Web Fanpage: https://blogdaytinhoc.com/khoa-hoc-autocad-o-vung-tau-lop-thiet-ke-ban-ve-ky-thuat-2d-3d-cap-toc-1161

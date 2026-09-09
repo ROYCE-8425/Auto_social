@@ -247,64 +247,51 @@ def save_state(st):
 
 
 BRANCHES_HCM = {
-    "binh_thanh": "🏫 Bình Thạnh: 21/12 Lê Trực, P.7, Bình Thạnh, TP.HCM",
-    "quan_12": "🏫 Quận 12: A23 Lê Thị Riêng, KDC Thới An, Quận 12, TP.HCM",
-    "thu_duc": "🏫 TP. Thủ Đức: 133/2 Đ. Đỗ Xuân Hợp, Phước Long B, TP. Thủ Đức",
-    "tan_binh": "🏫 Tân Bình: 2A Nguyễn Sỹ Sách, P.15, Tân Bình, TP.HCM",
-    "quan_7": "🏫 Quận 7: Căn hộ Florita Quận 7, Khu đô thị Him Lam, Tân Hưng, TP.HCM",
-    "binh_tan": "🏫 Bình Tân: TM-0.39, 510 Kinh Dương Vương, An Lạc, Bình Tân, TP.HCM",
-    "quan_6": "🏫 Bình Tân: TM-0.39, 510 Kinh Dương Vương, An Lạc, Bình Tân, TP.HCM",
+    "binh_thanh": "🏫 Bình Thạnh: 193 Nguyễn Xí, phường Bình Thạnh, TP.HCM (Quận Bình Thạnh cũ)",
+    "quan_7": "🏫 Quận 7: Căn hộ Florita, KĐT Him Lam, phường Tân Hưng, TP.HCM (Quận 7 cũ)",
+    "binh_tan": "🏫 Bình Tân: 510 Kinh Dương Vương, phường An Lạc, TP.HCM (Quận Bình Tân cũ)",
+    "quan_6": "🏫 Bình Tân: 510 Kinh Dương Vương, phường An Lạc, TP.HCM (Quận Bình Tân cũ)",
+    "quan_12": "🏫 Quận 12: A23 Lê Thị Riêng, KDC Thới An, phường Thới An, TP.HCM (Quận 12 cũ)",
+    "thu_duc": "🏫 TP. Thủ Đức: 133/2 Đỗ Xuân Hợp, phường Phước Long, TP.HCM (TP. Thủ Đức cũ)",
+    "tay_thanh": "🏫 CN Tây Thạnh: 11/23 Hồ Đắc Di, phường Tây Thạnh, TP.HCM (Quận Tân Phú cũ)",
+    "tan_binh": "🏫 CN Tây Thạnh: 11/23 Hồ Đắc Di, phường Tây Thạnh, TP.HCM (Quận Tân Phú cũ)",
 }
 
 BRANCHES_BINH_DUONG = [
-    "🏫 Dĩ An: 184/19/11 Đặng Văn Mây, KP. Đông Chiêu, P. Tân Đông Hiệp, TP. Dĩ An",
-    "🏫 Thuận An: 8 Đường NA8, Khu Dân Cư Viet Sing, TP. Thuận An",
-    "🏫 Thủ Dầu Một: 107 D5, KDC Phú Hòa 1, TP. Thủ Dầu Một",
-    "🏫 Tân Uyên: Số 20 Đường ĐX12, P. Tân Vĩnh Hiệp, TP. Tân Uyên",
+    "🏫 Dĩ An: 184/19/11 Đặng Văn Mây, phường Dĩ An, TP.HCM (TP. Dĩ An, Bình Dương cũ)",
+    "🏫 Thuận An: 69 D32, Làng chuyên gia Oasis, phường An Phú, TP.HCM (Thuận An, Bình Dương cũ)",
+    "🏫 Thủ Dầu Một: 107 D5, KDC Phú Hòa 1, phường Phú Lợi, TP.HCM (TP. Thủ Dầu Một, Bình Dương cũ)",
+    "🏫 Tân Uyên: 20 Đường ĐX12, phường Tân Khánh, TP.HCM (TP. Tân Uyên, Bình Dương cũ)",
 ]
 
 BRANCHES_DONG_NAI = [
-    "🏫 Biên Hòa: 91 Đoàn Văn Cự, P. Tam Hòa, TP. Biên Hòa",
-    "🏫 Long Thành: 72 Đinh Bộ Lĩnh, Lộc An, Long Thành",
+    "🏫 Biên Hòa: 91 Đoàn Văn Cự, phường Tam Hiệp, TP. Đồng Nai (TP. Biên Hòa cũ)",
+    "🏫 Long Thành: 72 Đinh Bộ Lĩnh, xã Long Thành, TP. Đồng Nai (Lộc An, huyện Long Thành cũ)",
 ]
 
 BRANCHES_VUNG_TAU = [
-    "🏫 Vũng Tàu: 293 Bình Giã, P.8, TP. Vũng Tàu",
+    "🏫 Vũng Tàu: 293 Bình Giã, phường Tam Thắng, TP.HCM (TP. Vũng Tàu, Bà Rịa - Vũng Tàu cũ)",
 ]
 
 BRANCHES_13_STANDARD = [
-    "🏫 Bình Thạnh: 21/12 Lê Trực, P.7, Bình Thạnh, TP.HCM",
-    "🏫 Quận 7: Căn hộ Florita Quận 7, Khu đô thị Him Lam, Tân Hưng, Hồ Chí Minh",
-    "🏫 Bình Tân: TM-0.39, 510 Kinh Dương Vương, An Lạc, Bình Tân",
-    "🏫 Quận 12: A23 Lê Thị Riêng, KDC Thới An, Quận 12",
-    "🏫 TP. Thủ Đức: 133/2 Đ. Đỗ Xuân Hợp, Phước Long B",
-    "🏫 Tân Bình: 2A Nguyễn Sỹ Sách, P.15, Tân Bình",
-    "🏫 Biên Hòa: 91 Đoàn Văn Cự, P. Tam Hòa",
-    "🏫 Long Thành: 72 Đinh Bộ Lĩnh, Lộc An",
-    "🏫 Dĩ An: 184/19/11 Đặng Văn Mây, KP Đông Chiêu",
-    "🏫 Thuận An: 8 Đường NA8, Khu Dân Cư Viet Sing",
-    "🏫 Thủ Dầu Một: 107 D5, KDC Phú Hòa 1",
-    "🏫 Tân Uyên: Số 20 Đường ĐX12, Tân Vĩnh Hiệp",
-    "🏫 Vũng Tàu: 293 Bình Giã, P.8, TP. Vũng Tàu",
+    "🏫 Bình Thạnh: 193 Nguyễn Xí, phường Bình Thạnh, TP.HCM (Quận Bình Thạnh cũ)",
+    "🏫 Quận 7: Căn hộ Florita, KĐT Him Lam, phường Tân Hưng, TP.HCM (Quận 7 cũ)",
+    "🏫 Bình Tân: 510 Kinh Dương Vương, phường An Lạc, TP.HCM (Quận Bình Tân cũ)",
+    "🏫 Quận 12: A23 Lê Thị Riêng, KDC Thới An, phường Thới An, TP.HCM (Quận 12 cũ)",
+    "🏫 TP. Thủ Đức: 133/2 Đỗ Xuân Hợp, phường Phước Long, TP.HCM (TP. Thủ Đức cũ)",
+    "🏫 CN Tây Thạnh: 11/23 Hồ Đắc Di, phường Tây Thạnh, TP.HCM (Quận Tân Phú cũ)",
+    "🏫 Biên Hòa: 91 Đoàn Văn Cự, phường Tam Hiệp, TP. Đồng Nai (TP. Biên Hòa cũ)",
+    "🏫 Long Thành: 72 Đinh Bộ Lĩnh, xã Long Thành, TP. Đồng Nai (Lộc An, huyện Long Thành cũ)",
+    "🏫 Dĩ An: 184/19/11 Đặng Văn Mây, phường Dĩ An, TP.HCM (TP. Dĩ An, Bình Dương cũ)",
+    "🏫 Thuận An: 69 D32, Làng chuyên gia Oasis, phường An Phú, TP.HCM (Thuận An, Bình Dương cũ)",
+    "🏫 Thủ Dầu Một: 107 D5, KDC Phú Hòa 1, phường Phú Lợi, TP.HCM (TP. Thủ Dầu Một, Bình Dương cũ)",
+    "🏫 Tân Uyên: 20 Đường ĐX12, phường Tân Khánh, TP.HCM (TP. Tân Uyên, Bình Dương cũ)",
+    "🏫 Vũng Tàu: 293 Bình Giã, phường Tam Thắng, TP.HCM (TP. Vũng Tàu, Bà Rịa - Vũng Tàu cũ)",
 ]
 
 BRANCHES_KE_TOAN = [
-    "Trung Tâm Đào Tạo Kế Toán TP HCM:",
-    "🏚 Bình Thạnh: Số 16, 21/12 Lê Trực, Phường 7, Q. Bình Thạnh (Chung Cư Lê Trực)",
-    "🏚 Quận 7: Số 515 B2/12, Lê Văn Lương, Tân Phong, Quận 7",
-    "🏚 Quận 6: Phòng A206 số 189 Kinh Dương Vương, Phường 12, Quận 6 (Trường CĐ GTVT Trung Ương VI)",
-    "🏚 Quận 12: 247/31 Hà Huy Giáp, Thạnh Lộc, Quận 12",
-    "🏚 Quận 9 - Thủ Đức: 49 Đường Số 3, Tăng Nhơn Phú B, Tp.Thủ Đức",
-    "🏚 Tân Bình: 180 Phạm Văn Bạch, Phường 15, Tân Bình, TP.HCM",
-    "Học Kế Toán Tại Bình Dương:",
-    "🏚 Thuận An: 1/513 KDC TÀI LỰC, Tổ 9, Khu phố Hòa Lân 2, Thuận An - Bình Dương",
-    "🏚 Dĩ An: 184/19/11 Đặng Văn Mây, KP. Đông Chiêu, P. Tân Đông Hiệp, Dĩ An - Bình Dương",
-    "🏚 Thủ Dầu Một: Số 107, D5, KDC Phú Hòa 1, Khu 4, Thủ Dầu Một, Bình Dương",
-    "🏚 Tân Uyên: 70 Đ. ĐX-03A, Tân Vĩnh Hiệp, Tân Uyên, Bình Dương",
-    "Học Kế Toán Tại Đồng Nai:",
-    "🏚 Biên Hòa: 91 Đoàn Văn Cự, P. Tam Hòa, Biên Hòa, Đồng Nai",
-    "🏚 Long Thành: 72 Đinh Bộ Lĩnh, Lộc An, Long Thành, Đồng Nai",
-]
+    "📍 HỆ THỐNG 13 CHI NHÁNH TIN HỌC SAO VIỆT",
+] + BRANCHES_13_STANDARD
 
 
 def remove_accents(text: str) -> str:
@@ -316,7 +303,7 @@ def remove_accents(text: str) -> str:
 
 def get_page_branches(row, tag=None):
     """Xác định danh sách địa chỉ cơ sở theo đúng TÊN FANPAGE (name):
-    1. Nếu Tên Fanpage có chi nhánh TP.HCM (Bình Thạnh, Quận 12, Thủ Đức, Tân Bình, Quận 7, Bình Tân/Quận 6):
+    1. Nếu Tên Fanpage có chi nhánh TP.HCM (Bình Thạnh, Quận 12, Thủ Đức, Tân Bình/Tây Thạnh, Quận 7, Bình Tân/Quận 6):
        Chỉ hiện DUY NHẤT 1 địa chỉ của chi nhánh đó.
     2. Nếu Tên Fanpage có Bình Dương (hoặc Dĩ An, Thuận An, Thủ Dầu Một, Tân Uyên):
        Hiện ĐẦY ĐỦ cả 4 địa chỉ thuộc tỉnh Bình Dương.
@@ -325,7 +312,7 @@ def get_page_branches(row, tag=None):
     4. Nếu Tên Fanpage có Vũng Tàu (hoặc Bà Rịa):
        Hiện địa chỉ cơ sở tại Vũng Tàu.
     5. Nếu Tên Fanpage KHÔNG ĐỀ CẬP địa danh nào (như Trung Tâm Đào Tạo AI Sao Việt, Tin Học Sao Việt, Royce Shop):
-       ĐĂNG HẾT TẤT CẢ ĐỊA CHỈ (Hệ thống 13 chi nhánh, hoặc 12 cơ sở kế toán nếu là khóa kế toán).
+       ĐĂNG HẾT TẤT CẢ 13 CHI NHÁNH TIN HỌC SAO VIỆT.
     """
     page_name = row.get("name") or row.get("slug") or ""
     norm_name = remove_accents(page_name)
@@ -337,8 +324,8 @@ def get_page_branches(row, tag=None):
         return [BRANCHES_HCM["quan_12"]]
     if "thu duc" in norm_name:
         return [BRANCHES_HCM["thu_duc"]]
-    if "tan binh" in norm_name:
-        return [BRANCHES_HCM["tan_binh"]]
+    if any(k in norm_name for k in ["tan binh", "tay thanh", "tan phu"]):
+        return [BRANCHES_HCM["tay_thanh"]]
     if re.search(r"\b(quan\s*7|q\.?\s*7)\b", norm_name):
         return [BRANCHES_HCM["quan_7"]]
     if re.search(r"\b(quan\s*6|q\.?\s*6|binh tan)\b", norm_name):
@@ -357,10 +344,6 @@ def get_page_branches(row, tag=None):
         return BRANCHES_VUNG_TAU
 
     # 5. KHÔNG ĐỀ CẬP ĐỊA DANH GÌ Ở TÊN FANPAGE -> ĐĂNG HẾT TẤT CẢ CÁC ĐỊA CHỈ
-    canon_tag = _canonical_tag(tag or "")
-    slug = (row.get("slug") or "").lower()
-    if canon_tag == "ke-toan" or ("ke-toan" in slug and not canon_tag):
-        return BRANCHES_KE_TOAN
     return ["📍 HỆ THỐNG 13 CHI NHÁNH TIN HỌC SAO VIỆT"] + BRANCHES_13_STANDARD
 
 
@@ -462,7 +445,8 @@ def main(argv):
         print("hotline=" + (row["hotline"] or ""))
         print("email=" + (row["email"] or ""))
         print("web=" + (row["web"] or ""))
-        print("dia_chi=" + (row["address"] or ""))
+        branches = get_page_branches(row, tag)
+        print("dia_chi=" + " | ".join(branches))
         print("folder=attachments/dataset/" + tag + "/")
         print("luat_anh=album 5-8 anh neu du dataset: photos[0]=cover AI moi, photos[1..]=anh that dung folder; chi fb_page_photo khi khong du anh")
         print("doc_he_thong=FAST_PATH:skills/dang-bai-facebook/SKILL.md + đúng 1 brand kit; không đọc _y-chu/_quy-trinh/_the-khoa-hoc nếu không thiếu dữ liệu")
@@ -631,7 +615,8 @@ def main(argv):
     print("hotline=" + (row["hotline"] or ""))
     print("email=" + (row["email"] or ""))
     print("web=" + (row["web"] or ""))
-    print("dia_chi=" + (row["address"] or ""))
+    branches = get_page_branches(row, tag)
+    print("dia_chi=" + " | ".join(branches))
     print("folder=attachments/dataset/" + tag + "/")
     print("luat_anh=album 5-8 anh neu du dataset: photos[0]=cover AI moi, photos[1..]=anh that dung folder; chi fb_page_photo khi khong du anh")
     print("doc_he_thong=FAST_PATH:skills/dang-bai-facebook/SKILL.md + đúng 1 brand kit; không đọc _y-chu/_quy-trinh/_the-khoa-hoc nếu không thiếu dữ liệu")

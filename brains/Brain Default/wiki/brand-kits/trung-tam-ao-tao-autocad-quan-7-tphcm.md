@@ -52,8 +52,7 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 - Bản đồ các cơ sở, Sitemap
 
 ## Cơ sở đào tạo của trang này (địa chỉ đúng Fanpage này)
-- TM-20 Sảnh B, Chung cư Florita, KĐT Him Lam, P. Tân Hưng, TP.HCM
-- Đăng bài chỉ dùng dòng Mới (Fanpage). Dòng Cũ chỉ để đối chiếu, không nhét vào caption.
+- 🏫 Quận 7: Căn hộ Florita, KĐT Him Lam, phường Tân Hưng, TP.HCM (Quận 7 cũ)
 
 ## USP chuẩn từ Fanpage thực tế
 - Học thực hành 100% trên máy tính và chứng từ thực tế của doanh nghiệp
@@ -97,7 +96,7 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 
 ## Chân trang caption (bắt buộc)
 Trung Tâm Đào Tạo Kế Toán Sao Việt (hoặc Trung Tâm Tin Học Sao Việt tùy khóa)
-🏫 Quận 7: Căn hộ Florita Quận 7, Khu đô thị Him Lam, Tân Hưng, TP.HCM
+🏫 Quận 7: Căn hộ Florita, KĐT Him Lam, phường Tân Hưng, TP.HCM (Quận 7 cũ)
 
 Hotline: 0935 946 407
 Email: phamthongsaoviet@gmail.com
@@ -108,7 +107,7 @@ Web: https://blogdaytinhoc.com
 - slug: trung-tam-ao-tao-autocad-quan-7-tphcm
 - Page ID: 1863741760559803
 - Thẻ khoá học: tin-hoc _ai, ve-ky-thuat
-- Cơ sở / địa chỉ: 🏫 Quận 7: Căn hộ Florita Quận 7, Khu đô thị Him Lam, Tân Hưng, TP.HCM
+- Cơ sở / địa chỉ: 🏫 Quận 7: Căn hộ Florita, KĐT Him Lam, phường Tân Hưng, TP.HCM (Quận 7 cũ)
 - Hotline / Zalo: 0935 946 407
 - Email Fanpage: phamthongsaoviet@gmail.com
 - Web Fanpage: https://blogdaytinhoc.com

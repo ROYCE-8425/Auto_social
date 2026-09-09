@@ -51,9 +51,7 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 - Bản đồ các cơ sở, Sitemap
 
 ## Cơ sở đào tạo của trang này (địa chỉ đúng Fanpage này)
-- Căn TM-0.39, Căn hộ Moonlight Boulevard, số 510 Đường Kinh Dương Vương, Phường An Lạc A, Quận Bình Tân, TP.HCM
-- Ghi chú: tên page là Quận 6; địa chỉ Fanpage mới ở Bình Tân (Moonlight).
-- Đăng bài chỉ dùng dòng Mới (Fanpage). Dòng Cũ chỉ để đối chiếu, không nhét vào caption.
+- 🏫 Bình Tân: 510 Kinh Dương Vương, phường An Lạc, TP.HCM (Quận Bình Tân cũ)
 
 ## USP chuẩn từ Fanpage thực tế
 - Học thực hành 100% trên máy tính và chứng từ thực tế của doanh nghiệp
@@ -97,7 +95,7 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 
 ## Chân trang caption (bắt buộc)
 Trung Tâm Đào Tạo Kế Toán Sao Việt (hoặc Trung Tâm Tin Học Sao Việt tùy khóa)
-🏫 Bình Tân: TM-0.39, 510 Kinh Dương Vương, An Lạc, Bình Tân, TP.HCM
+🏫 Bình Tân: 510 Kinh Dương Vương, phường An Lạc, TP.HCM (Quận Bình Tân cũ)
 
 Hotline: 0812 114 345
 Email: trungtamtinhocsaoviet@gmail.com
@@ -108,7 +106,7 @@ Web: https://blogdaytinhoc.com/trung-tam-dao-tao-ke-toan-tai-quan-6-417
 - slug: trung-tam-ao-tao-ke-toan-quan-6-tphcm
 - Page ID: 202396629612701
 - Thẻ khoá học: tin-hoc _ai, ke-toan
-- Cơ sở / địa chỉ: 🏫 Bình Tân: TM-0.39, 510 Kinh Dương Vương, An Lạc, Bình Tân, TP.HCM
+- Cơ sở / địa chỉ: 🏫 Bình Tân: 510 Kinh Dương Vương, phường An Lạc, TP.HCM (Quận Bình Tân cũ)
 - Hotline / Zalo: 0812 114 345
 - Email Fanpage: trungtamtinhocsaoviet@gmail.com
 - Web Fanpage: https://blogdaytinhoc.com/trung-tam-dao-tao-ke-toan-tai-quan-6-417
