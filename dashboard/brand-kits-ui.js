@@ -12,6 +12,8 @@
   var COURSE_FOLDERS = [];
   var COURSE_FOLDER_MAP = {};
   var courseTagsCache = null;
+  var pageTokensCache = {};
+  var connectedPageMap = {};
 
   function esc(s) {
     return String(s == null ? "" : s)
@@ -62,6 +64,45 @@
     } catch (e) {
       return [];
     }
+  }
+
+  /* Tải thông tin Fanpage đã kết nối (từ OAuth và page_tokens.json) */
+  async function loadConnectedInfo(force) {
+    if (!force && Object.keys(connectedPageMap).length > 0) {
+      return { pages: connectedPageMap, tokens: pageTokensCache };
+    }
+    try {
+      var pPages = fetchFbPages();
+      var pTokens = (async function () {
+        try {
+          var home = await getHome(brain());
+          var full = ceilPath(home, "Javis/page_tokens.json");
+          var res = await fetch("/files/read?brain=" + encodeURIComponent(brain()) + "&path=" + encodeURIComponent(full));
+          var d = await res.json();
+          return JSON.parse(d.content || "{}");
+        } catch (e) {
+          return {};
+        }
+      })();
+      var results = await Promise.all([pPages, pTokens]);
+      var pages = results[0] || [];
+      pageTokensCache = results[1] || {};
+      connectedPageMap = {};
+      pages.forEach(function (pg) {
+        if (pg && pg.id) connectedPageMap[String(pg.id)] = pg;
+      });
+      Object.keys(pageTokensCache).forEach(function (pid) {
+        if (!connectedPageMap[pid]) {
+          connectedPageMap[pid] = {
+            id: pid,
+            name: pageTokensCache[pid].name || ("Page " + pid),
+            has_token: true,
+            source: "manual_token"
+          };
+        }
+      });
+    } catch (e) {}
+    return { pages: connectedPageMap, tokens: pageTokensCache };
   }
 
   async function listPath(path) {
@@ -206,6 +247,8 @@
       tagsAll: false,
       hashtag: "",
       url: "",
+      pageId: "",
+      accessToken: "",
       note: ""
     };
 
@@ -257,6 +300,10 @@
     var mPid = md.match(/^[ \t]*[-*][ \t]*(?:Page ID|page_id|ID Fanpage|ID Trang)[ \t]*:[ \t]*(.*)$/mi);
     if (mPid && mPid[1]) out.pageId = mPid[1].trim();
     else out.pageId = "";
+
+    var mTok = md.match(/^[ \t]*[-*][ \t]*(?:Access Token|access_token|Page Token|Token)[ \t]*:[ \t]*(.*)$/mi);
+    if (mTok && mTok[1]) out.accessToken = mTok[1].trim();
+    else out.accessToken = "";
 
     var mNote = md.match(/^[ \t]*[-*][ \t]*Ghi chú:[ \t]*(.*)$/m);
     if (mNote && mNote[1]) out.note = mNote[1].trim();
@@ -398,10 +445,15 @@
         "- Page ID: " + (formVals.pageId || ""),
         /^[ \t]*[-*][ \t]*slug:[^\r\n]*/m);
     }
+    if (formVals.accessToken != null) {
+      setField(/^[ \t]*[-*][ \t]*(?:Access Token|access_token|Page Token|Token)[ \t]*:[^\r\n]*/mi,
+        "- Access Token: " + (formVals.accessToken || ""),
+        /^[ \t]*[-*][ \t]*(?:Page ID|page_id|ID Fanpage|ID Trang):[^\r\n]*/mi);
+    }
     if (formVals.tagsLine != null) {
       setField(/^[ \t]*[-*][ \t]*(?:Thẻ khoá học|The khoa hoc|Folder anh[^:]*)[ \t]*:[^\r\n]*/m,
         "- Thẻ khoá học: " + formVals.tagsLine,
-        /^[ \t]*[-*][ \t]*(?:Page ID|slug):[^\r\n]*/m);
+        /^[ \t]*[-*][ \t]*(?:Access Token|Page ID|slug):[^\r\n]*/mi);
     }
     setField(/^[ \t]*[-*][ \t]*Cơ sở \/ địa chỉ[^:]*:[^\r\n]*/m, "- Cơ sở / địa chỉ: " + (formVals.address || ""), /^[ \t]*[-*][ \t]*(?:Page ID|slug|Thẻ khoá học):[^\r\n]*/m);
     setField(/^[ \t]*[-*][ \t]*Hotline[^:]*:[^\r\n]*/m, "- Hotline / Zalo: " + (formVals.hotline || ""), /^[ \t]*[-*][ \t]*Cơ sở \/ địa chỉ[^:]*:[^\r\n]*/m);
@@ -456,6 +508,7 @@
   async function renderKit(body) {
     body.innerHTML = '<p class="dim" style="padding:14px">Đang tải danh sách brand kit…</p>';
     await loadCourseTags(true);
+    await loadConnectedInfo(true);
     var rawItems = [];
     try {
       rawItems = (await listPath(KIT_DIR)).filter(function (f) {
@@ -484,24 +537,47 @@
         f.content = "";
       }
       f.parsed = parsePageKit(f.content, f.name);
+      if (!f.parsed.accessToken && f.parsed.pageId && pageTokensCache[f.parsed.pageId] && pageTokensCache[f.parsed.pageId].access_token) {
+        f.parsed.accessToken = pageTokensCache[f.parsed.pageId].access_token;
+      }
+      f.isConnected = Boolean(
+        f.parsed.accessToken ||
+        (f.parsed.pageId && (connectedPageMap[f.parsed.pageId] || pageTokensCache[f.parsed.pageId]))
+      );
       f.displayTitle = cleanPageLabel(f.parsed.name, f.name);
       f.kind = kitKind(f.name);
     });
     await Promise.all(readPromises);
 
-    /* Sap xep: Default luon len dau tien -> tiep theo la Page -> cuoi cung la He thong */
-    items.sort(function (a, b) {
-      if (a.kind === "default" && b.kind !== "default") return -1;
-      if (b.kind === "default" && a.kind !== "default") return 1;
-      var order = { "default": 0, "page": 1, "he-thong": 2 };
-      if (order[a.kind] !== order[b.kind]) return order[a.kind] - order[b.kind];
-      return a.displayTitle.localeCompare(b.displayTitle, "vi");
-    });
+    /* Sap xep:
+       1. Default luon len dau tien
+       2. Fanpage DA KET NOI (co Token) noi len dau nhom Page
+       3. Fanpage CHUA KET NOI
+       4. Cuoi cung la He thong */
+    function sortItems() {
+      items.sort(function (a, b) {
+        function rank(x) {
+          if (x.kind === "default") return 0;
+          if (x.kind === "page") return x.isConnected ? 1 : 2;
+          return 3;
+        }
+        var rA = rank(a);
+        var rB = rank(b);
+        if (rA !== rB) return rA - rB;
+        return a.displayTitle.localeCompare(b.displayTitle, "vi");
+      });
+    }
+    sortItems();
 
     body.innerHTML =
       '<div class="ds-split">' +
       '<aside class="ds-side">' +
       '<input class="ds-search" id="dsKitQ" placeholder="Tìm Brand Kit, Fanpage, slug…">' +
+      '<div class="ds-filter-bar" id="dsKitFilterBar">' +
+      '<button type="button" class="ds-filter-btn sel" data-filter="all">Tất cả <span class="ds-filter-count" id="dsFilterCountAll">0</span></button>' +
+      '<button type="button" class="ds-filter-btn" data-filter="connected" title="Chỉ hiện Fanpage đã có Token / kết nối">🟢 Đã nối <span class="ds-filter-count" id="dsFilterCountConn">0</span></button>' +
+      '<button type="button" class="ds-filter-btn" data-filter="unconnected" title="Chỉ hiện Fanpage chưa kết nối">⚪ Chưa nối <span class="ds-filter-count" id="dsFilterCountUnconn">0</span></button>' +
+      '</div>' +
       '<div class="ds-side-scroll" id="dsKitList"></div>' +
       '<button type="button" class="s-btn ds-new" id="dsNewKit" title="Chọn Fanpage đã kết nối để tạo Brand Kit">Tạo kit từ Fanpage đã kết nối</button>' +
       '</aside>' +
@@ -517,27 +593,50 @@
 
     var listEl = body.querySelector("#dsKitList");
     var activeItem = null;
+    var curFilter = "all";
 
-    function paintList(q) {
+    function paintList(q, filter) {
+      if (filter !== undefined) curFilter = filter;
       q = (q || "").toLowerCase().trim();
       listEl.innerHTML = "";
 
+      var totalPages = items.filter(function (x) { return x.kind === "page"; });
+      var connPages = totalPages.filter(function (x) { return x.isConnected; });
+      var unconnPages = totalPages.filter(function (x) { return !x.isConnected; });
+
+      var elAll = body.querySelector("#dsFilterCountAll");
+      var elConn = body.querySelector("#dsFilterCountConn");
+      var elUnconn = body.querySelector("#dsFilterCountUnconn");
+      if (elAll) elAll.textContent = items.length;
+      if (elConn) elConn.textContent = connPages.length;
+      if (elUnconn) elUnconn.textContent = unconnPages.length;
+
       var groups = [
         { "key": "default", "title": "BRAND KIT MẶC ĐỊNH (DEFAULT)", "items": [] },
-        { "key": "page", "title": "Fanpage Chi Nhánh (" + items.filter(function (x) { return x.kind === "page"; }).length + ")", "items": [] },
+        { "key": "connected", "title": "🟢 Fanpage Đã Kết Nối (" + connPages.length + ") — Sẵn sàng đăng bài", "items": [] },
+        { "key": "unconnected", "title": "⚪ Fanpage Chưa Kết Nối (" + unconnPages.length + ")", "items": [] },
         { "key": "he-thong", "title": "Tài Liệu Hệ Thống", "items": [] }
       ];
 
       items.forEach(function (f) {
+        if (curFilter === "connected" && f.kind === "page" && !f.isConnected) return;
+        if (curFilter === "unconnected" && (f.kind !== "page" || f.isConnected)) return;
+
         if (q) {
           var matchTitle = (f.displayTitle || "").toLowerCase().indexOf(q) >= 0;
           var matchSlug = (f.parsed.slug || f.name).toLowerCase().indexOf(q) >= 0;
+          var matchPid = (f.parsed.pageId || "").toLowerCase().indexOf(q) >= 0;
           var matchColors = ((f.parsed.colorPrimary || "") + " " + (f.parsed.colorSecondary || "")).toLowerCase().indexOf(q) >= 0;
-          if (!matchTitle && !matchSlug && !matchColors) return;
+          if (!matchTitle && !matchSlug && !matchPid && !matchColors) return;
         }
+
         if (f.kind === "default") groups[0].items.push(f);
-        else if (f.kind === "page") groups[1].items.push(f);
-        else groups[2].items.push(f);
+        else if (f.kind === "page") {
+          if (f.isConnected) groups[1].items.push(f);
+          else groups[2].items.push(f);
+        } else {
+          groups[3].items.push(f);
+        }
       });
 
       var renderedCount = 0;
@@ -553,20 +652,40 @@
           var b = document.createElement("button");
           b.type = "button";
           var isDef = f.kind === "default";
-          b.className = "ds-row" + (isDef ? " ds-row-default" : "") + (activeItem && activeItem.name === f.name ? " sel" : "");
+          var isConn = f.kind === "page" && f.isConnected;
+          var isUnconn = f.kind === "page" && !f.isConnected;
+
+          var rowClass = "ds-row" +
+            (isDef ? " ds-row-default" : "") +
+            (isConn ? " ds-row-connected" : "") +
+            (isUnconn ? " ds-row-unconnected" : "") +
+            (activeItem && activeItem.name === f.name ? " sel" : "");
+          b.className = rowClass;
           b.dataset.path = KIT_DIR + "/" + f.name;
           b.dataset.name = f.name;
 
-          var badgeText = isDef ? "DEFAULT" : f.kind === "page" ? "Page" : "Hệ";
-          var badgeClass = isDef ? "ds-badge ds-badge-default" : ("ds-badge ds-badge-" + f.kind);
+          var badgeText = "";
+          var badgeClass = "";
           var subText = "";
+
           if (isDef) {
+            badgeText = "DEFAULT";
+            badgeClass = "ds-badge ds-badge-default";
             subText = (f.parsed.colorPrimary || "#6C3BFF") + ", " + (f.parsed.colorSecondary || "#00D4FF") + " · " + (f.parsed.fonts || "Inter, Montserrat");
           } else if (f.kind === "page") {
             var tagTxt = f.parsed.tagsAll ? "thẻ all" : ((f.parsed.folders || []).length ? (f.parsed.folders.length + " thẻ") : "chưa thẻ");
-            subText = (f.parsed.slug || "") + (f.parsed.pageId ? " · ID " + f.parsed.pageId : " · chưa Page ID")
-              + " · " + tagTxt;
+            if (isConn) {
+              badgeText = "✓ ĐÃ NỐI";
+              badgeClass = "ds-badge ds-badge-connected";
+              subText = (f.parsed.pageId ? "ID " + f.parsed.pageId : "") + " · 🟢 Sẵn sàng đăng · " + tagTxt;
+            } else {
+              badgeText = "CHƯA NỐI";
+              badgeClass = "ds-badge ds-badge-unconnected";
+              subText = (f.parsed.pageId ? "ID " + f.parsed.pageId : "Chưa có Page ID") + " · ⚪ Chưa có Token · " + tagTxt;
+            }
           } else {
+            badgeText = "Hệ";
+            badgeClass = "ds-badge ds-badge-he-thong";
             subText = f.name;
           }
 
@@ -586,12 +705,20 @@
       });
 
       if (!renderedCount) {
-        listEl.innerHTML = '<div class="ds-empty-sm">Không có Brand Kit nào khớp tìm kiếm</div>';
+        listEl.innerHTML = '<div class="ds-empty-sm">Không có Brand Kit nào khớp bộ lọc</div>';
       }
     }
 
     paintList("");
     body.querySelector("#dsKitQ").oninput = function () { paintList(this.value); };
+    body.querySelectorAll(".ds-filter-btn").forEach(function (btn) {
+      btn.onclick = function () {
+        body.querySelectorAll(".ds-filter-btn").forEach(function (x) { x.classList.remove("sel"); });
+        btn.classList.add("sel");
+        var filter = btn.getAttribute("data-filter") || "all";
+        paintList(body.querySelector("#dsKitQ").value, filter);
+      };
+    });
     body.querySelector("#dsNewKit").onclick = function () { newKit(body, items, paintList); };
 
     /* Uu tien chon kit Default dau tien */
@@ -747,6 +874,13 @@
       }
       f.content = d.content || "";
       f.parsed = parsePageKit(f.content, f.name);
+      if (!f.parsed.accessToken && f.parsed.pageId && pageTokensCache[f.parsed.pageId] && pageTokensCache[f.parsed.pageId].access_token) {
+        f.parsed.accessToken = pageTokensCache[f.parsed.pageId].access_token;
+      }
+      f.isConnected = Boolean(
+        f.parsed.accessToken ||
+        (f.parsed.pageId && (connectedPageMap[f.parsed.pageId] || pageTokensCache[f.parsed.pageId]))
+      );
       f.displayTitle = cleanPageLabel(f.parsed.name, f.name);
       st.textContent = "";
     } catch (e) {
@@ -759,7 +893,7 @@
     if (kind === "page" || kind === "default") {
       await loadCourseTags();
       renderPageForm(body, f, items);
-      save.onclick = function () { savePageKit(body, f, items); };
+      save.onclick = function () { savePageKit(body, f, items, paintList); };
     } else {
       area.innerHTML =
         '<div class="ds-md-box">' +
@@ -797,14 +931,22 @@
     var pageId = p.pageId || "";
     var pageName = p.name || f.displayTitle || "";
     var pageSlug = p.slug || f.name.replace(/\.md$/i, "");
+    var isConnected = Boolean(p.accessToken || (pageId && (connectedPageMap[pageId] || pageTokensCache[pageId])));
+
+    var tokenStatusHtml = isConnected
+      ? (p.accessToken
+          ? '<div class="ds-token-status ok">🟢 Đã có Page Access Token riêng (Vĩnh viễn) — Sẵn sàng đăng Graph API</div>'
+          : '<div class="ds-token-status ok">🟢 Đã kết nối qua Facebook App OAuth</div>')
+      : '<div class="ds-token-status warn">⚠️ Chưa kết nối Facebook — Hãy dán Page Access Token bên dưới để kích hoạt</div>';
+
     var fbCard = isDefault ? "" :
-      '<div class="ds-section-card">' +
+      '<div class="ds-section-card ' + (isConnected ? 'ds-token-card' : 'ds-token-card unconnected') + '">' +
       '<div class="ds-section-head">' +
       '<div class="ds-section-title">Fanpage Facebook (để đăng bài)</div>' +
-      '<div class="ds-section-sub">Chọn Trang đã tick lúc kết nối Graph API — Javis dùng Page ID này khi đăng, không dùng slug</div>' +
+      tokenStatusHtml +
       '</div>' +
       '<div class="ds-field" style="margin-bottom:10px">' +
-      '<label class="ds-label" for="dsFldFbPick">Trang đã kết nối</label>' +
+      '<label class="ds-label" for="dsFldFbPick">Trang đã kết nối (OAuth hoặc đã có Token)</label>' +
       '<select class="ds-input" id="dsFldFbPick"><option value="">Đang tải danh sách Trang…</option></select>' +
       '</div>' +
       '<div class="ds-form-row">' +
@@ -816,6 +958,14 @@
       '<label class="ds-label" for="dsFldPageId">Page ID</label>' +
       '<input type="text" class="ds-input" id="dsFldPageId" value="' + esc(pageId) + '" placeholder="Số ID, ví dụ 988656934325292" inputmode="numeric">' +
       '</div>' +
+      '</div>' +
+      '<div class="ds-field" style="margin-top:10px">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center">' +
+      '<label class="ds-label" for="dsFldAccessToken">Page Access Token (Graph API riêng của Trang)</label>' +
+      '<button type="button" class="s-btn-ghost ds-btn-xs" id="dsToggleTok" title="Hiện hoặc ẩn Token">👁️ Hiện/Ẩn</button>' +
+      '</div>' +
+      '<input type="password" class="ds-input ds-token-input" id="dsFldAccessToken" value="' + esc(p.accessToken || "") + '" placeholder="Dán mã Page Access Token (bắt đầu bằng EAAY...) để nạp vĩnh viễn" autocomplete="off" spellcheck="false">' +
+      '<div class="ds-token-tip">💡 Token này giúp Javis đăng bài tự động bằng Graph API trực tiếp lên Trang mà không bị chặn bởi Facebook App. Nạp xong nhấn <b>Lưu Brand Kit</b> ở góc trên.</div>' +
       '</div>' +
       '<div class="ds-field" style="margin-top:8px">' +
       '<label class="ds-label">Slug (tên file kit, không phải ID Facebook)</label>' +
@@ -984,6 +1134,7 @@
       return {
         name: (area.querySelector("#dsFldPageName") || {}).value || "",
         pageId: (area.querySelector("#dsFldPageId") || {}).value || "",
+        accessToken: ((area.querySelector("#dsFldAccessToken") || {}).value || "").trim(),
         tagsLine: (function () {
           if (f.kind === "default") return "all";
           var ids = [];
@@ -1049,6 +1200,22 @@
     bindSyncInput("dsFldDonts");
     bindSyncInput("dsFldPageName");
     bindSyncInput("dsFldPageId");
+    bindSyncInput("dsFldAccessToken");
+
+    var tokInp = area.querySelector("#dsFldAccessToken");
+    var togBtn = area.querySelector("#dsToggleTok");
+    if (tokInp && togBtn) {
+      togBtn.onclick = function () {
+        if (tokInp.type === "password") {
+          tokInp.type = "text";
+          togBtn.textContent = "🔒 Ẩn";
+        } else {
+          tokInp.type = "password";
+          togBtn.textContent = "👁️ Hiện";
+        }
+      };
+    }
+
     area.querySelectorAll("#dsTagList input[data-tag]").forEach(function (c) {
       c.onchange = function () {
         var lab = c.closest(".ds-tag");
@@ -1123,8 +1290,9 @@
         pick.innerHTML = '<option value="">— Chọn Trang đã kết nối —</option>' +
           pages.map(function (pg) {
             var sel = String(pg.id) === cur ? " selected" : "";
+            var note = pg.has_token ? " [Đã có Token]" : "";
             return '<option value="' + esc(pg.id) + '" data-name="' + esc(pg.name) + '"' + sel + ">"
-              + esc(pg.name) + " · " + esc(pg.id) + "</option>";
+              + esc(pg.name) + note + " · " + esc(pg.id) + "</option>";
           }).join("");
       });
       pick.onchange = function () {
@@ -1132,6 +1300,10 @@
         if (!opt || !opt.value) return;
         if (idInp) idInp.value = opt.value;
         if (nameInp && opt.getAttribute("data-name")) nameInp.value = opt.getAttribute("data-name");
+        var chosenId = String(opt.value);
+        if (tokInp && pageTokensCache[chosenId] && pageTokensCache[chosenId].access_token) {
+          tokInp.value = pageTokensCache[chosenId].access_token;
+        }
         syncFormToMarkdown();
       };
     }
@@ -1156,13 +1328,14 @@
   }
 
   /* Luu thong tin Brand Kit tu Form / Markdown */
-  async function savePageKit(body, f, items) {
+  async function savePageKit(body, f, items, paintList) {
     var area = body.querySelector("#dsKitContentArea");
     var st = body.querySelector("#dsKitStatus");
     var save = body.querySelector("#dsKitSave");
 
     var ta = area.querySelector("#dsKitText");
     var contentToSave = (ta && ta.value) ? ta.value : f.content;
+    var vals = getFormVals();
 
     st.textContent = "Đang lưu…";
     st.className = "ds-status-text dim";
@@ -1182,20 +1355,75 @@
       if (d.ok) {
         f.content = contentToSave;
         f.parsed = parsePageKit(contentToSave, f.name);
+        if (vals.accessToken) f.parsed.accessToken = vals.accessToken;
         f.displayTitle = cleanPageLabel(f.parsed.name, f.name);
 
-        /* Cap nhat lai nhan o cot trai */
-        var rowBtn = body.querySelector('.ds-row[data-name="' + f.name + '"]');
-        if (rowBtn) {
-          var lbl = rowBtn.querySelector(".ds-row-label");
-          if (lbl) lbl.textContent = f.displayTitle;
-          var sub = rowBtn.querySelector(".ds-row-sub");
-          if (sub) {
-            if (f.kind === "default") {
-              sub.textContent = (f.parsed.colorPrimary || "#6C3BFF") + ", " + (f.parsed.colorSecondary || "#00D4FF") + " · " + (f.parsed.fonts || "Inter, Montserrat");
-            } else {
-              sub.textContent = (f.parsed.slug || "") + (f.parsed.pageId ? " · ID " + f.parsed.pageId : " · chưa có Page ID")
-                + " · " + (f.parsed.colorPrimary || "#6C3BFF") + ", " + (f.parsed.colorSecondary || "#00D4FF");
+        // Đồng bộ token vào Javis/page_tokens.json nếu có pageId & accessToken
+        if (vals.pageId && vals.accessToken) {
+          try {
+            var tokCeil = ceilPath(home, "Javis/page_tokens.json");
+            var rRes = await fetch("/files/read?brain=" + encodeURIComponent(brain()) + "&path=" + encodeURIComponent(tokCeil));
+            var rD = await rRes.json();
+            var tData = {};
+            try { tData = JSON.parse(rD.content || "{}"); } catch (eTokParse) {}
+            tData[vals.pageId] = {
+              name: vals.name || f.displayTitle,
+              page_id: vals.pageId,
+              access_token: vals.accessToken,
+              expires_at: "never",
+              updated_at: new Date().toISOString().slice(0, 10)
+            };
+            pageTokensCache[vals.pageId] = tData[vals.pageId];
+            connectedPageMap[vals.pageId] = {
+              id: vals.pageId,
+              name: tData[vals.pageId].name,
+              has_token: true,
+              source: "manual_token"
+            };
+            var fdTok = new FormData();
+            fdTok.append("brain", brain());
+            fdTok.append("path", tokCeil);
+            fdTok.append("content", JSON.stringify(tData, null, 2));
+            await fetch("/files/write", { method: "POST", body: fdTok });
+          } catch (eTokSave) {
+            console.warn("Could not sync page_tokens.json", eTokSave);
+          }
+        }
+
+        f.isConnected = Boolean(
+          f.parsed.accessToken ||
+          (f.parsed.pageId && (connectedPageMap[f.parsed.pageId] || pageTokensCache[f.parsed.pageId]))
+        );
+
+        /* Cập nhật lại danh sách bên trái */
+        if (typeof paintList === "function") {
+          var qVal = (body.querySelector("#dsKitQ") || {}).value || "";
+          items.sort(function (a, b) {
+            function rank(x) {
+              if (x.kind === "default") return 0;
+              if (x.kind === "page") return x.isConnected ? 1 : 2;
+              return 3;
+            }
+            var rA = rank(a);
+            var rB = rank(b);
+            if (rA !== rB) return rA - rB;
+            return a.displayTitle.localeCompare(b.displayTitle, "vi");
+          });
+          paintList(qVal);
+        } else {
+          var rowBtn = body.querySelector('.ds-row[data-name="' + f.name + '"]');
+          if (rowBtn) {
+            var lbl = rowBtn.querySelector(".ds-row-label");
+            if (lbl) lbl.textContent = f.displayTitle;
+            var sub = rowBtn.querySelector(".ds-row-sub");
+            if (sub) {
+              if (f.kind === "default") {
+                sub.textContent = (f.parsed.colorPrimary || "#6C3BFF") + ", " + (f.parsed.colorSecondary || "#00D4FF") + " · " + (f.parsed.fonts || "Inter, Montserrat");
+              } else if (f.isConnected) {
+                sub.textContent = (f.parsed.pageId ? "ID " + f.parsed.pageId : "") + " · 🟢 Sẵn sàng đăng · " + (f.parsed.folders || []).length + " thẻ";
+              } else {
+                sub.textContent = (f.parsed.pageId ? "ID " + f.parsed.pageId : "Chưa có Page ID") + " · ⚪ Chưa có Token";
+              }
             }
           }
         }
@@ -1452,12 +1680,15 @@
         }
       }
     } catch (idxErr) {}
+    var newParsed = parsePageKit(tpl, name + ".md");
+    var hasTok = Boolean(newParsed.accessToken || (newParsed.pageId && (connectedPageMap[newParsed.pageId] || pageTokensCache[newParsed.pageId])));
     items.push({
       name: name + ".md",
       type: "file",
       content: tpl,
       kind: "page",
-      parsed: parsePageKit(tpl, name + ".md"),
+      parsed: newParsed,
+      isConnected: hasTok,
       displayTitle: ten
     });
     return { ok: true };
@@ -1501,6 +1732,17 @@
       if (wr && wr.ok) made++;
     }
     if (btn) btn.disabled = false;
+    items.sort(function (a, b) {
+      function rank(x) {
+        if (x.kind === "default") return 0;
+        if (x.kind === "page") return x.isConnected ? 1 : 2;
+        return 3;
+      }
+      var rA = rank(a);
+      var rB = rank(b);
+      if (rA !== rB) return rA - rB;
+      return a.displayTitle.localeCompare(b.displayTitle, "vi");
+    });
     paintList((body.querySelector("#dsKitQ") || {}).value || "");
     if (st) {
       st.textContent = made ? ("Đã tạo " + made + " Brand Kit (tên = tên Fanpage). Page không có kit sẽ không được đăng bài.") : "Không tạo được kit.";

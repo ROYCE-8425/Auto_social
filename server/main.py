@@ -3194,47 +3194,110 @@ async def connect_catalog():
 
 @app.get("/connect/facebook/pages")
 async def connect_facebook_pages():
-    """Fanpage đã tick lúc OAuth — gộp MỌI kết nối facebook-pages. Không lộ page token."""
-    try:
-        import oauth_mcp
-        import httpx
-    except Exception:
-        return {"ok": False, "pages": [], "error": "oauth chưa sẵn"}
-    tokens = []
-    for c in mcp_store.list_connections():
-        if c.get("connector_id") != "facebook-pages":
-            continue
-        if not oauth_mcp.status(c["id"]).get("connected"):
-            continue
-        hdr = await oauth_mcp.auth_headers(c["id"])
-        tok = (hdr.get("Authorization") or "").replace("Bearer ", "").strip()
-        if tok and tok not in tokens:
-            tokens.append(tok)
-    if not tokens:
-        return {"ok": False, "pages": [], "error": "Chưa kết nối Facebook Trang"}
+    """Fanpage đã tick lúc OAuth hoặc nạp Page Access Token — gộp MỌI kết nối. Không lộ page token."""
     by_id = {}
     last_err = ""
     try:
-        async with httpx.AsyncClient(timeout=20) as client:
-            for token in tokens:
-                r = await client.get(
-                    "https://graph.facebook.com/v25.0/me/accounts",
-                    params={"fields": "id,name,category", "limit": 200, "access_token": token})
-                d = r.json()
-                if isinstance(d, dict) and d.get("error"):
-                    err = d["error"]
-                    last_err = err.get("message") if isinstance(err, dict) else str(err)
-                    continue
-                for p in (d.get("data") or []):
-                    pid = str(p.get("id") or "")
-                    if pid:
-                        by_id[pid] = {"id": pid, "name": p.get("name") or "",
-                                      "category": p.get("category") or ""}
+        import oauth_mcp
+        import httpx
+        tokens = []
+        for c in mcp_store.list_connections():
+            if c.get("connector_id") != "facebook-pages":
+                continue
+            if not oauth_mcp.status(c["id"]).get("connected"):
+                continue
+            hdr = await oauth_mcp.auth_headers(c["id"])
+            tok = (hdr.get("Authorization") or "").replace("Bearer ", "").strip()
+            if tok and tok not in tokens:
+                tokens.append(tok)
+        if tokens:
+            async with httpx.AsyncClient(timeout=20) as client:
+                for token in tokens:
+                    r = await client.get(
+                        "https://graph.facebook.com/v25.0/me/accounts",
+                        params={"fields": "id,name,category", "limit": 200, "access_token": token})
+                    d = r.json()
+                    if isinstance(d, dict) and d.get("error"):
+                        err = d["error"]
+                        last_err = err.get("message") if isinstance(err, dict) else str(err)
+                        continue
+                    for p in (d.get("data") or []):
+                        pid = str(p.get("id") or "")
+                        if pid:
+                            by_id[pid] = {
+                                "id": pid,
+                                "name": p.get("name") or "",
+                                "category": p.get("category") or "",
+                                "connected": True,
+                                "source": "oauth"
+                            }
     except Exception as e:
-        return {"ok": False, "pages": [], "error": f"{type(e).__name__}: {e}"}
+        last_err = f"{type(e).__name__}: {e}"
+
+    # Gộp các trang có manual Page Access Token từ Javis/page_tokens.json và wiki/brand-kits/*.md
+    try:
+        from pathlib import Path
+        repo = Path(__file__).resolve().parents[1]
+        default_brain = repo / "brains" / "Brain Default"
+        roots = [default_brain, repo] if default_brain.is_dir() else [repo]
+        for r in roots:
+            tok_file = r / "Javis" / "page_tokens.json"
+            if tok_file.is_file():
+                try:
+                    import json
+                    tdata = json.loads(tok_file.read_text(encoding="utf-8"))
+                    if isinstance(tdata, dict):
+                        for pid, info in tdata.items():
+                            if isinstance(info, dict) and info.get("access_token"):
+                                pid_str = str(pid)
+                                if pid_str not in by_id:
+                                    by_id[pid_str] = {
+                                        "id": pid_str,
+                                        "name": info.get("name") or f"Page {pid_str}",
+                                        "category": "Community",
+                                        "connected": True,
+                                        "has_token": True,
+                                        "source": "manual_token"
+                                    }
+                                else:
+                                    by_id[pid_str]["has_token"] = True
+                except Exception:
+                    pass
+            bk_dir = r / "wiki" / "brand-kits"
+            if bk_dir.is_dir():
+                import re
+                for p in bk_dir.glob("*.md"):
+                    if p.name.startswith("_"):
+                        continue
+                    try:
+                        md = p.read_text(encoding="utf-8")
+                        m_pid = re.search(r"^[ \t]*[-*][ \t]*(?:Page ID|page_id|ID Fanpage|ID Trang)[ \t]*:[ \t]*(.+)$", md, re.M | re.I)
+                        m_tok = re.search(r"^[ \t]*[-*][ \t]*(?:Access Token|access_token|Page Token|Token)[ \t]*:[ \t]*(.+)$", md, re.M | re.I)
+                        if m_pid and m_tok:
+                            pid_str = m_pid.group(1).strip()
+                            if pid_str and pid_str not in by_id:
+                                m_name = re.search(r"^[ \t]*[-*][ \t]*Tên Fanpage:[ \t]*(.+)$", md, re.M)
+                                name = m_name.group(1).strip() if m_name else p.stem
+                                by_id[pid_str] = {
+                                    "id": pid_str,
+                                    "name": name,
+                                    "category": "Community",
+                                    "connected": True,
+                                    "has_token": True,
+                                    "source": "manual_token"
+                                }
+                            elif pid_str in by_id:
+                                by_id[pid_str]["has_token"] = True
+                    except Exception:
+                        pass
+    except Exception:
+        pass
+
     pages = list(by_id.values())
-    if not pages and last_err:
-        return {"ok": False, "pages": [], "error": last_err}
+    if not pages:
+        if last_err:
+            return {"ok": False, "pages": [], "error": last_err}
+        return {"ok": False, "pages": [], "error": "Chưa kết nối Facebook Trang hoặc chưa nạp Page Access Token"}
     return {"ok": True, "pages": pages}
 
 
