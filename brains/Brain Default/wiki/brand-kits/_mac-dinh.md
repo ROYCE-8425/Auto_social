@@ -51,28 +51,24 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Vẽ kỹ th
 - Điều khoản sử dụng, Chính sách bảo mật, Xử lý khiếu nại
 - Bản đồ các cơ sở, Sitemap
 
-## Hệ thống cơ sở: địa chỉ MỚI (Fanpage) và CŨ (list _mac-dinh trước 2026-09-05)
+## Hệ thống chi nhánh chuẩn Tin Học Sao Việt (theo bài mẫu thực tế)
 
-Đăng bài / chân trang: dùng cột **Mới**. Cột Cũ chỉ để biết chỗ chuyển cơ sở.
+📍 HỆ THỐNG 13 CHI NHÁNH TIN HỌC SAO VIỆT
+- 🏫 Bình Thạnh: 21/12 Lê Trực, P.7, Bình Thạnh, TP.HCM
+- 🏫 Quận 7: Căn hộ Florita Quận 7, Khu đô thị Him Lam, Tân Hưng, TP.HCM
+- 🏫 Bình Tân: TM-0.39, 510 Kinh Dương Vương, An Lạc, Bình Tân
+- 🏫 Quận 12: A23 Lê Thị Riêng, KDC Thới An, Quận 12
+- 🏫 TP. Thủ Đức: 133/2 Đ. Đỗ Xuân Hợp, Phước Long B
+- 🏫 Tân Bình: 2A Nguyễn Sỹ Sách, P.15, Tân Bình
+- 🏫 Biên Hòa: 91 Đoàn Văn Cự, P. Tam Hòa
+- 🏫 Long Thành: 72 Đinh Bộ Lĩnh, Lộc An
+- 🏫 Dĩ An: 184/19/11 Đặng Văn Mây, KP Đông Chiêu
+- 🏫 Thuận An: 8 Đường NA8, Khu Dân Cư Viet Sing
+- 🏫 Thủ Dầu Một: 107 D5, KDC Phú Hòa 1
+- 🏫 Tân Uyên: Số 20 Đường ĐX12, Tân Vĩnh Hiệp
+- 🏫 Vũng Tàu: 293 Bình Giã, P.8, TP. Vũng Tàu
 
-| Chi nhánh | Mới (Fanpage, đăng bài) | Cũ (list trước đây) | Đổi? |
-|---|---|---|---|
-| Bình Thạnh | 193 Nguyễn Xí, phường Bình Thạnh, TP.HCM | Số 16, 21/12 Lê Trực, Phường 7, Q. Bình Thạnh (Chung Cư Lê Trực) | Có |
-| Quận 7 | TM-20 Sảnh B, Chung cư Florita, KĐT Him Lam, P. Tân Hưng, TP.HCM | Số 515 B2/12, Lê Văn Lương, Tân Phong, Quận 7 | Có |
-| Quận 6 / Bình Tân | Căn TM-0.39, Moonlight Boulevard, 510 Kinh Dương Vương, P. An Lạc A, Quận Bình Tân, TP.HCM | Phòng A206 số 189 Kinh Dương Vương, Phường 12, Quận 6 (Trường CĐ GTVT Trung Ương VI) | Có (page tên Q6, địa chỉ mới Bình Tân) |
-| Quận 12 | A23 KDC Thới An, Đường Lê Thị Riêng, P. Thới An, Quận 12, TP.HCM | 247/31 Hà Huy Giáp, Thạnh Lộc, Quận 12 | Có |
-| Thủ Đức | 133/2 Đỗ Xuân Hợp, P. Phước Long, Thủ Đức, TP.HCM | 49 Đường Số 3, Tăng Nhơn Phú B, Tp. Thủ Đức | Có |
-| Tân Bình | 180 Phạm Văn Bạch, Phường 15, Tân Bình, TP.HCM | 180 Phạm Văn Bạch, Phường 15, Tân Bình, Thành phố Hồ Chí Minh | Không |
-| Thuận An | 69 D32, Làng chuyên gia Oasis, phường An Phú, TP.HCM (Thuận An, Bình Dương cũ) | 1/513 KDC TÀI LỰC, Tổ 9, Khu phố Hòa Lân 2, Thuận An - Bình Dương | Có |
-| Dĩ An | 184/19/11 Đặng Văn Mây, KP. Đông Chiêu, P. Tân Đông Hiệp, Dĩ An, Bình Dương | 184/19/11 Đặng Văn Mây, KP. Đông Chiêu, P. Tân Đông Hiệp, Dĩ An - Bình Dương | Không |
-| Thủ Dầu Một | Số 107, D5, KDC Phú Hòa 1, Khu 4, Thủ Dầu Một, Bình Dương | Số 107, D5, KDC Phú Hòa 1, Khu 4, Thủ Dầu Một, Bình Dương | Không |
-| Tân Uyên | Số 20 Đường ĐX 12, Phường Tân Khánh (Tân Uyên, Bình Dương cũ) | 70 Đ. ĐX-03A, Tân Vĩnh Hiệp, Tân Uyên, Bình Dương | Có |
-| Biên Hòa | 91 Đoàn Văn Cự, P. Tam Hòa, Biên Hòa, Đồng Nai (một số page Autocad ghi 93) | 91 Đoàn Văn Cự, P. Tam Hòa, Biên Hòa, Đồng Nai | Hầu như không |
-| Long Thành | 72 Đinh Bộ Lĩnh, Lộc An, Long Thành, Đồng Nai | 72 Đinh Bộ Lĩnh, Lộc An, Long Thành, Đồng Nai | Không (page Tin học Long Thành Fanpage còn ghi Tổ 36 Ấp Hàng Gòn) |
-| Vũng Tàu (Sao Việt) | 293 Bình Giã, Phường 8, TP. Vũng Tàu | (thêm sau list 12; cùng 293 Bình Giã) | Không |
-| Trung Tâm Tin Học Vũng Tàu | 1596 Đ. 30 Tháng 4, Phường 12, Vũng Tàu | không có trong list 12 | Page riêng |
-| Bà Rịa | 70-96 Hai Mươi Bảy Tháng Tư, Phước Hiệp, TP. Bà Rịa | không có trong list 12 | Page riêng |
-| Trí Việt | 968 Phạm Văn Thuận, Biên Hòa, Đồng Nai | không có trong list 12 | Page riêng |
+*(Ghi chú: Đối với các khóa Kế Toán riêng biệt, dùng hệ thống 12 cơ sở chuyên kế toán tại TP.HCM, Bình Dương, Đồng Nai theo mẫu kế toán).*
 
 
 ## USP chuẩn từ Fanpage thực tế
@@ -116,11 +112,24 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Vẽ kỹ th
 - Dùng ký tự em dash
 
 ## Chân trang caption (bắt buộc)
-Trung Tâm Đào Tạo Kế Toán Sao Việt (hoặc Trung Tâm Tin Học Sao Việt tùy khóa)
-[địa chỉ cơ sở của ĐÚNG Fanpage hoặc hệ thống 12 cơ sở]
-Hotline: 0823 552 558
-Email: trungtamtinhocsaoviet@gmail.com
-Web: https://tinhocsaoviet.com/
+Trung Tâm Đào Tạo Tin Học Sao Việt
+📍 HỆ THỐNG 13 CHI NHÁNH TIN HỌC SAO VIỆT
+🏫 Bình Thạnh: 21/12 Lê Trực, P.7, Bình Thạnh, TP.HCM
+🏫 Quận 7: Căn hộ Florita Quận 7, Khu đô thị Him Lam, Tân Hưng, TP.HCM
+🏫 Bình Tân: TM-0.39, 510 Kinh Dương Vương, An Lạc, Bình Tân
+🏫 Quận 12: A23 Lê Thị Riêng, KDC Thới An, Quận 12
+🏫 TP. Thủ Đức: 133/2 Đ. Đỗ Xuân Hợp, Phước Long B
+🏫 Tân Bình: 2A Nguyễn Sỹ Sách, P.15, Tân Bình
+🏫 Biên Hòa: 91 Đoàn Văn Cự, P. Tam Hòa
+🏫 Long Thành: 72 Đinh Bộ Lĩnh, Lộc An
+🏫 Dĩ An: 184/19/11 Đặng Văn Mây, KP Đông Chiêu
+🏫 Thuận An: 8 Đường NA8, Khu Dân Cư Viet Sing
+🏫 Thủ Dầu Một: 107 D5, KDC Phú Hòa 1
+🏫 Tân Uyên: Số 20 Đường ĐX12, Tân Vĩnh Hiệp
+🏫 Vũng Tàu: 293 Bình Giã, P.8, TP. Vũng Tàu
+📞 Hotline/Zalo: 0823 552 558 - 093 11 44 858
+📧 Email: trungtamtinhocsaoviet@gmail.com
+🌐 Website: https://tinhocsaoviet.com
 
 ## Tuỳ biến trang (trống ở file này)
 - Tên Fanpage:

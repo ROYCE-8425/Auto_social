@@ -51,8 +51,6 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 
 ## Cơ sở đào tạo của trang này (địa chỉ đúng Fanpage này)
 - 🏫 Vũng Tàu: 293 Bình Giã, Phường 8, TP. Vũng Tàu
-- Mới (Fanpage, dùng khi đăng bài): 🏫 Vũng Tàu: 293 Bình Giã, Phường 8, TP. Vũng Tàu
-- Cũ (list _mac-dinh trước đây, chỉ đối chiếu): 293 Bình Giã, Phường 8, TP. Vũng Tàu, Bà Rịa - Vũng Tàu
 
 ## USP chuẩn từ Fanpage thực tế
 - Học thực hành 100% trên máy tính và chứng từ thực tế của doanh nghiệp
@@ -108,7 +106,6 @@ Trung Tâm Tin Học Sao Việt Vũng Tàu
 - Access Token: EAAYrB1nymYkBSbmOGF3M4yRkK4tVpnx6kn3QZBFU58mjiVZBSsx5Hx31JSlCHmnNyi1XdLJi2Pf58f8uGD8iBYo7ZCtgNc93523X0jmcZCOkvxfjnJuGA7vxwxwWltMRZCZCblNSv1fGZB6KsxnR83Gc2TBn8gibDXDLQDFSZBZCT7JkhnKVZCgI1LGVhRq0FQzF3kcWO9DZC7hn2jCSH6eND9B
 - Thẻ khoá học: tin-hoc _ai
 - Cơ sở / địa chỉ: 🏫 Vũng Tàu: 293 Bình Giã, Phường 8, TP. Vũng Tàu
-- Địa chỉ cũ (list trước): 293 Bình Giã, Phường 8, TP. Vũng Tàu, Bà Rịa - Vũng Tàu
 - Hotline / Zalo: 0931 144 858
 - Email Fanpage: trungtamtinhocsaoviet@gmail.com
 - Web Fanpage: https://blogdaytinhoc.com/trung-tam-tin-hoc-o-vung-tau-1143

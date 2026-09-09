@@ -54,9 +54,6 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 - 🏫 Thuận An: 69 D32, Làng chuyên gia Oasis, P. An Phú, TP. Thuận An
 - 🏫 Thủ Dầu Một: 107 D5, KDC Phú Hòa 1, TP. Thủ Dầu Một
 - 🏫 Tân Uyên: 20 Đường ĐX 12, P. Tân Vĩnh Hiệp, TP. Tân Uyên
-- Mới (Fanpage, dùng khi đăng bài): 🏫 Dĩ An: 184/19/11 Đặng Văn Mây, KP. Đông Chiêu, P. Tân Đông Hiệp, TP. Dĩ An | 🏫 Thuận An: 69 D32, Làng chuyên gia Oasis, P. An Phú, TP. Thuận An | 🏫 Thủ Dầu Một: 107 D5, KDC Phú Hòa 1, TP. Thủ Dầu Một | 🏫 Tân Uyên: 20 Đường ĐX 12, P. Tân Vĩnh Hiệp, TP. Tân Uyên
-- Cũ (list _mac-dinh trước đây, chỉ đối chiếu): 1/513 KDC TÀI LỰC, Thuận An | 184/19/11 Đặng Văn Mây, Dĩ An | Số 107, D5, KDC Phú Hòa 1, Thủ Dầu Một | 70 Đ. ĐX-03A, Tân Uyên
-- Đăng bài chỉ dùng dòng Mới (Fanpage). Dòng Cũ chỉ để đối chiếu, không nhét vào caption.
 
 ## USP chuẩn từ Fanpage thực tế
 - Học thực hành 100% trên máy tính và chứng từ thực tế của doanh nghiệp
@@ -115,7 +112,6 @@ Trung Tâm Đào Tạo Tin Học Sao Việt Bình Dương
 - Access Token: EAAYrB1nymYkBSY8fMg2FEEZCNqZAClUV2FZA2yIF4Tr5M0u5uSZBtm4ZBjXZB6P4G8vIdkW36r1oxbKblWqcx1A0P0V4zUfNtKuUVk0eJtQozdQ4TDqjubtsrv65ErjP016yCj4ops0I7SyAkZBBU0bKhT23u6pR9Yh9vEqweeGAOpVeVHZBLHehZCZBayyxL0iL0gH3qrlp7d4cUCVbIq5p4ZD
 - Thẻ khoá học: tin-hoc _ai
 - Cơ sở / địa chỉ: 🏫 Dĩ An: 184/19/11 Đặng Văn Mây, KP. Đông Chiêu, P. Tân Đông Hiệp, TP. Dĩ An | 🏫 Thuận An: 69 D32, Làng chuyên gia Oasis, P. An Phú, TP. Thuận An | 🏫 Thủ Dầu Một: 107 D5, KDC Phú Hòa 1, TP. Thủ Dầu Một | 🏫 Tân Uyên: 20 Đường ĐX 12, P. Tân Vĩnh Hiệp, TP. Tân Uyên
-- Địa chỉ cũ (list trước): 1/513 KDC TÀI LỰC, Thuận An | 184/19/11 Đặng Văn Mây, Dĩ An | Số 107, D5, KDC Phú Hòa 1, Thủ Dầu Một | 70 Đ. ĐX-03A, Tân Uyên
 - Hotline / Zalo: 0812 114 345
 - Email Fanpage: trungtamtinhocsaoviet@gmail.com
 - Web Fanpage: https://blogdaytinhoc.com

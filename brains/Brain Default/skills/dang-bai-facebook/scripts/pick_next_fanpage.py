@@ -214,27 +214,56 @@ def save_state(st):
     STATE.write_text(json.dumps(st, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
-def print_chan_trang(row):
+BRANCHES_13_STANDARD = [
+    "🏫 Bình Thạnh: 21/12 Lê Trực, P.7, Bình Thạnh, TP.HCM",
+    "🏫 Quận 7: Căn hộ Florita Quận 7, Khu đô thị Him Lam, Tân Hưng, Hồ Chí Minh",
+    "🏫 Bình Tân: TM-0.39, 510 Kinh Dương Vương, An Lạc, Bình Tân",
+    "🏫 Quận 12: A23 Lê Thị Riêng, KDC Thới An, Quận 12",
+    "🏫 TP. Thủ Đức: 133/2 Đ. Đỗ Xuân Hợp, Phước Long B",
+    "🏫 Tân Bình: 2A Nguyễn Sỹ Sách, P.15, Tân Bình",
+    "🏫 Biên Hòa: 91 Đoàn Văn Cự, P. Tam Hòa",
+    "🏫 Long Thành: 72 Đinh Bộ Lĩnh, Lộc An",
+    "🏫 Dĩ An: 184/19/11 Đặng Văn Mây, KP Đông Chiêu",
+    "🏫 Thuận An: 8 Đường NA8, Khu Dân Cư Viet Sing",
+    "🏫 Thủ Dầu Một: 107 D5, KDC Phú Hòa 1",
+    "🏫 Tân Uyên: Số 20 Đường ĐX12, Tân Vĩnh Hiệp",
+    "🏫 Vũng Tàu: 293 Bình Giã, P.8, TP. Vũng Tàu",
+]
+
+BRANCHES_KE_TOAN = [
+    "Trung Tâm Đào Tạo Kế Toán TP HCM:",
+    "🏚 Bình Thạnh: Số 16, 21/12 Lê Trực, Phường 7, Q. Bình Thạnh (Chung Cư Lê Trực)",
+    "🏚 Quận 7: Số 515 B2/12, Lê Văn Lương, Tân Phong, Quận 7",
+    "🏚 Quận 6: Phòng A206 số 189 Kinh Dương Vương, Phường 12, Quận 6 (Trường CĐ GTVT Trung Ương VI)",
+    "🏚 Quận 12: 247/31 Hà Huy Giáp, Thạnh Lộc, Quận 12",
+    "🏚 Quận 9 - Thủ Đức: 49 Đường Số 3, Tăng Nhơn Phú B, Tp.Thủ Đức",
+    "🏚 Tân Bình: 180 Phạm Văn Bạch, Phường 15, Tân Bình, TP.HCM",
+    "Học Kế Toán Tại Bình Dương:",
+    "🏚 Thuận An: 1/513 KDC TÀI LỰC, Tổ 9, Khu phố Hòa Lân 2, Thuận An - Bình Dương",
+    "🏚 Dĩ An: 184/19/11 Đặng Văn Mây, KP. Đông Chiêu, P. Tân Đông Hiệp, Dĩ An - Bình Dương",
+    "🏚 Thủ Dầu Một: Số 107, D5, KDC Phú Hòa 1, Khu 4, Thủ Dầu Một, Bình Dương",
+    "🏚 Tân Uyên: 70 Đ. ĐX-03A, Tân Vĩnh Hiệp, Tân Uyên, Bình Dương",
+    "Học Kế Toán Tại Đồng Nai:",
+    "🏚 Biên Hòa: 91 Đoàn Văn Cự, P. Tam Hòa, Biên Hòa, Đồng Nai",
+    "🏚 Long Thành: 72 Đinh Bộ Lĩnh, Lộc An, Long Thành, Đồng Nai",
+]
+
+
+def print_chan_trang(row, tag=None):
     print("CHAN_TRANG")
     print(row["name"])
-    if row.get("address"):
-        seen = set()
-        for raw_part in [p.strip() for p in row["address"].replace("|", "\n").splitlines() if p.strip()]:
-            # Loại bỏ mã bưu chính và các đoạn thừa do Google places / geocoding
-            cleaned = re.sub(r",?\s*\b\d{5,6}\b.*$", "", raw_part).strip()
-            cleaned = re.sub(r",\s*(Di An|Thu Dau Mot|Vung Tau|Ho Chi Minh City|Việt Nam\.?)$", "", cleaned, flags=re.I).strip()
-            if not cleaned:
-                continue
-            norm = re.sub(r"^[🏫\s\-\*]+", "", cleaned).lower().strip()
-            if norm in seen:
-                continue
-            seen.add(norm)
-            if not cleaned.startswith("🏫"):
-                cleaned = f"🏫 {cleaned}"
-            print(cleaned)
+    canon_tag = _canonical_tag(tag or "")
+    if canon_tag == "ke-toan" or ("ke-toan" in row.get("slug", "") and not canon_tag):
+        print("12 Cơ Sở Đào Tạo Tại TP HCM - Bình Dương - Đồng Nai")
+        for b in BRANCHES_KE_TOAN:
+            print(b)
+    else:
+        print("📍 HỆ THỐNG 13 CHI NHÁNH TIN HỌC SAO VIỆT")
+        for b in BRANCHES_13_STANDARD:
+            print(b)
     if row.get("hotline"):
         hl = row["hotline"].strip()
-        if not hl.startswith("📞"):
+        if not hl.startswith("📞") and not hl.startswith("☎"):
             hl_val = re.sub(r"^(Hotline/Zalo|Hotline|Zalo)[:\s]*", "", hl, flags=re.I).strip()
             print("📞 Hotline/Zalo: " + hl_val)
         else:
@@ -346,7 +375,7 @@ def main(argv):
         print("Phong cach anh: " + (row.get("image_style") or ""))
         print("Cam: " + (row.get("donts") or ""))
         print("HET_KIT_VISUAL")
-        print_chan_trang(row)
+        print_chan_trang(row, tag)
         return 0
 
     connected_only = "--all-pages" not in argv
@@ -505,7 +534,7 @@ def main(argv):
     print("Phong cach anh: " + (row.get("image_style") or ""))
     print("Cam: " + (row.get("donts") or ""))
     print("HET_KIT_VISUAL")
-    print_chan_trang(row)
+    print_chan_trang(row, tag)
     return 0
 
 

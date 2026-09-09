@@ -50,10 +50,7 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 - Bản đồ các cơ sở, Sitemap
 
 ## Cơ sở đào tạo của trang này (địa chỉ đúng Fanpage này)
-- A23 KDC Thới An, Đường Lê Thị Riêng, Phường Thới An, Quận 12, TP.HCM
-- Mới (Fanpage, dùng khi đăng bài): A23 KDC Thới An, Đường Lê Thị Riêng, Phường Thới An, Quận 12, TP.HCM
-- Cũ (list _mac-dinh trước đây, chỉ đối chiếu): 247/31 Hà Huy Giáp, Thạnh Lộc, Quận 12
-- Đăng bài chỉ dùng dòng Mới (Fanpage). Dòng Cũ chỉ để đối chiếu, không nhét vào caption.
+- 🏫 Quận 12: A23 KDC Thới An, Đường Lê Thị Riêng, P. Thới An, Quận 12, TP.HCM
 
 ## USP chuẩn từ Fanpage thực tế
 - Học thực hành 100% trên máy tính và chứng từ thực tế của doanh nghiệp
@@ -109,7 +106,6 @@ Trung Tâm Tin Học Sao Việt Quận 12
 - Access Token: EAAYrB1nymYkBSbsSSn62WXnKWTi0eUHgPXh5343ygSVOGhJ5kIyk7trn7nY6lDkzbcKCBlMK0oLt34r2F7yycZA2PKOobz45XprZAMi4rO6itkwnlLOSZBp3H5wqh3ZB7McLg5GWlTZA0Yo8FHxgRmOP88Rf8QJFpTRqwsZACZAZCzxL029lwC4Oxqt7HlicRPXuifNJZBUDVNmCbsbqJIaBhny8ZD
 - Thẻ khoá học: tin-hoc _ai
 - Cơ sở / địa chỉ: 🏫 Quận 12: A23 KDC Thới An, Đường Lê Thị Riêng, P. Thới An, Quận 12, TP.HCM
-- Địa chỉ cũ (list trước): 247/31 Hà Huy Giáp, Thạnh Lộc, Quận 12
 - Hotline / Zalo: 0904 860 899
 - Email Fanpage: trungtamtinhocsaoviet@gmail.com
 - Web Fanpage: https://blogdaytinhoc.com
