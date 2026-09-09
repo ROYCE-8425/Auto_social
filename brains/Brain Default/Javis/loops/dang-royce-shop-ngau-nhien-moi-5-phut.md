@@ -18,7 +18,8 @@ Tuyệt đối KHÔNG đọc loop-log hoặc transcript cũ để tránh phình 
 ## Quy trình Đăng Bài Chuẩn (2 Bước - 1 Bài = 1 Ảnh AI Tạo Mới 100%):
 
 1. **Chọn khóa học xoay vòng (100% theo 5 nhóm dataset)**:
-   `python "brains/Brain Default/skills/dang-bai-facebook/scripts/pick_next_fanpage.py" --include-royce --page "Royce Shop"`
+   - Trên VPS: `python skills/dang-bai-facebook/scripts/pick_next_fanpage.py --include-royce --page "Royce Shop"`
+   - Trên Local: `python "brains/Brain Default/skills/dang-bai-facebook/scripts/pick_next_fanpage.py" --include-royce --page "Royce Shop"`
    Lấy kết quả: `the=<khoa_hoc>` (chỉ thuộc: tin-hoc _ai, do-hoa, ke-toan, ve-ky-thuat, tre-em) và `CHAN_TRANG`.
    Đọc file `wiki/courses/<the>.md` để lấy Tiêu đề (Title Hooks) và Highlights giáo trình thật.
    TUYỆT ĐỐI CẤM đăng khóa học ngoài dataset (CẤM kinh doanh online, CẤM bán hàng).
@@ -34,6 +35,7 @@ Tuyệt đối KHÔNG đọc loop-log hoặc transcript cũ để tránh phình 
    `fb_page_album(page="Royce Shop", photos="auto", course="<the>", cover="<photo_rel>", message="<caption>")`
    *(Hệ thống tự động ghép ảnh bìa AI mới + 5-7 ảnh lớp học thật từ dataset của đúng khóa học đó, chuẩn hóa 100% tỷ lệ vuông 1:1 đồng bộ, tổng 6, 7 hoặc 8 ảnh)*.
 4. **Đánh dấu hoàn thành**:
-   `python "brains/Brain Default/skills/dang-bai-facebook/scripts/pick_next_fanpage.py" --ok 988656934325292 <the>`
+   - Trên VPS: `python skills/dang-bai-facebook/scripts/pick_next_fanpage.py --ok 988656934325292 <the>`
+   - Trên Local: `python "brains/Brain Default/skills/dang-bai-facebook/scripts/pick_next_fanpage.py" --ok 988656934325292 <the>`
 5. **Trả về kết quả 1 dòng**:
    `POST_OK post_id=<post_id> link=<link>`

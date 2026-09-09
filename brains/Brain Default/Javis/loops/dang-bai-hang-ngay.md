@@ -31,18 +31,28 @@ Mục tiêu ngày: mỗi Fanpage có Brand Kit + Page ID được tối đa 1 b�
 
 0. FAST_PATH: Lệnh `pick_next_fanpage.py` đã tự động lọc CHỈ Fanpage ĐANG HOẠT ĐỘNG (có Access Token hợp lệ & live-check 200 OK trên Meta Graph API). Không quét các trang chưa kết nối.
 1. Chạy lệnh lấy Fanpage và khoá học:
-   `python "brains/Brain Default/skills/dang-bai-facebook/scripts/pick_next_fanpage.py"`
+   - Trên VPS / container Javis (thư mục chạy là vault):
+     `python skills/dang-bai-facebook/scripts/pick_next_fanpage.py`
+   - Trên máy Local (chạy từ thư mục gốc project):
+     `python "brains/Brain Default/skills/dang-bai-facebook/scripts/pick_next_fanpage.py"`
 2. Nếu `NEXT=NONE`: Toàn bộ Fanpage đã đủ bài hoặc chưa có thêm Fanpage kết nối, DỪNG ngay.
 3. Nếu `NEXT=1`:
-   - Đọc đúng 1 file `wiki/brand-kits/<kit>` được chỉ định và đọc `skills/dang-bai-facebook/SKILL.md`.
+   - Đọc đúng các file theo đường dẫn trả về:
+     + Brand Kit: `wiki/brand-kits/<kit>` (từ biến `kit_path`)
+     + Khóa học: `wiki/courses/<the>.md` (từ biến `course_path`)
+     + Quy chuẩn: `skills/dang-bai-facebook/SKILL.md` (từ biến `skill_path`)
    - Lấy thông tin hotline, địa chỉ từ khối `CHAN_TRANG`. Cấm bịa ngoài brand kit.
    - Bước 1 (Cover AI): Gọi tool `javis_generate_image` tạo 1 cover AI mới 100% chuẩn tỉ lệ vuông 1:1, phong cách công nghệ Sao Việt, đúng chủ đề khoá học `<the>`. CẤM dùng lại cover cũ trong `_xuat`.
-   - Bước 2 (Đăng Album): Soạn caption 7 nhịp (35-45 dòng) kèm `CHAN_TRANG`, sau đó gọi tool `fb_page_album`:
+   - Bước 2 (Đăng Album): Soạn caption chi tiết chuyên sâu (45-65 dòng) đầy đủ chương trình từ `wiki/courses/<the>.md` kèm `CHAN_TRANG`, sau đó gọi tool `fb_page_album`:
      `fb_page_album(page="<page_id>", photos="auto", course="<the>", cover="<đường_dẫn_cover_vừa_tạo>", message="<caption_đầy_đủ>")`
 4. Kết thúc vòng:
-   - Thành công: `python "brains/Brain Default/skills/dang-bai-facebook/scripts/pick_next_fanpage.py" --ok <page_id> <the>`
+   - Thành công:
+     + Trên VPS: `python skills/dang-bai-facebook/scripts/pick_next_fanpage.py --ok <page_id> <the>`
+     + Trên Local: `python "brains/Brain Default/skills/dang-bai-facebook/scripts/pick_next_fanpage.py" --ok <page_id> <the>`
      Báo cáo: `POST_OK post_id=<post_id> status=verified link=https://www.facebook.com/<post_id> | <tên_page> | <the>`
-   - Thất bại: `python "brains/Brain Default/skills/dang-bai-facebook/scripts/pick_next_fanpage.py" --fail <page_id> "<lý_do_lỗi>"`
+   - Thất bại:
+     + Trên VPS: `python skills/dang-bai-facebook/scripts/pick_next_fanpage.py --fail <page_id> "<lý_do_lỗi>"`
+     + Trên Local: `python "brains/Brain Default/skills/dang-bai-facebook/scripts/pick_next_fanpage.py" --fail <page_id> "<lý_do_lỗi>"`
      Báo cáo: `FAIL | <tên_page> | lý do: <lý_do_lỗi>`
 
 ## Fail / rollback

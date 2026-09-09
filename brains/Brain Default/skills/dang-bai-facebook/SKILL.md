@@ -8,10 +8,20 @@ group: Facebook
 
 Mục tiêu: Mỗi bài đăng Fanpage là một **ALBUM chuẩn Tỷ Lệ Vàng Facebook 2026 (ngẫu nhiên 6, 7 hoặc 8 ảnh)** gồm: 1 ảnh bìa độc quyền do GPT Image 2 (`javis_generate_image`) tạo mới 100% + 5-7 ảnh chụp lớp học thật từ dataset đi kèm, đăng tự động bằng `fb_page_album` với `photos='auto'`.
 
+## Quy ước đường dẫn làm việc (Cấm mất thời gian mò file):
+- **Môi trường VPS (chạy Việc định kỳ / container Docker, thư mục làm việc là vault)**:
+  * Script điều phối: `python skills/dang-bai-facebook/scripts/pick_next_fanpage.py`
+  * Brand Kit: `wiki/brand-kits/<kit>`
+  * Khóa học: `wiki/courses/<the>.md`
+  * Dataset ảnh lớp học thật: `attachments/dataset/<the>/`
+  * Nơi lưu ảnh xuất AI: `attachments/dataset/_xuat/`
+- **Môi trường Local (chạy từ thư mục gốc project `javis-os`)**:
+  * Thêm tiền tố `brains/Brain Default/` vào trước đường dẫn (ví dụ: `python "brains/Brain Default/skills/dang-bai-facebook/scripts/pick_next_fanpage.py"`).
+
 ## Luồng thực hiện chuẩn 2 bước:
 
 ### Bước 1: BẮT BUỘC tạo 1 ảnh bìa mới 100% bằng GPT Image 2
-- Đọc file `wiki/courses/<khoa_hoc>.md` để lấy Tiêu đề (Title Hooks) và Highlights giáo trình chuẩn.
+- Đọc file `wiki/courses/<the>.md` (hoặc `course_path` từ output của script) để lấy Tiêu đề (Title Hooks) và Highlights giáo trình chuẩn.
 - GỌI THẲNG TOOL DUY NHẤT: `javis_generate_image`:
   ```text
   javis_generate_image(

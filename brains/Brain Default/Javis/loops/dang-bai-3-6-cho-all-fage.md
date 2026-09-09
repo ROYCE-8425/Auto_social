@@ -19,7 +19,8 @@ Mỗi vòng CHỈ đăng 1 bài cho 1 Fanpage rồi DỪNG. Cấm đăng 2 page 
 
 1. ĐIỀU PHỐI FANPAGE (Chỉ chạy Thứ 3 và Thứ 6, mỗi page tối đa 1 bài/ngày):
 Chạy script:
-python "brains/Brain Default/skills/dang-bai-facebook/scripts/pick_next_fanpage.py"
+- Trên VPS (trong container / vault): `python skills/dang-bai-facebook/scripts/pick_next_fanpage.py`
+- Trên Local (gốc project): `python "brains/Brain Default/skills/dang-bai-facebook/scripts/pick_next_fanpage.py"`
 - Nếu xuất hiện "NEXT=NONE": Hôm nay là ngày nghỉ HOẶC toàn bộ Fanpage đã đăng xong -> DỪNG NGAY.
 - Nếu xuất hiện "NEXT=1": Lấy page_id, ten, the (khóa học), kit, CHAN_TRANG.
 
@@ -36,6 +37,9 @@ python "brains/Brain Default/skills/dang-bai-facebook/scripts/pick_next_fanpage.
   fb_page_album(page="<ten>", photos="auto", course="<the>", cover="<ảnh_ai_vừa_tạo>", message="<caption>")
 
 4. XỬ LÝ KẾT QUẢ & CHỊU LỖI:
-- ĐĂNG THÀNH CÔNG: Chạy python "brains/Brain Default/skills/dang-bai-facebook/scripts/pick_next_fanpage.py" --ok <page_id> <the>
+- ĐĂNG THÀNH CÔNG: Chạy lệnh:
+  + Trên VPS: `python skills/dang-bai-facebook/scripts/pick_next_fanpage.py --ok <page_id> <the>`
+  + Trên Local: `python "brains/Brain Default/skills/dang-bai-facebook/scripts/pick_next_fanpage.py" --ok <page_id> <the>`
 - BỊ LỖI: Bỏ qua ngay để không kẹt vòng bằng lệnh:
-  python "brains/Brain Default/skills/dang-bai-facebook/scripts/pick_next_fanpage.py" --fail <page_id> "<lý_do>"
+  + Trên VPS: `python skills/dang-bai-facebook/scripts/pick_next_fanpage.py --fail <page_id> "<lý_do>"`
+  + Trên Local: `python "brains/Brain Default/skills/dang-bai-facebook/scripts/pick_next_fanpage.py" --fail <page_id> "<lý_do>"`
