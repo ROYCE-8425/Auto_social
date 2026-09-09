@@ -52,7 +52,7 @@ Mục tiêu: Mỗi bài đăng Fanpage là một **ALBUM chuẩn Tỷ Lệ Vàng
    ```
    *(Cơ chế `photos="auto"` sẽ tự động ghép ảnh cover AI mới + 5-7 ảnh lớp học thật từ dataset của đúng khóa học đó, chuẩn hóa 100% sang tỷ lệ vuông 1:1 đồng bộ cho album 6, 7 hoặc 8 ảnh)*.
 4. **Báo cáo ngắn gọn 1 dòng**:
-   `OK | <Trang> | <Khóa học> | Album 6-8 ảnh (1 cover AI + ảnh dataset) | post_id: <post_id> | link: <link>`
+   `POST_OK post_id=<post_id> status=verified link=https://www.facebook.com/<post_id> | <Trang> | <Khóa học> | Album 6-8 ảnh (1 cover AI + ảnh dataset)`
 
 ## Quy định nghiêm ngặt:
 - Nếu `pick_next_fanpage.py` trả về `NEXT=NONE` (ví dụ `page-da-ok-hom-nay` hoặc `het-hang-hom-nay`): DỪNG NGAY TIẾN TRÌNH, không được dùng `--page` để bypass hoặc cố đăng tiếp.

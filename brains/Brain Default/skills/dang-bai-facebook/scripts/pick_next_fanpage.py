@@ -205,14 +205,45 @@ def load_state(today):
                 st["ok"] = list(raw.get("ok") or [])
                 st["skip"] = list(raw.get("skip") or [])
                 st["last_course"] = raw.get("last_course", "")
+            # Tự động dọn dẹp các page_id trong pending_course đã nằm trong ok
+            if isinstance(st.get("pending_course"), dict) and st.get("ok"):
+                ok_set = set(str(x) for x in st["ok"])
+                st["pending_course"] = {k: v for k, v in st["pending_course"].items() if str(k) not in ok_set}
         except Exception:
             pass
     return st
 
 
 def save_state(st):
+    """Ghi state dạng atomic qua temp file + os.replace để tránh kẹt quyền root-owned trong Docker/Linux."""
+    import os
     STATE.parent.mkdir(parents=True, exist_ok=True)
-    STATE.write_text(json.dumps(st, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    content = json.dumps(st, ensure_ascii=False, indent=2) + "\n"
+    tmp_file = STATE.parent / f".{STATE.name}.tmp.{os.getpid()}"
+    try:
+        tmp_file.write_text(content, encoding="utf-8")
+        try:
+            os.chmod(tmp_file, 0o666)
+        except Exception:
+            pass
+        os.replace(tmp_file, STATE)
+        try:
+            os.chmod(STATE, 0o666)
+        except Exception:
+            pass
+        return
+    except Exception:
+        if tmp_file.exists():
+            try:
+                tmp_file.unlink()
+            except Exception:
+                pass
+    # Fallback ghi trực tiếp nếu replace không hỗ trợ
+    STATE.write_text(content, encoding="utf-8")
+    try:
+        os.chmod(STATE, 0o666)
+    except Exception:
+        pass
 
 
 BRANCHES_HCM = {
@@ -476,12 +507,22 @@ def main(argv):
                 st["page_last_course"] = {}
             st["page_last_course"][mark_ok] = course_done
 
+        # Xóa khỏi pending_course để dọn dẹp state sạch sẽ
+        if "pending_course" in st and isinstance(st["pending_course"], dict):
+            st["pending_course"].pop(str(mark_ok), None)
+            st["pending_course"].pop(mark_ok, None)
+
         st["skip"] = [x for x in st.get("skip") or [] if x.get("id") != mark_ok]
         save_state(st)
         print("MARK_OK", mark_ok, f"course={st.get('page_last_course', {}).get(mark_ok, '')}")
         return 0
 
     if mark_fail:
+        # Dọn dẹp pending_course khi thất bại
+        if "pending_course" in st and isinstance(st["pending_course"], dict):
+            st["pending_course"].pop(str(mark_fail), None)
+            st["pending_course"].pop(mark_fail, None)
+
         skips = list(st.get("skip") or [])
         prev = next((x for x in skips if x.get("id") == mark_fail), None)
         lan = int((prev or {}).get("lan") or 0) + 1

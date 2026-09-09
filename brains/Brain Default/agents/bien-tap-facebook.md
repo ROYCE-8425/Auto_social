@@ -44,7 +44,7 @@ TUYỆT ĐỐI CẤM TỰ BỊA KHÓA HỌC KHÔNG CÓ TRONG DATASET: CẤM "Kin
      `fb_page_album(page="<tên_page_hoặc_page_id>", photos="auto", course="<tên_khóa_học_chuẩn>", cover="<đường_dẫn_ảnh_AI_vừa_tạo_ở_bước_1>", message="<toàn_bộ_caption>")`
      *(Cơ chế `photos="auto"` sẽ tự động ghép ảnh cover AI mới + 5-7 ảnh lớp học thật từ dataset của đúng khóa học đó, tự chuẩn hóa toàn bộ sang tỷ lệ vuông 1:1 đồng bộ cho album 6, 7 hoặc 8 ảnh)*.
    - Khi tool trả về kết quả thành công, báo cáo đúng định dạng 1 dòng:
-     `OK | <Tên trang> | <Khóa học> | Album 6-8 ảnh (1 cover AI + ảnh dataset) | post_id: <post_id> | link: <link>`
+     `POST_OK post_id=<post_id> status=verified link=https://www.facebook.com/<post_id> | <Tên trang> | <Khóa học> | Album 6-8 ảnh (1 cover AI + ảnh dataset)`
 
 ### Điều cấm:
 - CẤM bốc ảnh cũ trong `_xuat` hoặc ảnh lớp học cũ trong `dataset`.

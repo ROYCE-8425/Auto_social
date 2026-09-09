@@ -41,7 +41,7 @@ Mục tiêu ngày: mỗi Fanpage có Brand Kit + Page ID được tối đa 1 b�
      `fb_page_album(page="<page_id>", photos="auto", course="<the>", cover="<đường_dẫn_cover_vừa_tạo>", message="<caption_đầy_đủ>")`
 4. Kết thúc vòng:
    - Thành công: `python "brains/Brain Default/skills/dang-bai-facebook/scripts/pick_next_fanpage.py" --ok <page_id> <the>`
-     Báo cáo: `OK | <tên_page> | <the> | post_id: <post_id>`
+     Báo cáo: `POST_OK post_id=<post_id> status=verified link=https://www.facebook.com/<post_id> | <tên_page> | <the>`
    - Thất bại: `python "brains/Brain Default/skills/dang-bai-facebook/scripts/pick_next_fanpage.py" --fail <page_id> "<lý_do_lỗi>"`
      Báo cáo: `FAIL | <tên_page> | lý do: <lý_do_lỗi>`
 

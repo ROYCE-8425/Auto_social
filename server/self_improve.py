@@ -925,7 +925,10 @@ class LoopFeature:
         fb_verified = False
         if summary and not summary.startswith("Lỗi:"):
             m_post = re.search(r'post_id["\s:=]+(\d{8,}_\d{5,}|\d{14,})|POST_OK[^\n]*post_id[=:](\d+)', summary, re.I)
-            if m_post and any(k in summary.lower() for k in ("verified", "post_ok", "https://www.facebook.com", "facebook.com/")):
+            if m_post and (
+                any(k in summary.lower() for k in ("verified", "post_ok", "https://www.facebook.com", "facebook.com/", "ok |", "ok -", "ok:"))
+                or summary.strip().upper().startswith("OK")
+            ):
                 pid_val = m_post.group(1) or m_post.group(2) or ""
                 if not any(dummy in pid_val for dummy in ("87654321", "12345678", "0000000", "1111111")):
                     fb_verified = True
