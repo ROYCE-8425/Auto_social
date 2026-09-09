@@ -43,7 +43,14 @@ import uuid
 from pathlib import Path
 from typing import AsyncIterator, Optional
 
-from claude_cli import _home_dir, _no_window, tim_binary
+_server_dir = str(Path(__file__).resolve().parent)
+if _server_dir not in sys.path:
+    sys.path.insert(0, _server_dir)
+
+try:
+    from claude_cli import _home_dir, _no_window, tim_binary
+except ImportError:
+    from server.claude_cli import _home_dir, _no_window, tim_binary
 
 # Model mặc định khi người dùng chưa chọn gì. KHÔNG phải bảng model: chỉ là hạt giống để lượt
 # đầu chạy được nếu `agy models` chưa kịp trả lời. Danh sách thật luôn lấy từ CLI.
@@ -81,9 +88,17 @@ def find_antigravity_cli() -> Optional[str]:
     home = _home_dir()
     ung_vien = [
         home / ".local" / "bin" / "agy",
+        home / ".local" / "bin" / "agy.exe",
         home / ".antigravity" / "bin" / "agy",
+        home / ".antigravity" / "bin" / "agy.exe",
         Path("/usr/local/bin/agy"),
         Path("/opt/homebrew/bin/agy"),
+        Path("/root/.local/bin/agy"),
+        Path("/root/.antigravity/bin/agy"),
+        # Trinh cai Windows (install.ps1) tha vao %LOCALAPPDATA%\agy\bin\agy.exe,
+        # khong phai Programs\antigravity - Javis cu khong thay du CMD go duoc `agy`.
+        Path(os.environ.get("LOCALAPPDATA", "")) / "agy" / "bin" / "agy.exe",
+        Path(os.environ.get("LOCALAPPDATA", "")) / "agy" / "agy.exe",
         Path(os.environ.get("LOCALAPPDATA", "")) / "Programs" / "antigravity" / "agy.exe",
         Path(os.environ.get("APPDATA", "")) / "npm" / "agy.cmd",
     ]
@@ -512,9 +527,10 @@ def co_quyen_cho_mode(mode: Optional[str]) -> list[str]:
     # suggest + auto + mọi giá trị lạ: bật sandbox nếu bản CLI có.
     if co_co("--sandbox"):
         co.append("--sandbox")
-    if m == "auto" and co_co("--dangerously-skip-permissions"):
-        # auto = được ghi file nháp trong brain. Headless mà dừng lại hỏi duyệt là treo tới hết
-        # giờ, nên vẫn phải tự duyệt; rào tiền/đơn/đăng bài nằm ở MCP Hub chứ không ở đây.
+    if co_co("--dangerously-skip-permissions"):
+        # Trong headless mode (-p), CLI không thể hỏi người dùng qua terminal. Nếu thiếu cờ này,
+        # CLI sẽ tự động từ chối (auto-denied) cả tool đọc file / lệnh và văng 'jetski: no output produced'.
+        # Hàng rào bảo vệ an toàn (chặn ghi/tiêu tiền/đăng bài) đã do MCP Hub và X-Javis-Mode đảm nhận.
         co.append("--dangerously-skip-permissions")
     return co
 
@@ -642,7 +658,25 @@ def auth_status(bo_qua_cache: bool = False) -> dict:
         return dict(_AUTH_CACHE["val"])
     ds = list_models()
     if ds:
-        d = {"connected": True, "method": "google (keyring của máy)", "email": "", "error": ""}
+        email = ""
+        ung_vien_acc = [
+            _home_dir() / ".gemini" / "google_accounts.json",
+            Path("/root/.gemini/google_accounts.json"),
+            Path(os.environ.get("USERPROFILE", "")) / ".gemini" / "google_accounts.json",
+            Path(os.environ.get("LOCALAPPDATA", "")) / "Gemini" / "google_accounts.json",
+        ]
+        for p in ung_vien_acc:
+            try:
+                if p.is_file():
+                    acc_data = json.loads(p.read_text(encoding="utf-8", errors="replace"))
+                    act = str(acc_data.get("active") or "").strip()
+                    if act and "@" in act:
+                        email = act
+                        break
+            except Exception:
+                pass
+        method = f"{email} (Google AI Pro)" if email else "Google Antigravity"
+        d = {"connected": True, "method": method, "email": email, "error": ""}
     else:
         # Nói rõ chuyện ĐÚNG USER (16/08): nhiều người đã đăng nhập agy thành công qua SSH
         # nhưng bằng user khác (vd root), còn Javis chạy bằng user riêng nên không thấy gì -

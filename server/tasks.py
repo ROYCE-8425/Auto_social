@@ -143,6 +143,8 @@ class TasksFeature:
             # tới trần 5000 thì đây là 5000 lượt round-trip sqlite biến thành 10 lượt.
             events = self.store.list_events_bulk([t["id"] for t in tasks], 20)
             for task in tasks:
+                if str(task.get("route") or "") == "wf:dang-bai-that-facebook" and task.get("result"):
+                    task["result"] = self._compact_fb_result(task, str(task.get("result") or ""))
                 task["log"] = [
                     {
                         "ts": time.strftime(
@@ -202,6 +204,11 @@ class TasksFeature:
     ) -> str:
         root = self._ensure(brain)
         status = "todo" if deps else "triage"
+        if route == "wf:dang-bai-that-facebook":
+            if capability == "auto":
+                capability = "external-write"
+            if execution_mode == "auto":
+                execution_mode = "full"
         tid = self.store.enqueue(
             root,
             title,
@@ -382,6 +389,10 @@ class TasksFeature:
         )
         final_task: Optional[dict] = None
         try:
+            if str(task.get("route") or "") == "wf:dang-bai-that-facebook":
+                task["capability"] = "external-write"
+                task["execution_mode"] = "full"
+
             # New goals first pass through an AI specifier. This keeps raw Learn
             # suggestions out of the executable queue.
             if (task.get("capability") or "auto") == "auto":
@@ -420,13 +431,26 @@ class TasksFeature:
             result, error, needs_input, metadata = await asyncio.wait_for(
                 self._execute(task), timeout=WORKER_TIMEOUT_SECONDS
             )
+            if not error and aux_engine.final_loi_dang_nhap(result or ""):
+                error = (result or "").strip()
+                result = ""
+            if not error:
+                fb_err = self._fb_chua_dang(task, result or "")
+                if fb_err:
+                    error = fb_err
+                else:
+                    tt_err = self._tiktok_chua_dang(task, result or "")
+                    if tt_err:
+                        error = tt_err
+                    else:
+                        result = self._compact_fb_result(task, result or "")
             if error:
                 final_task = self.store.block(
                     tid,
                     worker_id,
                     "transient",
                     error,
-                    result=result,
+                    result=(result or "")[:500],
                     transient=self._is_transient(error),
                 )
             elif needs_input:
@@ -435,7 +459,7 @@ class TasksFeature:
                     worker_id,
                     "needs_input",
                     self._needs_input_reason(result),
-                    result=result,
+                    result=(result or "")[:500],
                 )
             else:
                 final_task = self.store.complete(
@@ -531,6 +555,9 @@ class TasksFeature:
         except Exception as exc:
             error = f"{type(exc).__name__}: {exc}"
         out = final.strip() or "\n".join(v for v in narration if v).strip()
+        if not error and aux_engine.final_loi_dang_nhap(out):
+            error = out
+            out = ""
         return out, error, tool_calls
 
     async def _specify(self, task: dict) -> tuple[dict, str]:
@@ -705,7 +732,12 @@ nói rõ đã được phép tự hành động; nếu không thì để auto đ
 
     async def _execute(self, task: dict) -> tuple[str, str, bool, dict]:
         route = str(task.get("route") or "auto").strip()
-        intent = str(task.get("intent") or task.get("title") or "")
+        title = str(task.get("title") or "").strip()
+        intent_body = str(task.get("intent") or "").strip()
+        if title and intent_body and title.lower() not in intent_body.lower():
+            intent = f"{title}\n{intent_body}"
+        else:
+            intent = intent_body or title
         tools, mode, disallowed = self._lane_tools(task)
 
         if route.startswith("wf:"):
@@ -713,8 +745,9 @@ nói rõ đã được phép tự hành động; nếu không thì để auto đ
             result = ""
             error = ""
             try:
+                wf_tools = None if slug == "dang-bai-that-facebook" else tools
                 async for event in self.deps.execute_workflow(
-                    task["brain_root"], slug, intent, tools
+                    task["brain_root"], slug, intent, wf_tools
                 ):
                     kind = event.get("type")
                     if kind == "done":
@@ -769,6 +802,16 @@ MỤC TIÊU:
 Nếu thiếu một quyết định hoặc dữ liệu mà không thể suy ra an toàn, kết quả phải bắt đầu
 bằng [[NEEDS_INPUT]] và nêu đúng một lý do cụ thể. Nếu hoàn thành, báo cáo ngắn: đã làm
 gì, dữ liệu/file/artifact nào được tạo và cách đã kiểm chứng.
+
+Đăng Facebook chuẩn 2 bước (1 bài = 1 ảnh AI tạo mới 100%):
+Bước 1 - Tạo ảnh độc quyền bằng GPT Image 2: BẮT BUỘC gọi thẳng tool javis_generate_image (GPT Image 2) với save_under="attachments/dataset/_xuat" + ai_render_brand=true để tạo đúng 1 ảnh mới tinh 100% đúng chủ đề khóa học và nhận diện thương hiệu. CẤM đắn đo chọn model khác, CẤM dùng template code cũ, CẤM bịa đặt học phí.
+Bước 2 - Đăng bài Facebook: Gọi fb_page_photo(page="<page>", photo="<ảnh vừa gen>", message="<caption>") để đăng bài kèm caption 7 nhịp brand kit lên Fanpage công khai lấy post_id thật. CẤM ghép album, CẤM bốc ảnh dataset cũ.
+TUYỆT ĐỐI CẤM dừng lại ở bản nháp, CẤM hỏi "vui lòng xem xét/xác nhận", CẤM hỏi người dùng.
+TUYỆT ĐỐI CẤM BỊA HOẶC MOCK post_id hoặc link post (cấm 87654321..., cấm số mẫu). Phải thực sự gọi tool đăng bài.
+Hàng ngày: chạy pick_next_fanpage.py, đọc ĐÚNG wiki/brand-kits/<kit> (không mặc định royce-shop).
+Kanban 1 page: FAST_PATH chỉ đọc kit page đó + skill đăng bài ngắn. Caption 32-45 dòng, ads đầy đủ 45-70 dòng, giọng+màu+logo+chân trang = kit.
+Không bắt đọc tài liệu hệ thống/reference dài trong mỗi vòng, trừ khi thiếu dữ liệu bắt buộc.
+CẤM [[NEEDS_INPUT]] vì 'không có tool / Royce chưa MCP'. CẤM địa chỉ một dòng |. CẤM gen 2 poster. CẤM gọi subagent verify lại vì Graph API đã tự kiểm tra post_id.
 """.strip()
         result, error, tool_calls = await self._query(cli, prompt)
         return (
@@ -783,6 +826,161 @@ gì, dữ liệu/file/artifact nào được tạo và cách đã kiểm chứng
                 "provider": aux_engine.read_spec().get("provider"),
             },
         )
+
+    @staticmethod
+    def _fb_chua_dang(task: dict, result: str) -> str:
+        """Workflow đăng Facebook mà không có post_id thì KHÔNG được ghi Hoàn thành."""
+        route = str((task or {}).get("route") or "")
+        if route != "wf:dang-bai-that-facebook":
+            return ""
+        t = result or ""
+        tl = t.lower()
+        # Chặn ngay các mã post_id giả / mock dạng đếm lùi, lặp số, hoặc mẫu ví dụ
+        if re.search(r"87654321|12345678|11111111|99999999|00000000", t):
+            return "Phát hiện post_id hoặc link bài viết giả lập / mock do AI tự bịa (dãy số mẫu). Bắt buộc gọi tool fb_page_album thật để lấy post_id từ Facebook Graph API."
+        # Graph thật: "post_id": "9886..._1221..." hoặc POST_OK post_id=...
+        # pfbid / permalink bịa (ca Royce 2026-09-05) không tính.
+        graph_id = re.search(
+            r'post_id["\s:=]+(\d{8,}_\d{5,}|\d{14,})', t, re.I
+        )
+        if graph_id and "ERROR" not in t[:80]:
+            gid = graph_id.group(1)
+            if not any(dummy in gid for dummy in ("87654321", "12345678", "0000000", "1111111", "9999999")):
+                return ""
+        if "POST_OK" in t and re.search(r"\d{8,}_\d{5,}|\d{14,}", t):
+            return ""
+        # New Page Experience: /posts/122131674009221350 (số thuần, không pfbid)
+        m_posts = re.search(r"facebook\.com/.+/posts/(\d{14,})", tl)
+        if m_posts:
+            pid = m_posts.group(1)
+            if not any(dummy in pid for dummy in ("87654321", "12345678", "0000000", "1111111", "9999999")):
+                return ""
+        if "pfbid" in tl and not re.search(r"/posts/\d{14,}", tl):
+            return (
+                "Link pfbid do model bịa. Tool fb_page_album/photo phải trả "
+                "post_id số dạng PAGEID_POSTID hoặc /posts/1221... Chưa đăng lên tường."
+            )
+        if "facebook.com" in tl and "/posts/" in tl:
+            return (
+                "Chỉ có URL hoặc post_id giả, không có post_id Graph thật. Chưa đăng. "
+                "Gọi fb_page_album rồi dán nguyên JSON tool (ok, post_id)."
+            )
+        if "javis_generate_image" in tl and "post_id" not in tl and "fb_page_" not in tl:
+            return (
+                "Đã tạo ảnh bằng javis_generate_image nhưng chưa đăng Facebook. "
+                "Tiếp tục chuẩn hóa album rồi gọi fb_page_album/fb_page_photo để lấy post_id thật."
+            )
+        if any(h in tl for h in ("bạn có muốn", "ban co muon", "vui lòng xem xét", "xác nhận nếu", "bản nháp caption")):
+            return "Worker dừng ở bản nháp/hỏi thay vì đăng thật. Cấm hỏi trên Kanban. Bắt buộc gọi fb_page_album lấy post_id."
+        return "Chưa đăng Facebook (không có post_id). Không đánh Hoàn thành."
+
+    @staticmethod
+    def _tiktok_chua_dang(task: dict, result: str) -> str:
+        """Kiểm tra xem task đăng TikTok đã thật sự có post_id/kết quả từ PostPeer chưa."""
+        route = str((task or {}).get("route") or "")
+        title_intent = (str((task or {}).get("title") or "") + " " + str((task or {}).get("intent") or "")).lower()
+        if route != "wf:dang-tiktok-carousel" and "tiktok" not in title_intent:
+            return ""
+        t = result or ""
+        tl = t.lower()
+        if any(w in tl for w in ("chưa kết nối postpeer", "thiếu api key", "chưa có connection", "connected=false", "không kết nối được")):
+            return "Chưa kết nối PostPeer hoặc thiếu API key trên server. Cần cấu hình PostPeer API key trong /app#/mcp hoặc scripts/connect_postpeer.py trước khi đăng thật. Không đánh Hoàn thành."
+        if any(w in tl for w in ("không đăng được", "thất bại", "error", "chưa đăng")):
+            if not ("tiktok_post_ok" in tl or "postpeer_id" in tl or "posturl" in tl or re.search(r"post_id[\s:=]+\w+", tl)):
+                return f"Chưa đăng được lên TikTok: {t[:200]}. Không đánh Hoàn thành."
+        if "tiktok_post_ok" in tl or "postpeer_id" in tl or "posturl" in tl or "tiktok.com" in tl:
+            if any(dummy in t for dummy in ("87654321", "12345678", "0000000", "1111111", "9999999")):
+                return "Phát hiện post_id giả lập / mock do AI tự bịa. Bắt buộc gọi PostPeer API thật."
+            return ""
+        return "Chưa đăng lên TikTok (không có post_id thật từ PostPeer). Không đánh Hoàn thành."
+
+    @staticmethod
+    def _compact_fb_result(task: dict, result: str) -> str:
+        """Cắt gọn kết quả Facebook ở tầng Kanban: cấm lưu nguyên văn caption 50 dòng
+        hay nhật ký suy luận vào task result. Giữ result luôn dưới 500 ký tự."""
+        route = str((task or {}).get("route") or "")
+        if route != "wf:dang-bai-that-facebook":
+            return result
+        t = (result or "").strip()
+        if not t:
+            return ""
+        if len(t) <= 350 and t.startswith("OK |") and "\n" not in t:
+            return t
+
+        post_id = ""
+        m_id = re.search(r'post_id["\s:=]+(\d{8,}_\d{5,}|\d{14,})', t, re.I)
+        if m_id:
+            post_id = m_id.group(1)
+        else:
+            m_posts = re.search(r"facebook\.com/.+/posts/(\d{14,})", t, re.I)
+            if m_posts:
+                post_id = m_posts.group(1)
+
+        link = ""
+        m_link = re.search(r'https?://[^\s)\]"\'>]+facebook\.com[^\s)\]"\'>]+', t)
+        if m_link:
+            link = m_link.group(0).rstrip(".,;")
+        elif post_id:
+            link = f"https://www.facebook.com/{post_id}"
+
+        cover = ""
+        m_cov = re.search(r'attachments/dataset/_xuat/[^\s\n\)\|\'"]+', t)
+        if m_cov:
+            cover = m_cov.group(0)
+
+        photos = ""
+        m_ph = re.search(r'(?:photos|số ảnh|ảnh|album)["\s:=]+(\d+)', t, re.I)
+        if m_ph:
+            photos = m_ph.group(1)
+
+        combined_text = (t + " " + str((task or {}).get("title") or "") + " " + str((task or {}).get("intent") or "")).lower()
+
+        page = ""
+        m_page = re.search(r'(?:page|trang)["\s:=]+([^\n\|,]+)', t, re.I)
+        if m_page:
+            raw_p = m_page.group(1).strip()
+            raw_p = re.split(r'\s+(?:với|post_id|post|có|link|id|course|gồm|kết quả)\b|[.]', raw_p, flags=re.I)[0].strip()
+            raw_p = raw_p.rstrip(".,;:")
+            page = raw_p
+        elif "royce" in combined_text:
+            page = "Royce Shop"
+
+        course = ""
+        if "do-hoa" in combined_text or "do_hoa" in combined_text or "đồ họa" in combined_text or "photoshop" in combined_text or "illustrator" in combined_text:
+            course = "do-hoa"
+        elif "tin-hoc" in combined_text or "tin_hoc" in combined_text or "tin học" in combined_text or "excel" in combined_text or "word" in combined_text or "powerpoint" in combined_text:
+            course = "tin-hoc _ai"
+        elif "ke-toan" in combined_text or "ke_toan" in combined_text or "kế toán" in combined_text or "misa" in combined_text:
+            course = "ke-toan"
+        elif "ve-ky-thuat" in combined_text or "autocad" in combined_text or "vẽ kỹ thuật" in combined_text or "solidworks" in combined_text:
+            course = "ve-ky-thuat"
+        elif "tre-em" in combined_text or "scratch" in combined_text or "trẻ em" in combined_text or "nhí" in combined_text:
+            course = "tre-em"
+        elif "game-bsn" in combined_text or "game" in combined_text or "bsn" in combined_text or "steam" in combined_text:
+            course = "game-bsn"
+        else:
+            m_c = re.search(r'(?:course|khóa học|ngành)["\s:=]+([^\n\|,]+)', t, re.I)
+            if m_c:
+                raw_c = m_c.group(1).strip()
+                if not any(k in raw_c.lower() for k in ("wiki", "brand kit", "royce", "từ", "theo", "trang")):
+                    course = raw_c
+
+        parts = ["OK"]
+        if page:
+            parts.append(f"page: {page}")
+        if course:
+            parts.append(f"course: {course}")
+        if cover:
+            parts.append(f"cover: {cover}")
+        if photos:
+            parts.append(f"photos: {photos}")
+        if post_id:
+            parts.append(f"post_id: {post_id}")
+        if link:
+            parts.append(f"link: {link}")
+
+        compact = " | ".join(parts)
+        return compact[:450] if post_id else t[:450]
 
     @staticmethod
     def _is_transient(error: str) -> bool:

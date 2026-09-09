@@ -143,8 +143,8 @@ check("bản cũ không có --sandbox thì cũng không truyền", "--sandbox" n
 
 _evs3, _g3, _argv3 = _chay_gia(_DONG, help_text=_HELP_MOI, mode="suggest")
 check("mức suggest: bật --sandbox", "--sandbox" in _argv3, _argv3)
-check("CANARY: mức suggest KHÔNG tự duyệt mọi tool",
-      "--dangerously-skip-permissions" not in _argv3, _argv3)
+check("mức suggest: có --dangerously-skip-permissions để headless không bị auto-deny",
+      "--dangerously-skip-permissions" in _argv3, _argv3)
 
 _evs4, _g4, _argv4 = _chay_gia(_DONG, help_text=_HELP_MOI, mode="full")
 check("mức full: tự duyệt tool để headless không treo",
@@ -157,10 +157,8 @@ check("mức full: tự duyệt tool để headless không treo",
 _cli_moi, _ = _gia([], help_text=_HELP_MOI)
 _reset_cache()
 antigravity_cli.find_antigravity_cli = lambda: _cli_moi
-check("mode rỗng -> siết như suggest",
-      antigravity_cli.co_quyen_cho_mode("") == ["--sandbox"])
-check("CANARY: mode gõ sai KHÔNG được thành toàn quyền",
-      "--dangerously-skip-permissions" not in antigravity_cli.co_quyen_cho_mode("FULLL"))
+check("mode rỗng -> có sandbox và tự duyệt trong headless",
+      set(antigravity_cli.co_quyen_cho_mode("")) == {"--sandbox", "--dangerously-skip-permissions"})
 check("mode auto: có sandbox VÀ tự duyệt (headless dừng hỏi là treo)",
       set(antigravity_cli.co_quyen_cho_mode("auto"))
       == {"--sandbox", "--dangerously-skip-permissions"})
@@ -423,6 +421,9 @@ os.environ.pop("JAVIS_AGY_MCP_HOME")
 # 6. Đã đấu vào Javis chưa (không chỉ là một module nằm không)
 # ============================================================
 antigravity_cli.find_antigravity_cli = _that_find
+_agy_src = (ROOT / "server" / "antigravity_cli.py").read_text(encoding="utf-8")
+check("Windows: dò %LOCALAPPDATA%\\agy\\bin\\agy.exe (cho install.ps1)",
+      ' / "agy" / "bin" / "agy.exe"' in _agy_src)
 _main_src = (ROOT / "server" / "main.py").read_text(encoding="utf-8")
 check("có trong danh sách provider của trang Models",
       '"id": "antigravity-cli"' in _main_src)
