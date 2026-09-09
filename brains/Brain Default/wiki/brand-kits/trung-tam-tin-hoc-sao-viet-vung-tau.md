@@ -105,6 +105,7 @@ Web: https://blogdaytinhoc.com/trung-tam-tin-hoc-o-vung-tau-1143
 - Tên Fanpage: Trung Tâm Tin Học Sao Việt Vũng Tàu
 - slug: trung-tam-tin-hoc-sao-viet-vung-tau
 - Page ID: 452301177973210
+- Access Token: EAAYrB1nymYkBSQrUEiqdNyfxviRNeQI55j4kOWma9OuNZBW1P1GBUAj2mvww7YU3lIBHdYcxASm4rUJQ6ZCsjmouJbY8lPAX1TXTcRZAqW8XnLRS2Y1tXrYsR51ibsZBZCpNCv5Jfx32L1xh2bZBZBQugvaqgnWt0LlR8VKxXOGf8QpZBkZCgKMAEuvRnwwClpePibgH9FmAQS6LzwpSxfrsM1vgMil7Tyr6N0CCokiYT9MUVPOWlEG2TCsIZD
 - Thẻ khoá học: tin-hoc _ai
 - Cơ sở / địa chỉ: 293 Bình Giã, Phường 8, TP. Vũng Tàu, Bà Rịa - Vũng Tàu, Vũng Tàu, Bà Rịa - Vũng Tàu 78000
 - Địa chỉ cũ (list trước): 293 Bình Giã, Phường 8, TP. Vũng Tàu, Bà Rịa - Vũng Tàu

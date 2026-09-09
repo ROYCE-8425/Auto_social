@@ -69,6 +69,7 @@ def _load_page_kit(vault_root, page_id):
                 "hotline": _kit_field(md, "Hotline / Zalo", "Hotline riêng", "Hotline"),
                 "email": _kit_field(md, "Email Fanpage", "Email"),
                 "web": _kit_field(md, "Web Fanpage", "Web"),
+                "access_token": _kit_field(md, "Access Token", "access_token", "Page Token", "Token"),
                 "test": is_test,
                 "md": md,
             }
@@ -246,32 +247,97 @@ def _connected_id():
     return ids[0] if ids else None
 
 
+def _manual_pages():
+    """Nạp Page Access Token trực tiếp từ Javis/page_tokens.json hoặc wiki/brand-kits/*.md."""
+    pages = {}
+    roots = []
+    try:
+        repo = Path(__file__).resolve().parents[3]
+        default_brain = repo / "brains" / "Brain Default"
+        if default_brain.is_dir():
+            roots.append(default_brain)
+        roots.append(repo)
+    except Exception:
+        pass
+    for r in roots:
+        # 1. Quét file Javis/page_tokens.json
+        tok_file = r / "Javis" / "page_tokens.json"
+        if tok_file.is_file():
+            try:
+                data = json.loads(tok_file.read_text(encoding="utf-8"))
+                if isinstance(data, dict):
+                    for pid, info in data.items():
+                        if isinstance(info, dict) and info.get("access_token"):
+                            pages[str(pid)] = {
+                                "id": str(pid),
+                                "name": info.get("name") or f"Page {pid}",
+                                "access_token": str(info["access_token"]).strip(),
+                                "category": "Community",
+                                "tasks": ["MANAGE", "CREATE_CONTENT"]
+                            }
+            except Exception:
+                pass
+        # 2. Quét wiki/brand-kits/*.md
+        bk_dir = r / "wiki" / "brand-kits"
+        if bk_dir.is_dir():
+            for p in bk_dir.glob("*.md"):
+                if p.name.startswith("_"):
+                    continue
+                try:
+                    md = p.read_text(encoding="utf-8")
+                    pid = _kit_field(md, "Page ID", "page_id", "ID Fanpage", "ID Trang")
+                    tok = _kit_field(md, "Access Token", "access_token", "Page Token", "Token")
+                    if pid and tok and str(pid) not in pages:
+                        name = _kit_field(md, "Tên Fanpage") or p.stem
+                        pages[str(pid)] = {
+                            "id": str(pid),
+                            "name": name,
+                            "access_token": str(tok).strip(),
+                            "category": "Community",
+                            "tasks": ["MANAGE", "CREATE_CONTENT"]
+                        }
+                except Exception:
+                    pass
+    return pages
+
+
 def _check():
-    if not _connected_ids():
+    if not _connected_ids() and not _manual_pages():
         return ("Chưa kết nối Facebook Trang. Vào trang Kết nối, chọn 'Facebook Trang (tự tạo app - "
-                "Graph API)', làm theo hướng dẫn tạo Facebook App rồi đăng nhập (nhớ tick chọn Trang). "
+                "Graph API)', làm theo hướng dẫn tạo Facebook App rồi đăng nhập (nhớ tick chọn Trang), "
+                "hoặc nạp Page Access Token vào brand kit / page_tokens.json. "
                 "Sau đó gọi lại tool này.")
     return None
 
 
 async def _token():
-    import oauth_mcp
     cid = _connected_id()
-    if not cid:
-        return None
-    hdr = await oauth_mcp.auth_headers(cid)
-    return (hdr.get("Authorization", "") or "").replace("Bearer ", "").strip() or None
+    if cid:
+        try:
+            import oauth_mcp
+            hdr = await oauth_mcp.auth_headers(cid)
+            tok = (hdr.get("Authorization", "") or "").replace("Bearer ", "").strip() or None
+            if tok:
+                return tok
+        except Exception:
+            pass
+    if _manual_pages():
+        return "manual"
+    return None
 
 
 async def _tokens():
     import oauth_mcp
     seen, out = set(), []
     for cid in _connected_ids():
-        hdr = await oauth_mcp.auth_headers(cid)
-        tok = (hdr.get("Authorization", "") or "").replace("Bearer ", "").strip()
-        if tok and tok not in seen:
-            seen.add(tok)
-            out.append(tok)
+        try:
+            hdr = await oauth_mcp.auth_headers(cid)
+            tok = (hdr.get("Authorization", "") or "").replace("Bearer ", "").strip()
+            if tok and tok not in seen:
+                seen.add(tok)
+                out.append(tok)
+        except Exception:
+            pass
     return out
 
 
@@ -324,13 +390,14 @@ def _fmt(d):
 
 
 async def _pages(user_token=None):
-    """Gộp Trang từ MỌI kết nối facebook-pages. Trả (list, err). Không lộ trùng page."""
-    toks = await _tokens()
-    if user_token and user_token not in toks:
-        toks = [user_token] + toks
-    if not toks:
-        return None, "ERROR: Chưa kết nối Facebook Trang."
+    """Gộp Trang từ MỌI kết nối facebook-pages và Page Token nạp thủ công. Trả (list, err). Không lộ trùng page."""
     by_id, last_err = {}, None
+    for pid, p in _manual_pages().items():
+        by_id[pid] = p
+
+    toks = await _tokens()
+    if user_token and user_token not in toks and user_token != "manual":
+        toks = [user_token] + toks
     for tok in toks:
         d = await _get("me/accounts", {"fields": "id,name,category,access_token,tasks", "limit": 200}, tok)
         if isinstance(d, dict) and d.get("error"):
