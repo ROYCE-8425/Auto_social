@@ -106,6 +106,7 @@ Web: https://blogdaytinhoc.com
 - Tên Fanpage: Trung Tâm Tin Học Sao Việt TP. Thủ Đức - TPHCM
 - slug: trung-tam-tin-hoc-sao-viet-tp-thu-uc-tphcm
 - Page ID: 109280655477819
+- Access Token: EAAYrB1nymYkBScoTrxZBvuI43vYmdfxQzOC3zyFU2vVOuRvKaz2RcsBchslFlzAdhfJqEcIkJGv4QqetkowQaVtpYoB2pWnqdX3co4iPHmZCuBVRlZB08t82PEt6wvZBZA900AGc3C4hliyoerrDmf1lMWLsgZCfmKEJSDedTsB7VI3lvnOSyaYCA0ROqDDQa10CUZBMlDVhWOsNSsUJYxKfx540k9m1ZAtZBxcqcj7pPraCU5u9lPZCgA4gZDZD
 - Thẻ khoá học: tin-hoc _ai
 - Cơ sở / địa chỉ: 133/2 Đỗ Xuân Hợp, P. Phước Long, Thủ Đức
 - Địa chỉ cũ (list trước): 49 Đường Số 3, Tăng Nhơn Phú B, Tp. Thủ Đức
