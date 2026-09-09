@@ -28,7 +28,6 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
 import httpx
-from PIL import Image
 
 _CUR_DIR = Path(__file__).resolve().parent
 if str(_CUR_DIR) not in sys.path:

@@ -36,6 +36,8 @@ uv>=0.5
 # connector google-keep khỏi bắt user mở terminal chạy lệnh. Kéo theo pycryptodomex/requests/
 # urllib3; đã kiểm bằng `pip install --dry-run`: KHÔNG đụng tới pin fastapi/starlette ở trên.
 gpsoauth>=1.0
+# Pillow: Xử lý kích thước ảnh, crop vuông 1:1 cho album Facebook, overlay logo và sinh banner đồ hoạ.
+Pillow>=10.0.0
 
 # yt-dlp: quân dự bị cho việc đọc phụ đề YouTube (server/youtube_read.py). Sáu client
 # InnerTube tự viết lo phần lớn ca; khi YouTube siết và chặn sạch chúng thì nhánh này gánh,
