@@ -5,7 +5,7 @@
 **Tổng quan:** 1 agents · 9 skills · 1 workflows (0 bật) · 2 loops (0 bật) · 12 plugins (11 chạy)
 
 ## Agents
-- **Biên tập Facebook** (`bien-tap-facebook`) - Tạo 1 ảnh AI độc quyền mới 100%, soạn caption đúng brand kit và đăng lên Fanpage Facebook. · skills: dang-bai-facebook, viet-bai-facebook
+- **Biên tập Facebook** (`bien-tap-facebook`) - Tạo 1 ảnh AI độc quyền mới 100%, soạn caption đúng brand kit và đăng lên Fanpage Facebook. · model gpt-5.5 · skills: dang-bai-facebook, viet-bai-facebook
 
 ## Skills
 ### AI
@@ -26,7 +26,7 @@
 - **Đăng Facebook** (`dang-bai-that-facebook`) - True · 1 bước [bien-tap-facebook] · Đăng bài Fanpage Facebook: Album 6-8 ảnh chuẩn Tỷ Lệ Vàng 2026 (1 cover AI mới 100% bằng GPT Image 2 + ảnh lớp học thật từ dataset), đăng bằng fb_page_album.
 
 ## Loops
-- **Đăng bài hàng ngày 1 page** (`dang-bai-hang-ngay`) - tắt · custom/full · mỗi 18 phút
+- **Đăng bài hàng ngày 1 page** (`dang-bai-hang-ngay`) - tắt · custom/full · mỗi 5 phút
 - **Đăng Royce Shop ngẫu nhiên** (`dang-royce-shop-ngau-nhien-moi-5-phut`) - tắt · custom/full · mỗi 5 phút
 
 ## Plugins (tool/hook native cho mọi engine)

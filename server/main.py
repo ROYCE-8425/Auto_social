@@ -6972,8 +6972,12 @@ def _workflow_agent_helpers(brain, tools):
     vault_root = str(_brain_root(brain))
 
     def _mk(sysprompt, model=None, provider=""):
+        if not model and not provider:
+            aux_sp = aux_engine.read_spec()
+            provider = aux_sp.get("provider") or aux_engine.CLAUDE
+            model = aux_sp.get("model") or ""
         prov = _agent_model_provider(model, provider)
-        if prov == "openai-oauth" and model and tools is None and find_codex_cli():
+        if prov == "openai-oauth" and tools is None and find_codex_cli():
             openai_oauth.write_codex_auth()
             cc = CodexCLI(cwd=vault_root, tag="workflow", model=_codex_safe_model(model),
                           instructions=sysprompt)
