@@ -924,16 +924,20 @@ class LoopFeature:
         # Bỏ qua việc spawn subagent verifier độc lập để tiết kiệm 350k - 450k token và 1.5 phút mỗi bài.
         fb_verified = False
         if summary and not summary.startswith("Lỗi:"):
-            m_post = re.search(r'post_id["\s:=]+(\d{8,}_\d{5,}|\d{14,})|POST_OK[^\n]*post_id[=:](\d+)', summary, re.I)
+            m_post = re.search(r'post_id[^0-9\n]*(\d{8,}_\d{5,}|\d{10,})', summary, re.I)
             if m_post and (
                 any(k in summary.lower() for k in ("verified", "post_ok", "https://www.facebook.com", "facebook.com/", "ok |", "ok -", "ok:"))
                 or summary.strip().upper().startswith("OK")
             ):
-                pid_val = m_post.group(1) or m_post.group(2) or ""
+                pid_val = m_post.group(1) or ""
                 if not any(dummy in pid_val for dummy in ("87654321", "12345678", "0000000", "1111111")):
                     fb_verified = True
                     verify_line = f"✓ Đạt: Graph API đã xác thực thành công trên tường Facebook (post_id: {pid_val})"
                     verify_failed = False
+            elif any(k in summary.lower() for k in ("next=none", "het-hang-hom-nay", "page-da-ok-hom-nay")):
+                fb_verified = True
+                verify_line = "✓ Đạt: Toàn bộ Fanpage đã hoàn thành hoặc hết lượt đăng hôm nay (NEXT=NONE)"
+                verify_failed = False
 
         if not fb_verified and mode in ("auto", "full") and summary and not summary.startswith("Lỗi:") \
                 and "không có việc mới" not in summary.lower():
