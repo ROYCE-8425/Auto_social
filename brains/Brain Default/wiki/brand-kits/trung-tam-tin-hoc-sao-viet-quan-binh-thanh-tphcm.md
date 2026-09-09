@@ -94,7 +94,8 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 
 ## Chân trang caption (bắt buộc)
 Trung Tâm Tin Học Sao Việt Quận Bình Thạnh
-🏫 Bình Thạnh: 193 Nguyễn Xí, Phường 26, Q. Bình Thạnh, TP.HCM (Tầng 1)
+🏫 Bình Thạnh: 21/12 Lê Trực, P.7, Bình Thạnh, TP.HCM
+
 📞 Hotline/Zalo: 0904 860 899
 📧 Email: tinhocsaovietbinhthanh@gmail.com
 🌐 Website: https://blogdaytinhoc.com
@@ -105,7 +106,7 @@ Trung Tâm Tin Học Sao Việt Quận Bình Thạnh
 - Page ID: 101084059225733
 - Access Token: EAAYrB1nymYkBSZAoZBn1RmrA4Y98XoTfv7DMoHSXfvZAlTBwxAFX4lOn33QrKHYioktQx66pZAJULhvZBbUyJSbEYCyZB2Icdkp44P4xLJovoKeDgIRde2I5hZCSdtv3ZBRIiMQRvV2Omf5b9PEgIuv9ZAwhhSPCj9yg4P7DRpFBKSwZADgpDMGiZCOe9SfwaL7F9HGsUK2noOOSt9o1PNI5VNYgtgZD
 - Thẻ khoá học: tin-hoc _ai
-- Cơ sở / địa chỉ: 🏫 Bình Thạnh: 21/12 Lê Trực, P.7, Bình Thạnh, TP.HCM (hoặc 193 Nguyễn Xí, Phường 26)
+- Cơ sở / địa chỉ: 🏫 Bình Thạnh: 21/12 Lê Trực, P.7, Bình Thạnh, TP.HCM
 - Hotline / Zalo: 0904 860 899
 - Email Fanpage: tinhocsaovietbinhthanh@gmail.com
 - Web Fanpage: https://blogdaytinhoc.com

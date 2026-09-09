@@ -51,8 +51,6 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 
 ## Cơ sở đào tạo của trang này (địa chỉ đúng Fanpage này)
 - 1596 Đ. 30 Tháng 4, Phường 12, Vũng Tàu, Bà Rịa - Vũng Tàu 78200
-- Mới (Fanpage, dùng khi đăng bài): 1596 Đ. 30 Tháng 4, Phường 12, Vũng Tàu, Bà Rịa - Vũng Tàu 78200
-- Cũ (list _mac-dinh trước đây, chỉ đối chiếu): 293 Bình Giã, Phường 8, TP. Vũng Tàu, Bà Rịa - Vũng Tàu
 
 ## USP chuẩn từ Fanpage thực tế
 - Học thực hành 100% trên máy tính và chứng từ thực tế của doanh nghiệp
@@ -96,7 +94,8 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 
 ## Chân trang caption (bắt buộc)
 Trung Tâm Đào Tạo Kế Toán Sao Việt (hoặc Trung Tâm Tin Học Sao Việt tùy khóa)
-1596 Đ. 30 Tháng 4, Phường 12, Vũng Tàu, Bà Rịa - Vũng Tàu 78200, Vung Tau
+🏫 Vũng Tàu: 293 Bình Giã, P.8, TP. Vũng Tàu
+
 Hotline: 0823 552 558
 Email: trungtamtinhocvungtau@gmail.com
 Web: https://trungtamtinhocvungtau.com
@@ -106,8 +105,7 @@ Web: https://trungtamtinhocvungtau.com
 - slug: trung-tam-tin-hoc-vung-tau
 - Page ID: 108316538179836
 - Thẻ khoá học: tin-hoc _ai
-- Cơ sở / địa chỉ: 1596 Đ. 30 Tháng 4, Phường 12, Vũng Tàu, Bà Rịa - Vũng Tàu 78200
-- Địa chỉ cũ (list trước): 293 Bình Giã, Phường 8, TP. Vũng Tàu, Bà Rịa - Vũng Tàu
+- Cơ sở / địa chỉ: 🏫 Vũng Tàu: 293 Bình Giã, P.8, TP. Vũng Tàu
 - Hotline / Zalo: 0823 552 558
 - Email Fanpage: trungtamtinhocvungtau@gmail.com
 - Web Fanpage: https://trungtamtinhocvungtau.com

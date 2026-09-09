@@ -91,21 +91,42 @@ def get_field(md: str, *labels: str) -> str:
     return ""
 
 
-def build_footer(md: str, name: str) -> str:
+def build_footer(md: str, name: str, top: dict = None) -> str:
     """Tạo khối chân trang từ thông tin trong kit."""
-    addr = get_field(md, "Cơ sở / địa chỉ")
-    parts = [a.strip() for a in addr.split("|") if a.strip()] if addr else []
+    row = {
+        "slug": get_field(md, "slug") or (top.get("slug", "") if top else ""),
+        "name": name,
+        "file": top.get("filename", "") if top else "",
+        "address": get_field(md, "Cơ sở / địa chỉ"),
+    }
+    parts = []
+    try:
+        sys.path.insert(0, str(VAULT / "skills" / "dang-bai-facebook" / "scripts"))
+        from pick_next_fanpage import get_page_branches
+        parts = get_page_branches(row)
+    except Exception:
+        addr = get_field(md, "Cơ sở / địa chỉ")
+        parts = [a.strip() for a in addr.split("|") if a.strip()] if addr else []
     hot = get_field(md, "Hotline / Zalo", "Hotline riêng", "Hotline")
     email = get_field(md, "Email Fanpage", "Email")
     web = get_field(md, "Web Fanpage", "Web")
     lines = [name] if name else []
     lines.extend(parts)
     if hot:
-        lines.append("Hotline/Zalo: " + hot)
+        if not hot.startswith("📞") and not hot.startswith("☎"):
+            lines.append("📞 Hotline/Zalo: " + hot)
+        else:
+            lines.append(hot)
     if email:
-        lines.append("Email: " + email)
+        if not email.startswith("📧"):
+            lines.append("📧 Email: " + email)
+        else:
+            lines.append(email)
     if web:
-        lines.append("Web: " + web)
+        if not web.startswith("🌐"):
+            lines.append("🌐 Website: " + web)
+        else:
+            lines.append(web)
     return "\n".join(lines)
 
 
@@ -259,7 +280,7 @@ def main(argv: list[str]) -> int:
         return 1
 
     top = results[0]
-    footer = build_footer(top["md"], top["page_name"])
+    footer = build_footer(top["md"], top["page_name"], top)
 
     if is_json:
         data = {

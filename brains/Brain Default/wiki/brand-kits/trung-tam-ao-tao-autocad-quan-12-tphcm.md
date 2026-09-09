@@ -53,8 +53,6 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 
 ## Cơ sở đào tạo của trang này (địa chỉ đúng Fanpage này)
 - A23 KDC Thới An, Đường Lê Thị Riêng, Phường Thới An, Quận 12, TP.HCM
-- Mới (Fanpage, dùng khi đăng bài): A23 KDC Thới An, Đường Lê Thị Riêng, Phường Thới An, Quận 12, TP.HCM
-- Cũ (list _mac-dinh trước đây, chỉ đối chiếu): 247/31 Hà Huy Giáp, Thạnh Lộc, Quận 12
 - Đăng bài chỉ dùng dòng Mới (Fanpage). Dòng Cũ chỉ để đối chiếu, không nhét vào caption.
 
 ## USP chuẩn từ Fanpage thực tế
@@ -99,7 +97,8 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 
 ## Chân trang caption (bắt buộc)
 Trung Tâm Đào Tạo Kế Toán Sao Việt (hoặc Trung Tâm Tin Học Sao Việt tùy khóa)
-A23 KDC Thới An, Đường Lê Thị Riêng, Phường Thới An, Quận 12, Thành phố Hồ Chí Minh, Ho Chi Minh City
+🏫 Quận 12: A23 Lê Thị Riêng, KDC Thới An, Quận 12, TP.HCM
+
 Hotline: 0984 159 201
 Email: trungtamtinhocsaoviet@gmail.com
 Web: https://tinhocsaoviet.com
@@ -109,8 +108,7 @@ Web: https://tinhocsaoviet.com
 - slug: trung-tam-ao-tao-autocad-quan-12-tphcm
 - Page ID: 246780635193685
 - Thẻ khoá học: tin-hoc _ai, ve-ky-thuat
-- Cơ sở / địa chỉ: A23 KDC Thới An, Đường Lê Thị Riêng, Phường Thới An, Quận 12, TP.HCM
-- Địa chỉ cũ (list trước): 247/31 Hà Huy Giáp, Thạnh Lộc, Quận 12
+- Cơ sở / địa chỉ: 🏫 Quận 12: A23 Lê Thị Riêng, KDC Thới An, Quận 12, TP.HCM
 - Hotline / Zalo: 0984 159 201
 - Email Fanpage: trungtamtinhocsaoviet@gmail.com
 - Web Fanpage: https://tinhocsaoviet.com

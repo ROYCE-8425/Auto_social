@@ -52,8 +52,6 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 
 ## Cơ sở đào tạo của trang này (địa chỉ đúng Fanpage này)
 - 91 Đoàn Văn Cự, Tam Hòa, Biên Hòa, Đồng Nai
-- Mới (Fanpage, dùng khi đăng bài): 91 Đoàn Văn Cự, Tam Hòa, Biên Hòa, Đồng Nai
-- Cũ (list _mac-dinh trước đây, chỉ đối chiếu): 91 Đoàn Văn Cự, P. Tam Hòa, Biên Hòa, Đồng Nai
 
 ## USP chuẩn từ Fanpage thực tế
 - Học thực hành 100% trên máy tính và chứng từ thực tế của doanh nghiệp
@@ -97,7 +95,9 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 
 ## Chân trang caption (bắt buộc)
 Trung Tâm Đào Tạo Kế Toán Sao Việt (hoặc Trung Tâm Tin Học Sao Việt tùy khóa)
-91 Đoàn Văn Cự, Tam Hòa, Biên Hòa, Đồng Nai
+🏫 Biên Hòa: 91 Đoàn Văn Cự, P. Tam Hòa, TP. Biên Hòa
+🏫 Long Thành: 72 Đinh Bộ Lĩnh, Lộc An, Long Thành
+
 Hotline: 0812 114 345
 Email: trungtamtinhocsaovietbienhoa@gmail.com
 Web: https://tinhocsaoviet.com
@@ -107,8 +107,7 @@ Web: https://tinhocsaoviet.com
 - slug: trung-tam-ao-tao-thiet-ke-o-hoa-sao-viet-bien-hoa-ong-nai
 - Page ID: 502884369578098
 - Thẻ khoá học: tin-hoc _ai, do-hoa
-- Cơ sở / địa chỉ: 91 Đoàn Văn Cự, Tam Hòa, Biên Hòa, Đồng Nai
-- Địa chỉ cũ (list trước): 91 Đoàn Văn Cự, P. Tam Hòa, Biên Hòa, Đồng Nai
+- Cơ sở / địa chỉ: 🏫 Biên Hòa: 91 Đoàn Văn Cự, P. Tam Hòa, TP. Biên Hòa | 🏫 Long Thành: 72 Đinh Bộ Lĩnh, Lộc An, Long Thành
 - Hotline / Zalo: 0812 114 345
 - Email Fanpage: trungtamtinhocsaovietbienhoa@gmail.com
 - Web Fanpage: https://tinhocsaoviet.com

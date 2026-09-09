@@ -52,8 +52,6 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 
 ## Cơ sở đào tạo của trang này (địa chỉ đúng Fanpage này)
 - 72 Đinh Bộ Lĩnh, Long Thành, Đồng Nai 76200
-- Mới (Fanpage, dùng khi đăng bài): 72 Đinh Bộ Lĩnh, Long Thành, Đồng Nai 76200
-- Cũ (list _mac-dinh trước đây, chỉ đối chiếu): 72 Đinh Bộ Lĩnh, Lộc An, Long Thành, Đồng Nai
 
 ## USP chuẩn từ Fanpage thực tế
 - Học thực hành 100% trên máy tính và chứng từ thực tế của doanh nghiệp
@@ -97,7 +95,9 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 
 ## Chân trang caption (bắt buộc)
 Trung Tâm Đào Tạo Kế Toán Sao Việt (hoặc Trung Tâm Tin Học Sao Việt tùy khóa)
-72 Đinh Bộ Lĩnh, Long Thành, Đồng Nai 76200
+🏫 Biên Hòa: 91 Đoàn Văn Cự, P. Tam Hòa, TP. Biên Hòa
+🏫 Long Thành: 72 Đinh Bộ Lĩnh, Lộc An, Long Thành
+
 Hotline: 0363 753 692
 Email: ketoanlongthanh@gmail.com
 Web: https://blogdaytinhoc.com/hoc-ke-toan-tai-long-thanh-nhon-trach-dong-nai-400
@@ -107,8 +107,7 @@ Web: https://blogdaytinhoc.com/hoc-ke-toan-tai-long-thanh-nhon-trach-dong-nai-40
 - slug: trung-tam-ao-tao-ke-toan-long-thanh-ong-nai
 - Page ID: 181644101699891
 - Thẻ khoá học: tin-hoc _ai, ke-toan
-- Cơ sở / địa chỉ: 72 Đinh Bộ Lĩnh, Long Thành, Đồng Nai 76200
-- Địa chỉ cũ (list trước): 72 Đinh Bộ Lĩnh, Lộc An, Long Thành, Đồng Nai
+- Cơ sở / địa chỉ: 🏫 Biên Hòa: 91 Đoàn Văn Cự, P. Tam Hòa, TP. Biên Hòa | 🏫 Long Thành: 72 Đinh Bộ Lĩnh, Lộc An, Long Thành
 - Hotline / Zalo: 0363 753 692
 - Email Fanpage: ketoanlongthanh@gmail.com
 - Web Fanpage: https://blogdaytinhoc.com/hoc-ke-toan-tai-long-thanh-nhon-trach-dong-nai-400

@@ -52,8 +52,6 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 
 ## Cơ sở đào tạo của trang này (địa chỉ đúng Fanpage này)
 - 69 D32, Làng chuyên gia Oasis, phường An Phú, TP. HCM (Thuận An, Bình Dương cũ), An Thuan, Bình Dương Province 820000
-- Mới (Fanpage, dùng khi đăng bài): 69 D32, Làng chuyên gia Oasis, phường An Phú, TP. HCM (Thuận An, Bình Dương cũ), An Thuan, Bình Dương Province 820000
-- Cũ (list _mac-dinh trước đây, chỉ đối chiếu): 1/513 KDC TÀI LỰC, Tổ 9, Khu phố Hòa Lân 2, Thuận An - Bình Dương
 - Đăng bài chỉ dùng dòng Mới (Fanpage). Dòng Cũ chỉ để đối chiếu, không nhét vào caption.
 
 ## USP chuẩn từ Fanpage thực tế
@@ -98,7 +96,11 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 
 ## Chân trang caption (bắt buộc)
 Trung Tâm Đào Tạo Kế Toán Sao Việt (hoặc Trung Tâm Tin Học Sao Việt tùy khóa)
-69 D32, Làng chuyên gia Oasis, phường An Phú, TP. HCM (Thuận An, Bình Dương cũ), An Thuan, Bình Dương Province 820000
+🏫 Dĩ An: 184/19/11 Đặng Văn Mây, KP. Đông Chiêu, P. Tân Đông Hiệp, TP. Dĩ An
+🏫 Thuận An: 8 Đường NA8, Khu Dân Cư Viet Sing, TP. Thuận An
+🏫 Thủ Dầu Một: 107 D5, KDC Phú Hòa 1, TP. Thủ Dầu Một
+🏫 Tân Uyên: Số 20 Đường ĐX12, P. Tân Vĩnh Hiệp, TP. Tân Uyên
+
 Hotline: 0931 144 858
 Email: trungtamtinhocsaoviet@gmail.com
 Web: https://tinhocsaoviet.com
@@ -108,8 +110,7 @@ Web: https://tinhocsaoviet.com
 - slug: trung-tam-ao-tao-thiet-ke-o-hoa-sao-viet-thuan-an
 - Page ID: 521888511005213
 - Thẻ khoá học: tin-hoc _ai, do-hoa
-- Cơ sở / địa chỉ: 69 D32, Làng chuyên gia Oasis, phường An Phú, TP. HCM (Thuận An, Bình Dương cũ), An Thuan, Bình Dương Province 820000
-- Địa chỉ cũ (list trước): 1/513 KDC TÀI LỰC, Tổ 9, Khu phố Hòa Lân 2, Thuận An - Bình Dương
+- Cơ sở / địa chỉ: 🏫 Dĩ An: 184/19/11 Đặng Văn Mây, KP. Đông Chiêu, P. Tân Đông Hiệp, TP. Dĩ An | 🏫 Thuận An: 8 Đường NA8, Khu Dân Cư Viet Sing, TP. Thuận An | 🏫 Thủ Dầu Một: 107 D5, KDC Phú Hòa 1, TP. Thủ Dầu Một | 🏫 Tân Uyên: Số 20 Đường ĐX12, P. Tân Vĩnh Hiệp, TP. Tân Uyên
 - Hotline / Zalo: 0931 144 858
 - Email Fanpage: trungtamtinhocsaoviet@gmail.com
 - Web Fanpage: https://tinhocsaoviet.com

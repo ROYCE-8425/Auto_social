@@ -58,8 +58,6 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 - 91 Đường Đoàn Văn Cự, Tam Hòa, Biên Hòa, Đồng Nai 76000
 - Tổ 36, Ấp Hàng Gòn, Xã Lộc An Long Thành Đồng Nai, Long Thành, Đồng Nai 76200
 - 91 Đoàn Văn Cự, Tam Hòa, Biên Hòa, Đồng Nai
-- Mới (Fanpage, dùng khi đăng bài): 72 Đinh Bộ Lĩnh, Xã Lộc An, Long Thành, Long Thành, Đồng Nai 76200 | 93 Đoàn Văn Cự, Phường Tam Hòa, Biên Hòa, Đồng Nai 76100 | 91 Đường Đoàn Văn Cự, Tam Hòa, Biên Hòa, Đồng Nai 76000 | 91 Đường Đoàn Văn Cự, Tam Hòa, Biên Hòa, Đồng Nai 76000 | Tổ 36, Ấp Hàng Gòn, Xã Lộc An Long Thành Đồng Nai, Long Thành, Đồng Nai 76200 | 91 Đoàn Văn Cự, Tam Hòa, Biên Hòa, Đồng Nai
-- Cũ (list _mac-dinh trước đây, chỉ đối chiếu): 91 Đoàn Văn Cự, P. Tam Hòa, Biên Hòa, Đồng Nai | 72 Đinh Bộ Lĩnh, Lộc An, Long Thành, Đồng Nai
 
 ## USP chuẩn từ Fanpage thực tế
 - Học thực hành 100% trên máy tính và chứng từ thực tế của doanh nghiệp
@@ -103,7 +101,9 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 
 ## Chân trang caption (bắt buộc)
 Trung Tâm Đào Tạo Kế Toán Sao Việt (hoặc Trung Tâm Tin Học Sao Việt tùy khóa)
-72 Đinh Bộ Lĩnh, Xã Lộc An, Long Thành, Kiên Giang 76200, Long Thanh | 72 Đinh Bộ Lĩnh, Long Thành, Đồng Nai 76200 | 93 Đoàn Văn Cự, Phường Tam Hòa, Biên Hòa, Đồng Nai 76100 | 91 Đường Đoàn Văn Cự, Tam Hòa, Biên Hòa, Biên Hòa, Đồng Nai 76000 | 91 Đường Đoàn Văn Cự, Tam Hòa, Biên Hòa, Đồng Nai 76000 | Tổ 36, Ấp Hàng Gòn, Xã Lộc An Long Thành Đồng Nai, Long Thành, Đồng Nai 76200 | 91 Đoàn Văn Cự, Tam Hòa, Biên Hòa, Đồng Nai
+🏫 Biên Hòa: 91 Đoàn Văn Cự, P. Tam Hòa, TP. Biên Hòa
+🏫 Long Thành: 72 Đinh Bộ Lĩnh, Lộc An, Long Thành
+
 Hotline: 0823 552 558
 Email: trungtamtinhocsaoviet@gmail.com
 Web: https://blogdaytinhoc.com/hoc-ke-toan-tai-bien-hoa-191
@@ -113,8 +113,7 @@ Web: https://blogdaytinhoc.com/hoc-ke-toan-tai-bien-hoa-191
 - slug: trung-tam-ao-tao-ke-toan-ong-nai
 - Page ID: 207745372422173
 - Thẻ khoá học: tin-hoc _ai, ke-toan
-- Cơ sở / địa chỉ: 72 Đinh Bộ Lĩnh, Xã Lộc An, Long Thành, Long Thành, Đồng Nai 76200 | 93 Đoàn Văn Cự, Phường Tam Hòa, Biên Hòa, Đồng Nai 76100 | 91 Đường Đoàn Văn Cự, Tam Hòa, Biên Hòa, Đồng Nai 76000 | 91 Đường Đoàn Văn Cự, Tam Hòa, Biên Hòa, Đồng Nai 76000 | Tổ 36, Ấp Hàng Gòn, Xã Lộc An Long Thành Đồng Nai, Long Thành, Đồng Nai 76200 | 91 Đoàn Văn Cự, Tam Hòa, Biên Hòa, Đồng Nai
-- Địa chỉ cũ (list trước): 91 Đoàn Văn Cự, P. Tam Hòa, Biên Hòa, Đồng Nai | 72 Đinh Bộ Lĩnh, Lộc An, Long Thành, Đồng Nai
+- Cơ sở / địa chỉ: 🏫 Biên Hòa: 91 Đoàn Văn Cự, P. Tam Hòa, TP. Biên Hòa | 🏫 Long Thành: 72 Đinh Bộ Lĩnh, Lộc An, Long Thành
 - Hotline / Zalo: 0823 552 558
 - Email Fanpage: trungtamtinhocsaoviet@gmail.com
 - Web Fanpage: https://blogdaytinhoc.com/hoc-ke-toan-tai-bien-hoa-191

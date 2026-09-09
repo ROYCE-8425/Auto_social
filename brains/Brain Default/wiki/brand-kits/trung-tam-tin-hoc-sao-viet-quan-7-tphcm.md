@@ -51,8 +51,6 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 
 ## Cơ sở đào tạo của trang này (địa chỉ đúng Fanpage này)
 - TM-20 Sảnh B, Chung cư Florita, KĐT Him Lam, P. Tân Hưng, TP.HCM
-- Mới (Fanpage, dùng khi đăng bài): TM-20 Sảnh B, Chung cư Florita, KĐT Him Lam, P. Tân Hưng, TP.HCM
-- Cũ (list _mac-dinh trước đây, chỉ đối chiếu): Số 515 B2/12, Lê Văn Lương, Tân Phong, Quận 7
 - Đăng bài chỉ dùng dòng Mới (Fanpage). Dòng Cũ chỉ để đối chiếu, không nhét vào caption.
 
 ## USP chuẩn từ Fanpage thực tế
@@ -97,7 +95,8 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 
 ## Chân trang caption (bắt buộc)
 Trung Tâm Đào Tạo Kế Toán Sao Việt (hoặc Trung Tâm Tin Học Sao Việt tùy khóa)
-TM-20 Sảnh B, Chung cư Florita, KĐT Him Lam, P. Tân Hưng, Thành phố Hồ Chí Minh 700000, Ho Chi Minh City
+🏫 Quận 7: Căn hộ Florita Quận 7, Khu đô thị Him Lam, Tân Hưng, TP.HCM
+
 Hotline: 0935 195 118
 Email: trungtamtinhocsaoviet@gmail.com
 Web: https://blogdaytinhoc.com
@@ -107,8 +106,7 @@ Web: https://blogdaytinhoc.com
 - slug: trung-tam-tin-hoc-sao-viet-quan-7-tphcm
 - Page ID: 108426965133947
 - Thẻ khoá học: tin-hoc _ai
-- Cơ sở / địa chỉ: TM-20 Sảnh B, Chung cư Florita, KĐT Him Lam, P. Tân Hưng, TP.HCM
-- Địa chỉ cũ (list trước): Số 515 B2/12, Lê Văn Lương, Tân Phong, Quận 7
+- Cơ sở / địa chỉ: 🏫 Quận 7: Căn hộ Florita Quận 7, Khu đô thị Him Lam, Tân Hưng, TP.HCM
 - Hotline / Zalo: 0935 195 118
 - Email Fanpage: trungtamtinhocsaoviet@gmail.com
 - Web Fanpage: https://blogdaytinhoc.com

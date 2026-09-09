@@ -261,11 +261,15 @@ Không nhồi quá nhiều hashtag vì nhìn spam.
 
 ## 8. Chân trang
 
-Chân trang lấy đúng từ brand kit của Fanpage đang đăng.
+Chân trang lấy đúng từ brand kit hoặc script `pick_next_fanpage.py` của Fanpage đang đăng.
 
-- Page hệ thống chính có thể dùng đầy đủ cơ sở nếu kit yêu cầu.
-- Page chi nhánh chỉ dùng đúng địa chỉ chi nhánh.
-- Mỗi cơ sở một dòng, không gom bằng dấu `|`.
+- Fanpage cơ sở TP.HCM (Bình Thạnh, Quận 12, Thủ Đức, Tân Bình, Quận 7, Bình Tân/Quận 6): Chỉ hiển thị DUY NHẤT 1 địa chỉ của đúng chi nhánh đó.
+- Fanpage Bình Dương: Hiển thị ĐẦY ĐỦ cả 4 địa chỉ thuộc tỉnh Bình Dương (Dĩ An, Thuận An, Thủ Dầu Một, Tân Uyên).
+- Fanpage Đồng Nai: Hiển thị ĐẦY ĐỦ cả 2 địa chỉ thuộc tỉnh Đồng Nai (Biên Hòa, Long Thành).
+- Fanpage Vũng Tàu: Hiển thị địa chỉ cơ sở tại Vũng Tàu.
+- Fanpage hệ thống / Royce Shop: Hiển thị 13 chi nhánh chuẩn.
+- Mỗi cơ sở một dòng, có icon `🏫 [Chi nhánh]: [Địa chỉ]`, không gom bằng dấu `|`.
+- Tuyệt đối cấm dùng mã bưu điện zip code (như 700000, 75300, 75411...).
 - Không trộn địa chỉ page này sang page khác.
 
 Nếu chân trang quá dài, thân bài càng phải gọn để tổng thể không ngợp.

@@ -52,8 +52,6 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 
 ## Cơ sở đào tạo của trang này (địa chỉ đúng Fanpage này)
 - 193 Nguyễn Xí, phường Bình Thạnh, TP.HCM, TP.HCM
-- Mới (Fanpage, dùng khi đăng bài): 193 Nguyễn Xí, phường Bình Thạnh, TP.HCM, TP.HCM
-- Cũ (list _mac-dinh trước đây, chỉ đối chiếu): Số 16, 21/12 Lê Trực, Phường 7, Q. Bình Thạnh (Chung Cư Lê Trực)
 - Đăng bài chỉ dùng dòng Mới (Fanpage). Dòng Cũ chỉ để đối chiếu, không nhét vào caption.
 
 ## USP chuẩn từ Fanpage thực tế
@@ -98,7 +96,8 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 
 ## Chân trang caption (bắt buộc)
 Trung Tâm Đào Tạo Kế Toán Sao Việt (hoặc Trung Tâm Tin Học Sao Việt tùy khóa)
-193 Nguyễn Xí, phường Bình Thạnh, Hồ Chí Minh., Thành phố Hồ Chí Minh 700000, Ho Chi Minh City
+🏫 Bình Thạnh: 21/12 Lê Trực, P.7, Bình Thạnh, TP.HCM
+
 Hotline: 0931 144 858
 Email: trungtamtinhocsaoviet@gmail.com
 Web: https://blogdaytinhoc.com/khoa-hoc-ke-toan-tai-binh-thanh-423
@@ -108,8 +107,7 @@ Web: https://blogdaytinhoc.com/khoa-hoc-ke-toan-tai-binh-thanh-423
 - slug: trung-tam-ao-tao-ke-toan-binh-thanh-tphcm
 - Page ID: 202448916275419
 - Thẻ khoá học: tin-hoc _ai, ke-toan
-- Cơ sở / địa chỉ: 193 Nguyễn Xí, phường Bình Thạnh, TP.HCM, TP.HCM
-- Địa chỉ cũ (list trước): Số 16, 21/12 Lê Trực, Phường 7, Q. Bình Thạnh (Chung Cư Lê Trực)
+- Cơ sở / địa chỉ: 🏫 Bình Thạnh: 21/12 Lê Trực, P.7, Bình Thạnh, TP.HCM
 - Hotline / Zalo: 0931 144 858
 - Email Fanpage: trungtamtinhocsaoviet@gmail.com
 - Web Fanpage: https://blogdaytinhoc.com/khoa-hoc-ke-toan-tai-binh-thanh-423

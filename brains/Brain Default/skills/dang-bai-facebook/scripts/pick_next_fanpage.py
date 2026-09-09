@@ -214,6 +214,32 @@ def save_state(st):
     STATE.write_text(json.dumps(st, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
+BRANCHES_HCM = {
+    "binh_thanh": "🏫 Bình Thạnh: 21/12 Lê Trực, P.7, Bình Thạnh, TP.HCM",
+    "quan_12": "🏫 Quận 12: A23 Lê Thị Riêng, KDC Thới An, Quận 12, TP.HCM",
+    "thu_duc": "🏫 TP. Thủ Đức: 133/2 Đ. Đỗ Xuân Hợp, Phước Long B, TP. Thủ Đức",
+    "tan_binh": "🏫 Tân Bình: 2A Nguyễn Sỹ Sách, P.15, Tân Bình, TP.HCM",
+    "quan_7": "🏫 Quận 7: Căn hộ Florita Quận 7, Khu đô thị Him Lam, Tân Hưng, TP.HCM",
+    "binh_tan": "🏫 Bình Tân: TM-0.39, 510 Kinh Dương Vương, An Lạc, Bình Tân, TP.HCM",
+    "quan_6": "🏫 Bình Tân: TM-0.39, 510 Kinh Dương Vương, An Lạc, Bình Tân, TP.HCM",
+}
+
+BRANCHES_BINH_DUONG = [
+    "🏫 Dĩ An: 184/19/11 Đặng Văn Mây, KP. Đông Chiêu, P. Tân Đông Hiệp, TP. Dĩ An",
+    "🏫 Thuận An: 8 Đường NA8, Khu Dân Cư Viet Sing, TP. Thuận An",
+    "🏫 Thủ Dầu Một: 107 D5, KDC Phú Hòa 1, TP. Thủ Dầu Một",
+    "🏫 Tân Uyên: Số 20 Đường ĐX12, P. Tân Vĩnh Hiệp, TP. Tân Uyên",
+]
+
+BRANCHES_DONG_NAI = [
+    "🏫 Biên Hòa: 91 Đoàn Văn Cự, P. Tam Hòa, TP. Biên Hòa",
+    "🏫 Long Thành: 72 Đinh Bộ Lĩnh, Lộc An, Long Thành",
+]
+
+BRANCHES_VUNG_TAU = [
+    "🏫 Vũng Tàu: 293 Bình Giã, P.8, TP. Vũng Tàu",
+]
+
 BRANCHES_13_STANDARD = [
     "🏫 Bình Thạnh: 21/12 Lê Trực, P.7, Bình Thạnh, TP.HCM",
     "🏫 Quận 7: Căn hộ Florita Quận 7, Khu đô thị Him Lam, Tân Hưng, Hồ Chí Minh",
@@ -249,18 +275,89 @@ BRANCHES_KE_TOAN = [
 ]
 
 
+def get_page_branches(row, tag=None):
+    """Xác định danh sách địa chỉ cơ sở theo đúng quy tắc vùng miền:
+    1. Cơ sở TP.HCM (Bình Thạnh, Quận 12, Thủ Đức, Tân Bình, Quận 7, Bình Tân/Quận 6):
+       Chỉ hiện DUY NHẤT 1 địa chỉ của chi nhánh đó.
+    2. Bình Dương (toàn tỉnh hoặc các chi nhánh Dĩ An, Thuận An, Thủ Dầu Một, Tân Uyên):
+       Hiện ĐẦY ĐỦ cả 4 địa chỉ thuộc tỉnh Bình Dương.
+    3. Đồng Nai (toàn tỉnh hoặc các chi nhánh Biên Hòa, Long Thành):
+       Hiện ĐẦY ĐỦ cả 2 địa chỉ thuộc tỉnh Đồng Nai.
+    4. Vũng Tàu (hoặc Bà Rịa):
+       Hiện địa chỉ cơ sở tại Vũng Tàu.
+    5. Hệ thống chung / Royce Shop:
+       Hiện toàn bộ 13 chi nhánh (hoặc 12 chi nhánh kế toán nếu là khóa kế toán).
+    """
+    slug = (row.get("slug") or "").lower()
+    name = (row.get("name") or "").lower()
+    file_stem = (row.get("file") or "").lower()
+    addr_raw = (row.get("address") or "")
+    combined = f"{slug} {name} {file_stem}"
+
+    # 1. Cơ sở TP.HCM: chỉ hiện 1 chi nhánh tương ứng
+    if any(k in combined for k in ["binh-thanh", "bình thạnh", "binh thanh"]):
+        return [BRANCHES_HCM["binh_thanh"]]
+    if any(k in combined for k in ["quan-12", "quận 12", "quan 12"]):
+        return [BRANCHES_HCM["quan_12"]]
+    if any(k in combined for k in ["thu-uc", "thủ đức", "thu-duc", "thu duc"]):
+        return [BRANCHES_HCM["thu_duc"]]
+    if any(k in combined for k in ["tan-binh", "tân bình", "tan binh"]):
+        return [BRANCHES_HCM["tan_binh"]]
+    if any(k in combined for k in ["quan-7", "quận 7", "quan 7"]):
+        return [BRANCHES_HCM["quan_7"]]
+    if any(k in combined for k in ["quan-6", "quận 6", "binh-tan", "bình tân", "binh tan"]):
+        return [BRANCHES_HCM["binh_tan"]]
+
+    # 2. Bình Dương: hiện hết cả 4 cơ sở tại Bình Dương
+    if any(k in combined for k in [
+        "binh-duong", "bình dương", "binh duong",
+        "di-an", "dĩ an", "di an",
+        "thuan-an", "thuận an", "thuan an",
+        "thu-dau-mot", "thủ dầu một", "thu dau mot",
+        "tan-uyen", "tân uyên", "tan uyen",
+    ]):
+        return BRANCHES_BINH_DUONG
+
+    # 3. Đồng Nai: hiện hết cả 2 cơ sở tại Đồng Nai
+    if any(k in combined for k in [
+        "dong-nai", "đồng nai", "ong-nai", "dong nai",
+        "bien-hoa", "biên hòa", "bien hoa",
+        "long-thanh", "long thành", "long thanh",
+    ]):
+        return BRANCHES_DONG_NAI
+
+    # 4. Vũng Tàu / Bà Rịa: hiện cơ sở Vũng Tàu
+    if any(k in combined for k in ["vung-tau", "vũng tàu", "vung tau", "ba-ria", "bà rịa", "ba ria"]):
+        return BRANCHES_VUNG_TAU
+
+    # 5. Nếu kit có địa chỉ cụ thể không thuộc các mẫu trên: làm sạch zip code và trả về
+    if addr_raw:
+        branches = []
+        for raw_part in addr_raw.replace("|", "\n").splitlines():
+            cleaned = re.sub(r",?\s*\b\d{5,6}\b.*$", "", raw_part.strip()).strip()
+            cleaned = re.sub(r",\s*(Di An|Thu Dau Mot|Vung Tau|Ho Chi Minh City|Việt Nam\.?)$", "", cleaned, flags=re.I).strip()
+            if not cleaned:
+                continue
+            if not cleaned.startswith("🏫"):
+                cleaned = f"🏫 {cleaned}"
+            if cleaned not in branches:
+                branches.append(cleaned)
+        if branches:
+            return branches
+
+    # 6. Fallback cho trang hệ thống / trung tâm chung
+    canon_tag = _canonical_tag(tag or "")
+    if canon_tag == "ke-toan" or ("ke-toan" in slug and not canon_tag):
+        return BRANCHES_KE_TOAN
+    return ["📍 HỆ THỐNG 13 CHI NHÁNH TIN HỌC SAO VIỆT"] + BRANCHES_13_STANDARD
+
+
 def print_chan_trang(row, tag=None):
     print("CHAN_TRANG")
     print(row["name"])
-    canon_tag = _canonical_tag(tag or "")
-    if canon_tag == "ke-toan" or ("ke-toan" in row.get("slug", "") and not canon_tag):
-        print("12 Cơ Sở Đào Tạo Tại TP HCM - Bình Dương - Đồng Nai")
-        for b in BRANCHES_KE_TOAN:
-            print(b)
-    else:
-        print("📍 HỆ THỐNG 13 CHI NHÁNH TIN HỌC SAO VIỆT")
-        for b in BRANCHES_13_STANDARD:
-            print(b)
+    branches = get_page_branches(row, tag)
+    for b in branches:
+        print(b)
     if row.get("hotline"):
         hl = row["hotline"].strip()
         if not hl.startswith("📞") and not hl.startswith("☎"):
@@ -307,7 +404,7 @@ def main(argv):
         reason = " ".join(argv[i + 2 :]) if i + 2 < len(argv) else "POST_SKIP"
 
     if specific_page:
-        all_pages = load_pages(include_royce=True)
+        all_pages = load_pages(include_royce=True, connected_only=False)
         row = None
         try:
             sys.path.insert(0, str(Path(VAULT) / "scratch"))

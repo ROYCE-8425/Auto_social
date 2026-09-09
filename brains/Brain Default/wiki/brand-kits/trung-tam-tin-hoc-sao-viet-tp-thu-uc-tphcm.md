@@ -94,7 +94,8 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 
 ## Chân trang caption (bắt buộc)
 Trung Tâm Tin Học Sao Việt TP. Thủ Đức
-🏫 TP. Thủ Đức: 133/2 Đỗ Xuân Hợp, P. Phước Long B, TP. Thủ Đức, TP.HCM
+🏫 TP. Thủ Đức: 133/2 Đ. Đỗ Xuân Hợp, Phước Long B, TP. Thủ Đức
+
 📞 Hotline/Zalo: 0935 946 407
 📧 Email: saovietthuduc@gmail.com
 🌐 Website: https://blogdaytinhoc.com
@@ -105,7 +106,7 @@ Trung Tâm Tin Học Sao Việt TP. Thủ Đức
 - Page ID: 109280655477819
 - Access Token: EAAYrB1nymYkBSex3wyqVzIiZCD8tycj5c7lkoC5jLWityGTLXrEe3VM9dSwhtSLRjkV64v9S5WYZA3kusxGjxOdSL5dn70zuv77KaaYRxR7RXZAZCkiOvKgOnuTILo2YemTLejWvV6nvywrtZCnwriXZAm0bTVJvz4nkeEpAWF4xrdht3eGEpIWZCZCxDmfxjmFpdhi51FwEenmzMtlkzewZD
 - Thẻ khoá học: tin-hoc _ai
-- Cơ sở / địa chỉ: 🏫 TP. Thủ Đức: 133/2 Đỗ Xuân Hợp, P. Phước Long B, TP. Thủ Đức, TP.HCM
+- Cơ sở / địa chỉ: 🏫 TP. Thủ Đức: 133/2 Đ. Đỗ Xuân Hợp, Phước Long B, TP. Thủ Đức
 - Hotline / Zalo: 0935 946 407
 - Email Fanpage: saovietthuduc@gmail.com
 - Web Fanpage: https://blogdaytinhoc.com

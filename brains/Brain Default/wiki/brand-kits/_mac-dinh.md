@@ -53,6 +53,13 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Vẽ kỹ th
 
 ## Hệ thống chi nhánh chuẩn Tin Học Sao Việt (theo bài mẫu thực tế)
 
+### Quy tắc hiển thị địa chỉ cơ sở khi đăng bài:
+1. **Fanpage cơ sở TP.HCM** (Bình Thạnh, Quận 12, Thủ Đức, Tân Bình, Quận 7, Bình Tân / Quận 6): Chỉ hiển thị DUY NHẤT 1 địa chỉ của đúng cơ sở đó (ví dụ: Fanpage Bình Thạnh chỉ hiện địa chỉ Bình Thạnh, Fanpage Quận 12 chỉ hiện địa chỉ Quận 12).
+2. **Fanpage Bình Dương** (toàn tỉnh hoặc các chi nhánh Bình Dương): Hiển thị ĐẦY ĐỦ cả 4 địa chỉ thuộc tỉnh Bình Dương (Dĩ An, Thuận An, Thủ Dầu Một, Tân Uyên).
+3. **Fanpage Đồng Nai** (toàn tỉnh hoặc các chi nhánh Đồng Nai): Hiển thị ĐẦY ĐỦ cả 2 địa chỉ thuộc tỉnh Đồng Nai (Biên Hòa, Long Thành).
+4. **Fanpage Vũng Tàu**: Hiển thị địa chỉ cơ sở tại Vũng Tàu.
+5. **Fanpage tổng hệ thống / trung tâm chung**: Hiển thị toàn bộ 13 chi nhánh.
+
 📍 HỆ THỐNG 13 CHI NHÁNH TIN HỌC SAO VIỆT
 - 🏫 Bình Thạnh: 21/12 Lê Trực, P.7, Bình Thạnh, TP.HCM
 - 🏫 Quận 7: Căn hộ Florita Quận 7, Khu đô thị Him Lam, Tân Hưng, TP.HCM
@@ -68,7 +75,7 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Vẽ kỹ th
 - 🏫 Tân Uyên: Số 20 Đường ĐX12, Tân Vĩnh Hiệp
 - 🏫 Vũng Tàu: 293 Bình Giã, P.8, TP. Vũng Tàu
 
-*(Ghi chú: Đối với các khóa Kế Toán riêng biệt, dùng hệ thống 12 cơ sở chuyên kế toán tại TP.HCM, Bình Dương, Đồng Nai theo mẫu kế toán).*
+*(Ghi chú: Đối với các khóa Kế Toán riêng biệt của trang hệ thống, dùng hệ thống 12 cơ sở chuyên kế toán tại TP.HCM, Bình Dương, Đồng Nai theo mẫu kế toán).*
 
 
 ## USP chuẩn từ Fanpage thực tế

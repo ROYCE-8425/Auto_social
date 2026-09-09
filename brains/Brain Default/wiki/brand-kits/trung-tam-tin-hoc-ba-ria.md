@@ -51,8 +51,6 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 
 ## Cơ sở đào tạo của trang này (địa chỉ đúng Fanpage này)
 - 70-96 Hai Mươi Bảy Tháng Tư, Phước Hiệp, Bà Rịa - Vũng Tàu
-- Mới (Fanpage, dùng khi đăng bài): 70-96 Hai Mươi Bảy Tháng Tư, Phước Hiệp, Bà Rịa - Vũng Tàu
-- Cũ (list _mac-dinh trước đây, chỉ đối chiếu): (chưa có trong list 12 cơ sở cũ)
 
 ## USP chuẩn từ Fanpage thực tế
 - Học thực hành 100% trên máy tính và chứng từ thực tế của doanh nghiệp
@@ -96,7 +94,8 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 
 ## Chân trang caption (bắt buộc)
 Trung Tâm Đào Tạo Kế Toán Sao Việt (hoặc Trung Tâm Tin Học Sao Việt tùy khóa)
-70-96 Hai Mươi Bảy Tháng Tư, Phước Hiệp, Bà Rịa, Bà Rịa - Vũng Tàu, Ba Ria, 90000
+🏫 Vũng Tàu: 293 Bình Giã, P.8, TP. Vũng Tàu
+
 Hotline: 0823 552 558
 Email: trungtamtinhocbaria@gmail.com
 Web: https://trungtamtinhocbaria.com
@@ -106,8 +105,7 @@ Web: https://trungtamtinhocbaria.com
 - slug: trung-tam-tin-hoc-ba-ria
 - Page ID: 108945188138472
 - Thẻ khoá học: tin-hoc _ai
-- Cơ sở / địa chỉ: 70-96 Hai Mươi Bảy Tháng Tư, Phước Hiệp, Bà Rịa - Vũng Tàu
-- Địa chỉ cũ (list trước): (chưa có trong list 12 cơ sở cũ)
+- Cơ sở / địa chỉ: 🏫 Vũng Tàu: 293 Bình Giã, P.8, TP. Vũng Tàu
 - Hotline / Zalo: 0823 552 558
 - Email Fanpage: trungtamtinhocbaria@gmail.com
 - Web Fanpage: https://trungtamtinhocbaria.com

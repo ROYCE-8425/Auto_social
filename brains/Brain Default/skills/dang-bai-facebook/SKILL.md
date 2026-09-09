@@ -32,7 +32,13 @@ Mục tiêu: Mỗi bài đăng Fanpage là một **ALBUM chuẩn Tỷ Lệ Vàng
      * Khối cam kết/điểm mạnh: 4-5 dòng, mỗi dòng bắt đầu bằng `📌` (ví dụ: `📌 Học theo nhu cầu thật, không ép học đại trà.`, `📌 Học đến khi thành thạo, không giới hạn số buổi.`, `📌 Lịch học linh hoạt sáng, chiều, tối từ Thứ 2 đến Thứ 7.`, `📌 Có thể đăng ký học ngay, không cần chờ đủ lớp.`, `📌 Phù hợp người bận rộn, người đi làm...`).
      * Khối quyền lợi/ưu đãi: 3-4 dòng, mỗi dòng bắt đầu bằng `🎁` (ví dụ: `🎁 Khi đăng ký, học viên được tư vấn lộ trình...`, `🎁 Được định hướng bộ kỹ năng cần học...`, `🎁 Được hỗ trợ giải đáp nghiệp vụ sau khóa học...`).
      * Khối kêu gọi hành động: `👉 Muốn học nhanh để dùng được ngay trong công việc?` -> `📞 Nhắn tin Fanpage hoặc gọi Hotline/Zalo để được tư vấn...` -> `📌 Nhận học viên mới mỗi tuần...`.
-     * Chân trang CHAN_TRANG: BẮT BUỘC dùng đúng định dạng sạch từ `pick_next_fanpage.py` hoặc brand kit: mỗi cơ sở có icon `🏫 [Chi nhánh]: [Địa chỉ]`, `📞 Hotline/Zalo: ...`, `📧 Email: ...`, `🌐 Website: ...`. TUYỆT ĐỐI CẤM dùng chuỗi địa chỉ rác có mã bưu điện (như 700000, 75300, 75411, Di An, Ho Chi Minh City...).
+     * Chân trang CHAN_TRANG: BẮT BUỘC dùng đúng định dạng sạch từ `pick_next_fanpage.py` hoặc brand kit:
+       - Fanpage cơ sở TP.HCM (Bình Thạnh, Quận 12, Thủ Đức, Tân Bình, Quận 7, Bình Tân/Quận 6): Chỉ hiển thị DUY NHẤT 1 địa chỉ của đúng chi nhánh đó.
+       - Fanpage Bình Dương: Hiển thị ĐẦY ĐỦ cả 4 địa chỉ thuộc tỉnh Bình Dương (Dĩ An, Thuận An, Thủ Dầu Một, Tân Uyên).
+       - Fanpage Đồng Nai: Hiển thị ĐẦY ĐỦ cả 2 địa chỉ thuộc tỉnh Đồng Nai (Biên Hòa, Long Thành).
+       - Fanpage Vũng Tàu: Hiển thị địa chỉ cơ sở tại Vũng Tàu.
+       - Fanpage tổng hệ thống / Royce Shop: Hiển thị 13 chi nhánh chuẩn.
+       Mỗi cơ sở dùng icon `🏫 [Chi nhánh]: [Địa chỉ]`, `📞 Hotline/Zalo: ...`, `📧 Email: ...`, `🌐 Website: ...`. TUYỆT ĐỐI CẤM dùng chuỗi địa chỉ rác có mã bưu điện (như 700000, 75300, 75411, Di An, Ho Chi Minh City...).
    - Không Markdown `**`, không em dash, CẤM bịa học phí, CẤM bịa khóa kinh doanh online.
 3. **Đăng ALBUM (Tỷ Lệ Vàng 2026 - Random 6, 7 hoặc 8 ảnh vuông 1:1 đồng bộ)**:
    ```text

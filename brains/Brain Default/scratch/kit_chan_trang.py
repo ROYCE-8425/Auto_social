@@ -56,25 +56,45 @@ def load(query):
     return None, None
 
 
-def footer_block(md, name):
-    addr = field(md, "Cơ sở / địa chỉ")
+def footer_block(md, name, path=None):
+    row = {
+        "slug": field(md, "slug") or (path.stem if path else ""),
+        "name": name,
+        "file": path.name if path else "",
+        "address": field(md, "Cơ sở / địa chỉ"),
+    }
     parts = []
-    if addr:
-        for a in addr.replace("|", "\n").splitlines():
-            a = a.strip()
-            if a:
-                parts.append(a)
+    try:
+        sys.path.insert(0, str(VAULT / "skills" / "dang-bai-facebook" / "scripts"))
+        from pick_next_fanpage import get_page_branches
+        parts = get_page_branches(row)
+    except Exception:
+        addr = field(md, "Cơ sở / địa chỉ")
+        if addr:
+            for a in addr.replace("|", "\n").splitlines():
+                a = a.strip()
+                if a:
+                    parts.append(a)
     hot = field(md, "Hotline / Zalo", "Hotline riêng", "Hotline")
     email = field(md, "Email Fanpage", "Email")
     web = field(md, "Web Fanpage", "Web")
     lines = [name] if name else []
     lines.extend(parts)
     if hot:
-        lines.append("Hotline/Zalo: " + hot)
+        if not hot.startswith("📞") and not hot.startswith("☎"):
+            lines.append("📞 Hotline/Zalo: " + hot)
+        else:
+            lines.append(hot)
     if email:
-        lines.append("Email: " + email)
+        if not email.startswith("📧"):
+            lines.append("📧 Email: " + email)
+        else:
+            lines.append(email)
     if web:
-        lines.append("Web: " + web)
+        if not web.startswith("🌐"):
+            lines.append("🌐 Website: " + web)
+        else:
+            lines.append(web)
     return "\n".join(lines)
 
 
@@ -105,7 +125,7 @@ def main(argv):
     print("Cam: " + (field(md, "Điều không được làm") or ""))
     print("HET_KIT_VISUAL")
     print("CHAN_TRANG")
-    print(footer_block(md, name))
+    print(footer_block(md, name, path))
     return 0
 
 

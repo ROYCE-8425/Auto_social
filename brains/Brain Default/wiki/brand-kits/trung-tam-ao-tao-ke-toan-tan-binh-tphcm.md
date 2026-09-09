@@ -52,8 +52,6 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 
 ## Cơ sở đào tạo của trang này (địa chỉ đúng Fanpage này)
 - 180 Phạm Văn Bạch, Phường 15, Tân Bình, TP.HCM
-- Mới (Fanpage, dùng khi đăng bài): 180 Phạm Văn Bạch, Phường 15, Tân Bình, TP.HCM
-- Cũ (list _mac-dinh trước đây, chỉ đối chiếu): 180 Phạm Văn Bạch, Phường 15, Tân Bình, Thành phố Hồ Chí Minh
 
 ## USP chuẩn từ Fanpage thực tế
 - Học thực hành 100% trên máy tính và chứng từ thực tế của doanh nghiệp
@@ -97,7 +95,8 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 
 ## Chân trang caption (bắt buộc)
 Trung Tâm Đào Tạo Kế Toán Sao Việt (hoặc Trung Tâm Tin Học Sao Việt tùy khóa)
-180 Phạm Văn Bạch, Phường 15, Tân Bình, Thành phố Hồ Chí Minh, Ho Chi Minh City
+🏫 Tân Bình: 2A Nguyễn Sỹ Sách, P.15, Tân Bình, TP.HCM
+
 Hotline: 0946 426 536
 Email: trungtamtinhocsaoviet@gmail.com
 Web: https://www.blogdaytinhoc.com/lop-hoc-ke-toan-891
@@ -107,8 +106,7 @@ Web: https://www.blogdaytinhoc.com/lop-hoc-ke-toan-891
 - slug: trung-tam-ao-tao-ke-toan-tan-binh-tphcm
 - Page ID: 279274611932317
 - Thẻ khoá học: tin-hoc _ai, ke-toan
-- Cơ sở / địa chỉ: 180 Phạm Văn Bạch, Phường 15, Tân Bình, TP.HCM
-- Địa chỉ cũ (list trước): 180 Phạm Văn Bạch, Phường 15, Tân Bình, Thành phố Hồ Chí Minh
+- Cơ sở / địa chỉ: 🏫 Tân Bình: 2A Nguyễn Sỹ Sách, P.15, Tân Bình, TP.HCM
 - Hotline / Zalo: 0946 426 536
 - Email Fanpage: trungtamtinhocsaoviet@gmail.com
 - Web Fanpage: https://www.blogdaytinhoc.com/lop-hoc-ke-toan-891

@@ -53,8 +53,6 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 
 ## Cơ sở đào tạo của trang này (địa chỉ đúng Fanpage này)
 - 193 Nguyễn Xí, phường Bình Thạnh, TP.HCM, TP.HCM
-- Mới (Fanpage, dùng khi đăng bài): 193 Nguyễn Xí, phường Bình Thạnh, TP.HCM, TP.HCM
-- Cũ (list _mac-dinh trước đây, chỉ đối chiếu): Số 16, 21/12 Lê Trực, Phường 7, Q. Bình Thạnh (Chung Cư Lê Trực)
 - Đăng bài chỉ dùng dòng Mới (Fanpage). Dòng Cũ chỉ để đối chiếu, không nhét vào caption.
 
 ## USP chuẩn từ Fanpage thực tế
@@ -99,7 +97,8 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 
 ## Chân trang caption (bắt buộc)
 Trung Tâm Đào Tạo Kế Toán Sao Việt (hoặc Trung Tâm Tin Học Sao Việt tùy khóa)
-193 Nguyễn Xí, phường Bình Thạnh, Hồ Chí Minh., Thành phố Hồ Chí Minh 72300, Ho Chi Minh City
+🏫 Bình Thạnh: 21/12 Lê Trực, P.7, Bình Thạnh, TP.HCM
+
 Hotline: 0931 144 858
 Email: tinhocsaovietbinhthanh@gmail.com
 Web: https://blogdaytinhoc.com
@@ -109,8 +108,7 @@ Web: https://blogdaytinhoc.com
 - slug: trung-tam-ao-tao-autocad-quan-binh-thanh-tphcm
 - Page ID: 281702171693245
 - Thẻ khoá học: tin-hoc _ai, ve-ky-thuat
-- Cơ sở / địa chỉ: 193 Nguyễn Xí, phường Bình Thạnh, TP.HCM, TP.HCM
-- Địa chỉ cũ (list trước): Số 16, 21/12 Lê Trực, Phường 7, Q. Bình Thạnh (Chung Cư Lê Trực)
+- Cơ sở / địa chỉ: 🏫 Bình Thạnh: 21/12 Lê Trực, P.7, Bình Thạnh, TP.HCM
 - Hotline / Zalo: 0931 144 858
 - Email Fanpage: tinhocsaovietbinhthanh@gmail.com
 - Web Fanpage: https://blogdaytinhoc.com

@@ -52,8 +52,6 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 
 ## Cơ sở đào tạo của trang này (địa chỉ đúng Fanpage này)
 - Số 107, D5, KDC Phú Hòa 1, Khu 4, Thủ Dầu Một, Bình Dương, Thủ Dầu Một, Bình Dương 75100, Thu Dau Mot
-- Mới (Fanpage, dùng khi đăng bài): Số 107, D5, KDC Phú Hòa 1, Khu 4, Thủ Dầu Một, Bình Dương, Thủ Dầu Một, Bình Dương 75100, Thu Dau Mot
-- Cũ (list _mac-dinh trước đây, chỉ đối chiếu): Số 107, D5, KDC Phú Hòa 1, Khu 4, Thủ Dầu Một, Bình Dương
 
 ## USP chuẩn từ Fanpage thực tế
 - Học thực hành 100% trên máy tính và chứng từ thực tế của doanh nghiệp
@@ -97,7 +95,11 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Tin học qu
 
 ## Chân trang caption (bắt buộc)
 Trung Tâm Đào Tạo Kế Toán Sao Việt (hoặc Trung Tâm Tin Học Sao Việt tùy khóa)
-Số 107, D5, KDC Phú Hòa 1, Khu 4, Thủ Dầu Một, Bình Dương, Thủ Dầu Một, Bình Dương 75100, Thu Dau Mot
+🏫 Dĩ An: 184/19/11 Đặng Văn Mây, KP. Đông Chiêu, P. Tân Đông Hiệp, TP. Dĩ An
+🏫 Thuận An: 8 Đường NA8, Khu Dân Cư Viet Sing, TP. Thuận An
+🏫 Thủ Dầu Một: 107 D5, KDC Phú Hòa 1, TP. Thủ Dầu Một
+🏫 Tân Uyên: Số 20 Đường ĐX12, P. Tân Vĩnh Hiệp, TP. Tân Uyên
+
 Hotline: 0823 552 558
 Email: trungtamtinhocsaoviet@gmail.com
 Web: https://blogdaytinhoc.com/hoc-ke-toan-tai-thu-dau-mot-binh-duong-day-thuc-hanh-thuc-te-cho-nguoi-moi-bat-dau-355
@@ -107,8 +109,7 @@ Web: https://blogdaytinhoc.com/hoc-ke-toan-tai-thu-dau-mot-binh-duong-day-thuc-h
 - slug: trung-tam-ao-tao-ke-toan-thu-dau-mot-binh-duong
 - Page ID: 180054785193451
 - Thẻ khoá học: tin-hoc _ai, ke-toan
-- Cơ sở / địa chỉ: Số 107, D5, KDC Phú Hòa 1, Khu 4, Thủ Dầu Một, Bình Dương, Thủ Dầu Một, Bình Dương 75100, Thu Dau Mot
-- Địa chỉ cũ (list trước): Số 107, D5, KDC Phú Hòa 1, Khu 4, Thủ Dầu Một, Bình Dương
+- Cơ sở / địa chỉ: 🏫 Dĩ An: 184/19/11 Đặng Văn Mây, KP. Đông Chiêu, P. Tân Đông Hiệp, TP. Dĩ An | 🏫 Thuận An: 8 Đường NA8, Khu Dân Cư Viet Sing, TP. Thuận An | 🏫 Thủ Dầu Một: 107 D5, KDC Phú Hòa 1, TP. Thủ Dầu Một | 🏫 Tân Uyên: Số 20 Đường ĐX12, P. Tân Vĩnh Hiệp, TP. Tân Uyên
 - Hotline / Zalo: 0823 552 558
 - Email Fanpage: trungtamtinhocsaoviet@gmail.com
 - Web Fanpage: https://blogdaytinhoc.com/hoc-ke-toan-tai-thu-dau-mot-binh-duong-day-thuc-hanh-thuc-te-cho-nguoi-moi-bat-dau-355
