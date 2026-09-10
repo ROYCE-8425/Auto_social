@@ -2,7 +2,7 @@
 
 > Tự sinh từ file - ĐỪNG sửa tay. Chỉ mục mọi năng lực của Javis trong brain này để bất kỳ AI/engine đọc 1 chỗ là hiểu Javis làm được gì. Song song `wiki/index.md` (tri thức).
 
-**Tổng quan:** 1 agents · 15 skills · 1 workflows (0 bật) · 5 loops (0 bật) · 12 plugins (11 chạy)
+**Tổng quan:** 1 agents · 15 skills · 1 workflows (0 bật) · 6 loops (0 bật) · 12 plugins (11 chạy)
 
 ## Agents
 - **Biên tập Facebook** (`bien-tap-facebook`) - Tạo 1 ảnh AI độc quyền mới 100%, soạn caption đúng brand kit và đăng lên Fanpage Facebook. · model gpt-5.5 · skills: dang-bai-facebook, viet-bai-facebook
@@ -34,6 +34,7 @@
 ## Loops
 - **đăng bài cho t3 t6 cho all fage** (`dang-bai-3-6-cho-all-fage`) - tắt · custom/full · mỗi 18 phút
 - **Đăng bài Facebook tự động (Xoay tua 1 Fanpage)** (`dang-bai-facebook-tu-dong-xoay-tua-1-fanpage-nho-dien-ten-fa`) - tắt · custom/full · mỗi 5 phút
+- **Đăng bài hàng ngày - Xoay tua tất cả Fanpage** (`dang-bai-hang-ngay-xoay-tua-tat-ca-fanpage`) - tắt · custom/full · mỗi 5 phút
 - **Đăng bài hàng ngày 1 page** (`dang-bai-hang-ngay`) - tắt · custom/full · mỗi 5 phút
 - **Đăng Royce Shop ngẫu nhiên** (`dang-royce-shop-ngau-nhien-moi-5-phut`) - tắt · custom/full · mỗi 5 phút
 - **s** (`s`) - tắt · custom/suggest · mỗi 120 phút

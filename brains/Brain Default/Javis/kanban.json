@@ -3224,7 +3224,7 @@
       "capability": "external-write",
       "execution_mode": "full",
       "priority": 2,
-      "status": "done",
+      "status": "archived",
       "needs_approval": false,
       "block_kind": "",
       "block_reason": "",
@@ -3239,7 +3239,7 @@
       "current_run_id": "",
       "result": "OK | page: ID Royce Shop là `988656934325292` | course: tin-hoc _ai | cover: attachments/dataset/_xuat/album_ready`. | post_id: 122131911783221350 | link: https://www.facebook.com/122131661457221350/posts/122131911783221350",
       "created_at": 1788778298.5780342,
-      "updated_at": 1788778649.9469733,
+      "updated_at": 1789037853.7206123,
       "metadata": {
         "route": "wf:dang-bai-that-facebook",
         "capability": "external-write"
@@ -3263,6 +3263,10 @@
         {
           "ts": "2026-09-07 10:57",
           "msg": "done"
+        },
+        {
+          "ts": "2026-09-10 10:57",
+          "msg": "done -> archived: đã kết thúc quá 3 ngày"
         }
       ]
     },
@@ -3275,7 +3279,7 @@
       "capability": "external-write",
       "execution_mode": "full",
       "priority": 2,
-      "status": "done",
+      "status": "archived",
       "needs_approval": false,
       "block_kind": "",
       "block_reason": "",
@@ -3290,7 +3294,7 @@
       "current_run_id": "",
       "result": "OK | page: ID `988656934325292` | course: tin-hoc _ai | cover: attachments/dataset/_xuat/javis-img-20260907-111842-607f48.png` | photos: 5 | post_id: 988656934325292 | link: https://www.facebook.com/988656934325292",
       "created_at": 1788779806.115016,
-      "updated_at": 1788780120.9308176,
+      "updated_at": 1789039324.6548572,
       "metadata": {
         "route": "wf:dang-bai-that-facebook",
         "capability": "external-write"
@@ -3314,6 +3318,10 @@
         {
           "ts": "2026-09-07 11:22",
           "msg": "done"
+        },
+        {
+          "ts": "2026-09-10 11:22",
+          "msg": "done -> archived: đã kết thúc quá 3 ngày"
         }
       ]
     },
@@ -3326,7 +3334,7 @@
       "capability": "external-write",
       "execution_mode": "full",
       "priority": 2,
-      "status": "done",
+      "status": "archived",
       "needs_approval": false,
       "block_kind": "",
       "block_reason": "",
@@ -3341,7 +3349,7 @@
       "current_run_id": "",
       "result": "OK | page: ID Royce Shop là `988656934325292` | course: do-hoa | cover: attachments/dataset/_xuat/javis-img-20260907-112523-e182a2.png`. | photos: 5 | post_id: 988656934325292 | link: https://www.facebook.com/988656934325292/posts/988656934325292_122131915275221350",
       "created_at": 1788780192.9132142,
-      "updated_at": 1788780498.6341875,
+      "updated_at": 1789039699.8635695,
       "metadata": {
         "route": "wf:dang-bai-that-facebook",
         "capability": "external-write"
@@ -3369,6 +3377,10 @@
         {
           "ts": "2026-09-07 11:28",
           "msg": "done"
+        },
+        {
+          "ts": "2026-09-10 11:28",
+          "msg": "done -> archived: đã kết thúc quá 3 ngày"
         }
       ]
     },
@@ -3381,7 +3393,7 @@
       "capability": "external-write",
       "execution_mode": "full",
       "priority": 2,
-      "status": "done",
+      "status": "archived",
       "needs_approval": false,
       "block_kind": "",
       "block_reason": "",
@@ -3396,7 +3408,7 @@
       "current_run_id": "",
       "result": "OK | page: ID `988656934325292` | course: tin-hoc _ai | cover: attachments/dataset/_xuat/javis-img-20260907-124758-11b76b.png`. | photos: 5 | post_id: 988656934325292 | link: https://www.facebook.com/988656934325292",
       "created_at": 1788785146.9831991,
-      "updated_at": 1788785402.685879,
+      "updated_at": 1789044602.7674623,
       "metadata": {
         "route": "wf:dang-bai-that-facebook",
         "capability": "external-write"
@@ -3420,6 +3432,10 @@
         {
           "ts": "2026-09-07 12:50",
           "msg": "done"
+        },
+        {
+          "ts": "2026-09-10 12:50",
+          "msg": "done -> archived: đã kết thúc quá 3 ngày"
         }
       ]
     },
@@ -3981,10 +3997,10 @@
       "capability": "external-write",
       "execution_mode": "full",
       "priority": 2,
-      "status": "blocked",
+      "status": "archived",
       "needs_approval": false,
-      "block_kind": "transient",
-      "block_reason": "Not logged in · Please run /login",
+      "block_kind": "",
+      "block_reason": "",
       "created_by": "user",
       "chat_id": "",
       "idempotency_key": "",
@@ -3996,7 +4012,7 @@
       "current_run_id": "",
       "result": "",
       "created_at": 1788943318.6628056,
-      "updated_at": 1788943321.1243513,
+      "updated_at": 1788956346.5089464,
       "metadata": {},
       "artifacts": [],
       "deps": [],
@@ -4012,9 +4028,13 @@
         {
           "ts": "2026-09-09 08:42",
           "msg": "Not logged in · Please run /login"
+        },
+        {
+          "ts": "2026-09-09 12:19",
+          "msg": "blocked -> archived: operator archive"
         }
       ]
     }
   ],
-  "updated": 1788943321.2163446
+  "updated": 1789044602.8025835
 }
