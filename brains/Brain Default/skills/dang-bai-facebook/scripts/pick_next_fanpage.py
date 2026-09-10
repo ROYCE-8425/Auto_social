@@ -29,8 +29,23 @@ if VAULT.name != "Brain Default" and not (VAULT / "wiki" / "brand-kits").is_dir(
     VAULT = Path(__file__).resolve().parents[4]
 KITS = VAULT / "wiki" / "brand-kits"
 STATE = VAULT / "Javis" / "dang-hang-ngay.json"
-# test page: không vào hàng ngày trừ khi --include-royce
 SKIP_FILES = {"royce-shop.md", "royce.md"}
+
+CONTENT_ANGLES = ["meo_thuc_chien", "tinh_huong", "tai_lieu", "tuyen_sinh"]
+ANGLE_LABELS = {
+    "meo_thuc_chien": "Mẹo & Thủ thuật / Phím tắt thực chiến",
+    "tinh_huong": "Tình huống thực tế & Giải pháp nghề nghiệp",
+    "tai_lieu": "Tặng tài liệu & Thư viện file mẫu",
+    "tuyen_sinh": "Tuyển sinh & Khai giảng khóa kèm 1-1",
+}
+
+
+def pick_next_angle(last_angle: str = "") -> str:
+    """Xoay tua tuần tự 4 góc nội dung: meo_thuc_chien -> tinh_huong -> tai_lieu -> tuyen_sinh -> ..."""
+    if last_angle in CONTENT_ANGLES:
+        idx = CONTENT_ANGLES.index(last_angle)
+        return CONTENT_ANGLES[(idx + 1) % len(CONTENT_ANGLES)]
+    return "meo_thuc_chien"
 
 
 def registry_tags():
@@ -228,15 +243,21 @@ def load_state(today):
         "skip": [],
         "cursor": 0,
         "page_last_course": {},
+        "page_last_angle": {},
         "pending_course": {},
+        "pending_angle": {},
     }
     if STATE.exists():
         try:
             raw = json.loads(STATE.read_text(encoding="utf-8"))
             if isinstance(raw.get("page_last_course"), dict):
                 st["page_last_course"] = raw["page_last_course"]
+            if isinstance(raw.get("page_last_angle"), dict):
+                st["page_last_angle"] = raw["page_last_angle"]
             if isinstance(raw.get("pending_course"), dict):
                 st["pending_course"] = raw["pending_course"]
+            if isinstance(raw.get("pending_angle"), dict):
+                st["pending_angle"] = raw["pending_angle"]
             if "cursor" in raw:
                 try:
                     st["cursor"] = int(raw.get("cursor") or 0)
@@ -246,11 +267,16 @@ def load_state(today):
                 st["ok"] = list(raw.get("ok") or [])
                 st["skip"] = list(raw.get("skip") or [])
                 st["last_course"] = raw.get("last_course", "")
-            # Tự động dọn dẹp các page_id trong pending_course đã nằm trong ok
-            if isinstance(st.get("pending_course"), dict) and st.get("ok"):
+                st["last_angle"] = raw.get("last_angle", "")
+            # Tự động dọn dẹp các page_id trong pending_course/pending_angle đã nằm trong ok
+            if st.get("ok"):
                 ok_set = set(str(x) for x in st["ok"])
-                st["pending_course"] = {
-                    k: v for k, v in st["pending_course"].items() if str(k) not in ok_set}
+                if isinstance(st.get("pending_course"), dict):
+                    st["pending_course"] = {
+                        k: v for k, v in st["pending_course"].items() if str(k) not in ok_set}
+                if isinstance(st.get("pending_angle"), dict):
+                    st["pending_angle"] = {
+                        k: v for k, v in st["pending_angle"].items() if str(k) not in ok_set}
         except Exception:
             pass
     return st
@@ -424,6 +450,13 @@ def main(argv):
         i = argv.index("--page")
         specific_page = argv[i + 1] if i + 1 < len(argv) else ""
 
+    specific_angle = None
+    if "--angle" in argv:
+        i = argv.index("--angle")
+        specific_angle = argv[i + 1] if i + 1 < len(argv) else ""
+        if specific_angle not in CONTENT_ANGLES:
+            specific_angle = None
+
     mark_ok = None
     mark_fail = None
     reason = ""
@@ -475,9 +508,16 @@ def main(argv):
         else:
             available_tags = unique_tags
         tag = random.choice(available_tags or ["tin-hoc _ai"])
+
+        last_angle = (st.get("page_last_angle") or {}).get(row["page_id"]) or ""
+        angle = specific_angle or pick_next_angle(last_angle)
+
         if "pending_course" not in st or not isinstance(st["pending_course"], dict):
             st["pending_course"] = {}
         st["pending_course"][row["page_id"]] = tag
+        if "pending_angle" not in st or not isinstance(st["pending_angle"], dict):
+            st["pending_angle"] = {}
+        st["pending_angle"][row["page_id"]] = angle
         save_state(st)
         print("NEXT=1")
         print("page_id=" + row["page_id"])
@@ -488,6 +528,8 @@ def main(argv):
         print("course_path=wiki/courses/" + tag + ".md")
         print("skill_path=skills/dang-bai-facebook/SKILL.md")
         print("the=" + tag)
+        print("angle=" + angle)
+        print("angle_label=" + ANGLE_LABELS.get(angle, angle))
         print("hotline=" + (row["hotline"] or ""))
         print("email=" + (row["email"] or ""))
         print("web=" + (row["web"] or ""))
@@ -528,10 +570,19 @@ def main(argv):
         if mark_ok not in st["ok"]:
             st["ok"].append(mark_ok)
         course_done = None
-        if len(argv) > argv.index("--ok") + 2 and not argv[argv.index("--ok") + 2].startswith("-"):
-            course_done = argv[argv.index("--ok") + 2].strip()
+        angle_done = None
+
+        # Kiểm tra nếu truyền tham số: --ok <page_id> <course> <angle>
+        pos = argv.index("--ok")
+        if len(argv) > pos + 2 and not argv[pos + 2].startswith("-"):
+            course_done = argv[pos + 2].strip()
         elif mark_ok in (st.get("pending_course") or {}):
             course_done = st["pending_course"].get(mark_ok)
+
+        if len(argv) > pos + 3 and not argv[pos + 3].startswith("-"):
+            angle_done = argv[pos + 3].strip()
+        elif mark_ok in (st.get("pending_angle") or {}):
+            angle_done = st["pending_angle"].get(mark_ok)
 
         if course_done:
             course_done = _canonical_tag(course_done)
@@ -540,23 +591,35 @@ def main(argv):
                 st["page_last_course"] = {}
             st["page_last_course"][mark_ok] = course_done
 
-        # Xóa khỏi pending_course để dọn dẹp state sạch sẽ
+        if angle_done and angle_done in CONTENT_ANGLES:
+            st["last_angle"] = angle_done
+            if "page_last_angle" not in st or not isinstance(st["page_last_angle"], dict):
+                st["page_last_angle"] = {}
+            st["page_last_angle"][mark_ok] = angle_done
+
+        # Xóa khỏi pending_course & pending_angle để dọn dẹp state sạch sẽ
         if "pending_course" in st and isinstance(st["pending_course"], dict):
             st["pending_course"].pop(str(mark_ok), None)
             st["pending_course"].pop(mark_ok, None)
+        if "pending_angle" in st and isinstance(st["pending_angle"], dict):
+            st["pending_angle"].pop(str(mark_ok), None)
+            st["pending_angle"].pop(mark_ok, None)
 
         st["skip"] = [x for x in st.get(
             "skip") or [] if x.get("id") != mark_ok]
         save_state(st)
         print("MARK_OK", mark_ok,
-              f"course={st.get('page_last_course', {}).get(mark_ok, '')}")
+              f"course={st.get('page_last_course', {}).get(mark_ok, '')} angle={st.get('page_last_angle', {}).get(mark_ok, '')}")
         return 0
 
     if mark_fail:
-        # Dọn dẹp pending_course khi thất bại
+        # Dọn dẹp pending_course & pending_angle khi thất bại
         if "pending_course" in st and isinstance(st["pending_course"], dict):
             st["pending_course"].pop(str(mark_fail), None)
             st["pending_course"].pop(mark_fail, None)
+        if "pending_angle" in st and isinstance(st["pending_angle"], dict):
+            st["pending_angle"].pop(str(mark_fail), None)
+            st["pending_angle"].pop(mark_fail, None)
 
         skips = list(st.get("skip") or [])
         prev = next((x for x in skips if x.get("id") == mark_fail), None)
@@ -661,9 +724,16 @@ def main(argv):
         available_tags = unique_tags
 
     tag = random.choice(available_tags or ["tin-hoc _ai"])
+
+    last_angle = (st.get("page_last_angle") or {}).get(row["page_id"]) or ""
+    angle = specific_angle or pick_next_angle(last_angle)
+
     if "pending_course" not in st or not isinstance(st["pending_course"], dict):
         st["pending_course"] = {}
     st["pending_course"][row["page_id"]] = tag
+    if "pending_angle" not in st or not isinstance(st["pending_angle"], dict):
+        st["pending_angle"] = {}
+    st["pending_angle"][row["page_id"]] = angle
     save_state(st)
     print("NEXT=1")
     print("page_id=" + row["page_id"])
@@ -674,6 +744,8 @@ def main(argv):
     print("course_path=wiki/courses/" + tag + ".md")
     print("skill_path=skills/dang-bai-facebook/SKILL.md")
     print("the=" + tag)
+    print("angle=" + angle)
+    print("angle_label=" + ANGLE_LABELS.get(angle, angle))
     print("hotline=" + (row["hotline"] or ""))
     print("email=" + (row["email"] or ""))
     print("web=" + (row["web"] or ""))

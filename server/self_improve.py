@@ -877,7 +877,25 @@ class LoopFeature:
                 "runs_this_week": runs_week, "week": week_str,
             }
             # Tự động nhận diện khi loop đã hoàn thành xong nhiệm vụ cho ngày hôm nay:
-            if any(k in summary.lower() for k in ("next=none", "het-hang-hom-nay", "page-da-ok-hom-nay", "da-du-bai", "hoan-thanh-hom-nay", "đã đủ bài", "đã hoàn thành hôm nay")):
+            # CHỐT CHẶN 1: Nếu vòng này vừa đăng bài thành công (có POST_OK hoặc post_id), TUYỆT ĐỐI KHÔNG set done_day.
+            has_posted_ok = bool(
+                re.search(r'\bPOST_OK\b', summary, re.I)
+                or re.search(r'post_id[^0-9\n]*(\d{8,}_\d{5,}|\d{10,})', summary, re.I)
+                or summary.strip().upper().startswith("OK |")
+                or summary.strip().upper().startswith("POST_OK")
+            )
+
+            # CHỐT CHẶN 2: Chỉ nhận diện hết hàng khi summary THỰC SỰ là tín hiệu máy rõ ràng đầu dòng,
+            # KHÔNG nhận diện khi cụm từ chỉ nằm trong câu văn giải thích/hướng dẫn của LLM (như 'nếu NEXT=NONE', 'không phải NEXT=NONE').
+            is_machine_done = bool(
+                re.search(r'^\s*NEXT=NONE\b', summary, re.M)
+                or re.search(r'^\s*POST_SKIP\s+het-hang-hom-nay\b', summary, re.M)
+                or summary.strip().startswith("NEXT=NONE")
+                or summary.strip() == "ĐÃ ĐĂNG HẾT MỌI PAGE TRONG NGÀY"
+                or summary.strip() == "NEXT=NONE het-hang-hom-nay"
+            )
+
+            if not has_posted_ok and is_machine_done:
                 patch["done_day"] = today
                 patch["sleep_until"] = _calc_sleep_until_tomorrow(loop.get("quiet_hours", ""))
             paused_now = False
@@ -961,7 +979,7 @@ class LoopFeature:
                     )
                     out_b, _ = await asyncio.wait_for(proc.communicate(), timeout=10.0)
                     out_str = out_b.decode("utf-8", errors="ignore")
-                    if "NEXT=NONE" in out_str:
+                    if re.search(r'^\s*NEXT=NONE\b', out_str, re.M):
                         sleep_ts = _calc_sleep_until_tomorrow(loop.get("quiet_hours", ""))
                         skip_msg = "Toàn bộ Fanpage đã đủ bài cho hôm nay (NEXT=NONE). Tự động dừng đến ngày mai (0 token tiêu tốn)."
                         self._update_state(brain, slug, last_run=time.time(), done_day=today,
@@ -1004,7 +1022,7 @@ class LoopFeature:
                     fb_verified = True
                     verify_line = f"✓ Đạt: Graph API đã xác thực thành công trên tường Facebook (post_id: {pid_val})"
                     verify_failed = False
-            elif any(k in summary.lower() for k in ("next=none", "het-hang-hom-nay", "page-da-ok-hom-nay")):
+            elif re.search(r'^\s*NEXT=NONE\b', summary, re.M) or summary.strip().startswith("NEXT=NONE") or summary.strip() == "ĐÃ ĐĂNG HẾT MỌI PAGE TRONG NGÀY":
                 fb_verified = True
                 verify_line = "✓ Đạt: Toàn bộ Fanpage đã hoàn thành hoặc hết lượt đăng hôm nay (NEXT=NONE)"
                 verify_failed = False

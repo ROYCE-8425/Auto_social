@@ -44,3 +44,38 @@ updated: 2026-09-06
   * Kèm 1 kèm 1 đến khi vẽ thành thạo và tự lập được hồ sơ bản vẽ hoàn chỉnh.
   * Học viên có thể mang trực tiếp bản vẽ của công ty mình lên lớp để cùng giảng viên giải quyết.
   * Hỗ trợ kỹ thuật và giải đáp vướng mắc trọn đời sau khi kết thúc khóa học.
+
+## 3. Kho Tri Thức 4 Góc Nội Dung (Content Pillars)
+
+### A. Góc Mẹo & Thủ thuật thực chiến (meo_thuc_chien):
+- **Tiêu đề gợi ý:**
+  * 💡 5 LỆNH TẮT AUTOCAD VẼ NHANH GẤP 3 LẦN CHO DÂN KỸ THUẬT
+  * 💡 MẸO IN BẢN VẼ AUTOCAD ĐÚNG TỶ LỆ VÀ KHÔNG BỊ MẤT NÉT
+  * 💡 BÍ QUYẾT TẠO BLOCK ĐỘNG TIẾT KIỆM 50% THỜI GIAN TRIỂN KHAI HỒ SƠ
+- **Nội dung mẹo chi tiết:**
+  * Phím F8 (Ortho) & F10 (Polar Tracking): Giữ đường gióng thẳng trục và góc chuẩn xác nhanh chóng.
+  * Lệnh MA (Matchprop): Sao chép thuộc tính Layer, màu sắc, nét đứt giữa các đối tượng chỉ trong 1 click chuột.
+  * Lệnh LAYOFF & LAYON: Ẩn/hiện layer tức thì để chỉnh sửa bản vẽ phức tạp mà không xóa nhầm đối tượng.
+  * Lệnh STRETCH (S): Co kéo kích thước cụm chi tiết mà không làm vỡ liên kết đường Dim.
+  * Lệnh PURGE (PU) & AUDIT: Quét dọn rác và sửa lỗi bản vẽ, giảm tới 70% dung lượng file giúp CAD chạy mượt.
+
+### B. Góc Tình huống & Sự cố thực tế (tinh_huong):
+- **Tiêu đề gợi ý:**
+  * ⚙️ BẢN VẼ AUTOCAD BỊ NẶNG, GIẬT LAG? 3 BƯỚC LÀM NHẸ FILE TRONG 30 GIÂY
+  * ⚙️ XỬ LÝ LỖI FONT CHỮ VĂNG DẤU HỎI (?) TRONG BẢN VẼ KỸ THUẬT
+  * ⚙️ BẢN VẼ IN RA BỊ MẤT NÉT HOẶC SAI TỶ LỆ: NGUYÊN NHÂN VÀ CÁCH KHẮC PHỤC
+- **Giải pháp thực tế:**
+  * Sửa lỗi giật lag: Gõ lệnh AUDIT -> Y để sửa lỗi hệ thống, sau đó gõ PU để xóa các block rác và layer thừa.
+  * Sửa lỗi font: Bổ sung bộ font SHX tiếng Việt vào thư mục Fonts của phần mềm hoặc chỉnh Style (ST).
+  * In ấn chuẩn: Thiết lập Page Setup Manager, gán file nét in CTB chuẩn, chọn Plot Area là Window kèm Center the Plot.
+
+### C. Góc Tặng tài liệu & Thư viện file mẫu (tai_lieu):
+- **Tiêu đề gợi ý:**
+  * 🎁 CHIA SẺ TRỌN BỘ THƯ VIỆN BLOCK CAD 2D THỰC CHIẾN (CỬA, NỘI THẤT, CÂY, THIẾT BỊ VỆ SINH)
+  * 🎁 TẶNG BỘ HỒ SƠ BẢN VẼ CÔNG TRÌNH MẪU ĐẦY ĐỦ CÁC HẠNG MỤC THỰC TẾ
+  * 🎁 TỔNG HỢP BỘ NÉT IN CTB TIÊU CHUẨN ISO CHO XÂY DỰNG VÀ CƠ KHÍ
+- **Nội dung chia sẻ:**
+  * Hơn 10.000 block động chuẩn tỷ lệ, phân loại rõ ràng theo ngành kiến trúc, nội thất, kết cấu, MEP và cơ khí chế tạo.
+
+### D. Góc Tuyển sinh & Khai giảng kèm 1-1 (tuyen_sinh):
+- Dùng tiêu đề và highlights ở Mục 1 & 2 để tuyển sinh lộ trình kèm 1-1.
