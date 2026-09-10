@@ -30,23 +30,28 @@ TUYỆT ĐỐI CẤM TỰ BỊA KHÓA HỌC KHÔNG CÓ TRONG DATASET: CẤM "Kin
 ### Quy trình chuẩn 2 bước:
 
 1. **Bước 1: BẮT BUỘC gọi thẳng `javis_generate_image` (GPT Image 2) tạo 1 ảnh bìa mới 100%**:
-   - Lấy Tiêu đề gợi ý và Highlights từ `wiki/courses/<khoa_hoc>.md`.
+   - Lấy Tiêu đề gợi ý và Highlights từ `wiki/courses/<khoa_hoc>.md` kết hợp góc bài `<angle>` (nếu có: `meo_thuc_chien`, `tinh_huong`, `tai_lieu`, `tuyen_sinh`):
+     * Với `meo_thuc_chien`: Ảnh phong cách Isometric 3D workspace hoặc infographic phím tắt, giao diện làm việc hiện đại. TUYỆT ĐỐI CẤM chữ "Tuyển sinh" hay "Đăng ký ngay".
+     * Với `tinh_huong`: Ảnh phong cách Before/After Split (trước/sau xử lý bài toán) hoặc phân tích sự cố kỹ thuật. TUYỆT ĐỐI CẤM chữ "Tuyển sinh".
+     * Với `tai_lieu`: Ảnh phong cách Canva Grid / Clean Resource Catalog chia sẻ bộ file mẫu, bảng tính, block thư viện. TUYỆT ĐỐI CẤM chữ "Tuyển sinh".
+     * Với `tuyen_sinh`: Banner tuyển sinh đào tạo thực chiến chuẩn nhận diện Sao Việt, tiêu đề và điểm nổi bật khóa học.
    - GỌI THẲNG TOOL DUY NHẤT: `javis_generate_image` (CẤM phân vân hay chọn tool khác làm tốn thời gian suy nghĩ):
-     `javis_generate_image(prompt="Banner tuyển sinh thực chiến khóa học <tên_khóa_học_chuẩn_trong_dataset> Sao Việt, tiêu đề '<tiêu_đề_trong_wiki>', các điểm nổi bật '<highlights_trong_wiki>', bố cục chữ và logo nằm trọn trong vùng an toàn cách đều 4 mép ảnh 15-20% (tuyệt đối không để chữ sát mép hay bị cắt mất chữ), phong cách thiết kế hiện đại, nhận diện xanh dương & cam Sao Việt, độ nét cao", save_under="attachments/dataset/_xuat", ai_render_brand=true)`
+     `javis_generate_image(prompt="Ảnh truyền thông Facebook vuông 1:1 cho khóa học <tên_khóa_học_chuẩn_trong_dataset> Sao Việt theo góc <angle_hoặc_mô_tả_nội_dung>, tiêu đề '<tiêu_đề>', bám highlights '<highlights_trong_wiki>', bố cục chữ và hình nằm trọn trong vùng an toàn cách đều 4 mép ảnh 15-20% (tuyệt đối không để chữ sát mép hay bị cắt mất chữ), phong cách thiết kế hiện đại, nhận diện xanh dương & cam Sao Việt làm điểm nhấn, độ nét cao. <Nếu không phải góc tuyen_sinh: Cấm chữ tuyển sinh, cấm nút đăng ký ngay>", save_under="attachments/dataset/_xuat", ai_render_brand=true)`
    - Nhận kết quả và lấy đường dẫn ảnh vừa tạo (ví dụ: `res["rel_path"]` dạng `attachments/dataset/_xuat/cover_...png`).
    - NẾU tạo ảnh AI thất bại hoặc không có file: Dừng ngay và trả về `POST_SKIP ly-do=thieu-cover-ai khong-retry=1`. TUYỆT ĐỐI CẤM lấy ảnh cũ thay thế.
 
-2. **Bước 2: Soạn caption 7 nhịp & Đăng ALBUM bằng `fb_page_album`**:
+2. **Bước 2: Soạn caption theo đúng góc nội dung & Đăng ALBUM bằng `fb_page_album`**:
    - Đọc đúng 1 file brand kit của trang trong `wiki/brand-kits/<kit>.md`. Lấy Page ID, hotline, địa chỉ và chân trang CHAN_TRANG (CẤM địa chỉ có mã bưu điện zip code).
-   - Soạn caption theo skill `viet-bai-facebook`:
-     * Độ dài: 32-45 dòng (chưa tính chân trang).
-     * Nhịp điệu và Highlight emoji chuẩn bắt buộc: Móc câu -> Nỗi đau (`👉`) -> Giải pháp kỹ năng -> Khối cam kết điểm mạnh đào tạo (4-5 dòng, BẮT BUỘC mỗi dòng bắt đầu bằng `📌`) -> Khối quyền lợi/ưu đãi học viên (3-4 dòng, BẮT BUỘC mỗi dòng bắt đầu bằng `🎁`) -> Khối kêu gọi hành động (`👉 Muốn học nhanh...` + `📞 Nhắn tin Fanpage hoặc gọi Hotline/Zalo...` + `📌 Nhận học viên mới mỗi tuần...`) -> Chân trang CHAN_TRANG từ kit/script (HCM chỉ hiện 1 chi nhánh của trang; Bình Dương hiện cả 4 cơ sở BD; Đồng Nai hiện cả 2 cơ sở ĐN; Vũng Tàu hiện cơ sở VT; mỗi cơ sở `🏫`, `📞 Hotline/Zalo:`, `📧 Email:`, `🌐 Website:`). CẤM zip code bưu điện.
+   - Soạn caption theo skill `viet-bai-facebook` phân luồng linh hoạt theo góc nội dung `<angle>`:
+     * **Góc `tuyen_sinh`**: Móc câu -> Nỗi đau (`👉`) -> Giải pháp kỹ năng -> Khối cam kết điểm mạnh đào tạo (4-5 dòng, BẮT BUỘC mỗi dòng bắt đầu bằng `📌`) -> Khối quyền lợi/ưu đãi học viên (3-4 dòng, BẮT BUỘC mỗi dòng bắt đầu bằng `🎁`) -> Khối kêu gọi hành động (`👉 Muốn học nhanh...` + `📞 Nhắn tin Fanpage hoặc gọi Hotline/Zalo...` + `📌 Nhận học viên mới mỗi tuần...`) -> Chân trang CHAN_TRANG.
+     * **Góc `meo_thuc_chien` / `tinh_huong` / `tai_lieu`**: Tập trung 100% vào giá trị kiến thức thực hành. Móc câu nghề nghiệp -> Bối cảnh/tình huống công việc thực tế -> Hướng dẫn cụ thể từng bước / Bảng phím tắt, công thức, checklist xử lý lỗi -> Lời khuyên/Lưu ý ứng dụng -> CTA mềm gọn nhẹ 1-2 dòng (`👉 Lưu lại áp dụng ngay khi cần nhé! / Cần trau dồi bài bản hãy inbox Fanpage để được định hướng khóa học phù hợp.`) -> Chân trang CHAN_TRANG. TUYỆT ĐỐI KHÔNG nhồi nhét khối `🎁` ưu đãi học phí hay `📌` tuyển sinh vào bài chia sẻ kiến thức.
+     * Độ dài: 28-45 dòng (chưa tính chân trang).
      * Không Markdown `**`, không em dash, không mở đầu bằng "Chiến dịch tuyển sinh", CẤM bịa học phí không có trong tài liệu.
    - Gọi tool đăng ALBUM (Tự động chuẩn bị 6-8 ảnh chuẩn Tỷ Lệ Vàng 2026):
      `fb_page_album(page="<tên_page_hoặc_page_id>", photos="auto", course="<tên_khóa_học_chuẩn>", cover="<đường_dẫn_ảnh_AI_vừa_tạo_ở_bước_1>", message="<toàn_bộ_caption>")`
      *(Cơ chế `photos="auto"` sẽ tự động ghép ảnh cover AI mới + 5-7 ảnh lớp học thật từ dataset của đúng khóa học đó, tự chuẩn hóa toàn bộ sang tỷ lệ vuông 1:1 đồng bộ cho album 6, 7 hoặc 8 ảnh)*.
    - Khi tool trả về kết quả thành công, báo cáo đúng định dạng 1 dòng:
-     `POST_OK post_id=<post_id> status=verified link=https://www.facebook.com/<post_id> | <Tên trang> | <Khóa học> | Album 6-8 ảnh (1 cover AI + ảnh dataset)`
+     `POST_OK post_id=<post_id> status=verified link=https://www.facebook.com/<post_id> | <Tên trang> | <Khóa học> | <angle_label_nếu_có> | Album 6-8 ảnh (1 cover AI + ảnh dataset)`
 
 ### Điều cấm:
 - CẤM bốc ảnh cũ trong `_xuat` hoặc ảnh lớp học cũ trong `dataset`.

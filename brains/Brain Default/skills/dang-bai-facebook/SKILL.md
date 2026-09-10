@@ -1,6 +1,6 @@
 ---
 name: Đăng bài Facebook
-description: "Đăng bài Fanpage Sao Việt: Album 6-8 ảnh chuẩn Tỷ Lệ Vàng 2026 (1 cover AI mới 100% + ảnh lớp học thật dataset), luân phiên 4 góc nội dung (Mẹo thực chiến, Tình huống nghề, Tặng tài liệu, Tuyển sinh) kèm chân trang chuẩn."
+description: "Đăng bài Fanpage Sao Việt: Album 6-8 ảnh chuẩn Tỷ Lệ Vàng 2026, cover AI mới 100%, luân phiên 4 Content Pillars kèm chân trang sạch."
 group: Facebook
 ---
 
@@ -28,14 +28,21 @@ Hệ thống tự động điều phối bài viết theo **4 Góc Nội Dung (C
 
 ---
 
-### Bước 1: BẮT BUỘC tạo 1 ảnh bìa mới 100% bằng GPT Image 2 (Theo đúng `angle`)
+### Bước 1: BẮT BUỘC tạo 1 ảnh bìa mới 100% bằng GPT Image 2 (Theo đúng `angle` & Visual Style)
 - Đọc file `wiki/courses/<the>.md` (hoặc `course_path` từ output của script) để lấy Tiêu đề và nội dung chuyên môn tương ứng với `angle`.
+- **Thư viện Visual Styles tuyển chọn cho Cover AI (Đa dạng hóa góc nhìn)**:
+  * **Isometric 3D Workspace** (`meo_thuc_chien` / Kỹ thuật / CAD / Đồ họa): Không gian làm việc 3D hiện đại, góc nhìn isometric, hiển thị bàn vẽ kỹ thuật, phím tắt, giao diện phần mềm nổi bật.
+  * **Before / After Split Screen** (`tinh_huong`): Màn hình chia đôi, nửa bên trái là sự cố/lỗi thường gặp (màu xám/đỏ nhẹ), nửa bên phải là giải pháp chuẩn chỉ (màu xanh/cam sáng rõ).
+  * **Canva Grid / Clean Resource Catalog** (`tai_lieu`): Bố cục infographic hiện đại, dạng catalog hoặc grid hiển thị các tài nguyên file mẫu, template thực hành.
+  * **Glassmorphism Tech Dashboard** (Tin học văn phòng & AI): Giao diện kính mờ công nghệ cao, bảng tính dữ liệu, dashboard phân tích tự động.
+  * **Modern Educational Ad** (`tuyen_sinh`): Banner tuyển sinh thực hành hiện đại, tương phản mạnh, nhận diện xanh dương & cam Sao Việt.
+
 - GỌI THẲNG TOOL DUY NHẤT `javis_generate_image` với prompt chuẩn theo từng góc:
 
   * **Nếu `angle == "meo_thuc_chien"` (Mẹo & Thủ thuật)**:
     ```text
     javis_generate_image(
-      prompt="Infographic poster kiến thức mẹo thủ thuật kỹ thuật chuyên ngành <the> Sao Việt, tiêu đề nổi bật '<tiêu_đề_mẹo>', các bước hướng dẫn hoặc phím tắt trực quan, bố cục chữ và hình nằm trọn trong vùng an toàn cách đều 4 mép ảnh 15-20% (tuyệt đối không để chữ sát mép hay bị cắt chữ), phong cách thiết kế đồ họa công nghệ hiện đại, nhận diện xanh dương & cam Sao Việt, độ nét cao, TUYỆT ĐỐI KHÔNG CÓ chữ tuyển sinh, KHÔNG CÓ nút đăng ký",
+      prompt="Infographic poster kiến thức mẹo thủ thuật kỹ thuật chuyên ngành <the> Sao Việt, phong cách Isometric 3D workspace hiện đại, tiêu đề nổi bật '<tiêu_đề_mẹo>', các bước hướng dẫn hoặc phím tắt trực quan, bố cục chữ và hình nằm trọn trong vùng an toàn cách đều 4 mép ảnh 15-20% (tuyệt đối không để chữ sát mép hay bị cắt chữ), nhận diện xanh dương & cam Sao Việt làm điểm nhấn, độ nét cao, TUYỆT ĐỐI KHÔNG CÓ chữ tuyển sinh, KHÔNG CÓ nút đăng ký",
       save_under="attachments/dataset/_xuat",
       ai_render_brand=true
     )
@@ -44,7 +51,7 @@ Hệ thống tự động điều phối bài viết theo **4 Góc Nội Dung (C
   * **Nếu `angle == "tinh_huong"` (Tình huống thực tế / Xử lý lỗi)**:
     ```text
     javis_generate_image(
-      prompt="Poster chuyên đề giải pháp kỹ thuật và xử lý tình huống thực tế ngành <the> Sao Việt, tiêu đề nổi bật '<tiêu_đề_tình_huống>', phân tích giải pháp công nghệ trực quan, bố cục nằm trọn trong vùng an toàn cách đều 4 mép ảnh 15-20%, phong cách thiết kế hiện đại, nhận diện xanh dương & cam Sao Việt, độ nét cao, TUYỆT ĐỐI KHÔNG CÓ chữ tuyển sinh, KHÔNG CÓ nút đăng ký",
+      prompt="Poster chuyên đề giải pháp kỹ thuật và xử lý tình huống thực tế ngành <the> Sao Việt, bố cục Before / After split screen hoặc phân tích xử lý sự cố trực quan, tiêu đề nổi bật '<tiêu_đề_tình_huống>', bố cục nằm trọn trong vùng an toàn cách đều 4 mép ảnh 15-20%, phong cách thiết kế hiện đại, nhận diện xanh dương & cam Sao Việt làm điểm nhấn, độ nét cao, TUYỆT ĐỐI KHÔNG CÓ chữ tuyển sinh, KHÔNG CÓ nút đăng ký",
       save_under="attachments/dataset/_xuat",
       ai_render_brand=true
     )
@@ -53,7 +60,7 @@ Hệ thống tự động điều phối bài viết theo **4 Góc Nội Dung (C
   * **Nếu `angle == "tai_lieu"` (Tặng tài liệu / File mẫu)**:
     ```text
     javis_generate_image(
-      prompt="Poster chia sẻ tài liệu và thư viện file mẫu thực hành chuyên ngành <the> Sao Việt, tiêu đề nổi bật 'BỘ TÀI LIỆU & FILE MẪU CHUẨN THỰC CHIẾN', hình ảnh minh họa tài nguyên template trực quan, vùng an toàn cách đều 4 mép 15-20%, phong cách hiện đại công nghệ, nhận diện xanh dương & cam Sao Việt, độ nét cao, TUYỆT ĐỐI KHÔNG CÓ chữ tuyển sinh, KHÔNG CÓ nút đăng ký",
+      prompt="Poster chia sẻ tài liệu và thư viện file mẫu thực hành chuyên ngành <the> Sao Việt, phong cách Canva Grid / Resource Catalog hiện đại, tiêu đề nổi bật 'BỘ TÀI LIỆU & FILE MẪU CHUẨN THỰC CHIẾN', hình ảnh minh họa tài nguyên template trực quan, vùng an toàn cách đều 4 mép 15-20%, phong cách hiện đại công nghệ, nhận diện xanh dương & cam Sao Việt làm điểm nhấn, độ nét cao, TUYỆT ĐỐI KHÔNG CÓ chữ tuyển sinh, KHÔNG CÓ nút đăng ký",
       save_under="attachments/dataset/_xuat",
       ai_render_brand=true
     )
@@ -62,7 +69,7 @@ Hệ thống tự động điều phối bài viết theo **4 Góc Nội Dung (C
   * **Nếu `angle == "tuyen_sinh"` (Tuyển sinh trực tiếp)**:
     ```text
     javis_generate_image(
-      prompt="Banner tuyển sinh thực chiến khóa học <the> Sao Việt, tiêu đề '<tiêu_đề>', các điểm nổi bật '<highlights>', bố cục chữ và logo nằm trọn trong vùng an toàn cách đều 4 mép ảnh 15-20% (tuyệt đối không để chữ sát mép hay bị cắt mất chữ), phong cách thiết kế hiện đại, không gian học tập công nghệ, nhận diện xanh dương & cam Sao Việt, độ nét cao",
+      prompt="Banner tuyển sinh thực chiến khóa học <the> Sao Việt, phong cách Modern Educational Ad, tiêu đề '<tiêu_đề>', các điểm nổi bật '<highlights>', bố cục chữ và logo nằm trọn trong vùng an toàn cách đều 4 mép ảnh 15-20% (tuyệt đối không để chữ sát mép hay bị cắt mất chữ), phong cách thiết kế hiện đại, không gian học tập công nghệ, nhận diện xanh dương & cam Sao Việt, độ nét cao",
       save_under="attachments/dataset/_xuat",
       ai_render_brand=true
     )
@@ -77,7 +84,7 @@ Hệ thống tự động điều phối bài viết theo **4 Góc Nội Dung (C
 ### Bước 2: Soạn Caption Đậm Giá Trị Chuyên Môn & Đăng ALBUM bằng `fb_page_album`
 1. **Xác định Fanpage & Brand Kit**: Đọc đúng 1 file `wiki/brand-kits/<kit-page>.md`. Lấy Page ID, hotline, địa chỉ và chân trang CHAN_TRANG.
 2. **Sáng tạo Caption Chuyên Sâu Theo Đúng Ngành Học & Đúng Góc Nội Dung (`angle`)**:
-   - Bài viết chuẩn chuyển đổi: 45-65 dòng (chưa tính chân trang), bố cục thoáng, ngắt dòng rõ ràng, đọc lướt mobile cực kỳ cuốn hút.
+   - Bài viết chuẩn chuyển đổi: 28-45 dòng (chưa tính chân trang), bố cục thoáng, ngắt dòng rõ ràng, đọc lướt mobile cực kỳ cuốn hút.
    - Viết theo đúng khung sườn của `angle`:
 
    #### A. Khung bài Góc 1: Mẹo & Thủ thuật / Phím tắt thực chiến (`angle == "meo_thuc_chien"`)

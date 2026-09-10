@@ -1,11 +1,8 @@
 {
-  "date": "2026-09-09",
-  "ok": [
-    "101084059225733",
-    "347101481809822"
-  ],
+  "date": "2026-09-11",
+  "ok": [],
   "skip": [],
-  "cursor": 1,
+  "cursor": 2,
   "page_last_course": {
     "101084059225733": "tin-hoc _ai",
     "347101481809822": "ve-ky-thuat"
@@ -20,12 +17,12 @@
     "988656934325292": "do-hoa",
     "452301177973210": "tin-hoc _ai",
     "100181125985092": "tin-hoc _ai",
-    "284859368039913": "ve-ky-thuat"
+    "284859368039913": "ve-ky-thuat",
+    "290400614148885": "ve-ky-thuat"
   },
   "pending_angle": {
     "100181125985092": "meo_thuc_chien",
-    "284859368039913": "meo_thuc_chien"
-  },
-  "last_course": "ve-ky-thuat",
-  "last_angle": "meo_thuc_chien"
+    "284859368039913": "meo_thuc_chien",
+    "290400614148885": "meo_thuc_chien"
+  }
 }

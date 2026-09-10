@@ -187,49 +187,95 @@ CTA tự nhiên:
 - "Gửi ngành học hoặc công việc hiện tại, Sao Việt sẽ gợi ý ca học phù hợp."
 - "Liên hệ Hotline/Zalo để xếp lịch học gần nhất."
 
-## 5. Biến thể nội dung để bài không bị một màu
+## 5. 4 Góc Nội Dung (Content Pillars) Luân Phiên Chuẩn Sao Việt
 
-Luân phiên 5 kiểu bài, không phải bài nào cũng là tuyển sinh dài:
+Hệ thống xoay tua 4 Content Pillars, tuyệt đối không đăng lặp lại cùng một kiểu bài nhiều ngày:
 
-1. Bài vấn đề - giải pháp: mở bằng một lỗi công việc rất cụ thể.
-2. Bài thành quả sau khóa: tập trung vào sản phẩm/nghiệp vụ học viên làm được.
-3. Bài lớp học thật: dựa vào ảnh album, kể không khí học, giáo viên kèm, học viên thực hành.
-4. Bài checklist nghề: 5-7 kỹ năng cần có để đi làm.
-5. Bài ưu đãi/lịch học: ngắn, rõ ca học, ưu đãi, cách đăng ký.
+### Trụ cột 1: `meo_thuc_chien` (Mẹo & Thủ thuật / Phím tắt thực chiến)
+- **Mục tiêu**: Chia sẻ giá trị ngay lập tức, giải quyết 1 bài toán nhỏ, học xong làm được ngay.
+- **Dạng bài**: 
+  * *1 công thức chi tiết*: Tên công thức + Bài toán văn phòng + Cú pháp 1 dòng + Ví dụ kết quả + Lỗi hay gặp.
+  * *5 phím tắt ăn tiền*: Danh sách phím tắt + tác dụng thực tế + bảng tóm tắt dễ nhớ.
+  * *Checklist tự soi kỹ năng*: 5-7 tiêu chí người làm nghề phải biết (layer CAD, hàm Excel, phím tắt AI...).
+- **Cấu trúc**:
+  * Tiêu đề / Hook: Đặt vấn đề trực diện (VD: "Đừng dò tìm dữ liệu bằng mắt nữa...", "3 phím tắt AutoCAD giúp tiết kiệm 30% thời gian vẽ").
+  * Tình huống đau: 2-3 dòng miêu tả cách làm cũ tốn thời gian (`👉`).
+  * Hướng dẫn giải pháp: Các bước thực hiện cụ thể, dùng emoji công cụ (`💻`, `📐`, `📊`, `✅`).
+  * Lời khuyên / Lưu ý: 1-2 mẹo nhỏ tránh bị lỗi (`💡`).
+  * CTA mềm: `👉 Lưu lại áp dụng ngay khi cần nhé! / Nếu cần học bài bản từ cơ bản đến chuyên sâu, nhắn tin cho Sao Việt để nhận lộ trình phù hợp!`
+  * Chân trang `CHAN_TRANG`.
 
-Nếu bài có album ảnh lớp thật, nên ưu tiên kiểu 3 hoặc kiểu 1. Đừng viết như tờ rơi chung chung.
+### Trụ cột 2: `tinh_huong` (Tình huống thực tế & Giải pháp nghề nghiệp)
+- **Mục tiêu**: Đánh trúng nỗi đau thực tế của học viên và người đi làm tại doanh nghiệp, KCN.
+- **Dạng bài**:
+  * *Mini-case Trước - Sau*: Trước khi xử lý (rối, sai lệch, chậm) vs Sau khi xử lý (gọn gàng, chuẩn xác, nhanh chóng).
+  * *Bóc lỗi thường gặp*: Bóc tách nguyên nhân gây ra lỗi phổ biến (in bản vẽ sai tỷ lệ, lệch bảng cân đối kế toán, nhảy trang Word, file Photoshop quá nặng) và cách khắc phục.
+- **Cấu trúc**:
+  * Tiêu đề / Hook: Một lỗi hoặc sự cố thực tế thường gặp.
+  * Phân tích sự cố: Nguyên nhân vì sao bị lỗi (`❌`).
+  * Cách khắc phục từng bước: Giải pháp chuẩn quy trình (`✅`).
+  * Đúc kết kinh nghiệm: Bài học thực tế khi đi làm (`📌`).
+  * CTA mềm: `👉 Bạn có hay gặp lỗi này trong công việc không? Nhắn tin cho Fanpage để được trao đổi và tư vấn giải pháp nhé!`
+  * Chân trang `CHAN_TRANG`.
 
-## 6. Nhịp thị giác bắt buộc cho Facebook (Highlight theo mẫu chuẩn Sao Việt)
+### Trụ cột 3: `tai_lieu` (Tặng tài liệu & Thư viện file mẫu thực hành)
+- **Mục tiêu**: Thu hút tương tác tự nhiên, tạo uy tín chuyên gia.
+- **Dạng bài**: Tặng bộ template Excel (chấm công, tính lương, quản lý kho), thư viện Block CAD 2D/3D nội thất, bảng tra tài khoản kế toán, bộ font chữ Việt hóa Designer.
+- **Cấu trúc**:
+  * Tiêu đề / Hook: Giới thiệu bộ tài nguyên (`🎁` hoặc `📂`).
+  * Bên trong có gì: Liệt kê 4-6 mục hữu ích có trong bộ tài liệu (`✔️`).
+  * Ứng dụng thực tế: File này giúp gì cho công việc hằng ngày (`🎯`).
+  * Hướng dẫn nhận tài liệu: Bình luận hoặc nhắn tin Fanpage để nhận link tải.
+  * CTA & Chân trang `CHAN_TRANG`.
+
+### Trụ cột 4: `tuyen_sinh` (Tuyển sinh & Khai giảng lớp kèm 1-1)
+- **Mục tiêu**: Chuyển đổi học viên, giới thiệu lớp học thực hành kèm 1-1, học đến khi làm được việc.
+- **Dạng bài**: Lộ trình đào tạo thực chiến, khai giảng hàng tuần, cam kết không giới hạn số buổi.
+- **Cấu trúc**:
+  * Tiêu đề / Hook: Nhu cầu nâng cao tay nghề, đổi việc, thăng tiến.
+  * Nỗi đau & Nhu cầu: Thiếu kỹ năng thực tế, học lý thuyết không làm được việc (`👉`).
+  * Giải pháp khóa học: Tên khóa học + các kỹ năng làm được sau khóa (`🚀`).
+  * Khối Cam kết đào tạo: 4-5 dòng bắt đầu bằng `📌`.
+  * Khối Quyền lợi & Ưu đãi: 3-4 dòng bắt đầu bằng `🎁`.
+  * CTA tuyển sinh: `👉 Muốn học nhanh để dùng được ngay trong công việc?` + `📞 Nhắn tin Fanpage hoặc gọi Hotline/Zalo...` + `📌 Nhận học viên mới mỗi tuần...`.
+  * Chân trang `CHAN_TRANG`.
+
+## 6. Nhịp thị giác bắt buộc cho Facebook (Highlight theo đúng góc bài)
 
 Caption BẮT BUỘC phải có highlight icon dẫn mắt theo từng khối cụ thể, không được viết trơn toàn bộ bằng chữ hay dấu gạch ngang `-`.
 
-Mẫu phân vai emoji chuẩn thực tế:
-- **Tiêu đề / Hook**: Tên khóa học IN HOA kèm icon chủ đề (`💻`, `📊`, `🎨`, `📐`, `🤖`).
-- **Nỗi đau / Vấn đề**: 2-4 dòng ngắn gọn, có thể mở đầu bằng câu hỏi hoặc `👉`.
-- **Nội dung / Module học**: Nêu ngắn gọn các kỹ năng cụ thể làm được (Word, Excel, PowerPoint, AI thực chiến, AutoCAD, MISA...).
-- **Khối Cam kết & Điểm mạnh đào tạo (BẮT BUỘC dùng `📌` cho từng dòng, 4-5 dòng)**:
+### Phân vai emoji linh hoạt theo từng góc bài:
+
+- **Khi bài ở góc `tuyen_sinh`**:
+  * Áp dụng đầy đủ khối cam kết (`📌` 4-5 dòng) và khối quyền lợi/ưu đãi (`🎁` 3-4 dòng) và CTA tuyển sinh (`👉`/`📞`/`📌`).
   ```text
   📌 Học theo nhu cầu thật, không ép học đại trà.
   📌 Học đến khi thành thạo, không giới hạn số buổi.
   📌 Lịch học linh hoạt sáng, chiều, tối từ Thứ 2 đến Thứ 7.
   📌 Có thể đăng ký học ngay, không cần chờ đủ lớp.
   📌 Phù hợp người bận rộn, người đi làm, sinh viên chuẩn bị ra trường.
-  ```
-- **Khối Quyền lợi & Ưu đãi học viên (BẮT BUỘC dùng `🎁` cho từng dòng, 3-4 dòng)**:
-  ```text
+
   🎁 Khi đăng ký, học viên được tư vấn lộ trình theo trình độ hiện tại.
   🎁 Được định hướng bộ kỹ năng cần học theo mục tiêu công việc.
   🎁 Được hỗ trợ giải đáp nghiệp vụ sau khóa học.
   🎁 Ưu tiên xếp lịch học linh hoạt theo thời gian cá nhân.
-  ```
-- **Khối Kêu gọi hành động / CTA (BẮT BUỘC dùng `👉`, `📞`, `📌`)**:
-  ```text
+
   👉 Muốn học nhanh để dùng được ngay trong công việc?
   📞 Nhắn tin Fanpage hoặc gọi Hotline/Zalo để được tư vấn lộ trình phù hợp.
   📌 Trung Tâm Tin Học Sao Việt nhận học viên mới mỗi tuần.
   📌 Đăng ký sớm để được xếp ca học gần nhất.
   ```
-- **Khối Chân trang CHAN_TRANG (BẮT BUỘC dùng `🏫`, `📞`, `📧`, `🌐`)**:
+
+- **Khi bài ở góc `meo_thuc_chien` / `tinh_huong` / `tai_lieu`**:
+  * Tuyệt đối KHÔNG nhồi nhét khối `🎁` ưu đãi học phí hay danh sách cam kết `📌` tuyển sinh dài dòng vào bài chia sẻ kiến thức.
+  * Dùng emoji kiến thức: `💻`, `📊`, `📐`, `🎨`, `👉`, `✅`, `❌`, `💡`, `📌`.
+  * Kết thúc bằng CTA mềm 1-2 dòng:
+  ```text
+  👉 Lưu lại bài viết để áp dụng ngay khi cần nhé!
+  📞 Cần tư vấn lộ trình học thực hành bài bản, đừng ngần ngại inbox Fanpage hoặc gọi Hotline/Zalo của Sao Việt!
+  ```
+
+- **Khối Chân trang CHAN_TRANG (BẮT BUỘC cho MỌI bài viết)**:
   CẤM dùng các chuỗi địa chỉ có mã bưu điện Google Maps/geocoding (như 700000, 75300, 75411, Di An, Ho Chi Minh City...). Lấy nguyên vẹn khối CHAN_TRANG sạch từ script `pick_next_fanpage.py` hoặc brand kit:
   ```text
   [Tên Fanpage]
@@ -240,9 +286,9 @@ Mẫu phân vai emoji chuẩn thực tế:
   ```
 
 Quy tắc:
-- Không để toàn bộ bài chỉ toàn chữ trơn. Các khối cam kết (`📌`), quyền lợi (`🎁`), CTA (`👉`/`📞`), cơ sở (`🏫`) bắt buộc phải có icon chuẩn như trên.
+- Không để toàn bộ bài chỉ toàn chữ trơn. Dùng emoji có chọn lọc để phân đoạn rõ ràng.
 - Mỗi khối cách nhau 1 dòng trống để thoáng mắt trên điện thoại.
-- Độ dài vừa vặn 32-45 dòng.
+- Độ dài vừa vặn 28-45 dòng (chưa tính chân trang).
 
 ## 7. Hashtag
 
