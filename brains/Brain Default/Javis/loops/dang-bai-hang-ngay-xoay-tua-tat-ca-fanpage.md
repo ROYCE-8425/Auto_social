@@ -12,7 +12,7 @@ quiet_hours: ''
 max_runs_per_day: 0
 owner_chat: ''
 notify: true
-updated: '2026-09-09'
+updated: '2026-09-11'
 ---
 
 Mỗi vòng CHỈ đăng đúng 1 Fanpage, 1 bài duy nhất, rồi DỪNG NGAY. Tuyệt đối KHÔNG đăng 2 page trong cùng một vòng. Cấm chạy song song. Cấm fb_page_delete.

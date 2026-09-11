@@ -2,7 +2,7 @@
 
 > Tự sinh từ file - ĐỪNG sửa tay. Chỉ mục mọi năng lực của Javis trong brain này để bất kỳ AI/engine đọc 1 chỗ là hiểu Javis làm được gì. Song song `wiki/index.md` (tri thức).
 
-**Tổng quan:** 1 agents · 15 skills · 1 workflows (0 bật) · 6 loops (0 bật) · 12 plugins (11 chạy)
+**Tổng quan:** 1 agents · 16 skills · 1 workflows (0 bật) · 3 loops (0 bật) · 12 plugins (11 chạy)
 
 ## Agents
 - **Biên tập Facebook** (`bien-tap-facebook`) - Tạo 1 ảnh AI độc quyền mới 100%, soạn caption đúng brand kit và đăng lên Fanpage Facebook. · model gpt-5.5 · skills: dang-bai-facebook, viet-bai-facebook
@@ -23,6 +23,7 @@
 - **Đăng bài Facebook** (`dang-bai-facebook`) - Đăng bài Fanpage Sao Việt: Album 6-8 ảnh chuẩn Tỷ Lệ Vàng 2026, cover AI mới 100%, luân phiên 4 Content Pillars kèm chân trang sạch.
 - **Kiểm tra goal đăng bài Facebook** (`kiem-tra-goal-dang-bai-facebook`) - Kiểm tra goal Facebook vừa chạy: thời gian, token, post_id, ảnh đã dùng và lỗi sai khóa học.
 - **Kiểm tra loop đăng bài Facebook** (`kiem-tra-loop-dang-bai-facebook`) - Kiểm tra loop đăng bài Facebook: trạng thái, lần chạy, treo ở đâu, token, post_id, ảnh và lỗi lặp page.
+- **Vá chống lặp loop Facebook bằng log** (`va-chong-lap-loop-facebook-bang-log`) - Vá picker loop Facebook để không chọn lại page đã có POST_OK trong log hôm nay.
 - **Xử lý token Meta Facebook an toàn** (`xu-ly-token-meta-facebook-an-toan`) - Tư vấn và kiểm tra token Meta/Facebook mà không lộ secret, ưu tiên OAuth và Page Token đúng chuẩn.
 ### Marketing
 - **HTML sang Webcake** (`html-to-webcake`) - Chuyển trang HTML thành file .pke mở được trong trình dựng Webcake, giữ đúng màu, cỡ chữ, ảnh và bố cục của bản gốc.
@@ -33,11 +34,8 @@
 
 ## Loops
 - **đăng bài cho t3 t6 cho all fage** (`dang-bai-3-6-cho-all-fage`) - tắt · custom/full · mỗi 18 phút
-- **Đăng bài Facebook tự động (Xoay tua 1 Fanpage)** (`dang-bai-facebook-tu-dong-xoay-tua-1-fanpage-nho-dien-ten-fa`) - tắt · custom/full · mỗi 5 phút
 - **Đăng bài hàng ngày - Xoay tua tất cả Fanpage** (`dang-bai-hang-ngay-xoay-tua-tat-ca-fanpage`) - tắt · custom/full · mỗi 5 phút
 - **Đăng bài hàng ngày 1 page** (`dang-bai-hang-ngay`) - tắt · custom/full · mỗi 5 phút
-- **Đăng Royce Shop ngẫu nhiên** (`dang-royce-shop-ngau-nhien-moi-5-phut`) - tắt · custom/full · mỗi 5 phút
-- **s** (`s`) - tắt · custom/suggest · mỗi 120 phút
 
 ## Plugins (tool/hook native cho mọi engine)
 - **Thời gian & ngày** (`datetime-vn`) - bundled/chạy · tools: javis_now, javis_date_add · Xem ngày giờ hiện tại theo múi giờ đã cấu hình và tính ngày tương đối (mai, mốt, N ngày nữa, tuần trước). Thuần stdlib, chỉ đọc, không cần mạng.

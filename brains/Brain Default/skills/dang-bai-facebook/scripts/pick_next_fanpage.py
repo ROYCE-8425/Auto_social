@@ -319,6 +319,49 @@ def save_state(st):
         pass
 
 
+def posted_pages_from_loop_log(today: str) -> set[str]:
+    """Đọc POST_OK hôm nay từ loop-log để chống đăng lặp khi state bị reset/ghi thiếu."""
+    log_file = VAULT / "Javis" / "loop-log" / f"{today}.md"
+    if not log_file.is_file():
+        return set()
+    try:
+        text = log_file.read_text(encoding="utf-8", errors="ignore")
+    except Exception:
+        return set()
+    pages = set()
+    for m in re.finditer(r"^POST_OK\s+post_id=(\d+)_\d+\s+status=verified\b", text, re.M):
+        pages.add(m.group(1))
+    return pages
+
+
+def merge_posted_log_into_state(st, today: str) -> bool:
+    """Bổ sung các page đã POST_OK trong log hôm nay vào ok để picker không chọn lại."""
+    posted = posted_pages_from_loop_log(today)
+    if not posted:
+        return False
+    ok_list = [str(x) for x in (st.get("ok") or [])]
+    ok_set = set(ok_list)
+    changed = False
+    for pid in sorted(posted):
+        if pid not in ok_set:
+            ok_list.append(pid)
+            ok_set.add(pid)
+            changed = True
+    if changed:
+        st["ok"] = ok_list
+    if isinstance(st.get("pending_course"), dict):
+        before = len(st["pending_course"])
+        st["pending_course"] = {
+            k: v for k, v in st["pending_course"].items() if str(k) not in ok_set}
+        changed = changed or len(st["pending_course"]) != before
+    if isinstance(st.get("pending_angle"), dict):
+        before = len(st["pending_angle"])
+        st["pending_angle"] = {
+            k: v for k, v in st["pending_angle"].items() if str(k) not in ok_set}
+        changed = changed or len(st["pending_angle"]) != before
+    return changed
+
+
 BRANCHES_HCM = {
     "binh_thanh": "🏫 Bình Thạnh: 193 Nguyễn Xí, phường Bình Thạnh, TP.HCM (Quận Bình Thạnh cũ)",
     "quan_7": "🏫 Quận 7: Căn hộ Florita, KĐT Him Lam, phường Tân Hưng, TP.HCM (Quận 7 cũ)",
@@ -450,6 +493,8 @@ def main(argv):
     today = now.strftime("%Y-%m-%d")
     include_royce = "--include-royce" in argv
     st = load_state(today)
+    if merge_posted_log_into_state(st, today):
+        save_state(st)
     specific_page = None
     if "--page" in argv:
         i = argv.index("--page")

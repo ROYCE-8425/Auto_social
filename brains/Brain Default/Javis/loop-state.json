@@ -6,5 +6,16 @@
     "runs_today": 1,
     "day": "2026-09-08",
     "fail_streak": 0
+  },
+  "dang-bai-hang-ngay-xoay-tua-tat-ca-fanpage": {
+    "auto_paused_reason": "",
+    "fail_streak": 0,
+    "last_run": 1789111057.8844872,
+    "last_summary": "Em sẽ đi đúng theo vòng này: trước hết đọc skill đăng bài để lấy luật hiện hành, rồi chạy picker chọn đúng 1 Fanpage. Nếu cần công cụ Facebook hoặc tạo ảnh mà chưa được nạp sẵn, em sẽ tìm đúng tool đang có thay vì đoán.\nPicker đã chọn đúng 1 page còn chờ hôm nay: **Trung Tâm Đào Tạo AutoCad Tân Uyên - Bình Dương**, khóa `ve-ky-thuat`, góc `tinh_huong`. Em đang nạp công cụ tạo ảnh và đăng album để đi tiếp đến post thật, không dừng ở bản nháp.\nĐã có đúng tool cần dùng: `javis_generate_image` và `fb_page_album`. Em đang đọc brand kit với course `ve-ky-thuat` để caption không bịa học phí, chứng chỉ hay ưu đãi ngoài dữ liệu.\nDữ liệu đã đủ: brand kit Tân Uyên có hotline, địa chỉ, palette riêng; course `ve-ky-thuat` có tình huống AutoCAD bị nặng, giật lag và cách xử lý bằng `AUDIT`, `PURGE`. Em tạo cover AI mới đúng góc `tinh_huong` ngay bây giờ.\nCover AI mới đã sinh tại `attachments/dataset/_xuat/javis-img-20260911-071652-9066fb.png`. Em đang đăng album thật bằng cover này cộng ảnh dataset `",
+    "last_status": "✓ Đạt: Graph API đã xác thực thành công trên tường Facebook (post_id: 347101481809822_122240162450321885)",
+    "runs_today": 37,
+    "day": "2026-09-11",
+    "runs_this_week": 37,
+    "week": "2026-W37"
   }
 }
