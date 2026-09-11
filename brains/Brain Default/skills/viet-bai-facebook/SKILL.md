@@ -205,25 +205,28 @@ Hệ thống xoay tua 4 Content Pillars, tuyệt đối không đăng lặp lạ
   * CTA mềm: `👉 Lưu lại áp dụng ngay khi cần nhé! / Nếu cần học bài bản từ cơ bản đến chuyên sâu, nhắn tin cho Sao Việt để nhận lộ trình phù hợp!`
   * Chân trang `CHAN_TRANG`.
 
-### Trụ cột 2: `tinh_huong` (Tình huống thực tế & Giải pháp nghề nghiệp)
+### Trụ cột 2: `tinh_huong` (Tình huống thực tế, Mini-Case & Checklist tự đánh giá)
 - **Mục tiêu**: Đánh trúng nỗi đau thực tế của học viên và người đi làm tại doanh nghiệp, KCN.
-- **Dạng bài**:
-  * *Mini-case Trước - Sau*: Trước khi xử lý (rối, sai lệch, chậm) vs Sau khi xử lý (gọn gàng, chuẩn xác, nhanh chóng).
-  * *Bóc lỗi thường gặp*: Bóc tách nguyên nhân gây ra lỗi phổ biến (in bản vẽ sai tỷ lệ, lệch bảng cân đối kế toán, nhảy trang Word, file Photoshop quá nặng) và cách khắc phục.
+- **Dạng bài phong phú (Tham chiếu `wiki/references/khung-bai-viet-da-dang-facebook.md`)**:
+  * *Checklist tự đánh giá tay nghề (Rất hiệu quả)*: Đưa ra 4-5 câu hỏi trắc nghiệm thực tế (`📐 Đã biết quản lý layer chưa?`, `📏 Đã biết setup nét in chưa?`, `📊 Đã tự tin lập Báo cáo tài chính chưa?`).
+  * *Mini-case Trước - Sau*: Kể chuyện một bạn nhân viên làm thủ công (2 tiếng, dò từng dòng, bản vẽ in lệch) vs Sau khi áp dụng quy trình chuẩn (chỉ 15-20 phút, tự động hóa).
+  * *Bóc lỗi thường gặp (Troubleshooting)*: Bóc tách nguyên nhân gây ra lỗi phổ biến (in bản vẽ sai tỷ lệ, lệch bảng cân đối kế toán, nhảy trang Word, file Photoshop quá nặng) và cách khắc phục từng bước 1-2-3.
 - **Cấu trúc**:
-  * Tiêu đề / Hook: Một lỗi hoặc sự cố thực tế thường gặp.
+  * Tiêu đề / Hook: Một lỗi hoặc sự cố thực tế thường gặp hoặc câu hỏi checklist.
   * Phân tích sự cố: Nguyên nhân vì sao bị lỗi (`❌`).
   * Cách khắc phục từng bước: Giải pháp chuẩn quy trình (`✅`).
   * Đúc kết kinh nghiệm: Bài học thực tế khi đi làm (`📌`).
   * CTA mềm: `👉 Bạn có hay gặp lỗi này trong công việc không? Nhắn tin cho Fanpage để được trao đổi và tư vấn giải pháp nhé!`
   * Chân trang `CHAN_TRANG`.
 
-### Trụ cột 3: `tai_lieu` (Tặng tài liệu & Thư viện file mẫu thực hành)
+### Trụ cột 3: `tai_lieu` (Tặng tài liệu, Thư viện file mẫu & Lộ trình đào tạo)
 - **Mục tiêu**: Thu hút tương tác tự nhiên, tạo uy tín chuyên gia.
-- **Dạng bài**: Tặng bộ template Excel (chấm công, tính lương, quản lý kho), thư viện Block CAD 2D/3D nội thất, bảng tra tài khoản kế toán, bộ font chữ Việt hóa Designer.
+- **Dạng bài phong phú**:
+  * *Tặng bộ tài nguyên*: Tặng bộ template Excel (chấm công, tính lương, quản lý kho), thư viện Block CAD 2D/3D nội thất, bảng tra tài khoản kế toán, bộ font chữ Việt hóa Designer.
+  * *Lộ trình học phân tầng (Roadmap)*: Chia rõ chặng đường từ mất gốc đến thành thạo (Tuần 1-2 Nền tảng, Tuần 3-4 Dự án thực tế, Tuần 5-6 Tối ưu & Báo cáo).
 - **Cấu trúc**:
-  * Tiêu đề / Hook: Giới thiệu bộ tài nguyên (`🎁` hoặc `📂`).
-  * Bên trong có gì: Liệt kê 4-6 mục hữu ích có trong bộ tài liệu (`✔️`).
+  * Tiêu đề / Hook: Giới thiệu bộ tài nguyên (`🎁` hoặc `📂`) hoặc Lộ trình (`🚀`).
+  * Bên trong có gì: Liệt kê 4-6 mục hữu ích có trong bộ tài liệu (`✔️`) hoặc các chặng lộ trình (`📍`).
   * Ứng dụng thực tế: File này giúp gì cho công việc hằng ngày (`🎯`).
   * Hướng dẫn nhận tài liệu: Bình luận hoặc nhắn tin Fanpage để nhận link tải.
   * CTA & Chân trang `CHAN_TRANG`.
@@ -240,9 +243,17 @@ Hệ thống xoay tua 4 Content Pillars, tuyệt đối không đăng lặp lạ
   * CTA tuyển sinh: `👉 Muốn học nhanh để dùng được ngay trong công việc?` + `📞 Nhắn tin Fanpage hoặc gọi Hotline/Zalo...` + `📌 Nhận học viên mới mỗi tuần...`.
   * Chân trang `CHAN_TRANG`.
 
-## 6. Nhịp thị giác bắt buộc cho Facebook (Highlight theo đúng góc bài)
+## 6. Nhịp thị giác bắt buộc cho Facebook (Highlight theo đúng chuyên môn & góc bài)
 
 Caption BẮT BUỘC phải có highlight icon dẫn mắt theo từng khối cụ thể, không được viết trơn toàn bộ bằng chữ hay dấu gạch ngang `-`.
+
+### Bảng Emoji chuyên ngành theo từng môn học:
+- **AutoCAD / Bản vẽ kỹ thuật**: `📐 🏗️ 🧱 🛠️ 📏 ⚙️`
+- **Kế toán thực hành**: `📊 🧾 💼 💰 📌 📑 💵`
+- **Thiết kế đồ họa**: `🎨 🖌️ 🖼️ ✂️ ✨ 📸`
+- **Tin học văn phòng & AI**: `💻 🤖 ⚡ 🧠 ⏱️ 🚀 📈`
+- **Lập trình & Tin học trẻ em**: `🧩 💡 👩‍💻 👨‍💻 🎮 🚀`
+- **Dẫn dắt chung**: `🔵 📍 📌 👉 ✅ ❌ 💡 🎁 📞 🌐`
 
 ### Phân vai emoji linh hoạt theo từng góc bài:
 

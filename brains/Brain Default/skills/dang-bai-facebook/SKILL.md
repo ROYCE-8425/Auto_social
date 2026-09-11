@@ -28,64 +28,72 @@ Hệ thống tự động điều phối bài viết theo **4 Góc Nội Dung (C
 
 ---
 
-### Bước 1: BẮT BUỘC tạo 1 ảnh bìa mới 100% bằng GPT Image 2 (Theo đúng `angle` & Visual Style)
+### Bước 1: BẮT BUỘC tạo 1 ảnh bìa mới 100% bằng GPT Image 2 (Theo đúng `angle`, chuyên môn & Thư viện 19 Visual Styles)
 - Đọc file `wiki/courses/<the>.md` (hoặc `course_path` từ output của script) để lấy Tiêu đề và nội dung chuyên môn tương ứng với `angle`.
-- **Thư viện Visual Styles tuyển chọn cho Cover AI (Đa dạng hóa góc nhìn)**:
-  * **Isometric 3D Workspace** (`meo_thuc_chien` / Kỹ thuật / CAD / Đồ họa): Không gian làm việc 3D hiện đại, góc nhìn isometric, hiển thị bàn vẽ kỹ thuật, phím tắt, giao diện phần mềm nổi bật.
-  * **Before / After Split Screen** (`tinh_huong`): Màn hình chia đôi, nửa bên trái là sự cố/lỗi thường gặp (màu xám/đỏ nhẹ), nửa bên phải là giải pháp chuẩn chỉ (màu xanh/cam sáng rõ).
-  * **Canva Grid / Clean Resource Catalog** (`tai_lieu`): Bố cục infographic hiện đại, dạng catalog hoặc grid hiển thị các tài nguyên file mẫu, template thực hành.
-  * **Glassmorphism Tech Dashboard** (Tin học văn phòng & AI): Giao diện kính mờ công nghệ cao, bảng tính dữ liệu, dashboard phân tích tự động.
-  * **Modern Educational Ad** (`tuyen_sinh`): Banner tuyển sinh thực hành hiện đại, tương phản mạnh, nhận diện xanh dương & cam Sao Việt.
+- **Kế thừa Thư viện 19 Visual Styles từ `wiki/references/19-visual-styles-gen-anh.md`**:
+  * **AutoCAD / Kỹ thuật**: Ưu tiên **Mẫu 4 (Isometric 3D Workspace)**, **Mẫu 5 (Before/After Split Screen)**, **Mẫu 12 (Bold Typography)**.
+  * **Kế toán thực hành**: Ưu tiên **Mẫu 19 (Corporate Professional)**, **Mẫu 18 (Resource & Document Catalog)**, **Mẫu 5 (Before/After Chứng từ)**.
+  * **Thiết kế đồ họa**: Ưu tiên **Mẫu 10 (Magazine Editorial)**, **Mẫu 17 (Gradient Mesh)**, **Mẫu 16 (Flat Illustration)**.
+  * **Tin học văn phòng & AI**: Ưu tiên **Mẫu 2 (High-Conversion AI Banner)**, **Mẫu 7 (Glassmorphism UI)**, **Mẫu 9 (Neon Tech)**, **Mẫu 3 (Infographic Roadmap)**.
+  * **Lập trình & Tin học thiếu nhi**: Bắt buộc dùng **Mẫu 14 (Pastel Friendly Kids)** phong cách Scandinavian nhẹ nhàng, không gian học tập thân thiện.
+  * **Đánh giá / Cảm nhận học viên**: Dùng **Mẫu 13 (Student Feedback Review Messenger)**.
 
-- GỌI THẲNG TOOL DUY NHẤT `javis_generate_image` với prompt chuẩn theo từng góc:
+- **Quy chuẩn màu sắc & Safe Zone khi tạo prompt**:
+  * Luôn nhúng mã màu chuẩn: `#5EB9F0` (Xanh Sao Việt), `#343F52` (Xanh đen đậm), `#FAB758` (Cam vàng kim), `#0077C8` (CTA Blue), `#F0F8FE` (Nền Ice White).
+  * Luôn kèm Safe Zone: Bố cục chữ và đồ họa nằm gọn trong vùng an toàn 80% giữa ảnh, cách đều 4 mép 15-20%.
+  * Luôn kèm câu lệnh ép tiếng Việt đủ dấu: *"All Vietnamese text must be rendered with full, correct Vietnamese diacritics (dấu thanh + dấu mũ/móc). Do NOT omit, simplify, romanize, or alter any diacritical marks."*
+  * Giữ negative space tự nhiên ở góc trên cho logo, TUYỆT ĐỐI CẤM model tự vẽ logo hay vẽ placeholder box.
 
-  * **Nếu `angle == "meo_thuc_chien"` (Mẹo & Thủ thuật)**:
+- GỌI THẲNG TOOL DUY NHẤT `javis_generate_image` với prompt chuẩn thích ứng theo chuyên môn và góc bài:
+
+  * **Nếu `angle == "meo_thuc_chien"` (Mẹo & Thủ thuật / Phím tắt)**:
     ```text
     javis_generate_image(
-      prompt="Infographic poster kiến thức mẹo thủ thuật kỹ thuật chuyên ngành <the> Sao Việt, phong cách Isometric 3D workspace hiện đại, tiêu đề nổi bật '<tiêu_đề_mẹo>', các bước hướng dẫn hoặc phím tắt trực quan, bố cục chữ và hình nằm trọn trong vùng an toàn cách đều 4 mép ảnh 15-20% (tuyệt đối không để chữ sát mép hay bị cắt chữ), nhận diện xanh dương & cam Sao Việt làm điểm nhấn, độ nét cao, TUYỆT ĐỐI KHÔNG CÓ chữ tuyển sinh, KHÔNG CÓ nút đăng ký",
+      prompt="Create a modern 1024x1024 square educational infographic banner for course <the> Sao Việt, Visual Style: Isometric 3D Workspace or Canva 2x2 Grid, title: '<tiêu_đề_mẹo>', showcasing practical software shortcuts, tools, and technical workflow, color palette: #F0F8FE background, #5EB9F0 primary blue, #343F52 deep navy, #FAB758 gold accent, safe zone 15-20% margin from all borders, no text touching edges. Logo handling: keep quiet negative space at top-left. Vietnamese text to render: '<tiêu_đề_mẹo>' and '<tên_fanpage>'. All Vietnamese text must be rendered with full, correct Vietnamese diacritics (dấu thanh + dấu mũ/móc). Do NOT omit, simplify, romanize, or alter any diacritical marks. High resolution, no recruitment text, no register button",
       save_under="attachments/dataset/_xuat",
       ai_render_brand=true
     )
     ```
 
-  * **Nếu `angle == "tinh_huong"` (Tình huống thực tế / Xử lý lỗi)**:
+  * **Nếu `angle == "tinh_huong"` (Tình huống thực tế / Xử lý lỗi / Before-After)**:
     ```text
     javis_generate_image(
-      prompt="Poster chuyên đề giải pháp kỹ thuật và xử lý tình huống thực tế ngành <the> Sao Việt, bố cục Before / After split screen hoặc phân tích xử lý sự cố trực quan, tiêu đề nổi bật '<tiêu_đề_tình_huống>', bố cục nằm trọn trong vùng an toàn cách đều 4 mép ảnh 15-20%, phong cách thiết kế hiện đại, nhận diện xanh dương & cam Sao Việt làm điểm nhấn, độ nét cao, TUYỆT ĐỐI KHÔNG CÓ chữ tuyển sinh, KHÔNG CÓ nút đăng ký",
+      prompt="Design a 1024x1024 square split before/after comparison education banner for course <the> Sao Việt, Visual Style: Before / After Split Screen or Troubleshooting, left side: messy/error state with muted #343F52, right side: clean professional solution with bright #5EB9F0 and gold #FAB758 stars, title: '<tiêu_đề_tình_huống>', safe zone 15-20% padding from all canvas borders. Logo handling: quiet negative space at top-left. Vietnamese text to render: 'TRƯỚC KHI HỌC' · 'SAU KHI HỌC' · '<tiêu_đề_tình_huống>' · '<tên_fanpage>'. All Vietnamese text must be rendered with full, correct Vietnamese diacritics (dấu thanh + dấu mũ/móc). Do NOT omit, simplify, romanize, or alter any diacritical marks. High quality, no recruitment text, no register button",
       save_under="attachments/dataset/_xuat",
       ai_render_brand=true
     )
     ```
 
-  * **Nếu `angle == "tai_lieu"` (Tặng tài liệu / File mẫu)**:
+  * **Nếu `angle == "tai_lieu"` (Tặng tài liệu / Thư viện file mẫu / Roadmap)**:
     ```text
     javis_generate_image(
-      prompt="Poster chia sẻ tài liệu và thư viện file mẫu thực hành chuyên ngành <the> Sao Việt, phong cách Canva Grid / Resource Catalog hiện đại, tiêu đề nổi bật 'BỘ TÀI LIỆU & FILE MẪU CHUẨN THỰC CHIẾN', hình ảnh minh họa tài nguyên template trực quan, vùng an toàn cách đều 4 mép 15-20%, phong cách hiện đại công nghệ, nhận diện xanh dương & cam Sao Việt làm điểm nhấn, độ nét cao, TUYỆT ĐỐI KHÔNG CÓ chữ tuyển sinh, KHÔNG CÓ nút đăng ký",
+      prompt="Design a 1024x1024 square educational resource catalog banner for course <the> Sao Việt, Visual Style: Resource Catalog or Infographic Roadmap, showcasing practical template files, calculation sheets, technical libraries, badge 'TẶNG MIỄN PHÍ' in #FAB758 gold, color palette: #F0F8FE background, #5EB9F0 primary blue, #343F52 deep navy, safe zone 15-20% margin from all borders. Logo handling: quiet negative space at top-left. Vietnamese text to render: 'TRỌN BỘ TÀI LIỆU THỰC CHIẾN' · '<the>' · '<tên_fanpage>'. All Vietnamese text must be rendered with full, correct Vietnamese diacritics (dấu thanh + dấu mũ/móc). Do NOT omit, simplify, romanize, or alter any diacritical marks. High resolution, no recruitment text, no register button",
       save_under="attachments/dataset/_xuat",
       ai_render_brand=true
     )
     ```
 
-  * **Nếu `angle == "tuyen_sinh"` (Tuyển sinh trực tiếp)**:
+  * **Nếu `angle == "tuyen_sinh"` (Tuyển sinh / Khai giảng lớp kèm 1-1)**:
     ```text
     javis_generate_image(
-      prompt="Banner tuyển sinh thực chiến khóa học <the> Sao Việt, phong cách Modern Educational Ad, tiêu đề '<tiêu_đề>', các điểm nổi bật '<highlights>', bố cục chữ và logo nằm trọn trong vùng an toàn cách đều 4 mép ảnh 15-20% (tuyệt đối không để chữ sát mép hay bị cắt mất chữ), phong cách thiết kế hiện đại, không gian học tập công nghệ, nhận diện xanh dương & cam Sao Việt, độ nét cao",
+      prompt="Design a modern educational opening-class banner (1024x1024 square) for course <the> Sao Việt, Visual Style: Modern Educational Ad or Glassmorphism UI (or Pastel Friendly Kids if children course), bold headline: '<tiêu_đề>', 3 benefit pills ('Học kèm 1-1' · 'Thời gian linh hoạt' · 'Cấp chứng chỉ'), color palette: #F0F8FE background, #5EB9F0 primary, #343F52 headline, #FAB758 gold accent, safe zone 15-20% padding from all borders. Logo handling: quiet negative space at top-left. Vietnamese text to render: 'KHAI GIẢNG LỚP MỚI' · '<tiêu_đề>' · '<tên_fanpage>'. All Vietnamese text must be rendered with full, correct Vietnamese diacritics (dấu thanh + dấu mũ/móc). Do NOT omit, simplify, romanize, or alter any diacritical marks. High quality, professional education ad",
       save_under="attachments/dataset/_xuat",
       ai_render_brand=true
     )
     ```
 
 - Lấy đường dẫn file AI trả về: `res["rel_path"]` (dạng `attachments/dataset/_xuat/cover_...png`).
-- **Quy tắc 1-Shot cho Cover AI**: Chỉ gọi `javis_generate_image` đúng 1 lần duy nhất. TUYỆT ĐỐI CẤM loop tạo lại ảnh nhiều lần để soi chính tả hay chữ logo (mô hình khuếch tán AI không thể render typography chính xác 100%, việc cố tạo lại sẽ đốt hàng triệu token và làm nghẽn tiến trình). Dùng trực tiếp ảnh AI sinh ra; phần logo và nhận diện đã có `ai_render_brand=true` xử lý.
+- **Quy tắc 1-Shot cho Cover AI**: Chỉ gọi `javis_generate_image` đúng 1 lần duy nhất. TUYỆT ĐỐI CẤM loop tạo lại ảnh nhiều lần để soi chính tả hay chữ logo. Dùng trực tiếp ảnh AI sinh ra; phần logo và nhận diện đã có `ai_render_brand=true` xử lý.
 - Nếu tool báo lỗi exception hoặc không sinh được file: tối đa retry 1 lần duy nhất. Nếu vẫn thất bại: dừng ngay với `POST_SKIP ly-do=thieu-cover-ai`. TUYỆT ĐỐI CẤM lấy ảnh cũ thay thế và CẤM viết script chèn logo thủ công.
 
 ---
 
 ### Bước 2: Soạn Caption Đậm Giá Trị Chuyên Môn & Đăng ALBUM bằng `fb_page_album`
 1. **Xác định Fanpage & Brand Kit**: Đọc đúng 1 file `wiki/brand-kits/<kit-page>.md`. Lấy Page ID, hotline, địa chỉ và chân trang CHAN_TRANG.
-2. **Sáng tạo Caption Chuyên Sâu Theo Đúng Ngành Học & Đúng Góc Nội Dung (`angle`)**:
-   - Bài viết chuẩn chuyển đổi: 28-45 dòng (chưa tính chân trang), bố cục thoáng, ngắt dòng rõ ràng, đọc lướt mobile cực kỳ cuốn hút.
-   - Viết theo đúng khung sườn của `angle`:
+2. **Sáng tạo Caption Chuyên Sâu Đa Dạng Theo Chuyên Môn & Tham Chiếu `wiki/references/khung-bai-viet-da-dang-facebook.md`**:
+   - Bài viết chuẩn chuyển đổi: 28-45 dòng (chưa tính chân trang), bố cục thoáng, ngắt dòng 1-2 câu một lần, tối ưu đọc lướt mobile.
+   - Nhịp thị giác bằng Emoji chuyên ngành: AutoCAD (`📐 🏗️ 🧱 🛠️ 📏`), Kế toán (`📊 🧾 💼 💰 📑`), Đồ họa (`🎨 🖌️ 🖼️ ✂️ ✨`), Tin học & AI (`💻 🤖 ⚡ 🧠 ⏱️ 🚀`).
+   - Kế thừa linh hoạt các khung sườn thực chiến: *Checklist tự đánh giá 5 câu hỏi*, *Mini Case Trước-Sau*, *Xử lý lỗi nghề nghiệp*, *Lộ trình phân tầng tuần 1-8*, hoặc *Khai giảng kèm 1-1*:
 
    #### A. Khung bài Góc 1: Mẹo & Thủ thuật / Phím tắt thực chiến (`angle == "meo_thuc_chien"`)
    * **Tiêu đề IN HOA + Icon Hook**:
