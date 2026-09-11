@@ -28,26 +28,18 @@ Gốc cho mọi Fanpage. Tạo page mới = copy khối Nhận diện thương h
 ## Giới thiệu (dùng khi cần đoạn about, không nhồi cả khối vào mọi caption)
 Trung tâm Tin học Sao Việt là một trong những Trung tâm Tin học hàng đầu tại Việt Nam, hơn 10 năm xây dựng và phát triển. Tầm nhìn: không ngừng nâng cao chất lượng đào tạo nhân lực. Uy tín trong đào tạo tin học cho người đi làm, học sinh, sinh viên, doanh nghiệp.
 
-## Khóa học chuẩn (Bắt buộc chọn trong 5 nhóm dataset: wiki/courses/):
-- Tin học văn phòng & Ứng dụng AI: Word, Excel, PowerPoint, ChatGPT, Copilot, MOS, IC3 (wiki/courses/tin-hoc _ai.md)
-- Thiết kế đồ họa: Photoshop, Illustrator, CorelDraw, InDesign (wiki/courses/do-hoa.md)
-- Kế toán thực hành: MISA, Excel kế toán, BCTC, Thuế (wiki/courses/ke-toan.md)
-- Vẽ kỹ thuật: AutoCAD 2D, AutoCAD 3D, SolidWorks, SketchUP (wiki/courses/ve-ky-thuat.md)
-- Tin học trẻ em: Scratch, Python thiếu nhi, IC3 Spark (wiki/courses/tre-em.md)
-TUYỆT ĐỐI CẤM tự bịa khóa học ngoài dataset (như kinh doanh online, bán hàng online).
-
-Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Vẽ kỹ thuật AutoCAD, Kế toán thực hành, Thiết kế đồ họa, Tin học quốc tế MOS.
+## Khóa học đào tạo
+- Tin học văn phòng & Ứng dụng AI (Word, Excel, PowerPoint, ChatGPT)
+- Bản vẽ kỹ thuật & AutoCAD 2D/3D (SolidWorks, SketchUp, 3Ds Max)
+- Kế toán thực hành tổng hợp (MISA, Excel kế toán, Báo cáo thuế)
+- Thiết kế đồ họa chuyên nghiệp (Photoshop, Illustrator, CorelDraw)
+- Lập trình & Tin học thiếu nhi (Scratch, Python, IC3 Spark)
 
 ## Liên hệ (chân trang mọi bài — số/mail/web CỦA ĐÚNG Fanpage này)
 - Hotline / Zalo: 0823 552 558
 - Email: trungtamtinhocsaoviet@gmail.com
 - Web: https://trannhuy.online
 - Fanpage: https://www.facebook.com/988656934325292
-
-
-## Liên kết (chỉ khi brief cần, không nhét hết vào caption)
-- Điều khoản sử dụng, Chính sách bảo mật, Xử lý khiếu nại
-- Bản đồ các cơ sở, Sitemap
 
 ## Hệ thống 12 cơ sở đào tạo chuẩn (nguồn chốt từ user 2026-09-04)
 ### Trung Tâm Đào Tạo TP HCM
@@ -78,27 +70,22 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Vẽ kỹ th
 - Lịch học linh hoạt ca sáng, chiều, tối từ Thứ 2 đến Thứ 7, đăng ký học ngay không chờ lớp
 - Tích hợp kỹ năng ứng dụng AI (ChatGPT, AI Agents) vào tối ưu công việc văn phòng và kế toán
 
-## Logo và dataset ảnh
-- Logo: attachments/dataset/chung/ (chỉ dùng làm watermark hoặc tham chiếu, không đăng logo trần)
-- Thư mục ảnh theo ngành: tin-hoc, co-khi, ke-toan, do-hoa, marketing, ai, tre-em, tieng-han. Không khớp chủ đề (lịch lễ, thông báo) thì không lấy ảnh ngành khác cho có
-- Mặc định có hai kiểu ảnh bám mẫu khi KHÔNG yêu cầu AI full:
-  + Kiểu A (có ảnh ngành): bám mẫu attachments/dataset/_mau/mau-khoa-hoc-co-anh-goc.png (ảnh thật lớp học + panel xanh/vàng tóm tắt 3-5 ý chính + logo Sao Việt góc trên).
-  + Kiểu B (không có ảnh ngành, lịch lễ): bám mẫu attachments/dataset/_mau/mau-lich-le-tu-gen.png (poster đủ họa tiết đỏ vàng lễ hội, đèn lồng, trăng, 2 khối lịch nghỉ và học lại, logo Sao Việt; cấm vẽ poster tối giản).
-- Album tỷ lệ 7/3: Ảnh 1 = banner quảng cáo (gen từ 1 raw dataset đúng thẻ + logo kit, HOẶC gen AI full). Tối đa 3 ảnh gen/bài; phần còn lại (~7) ảnh raw folder thẻ. Cover luôn _xuat.
-- Nơi lưu ảnh gen: attachments/dataset/_xuat/
-- Gen cover: nếu brief/model yêu cầu ChatGPT/OpenAI/GPT Image/gpt-image/javis_generate_image/ai_render_brand=true/ai_full hoặc AI tự render logo/tiêu đề/hotline thì dùng trực tiếp javis_generate_image với page_id đúng kit, save_under=attachments/dataset/_xuat, ai_render_brand=true; brand kit page được đưa thẳng vào prompt tạo ảnh. Nhánh này KHÔNG bám mẫu A/B, KHÔNG template code, KHÔNG overlay Javis. Nếu không opt-in AI full thì dùng ảnh thật/template mặc định với logo kit và ảnh raw đúng thẻ.
-- Đối chiếu số liệu: caption và chữ trên ảnh bắt buộc cùng ngày/giờ và số liệu. Nếu lệch phải sửa caption trước khi đăng, không đăng lệch
-- Đăng đúng 1 lần: chỉ gọi fb_page_photo hoặc fb_page_post 1 lần. CẤM gọi fb_page_delete trừ khi user bảo xóa đúng post_id
+## Quy chuẩn xuất bản Album Tỷ Lệ Vàng 2026
+- Album: 6-8 ảnh chuẩn Tỷ Lệ Vàng Facebook 2026 (ngẫu nhiên 6, 7 hoặc 8 ảnh vuông 1:1 đồng bộ).
+- Cấu trúc album: 1 ảnh bìa độc quyền do GPT Image 2 (`javis_generate_image`) tạo mới 100% trong `attachments/dataset/_xuat/` + 5-7 ảnh lớp học thật từ dataset tương ứng (`attachments/dataset/<the>/`). Đăng tự động bằng `fb_page_album` với `photos='auto'`.
+- 4 Content Pillars: Luân phiên `meo_thuc_chien` (Mẹo & phím tắt), `tinh_huong` (Xử lý sự cố thực tế), `tai_lieu` (Tặng file mẫu), `tuyen_sinh` (Khai giảng lớp kèm 1-1).
+- 5 Visual Styles cho Cover AI: Isometric 3D Workspace, Before/After Split Screen, Canva Grid / Catalog, Glassmorphism Tech Dashboard, Modern Educational Ad.
+- Nguyên tắc Cover AI: Tạo mới 100% mỗi bài đăng, bố cục an toàn 15-20%. Tuyệt đối CẤM dùng lại cover cũ trong `_xuat`. CẤM loop retry tạo lại ảnh.
 
 ## Khách và giọng (học từ Fanpage Sao Việt)
 - Khách: người đi làm, người trái ngành muốn học nghề thực chiến, sinh viên cần kỹ năng việc làm, phụ huynh và doanh nghiệp
 - Giọng văn: Thực tế, tận tâm, chuyên nghiệp, rõ ràng từng module, không nói chung chung sáo rỗng
-- Bố cục: Tiêu đề IN HOA kèm icon nổi bật, thân bài chia gạch đầu dòng rõ ràng, cam kết đào tạo thực chiến ("DUY NHẤT CHỈ CÓ TẠI TIN HỌC SAO VIỆT"), lộ trình module chi tiết, ưu đãi học phí và hệ thống 12-13 cơ sở
+- Bố cục: Tiêu đề IN HOA kèm icon nổi bật, thân bài chia gạch đầu dòng rõ ràng, cam kết đào tạo thực chiến , lộ trình module chi tiết, ưu đãi học phí và hệ thống 12-13 cơ sở
 - Độ dài: mặc định 32-45 dòng thân bài, bài tuyển sinh/ads đầy đủ 45-70 dòng, chưa tính chân trang. Không viết dưới 28 dòng thân bài, nhưng cũng không nhồi dài như landing page nếu brief không yêu cầu.
 - CTA: Nhắn tin Fanpage hoặc liên hệ Hotline/Zalo: 0823 552 558 để được tư vấn lộ trình và xếp lịch học
 
 ## Quy chuẩn thống nhất độ dài
-- Chuẩn caption: viết tự nhiên, đọc lướt mobile, đủ hook - nỗi đau chọn lọc - thành quả - quyền lợi - CTA - chân trang đúng kit. Không ép 60-120 dòng cho mọi bài; chỉ viết dài khi brief yêu cầu ads/landing đầy đủ.
+- Chuẩn caption: viết tự nhiên, đọc lướt mobile, đủ nhịp điệu theo đúng góc bài (Content Pillar), không nhồi nhét.
 
 ## Cấm
 - Viết bài quá ngắn, cụt ý (dưới 28 dòng thân bài với bài tuyển sinh)
@@ -106,7 +93,7 @@ Khóa nổi bật (footer): Tin học văn phòng, Ứng dụng AI, Vẽ kỹ th
 - Bịa học phí không có trong tài liệu đào tạo
 - Trộn địa chỉ page A vào page B; trộn 2 brief một bài
 - Đăng logo trần hoặc đăng file dataset gốc chưa qua biên tập (đường dẫn chứa `/tin-hoc/`, `/co-khi/`, `/ke-toan/`, `/chung/`)
-- Tạo poster tối giản không bám sát file mẫu `_mau/`
+- Dùng Markdown bold (**) hoặc heading (#) trong bài đăng Facebook (bắt buộc Plain Text)
 - Đăng bài khi ngày tháng/số liệu trong caption lệch với chữ trên ảnh
 - Đăng trùng rồi tự ý gọi `fb_page_delete` để xóa bài
 - Dùng ký tự em dash
@@ -127,14 +114,13 @@ Trung Tâm Đào Tạo Tin Học Sao Việt
 🏫 Tân Uyên: 20 Đường ĐX12, Tân Vĩnh Hiệp
 🏫 Vũng Tàu: 293 Bình Giã, P.8
 📞 Hotline/Zalo: 0823 552 558 - 093 11 44 858
-📩 Email: trungtamtinhocsaoviet@gmail.com
+📧 Email: trungtamtinhocsaoviet@gmail.com
 🌐 Website: https://tinhocsaoviet.com
 
 ## Tuỳ biến trang (trống ở file này)
 - Tên Fanpage: Royce Shop
 - slug: royce-shop
 - Page ID: 988656934325292
-- Access Token: EAAYrB1nymYkBSRKa7Mkk7PtL6f4oa6Y5MswuiJQbYtg7NMYyVixtfVJi4BvS6PJuvTZAUGGrwG7AOCkEKFZC0rc1lonJt10alXY0kDA1GMDB0H7DjP9eNqL6pcBdW9waXLLmv8Tz8GLXDZB6UeLZAXEOigT45857LkG5yNOfjgoJNwnd4E2LrErdWX5hx03bktzCL5PayLbLv1F9JHAgCXIO
 - Page test: true
 - Cơ sở / địa chỉ: 🏫 Bình Thạnh: 193 Nguyễn Xí, phường Bình Thạnh, Hồ Chí Minh (Tầng 1) | 🏫 Quận 7: Căn hộ Florita, KĐT Him Lam, Tân Hưng, Hồ Chí Minh | 🏫 Bình Tân: 510 Kinh Dương Vương, An Lạc, Bình Tân | 🏫 Quận 12: A23 Lê Thị Riêng, KDC Thới An | 🏫 TP. Thủ Đức: 133/2 Đỗ Xuân Hợp, Phước Long B | 🏫 CN Tây Thạnh (Q. Tân Phú): 11/23 Hồ Đắc Di, P. Tây Thạnh, TP. Hồ Chí Minh | 🏫 Biên Hòa: 91 Đoàn Văn Cự, Tam Hòa | 🏫 Long Thành: 72 Đinh Bộ Lĩnh, Lộc An | 🏫 Dĩ An: 184/19/11 Đặng Văn Mây | 🏫 Thuận An: 69 D32, Làng chuyên gia Oasis, phường An Phú, Thuận An | 🏫 Thủ Dầu Một: 107 D5, KDC Phú Hòa 1 | 🏫 Tân Uyên: 20 Đường ĐX12, Tân Vĩnh Hiệp | 🏫 Vũng Tàu: 293 Bình Giã, P.8
 - Hotline / Zalo: 0823 552 558 - 093 11 44 858

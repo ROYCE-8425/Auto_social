@@ -35,9 +35,9 @@ Xem chi tiết đầy đủ tại [[brand-kits/royce-shop]].
 
 ## Chân trang caption (bắt buộc)
 Royce Shop
-Hotline/Zalo: 0823 552 558
-Email: trungtamtinhocsaoviet@gmail.com
-Web: https://trannhuy.online
+📞 Hotline/Zalo: 0823 552 558
+📧 Email: trungtamtinhocsaoviet@gmail.com
+🌐 Website: https://trannhuy.online
 
 ## Tuỳ biến trang
 - Tên Fanpage: Royce Shop
