@@ -20,7 +20,7 @@
 ### Content
 - **Viết bài Facebook** (`viet-bai-facebook`) - Skill viết caption Facebook cho hệ thống Sao Việt: rõ người học, rõ việc làm được, giọng tự nhiên, không văn mẫu AI, tối ưu đọc lướt trên di động.
 ### Facebook
-- **Đăng bài Facebook** (`dang-bai-facebook`) - Đăng bài Fanpage Sao Việt: Album 6-8 ảnh chuẩn Tỷ Lệ Vàng 2026 (1 cover AI mới 100% + ảnh lớp học thật dataset), luân phiên 4 góc nội dung (Mẹo thực chiến, Tình huống nghề, Tặng tài liệu, Tuyển sinh) kèm chân trang chuẩn.
+- **Đăng bài Facebook** (`dang-bai-facebook`) - Đăng bài Fanpage Sao Việt: Album 6-8 ảnh chuẩn Tỷ Lệ Vàng 2026, cover AI mới 100%, luân phiên 4 Content Pillars kèm chân trang sạch.
 - **Kiểm tra goal đăng bài Facebook** (`kiem-tra-goal-dang-bai-facebook`) - Kiểm tra goal Facebook vừa chạy: thời gian, token, post_id, ảnh đã dùng và lỗi sai khóa học.
 - **Kiểm tra loop đăng bài Facebook** (`kiem-tra-loop-dang-bai-facebook`) - Kiểm tra loop đăng bài Facebook: trạng thái, lần chạy, treo ở đâu, token, post_id, ảnh và lỗi lặp page.
 - **Xử lý token Meta Facebook an toàn** (`xu-ly-token-meta-facebook-an-toan`) - Tư vấn và kiểm tra token Meta/Facebook mà không lộ secret, ưu tiên OAuth và Page Token đúng chuẩn.

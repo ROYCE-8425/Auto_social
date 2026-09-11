@@ -3498,7 +3498,7 @@
       "capability": "external-write",
       "execution_mode": "full",
       "priority": 2,
-      "status": "done",
+      "status": "archived",
       "needs_approval": false,
       "block_kind": "",
       "block_reason": "",
@@ -3513,7 +3513,7 @@
       "current_run_id": "",
       "result": "OK | page: ID/hotline/địa chỉ/chân trang | post_id: 988656934325292_122131949451221350 | link: https://www.facebook.com/988656934325292_122131949451221350",
       "created_at": 1788804910.2699463,
-      "updated_at": 1788805034.0113897,
+      "updated_at": 1789064238.7892892,
       "metadata": {
         "route": "wf:dang-bai-that-facebook",
         "capability": "external-write"
@@ -3532,6 +3532,10 @@
         {
           "ts": "2026-09-07 18:17",
           "msg": "done"
+        },
+        {
+          "ts": "2026-09-10 18:17",
+          "msg": "done -> archived: đã kết thúc quá 3 ngày"
         }
       ]
     },
@@ -3544,7 +3548,7 @@
       "capability": "external-write",
       "execution_mode": "full",
       "priority": 2,
-      "status": "done",
+      "status": "archived",
       "needs_approval": false,
       "block_kind": "",
       "block_reason": "",
@@ -3559,7 +3563,7 @@
       "current_run_id": "",
       "result": "OK | page: là `Royce Shop` | course: cho `tin-hoc`. Tôi chuyển sang khóa `do-hoa` | post_id: 988656934325292_122131953225221350 | link: https://www.facebook.com/988656934325292_122131953225221350",
       "created_at": 1788806358.3981311,
-      "updated_at": 1788806568.9622545,
+      "updated_at": 1789065769.6642709,
       "metadata": {
         "route": "wf:dang-bai-that-facebook",
         "capability": "external-write"
@@ -3578,6 +3582,10 @@
         {
           "ts": "2026-09-07 18:42",
           "msg": "done"
+        },
+        {
+          "ts": "2026-09-10 18:42",
+          "msg": "done -> archived: đã kết thúc quá 3 ngày"
         }
       ]
     },
@@ -4036,5 +4044,5 @@
       ]
     }
   ],
-  "updated": 1789044602.8025835
+  "updated": 1789065769.7002854
 }
