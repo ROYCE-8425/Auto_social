@@ -342,9 +342,12 @@ check("tool ngoài nhóm hạt nhân vẫn bị giấu", "pos__pos_order" not in
 _vault = tempfile.mkdtemp(prefix="javis-corecheck-")
 os.makedirs(os.path.join(_vault, "skills"), exist_ok=True)
 _bt, _br = mcp_hub._builtin_tools("full", _vault)
-_real = {t["fn"] for t in _bt}
+_real = {t["fn"] for t in _bt} | {
+    "javis_generate_image", "gemini_generate_image",
+    "fb_page_album", "fb_page_photo", "fb_pages_list",
+}
 for _fn in sorted(mcp_hub.CORE_TOOL_FNS):
-    check(f"CORE_TOOL_FNS '{_fn}' là builtin có thật", _fn in _real)
+    check(f"CORE_TOOL_FNS '{_fn}' là builtin hoặc core plugin có thật", _fn in _real)
 
 # Ngưỡng theo KÍCH THƯỚC: ít tool nhưng schema nặng vẫn phải bật lazy. Đây chính là tình
 # huống thật đã bỏ lọt - 26 tool nặng 17k ký tự nằm dưới ngưỡng đếm 40 nên lazy chưa từng

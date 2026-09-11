@@ -1096,6 +1096,82 @@ def _mcp_to_openai_tools(mcp_tools):
     }} for t in mcp_tools]
 
 
+def _gemini_schema(node, is_root=True):
+    """JSON Schema Gemini 2.5 chịu được. Loại bỏ title / additionalProperties / $ref."""
+    if not isinstance(node, dict):
+        return {"type": "string"}
+    out = {}
+    typ = node.get("type") or ("object" if node.get("properties") else "string")
+    if isinstance(typ, list):
+        typ = next((x for x in typ if x != "null"), "string")
+    out["type"] = typ or "string"
+    if node.get("description"):
+        out["description"] = str(node.get("description"))[:180]
+    if "enum" in node and isinstance(node["enum"], list):
+        out["enum"] = [str(x) for x in node["enum"][:12]]
+    if typ == "array":
+        items = node.get("items")
+        out["items"] = _gemini_schema(items, is_root=False) if isinstance(items, dict) else {"type": "string"}
+        return out
+    if typ == "object" or node.get("properties"):
+        raw_props = node.get("properties")
+        if not is_root and not raw_props:
+            # Nested freeform object (như args của javis_run_tool): Gemini OpenAPI không hỗ trợ
+            # object tự do không khai properties. Chuyển sang string để nhận chuỗi JSON an toàn.
+            return {"type": "string", "description": (str(node.get("description") or "JSON string"))[:180]}
+        out["type"] = "object"
+        props = {}
+        for k, v in list((raw_props or {}).items())[:12]:
+            props[str(k)] = _gemini_schema(v, is_root=False) if isinstance(v, dict) else {"type": "string"}
+        if props:
+            out["properties"] = props
+            req = [r for r in (node.get("required") or []) if r in props][:8]
+            if req:
+                out["required"] = req
+    return out
+
+
+def _mcp_to_gemini_tools(mcp_tools):
+    """Tối đa 8 tool, schema đã loại bỏ title/additionalProperties.
+    Ưu tiên các tool hành động trực tiếp, loại bỏ meta-tool lazy khi đã có tool trực tiếp."""
+    raw = list(mcp_tools or [])
+    priority_order = [
+        "gemini_generate_image",
+        "fb_page_album",
+        "fb_page_photo",
+        "fb_pages_list",
+        "javis_read_file",
+        "javis_write_file",
+        "javis_list_dir",
+    ]
+
+    def _rank(t):
+        fn = t.get("fn", "")
+        if fn in priority_order:
+            return priority_order.index(fn)
+        if fn.startswith("fb_page_"):
+            return 20
+        if fn in ("javis_search_tools", "javis_run_tool"):
+            return 90
+        return 50
+
+    sorted_tools = sorted(raw, key=_rank)
+    has_direct = any(t.get("fn") in ("gemini_generate_image", "fb_page_album", "fb_page_photo") for t in sorted_tools)
+    if has_direct:
+        sorted_tools = [t for t in sorted_tools if t.get("fn") not in ("javis_search_tools", "javis_run_tool")]
+    out = []
+    for t in sorted_tools[:8]:
+        out.append({
+            "type": "function",
+            "function": {
+                "name": t["fn"][:64],
+                "description": (t.get("description") or t["fn"])[:240],
+                "parameters": _gemini_schema(t.get("schema") or {"type": "object", "properties": {}}, is_root=True),
+            },
+        })
+    return out
+
+
 def _plain_vn(text):
     """Chuẩn hoá nhẹ để nhận intent tiếng Việt có/không dấu."""
     import unicodedata
@@ -1444,7 +1520,8 @@ async def _cc_tool_loop(url, headers, model, messages, mcp_tools, mcp_route, rea
     cache_system=True (OpenRouter + model Claude): đánh cache_control lên system - OpenAI/Gemini
     tự cache nên không cần."""
     import mcp_client
-    tools = _mcp_to_openai_tools(mcp_tools)
+    is_gemini = "generativelanguage.googleapis.com" in (url or "")
+    tools = _mcp_to_gemini_tools(mcp_tools) if is_gemini else _mcp_to_openai_tools(mcp_tools)
     msgs = _or_mark_system(messages) if cache_system else list(messages)
     usage_in = usage_out = 0
     guard = _LapGuard()   # phanh chống kẹt vòng lặp (xem _LapGuard)
@@ -1453,7 +1530,8 @@ async def _cc_tool_loop(url, headers, model, messages, mcp_tools, mcp_route, rea
     waited_for_window = False
     # Số lần model bịa sai cú pháp gọi tool. 0 -> thử lại; 1 -> bỏ tool; 2 -> chịu, báo lỗi.
     tool_fumbles = 0
-    requirement = _tool_requirement(messages, mcp_tools)
+    # Gemini + tool_choice=required/named → MALFORMED_FUNCTION_CALL (Royce).
+    requirement = None if is_gemini else _tool_requirement(messages, mcp_tools)
     requirement_pending = bool(requirement)
     ignored_required = 0
     cancel_gate = await schedule_cancel_gateway(messages, mcp_tools, mcp_route)
@@ -1510,8 +1588,16 @@ async def _cc_tool_loop(url, headers, model, messages, mcp_tools, mcp_route, rea
             ),
         })
         requirement_pending = False
+    empty_retries = 0
+    malformed_retries = 0
     for _ in range(_max_tool_rounds()):
         payload = {"model": model, "messages": msgs, "stream": False}
+        # Gemini OpenAI-compat: không max_tokens thì 2.5-flash hay nghĩ hết ngân sách
+        # rồi trả message.content rỗng → Kanban "Gemini trả về rỗng".
+        if "generativelanguage.googleapis.com" in (url or ""):
+            payload.setdefault("max_tokens", 8192)
+            if tools:
+                payload.setdefault("temperature", 0.2)
         # Bỏ hẳn khoá "tools" khi rỗng: vài endpoint OpenAI-compat từ chối mảng rỗng, và
         # nhánh cứu hộ ở dưới (model vấp cú pháp gọi tool) dựa vào đúng chỗ này.
         if tools:
@@ -1609,6 +1695,39 @@ async def _cc_tool_loop(url, headers, model, messages, mcp_tools, mcp_route, rea
                 return
             continue
         content = msg.get("content") or ""
+        finish = ((data.get("choices") or [{}])[0]).get("finish_reason") or ""
+        if (not content) and (not tcs) and (
+                "MALFORMED" in finish or "function_call_filter" in finish):
+            if malformed_retries < 3:
+                malformed_retries += 1
+                print(f"[{label}] {finish} - thu hoi phuc lan {malformed_retries}/3",
+                      file=__import__("sys").stderr)
+                msgs.append({
+                    "role": "user",
+                    "content": (
+                        f"Lượt gọi tool vừa rồi bị Google Gemini từ chối vì sai định dạng ({finish}). "
+                        "HƯỚNG DẪN SỬA ĐÚNG: "
+                        "1. gemini_generate_image: prompt (chuỗi text), aspect_ratio (square hoặc 1:1), logo (chuỗi đường dẫn), images (mảng [\"đường_dẫn\"] hoặc chuỗi đường dẫn). "
+                        "2. fb_page_album: photos (mảng JSON [\"path1\", \"path2\"]), message (caption text). Mọi ký tự xuống dòng trong text BẮT BUỘC escape là \\n (không để dòng thô). "
+                        "3. TUYỆT ĐỐI TUÂN THỦ JSON chuẩn. Hãy thực hiện lại cuộc gọi tool ngay."
+                    )
+                })
+                continue
+            print(f"[{label}] {finish} - da het {malformed_retries} lan thu, dung lai.",
+                  file=__import__("sys").stderr)
+            yield {"type": "error", "content": (
+                f"{label} gọi tool hỏng ({finish}) sau {malformed_retries} lần thử. "
+                "Gọi thẳng gemini_generate_image / fb_page_album với JSON hợp lệ."
+            )}
+            return
+        if (not content) and (not tcs) and empty_retries < 1:
+            empty_retries += 1
+            print(f"[{label} empty] finish={finish!r} usage={u} retry once",
+                  file=__import__("sys").stderr)
+            msgs.append({"role": "user", "content":
+                         "Lượt trước không có chữ. Trả lời bằng văn bản (tiếng Việt). "
+                         "Nếu cần tool thì gọi tool, không trả JSON rỗng."})
+            continue
         if requirement_pending:
             ignored_required += 1
             if ignored_required < 2:
@@ -1633,7 +1752,8 @@ async def _cc_tool_loop(url, headers, model, messages, mcp_tools, mcp_route, rea
         if content:
             yield {"type": "text", "content": content}
         else:
-            yield {"type": "error", "content": f"{label} trả về rỗng."}
+            extra = f" (finish_reason={finish})" if finish else ""
+            yield {"type": "error", "content": f"{label} trả về rỗng.{extra}"}
         return
     yield {"type": "text", "content": _het_vong_msg()}
 

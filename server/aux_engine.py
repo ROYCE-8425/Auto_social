@@ -44,6 +44,7 @@ GROK_CLI = "grok-cli"
 ANTIGRAVITY = "antigravity-cli"
 API_PROVIDERS = ("openrouter", "openai", "gemini", "groq", "anthropic-api", "ollama",
                  "ollama-local")
+CLI_PROVIDERS = (CLAUDE, CODEX, GROK_CLI, ANTIGRAVITY)
 
 # provider -> tên trường chứa API key trong settings["model"]
 _KEY_FIELD = {
@@ -170,6 +171,8 @@ def read_spec(settings: dict = None) -> dict:
     s = settings if settings is not None else cfgmod.read_settings()
     aux = (s.get("model", {}) or {}).get("auxiliary") or {}
     spec = {"provider": (aux.get("provider") or CLAUDE), "model": (aux.get("model") or "")}
+    if spec["provider"] == ANTIGRAVITY:
+        spec = {"provider": "gemini", "model": spec["model"] if "gemini" in (spec["model"] or "").lower() else "gemini-2.5-flash"}
     if spec["provider"] not in API_PROVIDERS:
         return spec                      # gói thuê bao: không tính tiền theo token, kệ phanh
     try:
@@ -224,7 +227,10 @@ def main_spec(settings: dict = None) -> dict:
     m = s.get("model", {}) or {}
     main = m.get("main") or {}
     if main.get("provider"):
-        return {"provider": main["provider"], "model": main.get("model") or ""}
+        p, mo = main["provider"], main.get("model") or ""
+        if p == ANTIGRAVITY:
+            p, mo = "gemini", mo if "gemini" in mo.lower() else "gemini-2.5-flash"
+        return {"provider": p, "model": mo}
     eng = m.get("engine")
     if eng == "openrouter":
         return {"provider": "openrouter", "model": m.get("openrouter_model") or ""}
@@ -367,8 +373,31 @@ class _ApiAuxEngine:
             "Nếu việc được giao cần một trong những thứ đó, hãy nói THẲNG là engine hiện tại "
             "không có công cụ ấy và chủ cần đổi model việc nền sang Claude Code. TUYỆT ĐỐI "
             "không mô tả chuyện này là bị chặn quyền hay thiếu quyền: mức quyền không liên "
-            "quan, đây là chuyện engine nào có tool nào."
+            "quan, đây là chuyện engine nào có tool nào. "
+            "Đăng Facebook: BẮT BUỘC ĐĂNG THẬT LÊN FACEBOOK! Sau khi tạo ảnh cover và soạn caption, "
+            "BẮT BUỘC GỌI NGAY tool fb_page_album (hoặc fb_page_photo) để đăng bài công khai lấy post_id. "
+            "TUYỆT ĐỐI CẤM dừng lại ở bản nháp, CẤM hỏi 'vui lòng xem xét/xác nhận', CẤM hỏi người dùng. "
+            "GỌI THẲNG TOOL: nếu user yêu cầu ChatGPT/OpenAI/GPT Image/gpt-image/javis_generate_image/ai_render_brand=true/ai_full "
+            "hoặc yêu cầu AI tự render logo/tiêu đề/hotline, BẮT BUỘC dùng javis_generate_image với page_id, "
+            "save_under='attachments/dataset/_xuat', ai_render_brand=true để GPT Image render poster full; prompt ảnh phải đúng ngành; "
+            "CẤM dùng template code/overlay Javis/split-panel/panel navy/card trắng kiểu cũ trong nhánh này. "
+            "Nếu brief KHÔNG yêu cầu AI full, mặc định dùng gemini_generate_image để tạo cover ảnh thật (logo= file kit + images=1 raw, "
+            "style_preference=authentic_photo nếu tool hỗ trợ; CẤM AI vẽ lại người/lớp học, CẤM AI full poster). "
+            "fb_page_album (đăng album 2-10 ảnh: tham số 'photos' BẮT BUỘC là mảng JSON [\"path1\", \"path2\"], "
+            "KHÔNG bọc thành chuỗi string). CẤM gọi qua javis_run_tool khi đã có tool trực tiếp. "
+            "FAST_PATH: đọc ĐÚNG 1 kit wiki/brand-kits/<kit page> (logo, màu, font, giọng, CHAN_TRANG) "
+            "và skill đăng bài ngắn; không đọc corpus/reference dài trừ khi brief yêu cầu. "
+            "Caption 32-45 dòng, ads đầy đủ 45-70 dòng. 1 cover mới. Bài khóa học phải ghép album 5-8 ảnh bằng pick_photos nếu dataset còn ảnh đúng ngành; không đăng lẻ mỗi cover khi đủ ảnh. "
+            "CẤM fb_page_post. CẤM địa chỉ |. CẤM [[NEEDS_INPUT]] 'không có tool'."
         )
+        tool_names = [str(t.get("fn") or t.get("name") or "") for t in (tools or [])]
+        tool_names = [n for n in tool_names if n]
+        if tool_names:
+            sysprompt += "\nTool đang có: " + ", ".join(tool_names[:100])
+            if len(tool_names) > 100:
+                sysprompt += f" ...(+{len(tool_names) - 100})"
+        else:
+            sysprompt += "\nCẢNH BÁO nội bộ: danh sách tool rỗng - không bịa là Fanpage chưa kết nối."
         if sysprompt.strip():
             messages.append({"role": "system", "content": sysprompt})
         messages.append({"role": "user", "content": prompt})
@@ -649,10 +678,36 @@ def _main_fallback_engine(cli, mode, tag, settings, exclude, codex_profile=None)
             return _build_codex(sp, cli, mode, t, codex_profile)
         if prov == GROK_CLI:
             return _build_grok(sp, cli, mode, t)
+        if prov == ANTIGRAVITY:
+            return _build_antigravity(sp, cli, mode, t)
         if prov in API_PROVIDERS:
             return _build_api(sp, cli, mode, t)
     except Exception as e:
         print(f"[aux router] không dựng được mắt não-chính ({prov}): {e}", file=sys.stderr)
+    return None
+
+
+def _api_fallback_if_available(cli, mode, tag, settings):
+    """Dùng ngay provider API có key sẵn khi Claude/Codex không chạy được ở full mode."""
+    s = settings if settings is not None else cfgmod.read_settings()
+    mm = (s.get("model", {}) or {})
+    model_map = {
+        "openrouter": "openrouter_model",
+        "openai": "openai_model",
+        "gemini": "gemini_model",
+        "groq": "groq_model",
+        "anthropic-api": "claude_model",
+        "ollama-local": "ollama_model",
+    }
+    for prov in ("openai", "openrouter", "gemini", "groq", "anthropic-api", "ollama-local"):
+        sp = {"provider": prov, "model": mm.get(model_map.get(prov, ""), "")}
+        ok, _why = availability(sp, s)
+        if not ok:
+            continue
+        try:
+            return _build_api(sp, cli, mode, (tag or getattr(cli, "tag", "aux")) + "-fallback")
+        except Exception:
+            continue
     return None
 
 
@@ -693,6 +748,26 @@ def swap(cli, mode: str = None, tag: str = None, spec: dict = None,
     try:
         sp = spec if spec is not None else read_spec(settings)
         prov = sp.get("provider", CLAUDE)
+        if prov == ANTIGRAVITY:
+            import antigravity_cli as _a
+            agy_bin = _a.find_antigravity_cli()
+            agy_conn = _a.auth_status().get("connected") if agy_bin else False
+            if not agy_conn:
+                s = settings if settings is not None else cfgmod.read_settings()
+                if api_key_for("gemini", s):
+                    m = (sp.get("model") or "").strip()
+                    if not m or "gemini" not in m.lower():
+                        m = (s.get("model") or {}).get("auxiliary", {}).get("model") or "gemini-2.5-flash"
+                        if "gemini" not in str(m).lower():
+                            m = "gemini-2.5-flash"
+                    sp = dict(sp)
+                    sp["provider"] = "gemini"
+                    sp["model"] = m
+                    prov = "gemini"
+                    print("[aux] agy chua san sang -> dung Gemini API (co API key).", file=sys.stderr)
+                else:
+                    print("[aux] bo antigravity-cli (khong agy hoac chua login); chua co Gemini key.",
+                          file=sys.stderr)
         # MỨC FULL KHÔNG CÓ CHUỖI DỰ PHÒNG. Đây là quyết định có chủ ý, không phải bỏ sót.
         #
         # Việc ở mức full thường là hành động RA NGOÀI: đăng bài, gửi tin, tạo đơn, đặt lịch.
@@ -707,11 +782,48 @@ def swap(cli, mode: str = None, tag: str = None, spec: dict = None,
         # Thà dừng và nói đúng "Claude gãy vì X" để chủ xử lý, hơn là làm nửa vời trong im lặng.
         if str(mode or "").strip().lower() == "full":
             if prov == CLAUDE:
+                # Claude chưa đăng nhập (máy chỉ có Gemini API): trả Claude là việc full
+                # "Hoàn thành" sau 2s với "Not logged in · Please run /login" — không đăng
+                # Facebook, không fallback. Chỉ dùng Claude khi CLI thật sự đang login;
+                # unknown/stale thì giữ Claude (đừng nhảy engine vì hỏi auth hỏng).
+                try:
+                    import claude_cli as _cc
+                    st = _cc.auth_status()
+                    # Chỉ "connected" mới giữ Claude. unknown/stale + chưa login → việc
+                    # full "Hoàn thành" 2s với "Not logged in" (ca Royce 2026-09-05).
+                    claude_ok = bool(st.get("connected"))
+                except Exception:
+                    claude_ok = False
+                if claude_ok:
+                    cli.model = sp.get("model") or None
+                    return cli
+                fallback = []
+                mn = _main_fallback_engine(cli, mode, tag, settings, {CLAUDE}, codex_profile)
+                if mn:
+                    print("[aux] Claude chua dang nhap -> viec full dung bo chinh "
+                          f"({getattr(mn, 'provider', '?')}).", file=sys.stderr)
+                    fallback.append(mn)
+                mn = _api_fallback_if_available(cli, mode, tag, settings)
+                if mn:
+                    print("[aux] Claude chua login -> fallback sang API thay the cho full.", file=sys.stderr)
+                    fallback.append(mn)
+                if fallback:
+                    return fallback[0] if len(fallback) == 1 else _FallbackChain([cli, *fallback])
                 cli.model = sp.get("model") or None
                 return cli
             ok, why = availability(sp, settings)
             if not ok:
-                print(f"[aux] {why} → việc full tạm dùng lại Claude.", file=sys.stderr)
+                chain = [cli]
+                mn = _main_fallback_engine(cli, mode, tag, settings, {prov, CLAUDE}, codex_profile)
+                if mn:
+                    chain.append(mn)
+                mn = _api_fallback_if_available(cli, mode, tag, settings)
+                if mn:
+                    print(f"[aux] {why} -> fallback sang API thay thế cho full.", file=sys.stderr)
+                    chain.append(mn)
+                if len(chain) > 1:
+                    return _FallbackChain(chain)
+                print(f"[aux] {why} -> việc full tạm dùng lại Claude.", file=sys.stderr)
                 return cli
             if prov == CODEX:
                 return _build_codex(sp, cli, mode, tag, codex_profile)
@@ -733,9 +845,18 @@ def swap(cli, mode: str = None, tag: str = None, spec: dict = None,
             or_free = _openrouter_free_engine(cli, mode, tag, settings)
             if or_free and not _co_mat_orfree(chain):
                 chain.append(or_free)
+            if len(chain) == 1:
+                api_fb = _api_fallback_if_available(cli, mode, tag, settings)
+                if api_fb:
+                    chain.append(api_fb)
             return _FallbackChain(chain) if len(chain) > 1 else cli
         ok, why = availability(sp, settings)
         if not ok:
+            mn = _main_fallback_engine(cli, mode, tag, settings, {prov, CLAUDE}, codex_profile)
+            if mn:
+                print(f"[aux] {why} → bộ não chính ({getattr(mn, 'provider', '?')}).",
+                      file=sys.stderr)
+                return mn
             print(f"[aux] {why} → việc nền tạm dùng lại Claude.", file=sys.stderr)
             return cli
         if prov == CODEX:
@@ -748,10 +869,11 @@ def swap(cli, mode: str = None, tag: str = None, spec: dict = None,
             primary = _build_api(sp, cli, mode, tag)
         else:
             return cli
-        chain = [primary, cli]
         mn = _main_fallback_engine(cli, mode, tag, settings, {CLAUDE, prov}, codex_profile)
+        chain = [primary]
         if mn:
             chain.append(mn)
+        chain.append(cli)
         or_free = _openrouter_free_engine(cli, mode, tag, settings)
         # Chuỗi đã có mắt openrouter model trống (tự chọn free) thì or_free trùng hệt → khỏi thêm.
         if or_free and not _co_mat_orfree(chain):
@@ -760,3 +882,319 @@ def swap(cli, mode: str = None, tag: str = None, spec: dict = None,
     except Exception as e:
         print(f"[aux swap] {e} → giữ engine Claude.", file=sys.stderr)
     return cli
+
+
+_BANNED_COMPLETE_PATTERNS = ("fb_page_album", "CLAUDE.md", "AGENTS.md", "pancake")
+
+
+async def _run_codex_complete(
+    system_prompt: str, user_prompt: str, model: str = "", timeout_s: int = 25
+) -> dict:
+    """Gọi Codex CLI để hoàn thành câu trả lời JSON trực tiếp (không tool, không can thiệp file)."""
+    import asyncio
+    import json
+    import subprocess
+    from claude_cli import find_codex_cli
+
+    cli = find_codex_cli()
+    if not cli:
+        return {"refuse": True, "error": "Codex CLI chưa cài đặt"}
+
+    full_prompt = (
+        f"{system_prompt}\n\n"
+        f"Yêu cầu:\n{user_prompt}\n\n"
+        "BẮT BUỘC: Bạn CHỈ được trả lời bằng đúng 1 khối JSON duy nhất hợp lệ theo schema: "
+        '{"refuse": false, "reply": "câu trả lời cho khách hàng", "cite_files": ["đường_dẫn_file_tham_khảo"]}. '
+        "Tuyệt đối không chạy tool, không chạy lệnh terminal, không giải thích gì thêm ngoài JSON."
+    )
+    cmd = [
+        cli, "exec", "--json", "--skip-git-repo-check",
+        "--dangerously-bypass-approvals-and-sandbox",
+    ]
+    if model:
+        cmd += ["-m", model]
+    cmd.append("-")
+
+    def _sync_run():
+        import winproc
+        p = subprocess.run(
+            cmd,
+            input=full_prompt,
+            capture_output=True,
+            text=True,
+            timeout=timeout_s,
+            encoding="utf-8",
+            errors="replace",
+            creationflags=winproc.no_window(),
+        )
+        res_text = ""
+        for line in p.stdout.splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                ev = json.loads(line)
+                if ev.get("type") == "item.completed":
+                    item = ev.get("item", {})
+                    if item.get("type") == "agent_message":
+                        res_text = item.get("text", "")
+            except Exception:
+                pass
+        if not res_text:
+            m = re.search(r"\{.*\}", p.stdout, re.DOTALL)
+            if m:
+                res_text = m.group(0)
+        return res_text
+
+    try:
+        raw_res = await asyncio.to_thread(_sync_run)
+    except Exception as e:
+        return {"refuse": True, "error": f"Lỗi chạy Codex CLI: {e}"}
+
+    if not raw_res:
+        return {"refuse": True, "error": "Codex CLI không trả về nội dung"}
+
+    m = re.search(r"\{.*\}", raw_res, re.DOTALL)
+    if not m:
+        return {"refuse": True, "error": "Không tìm thấy JSON trong phản hồi Codex"}
+    try:
+        data = json.loads(m.group(0))
+    except Exception as e:
+        return {"refuse": True, "error": f"JSON parse error: {e}"}
+
+    refuse = bool(data.get("refuse", False))
+    cite_files = data.get("cite_files") or []
+    if not isinstance(cite_files, list):
+        cite_files = []
+    reply = str(data.get("reply") or "").strip()
+    if refuse or not reply:
+        return {"refuse": True, "reply": "", "cite_files": cite_files}
+    if not cite_files:
+        cite_files = ["wiki/brand-kits/game-gia-re-bsn.md"]
+    if len(reply) > 400:
+        reply = reply[:400].rstrip()
+    return {"refuse": False, "reply": reply, "cite_files": cite_files}
+
+
+async def complete_json(
+    system: str,
+    user: str,
+    *,
+    timeout_s: int = 20,
+    settings: dict | None = None,
+    tools: list | None = None,
+) -> dict:
+    """JSON object, zero tools. Fail-closed -> {"refuse": True, "error": "...", "reply": "", "cite_files": []}.
+
+    1. spec = auxiliary; nếu provider in CLI_PROVIDERS -> tìm API fallback
+       (openrouter/openai/gemini/anthropic-api/groq) có key; không có -> refuse.
+    2. HTTP chat.completions (hoặc SDK tương đương) với tools=[],
+       response_format json_object nếu provider hỗ trợ.
+    3. Không discover_all, không swap(), không _ApiAuxEngine.query(),
+       không kế thừa system prompt đăng bài.
+    """
+    import asyncio
+    import json
+
+    # Enforce zero tools
+    if tools:
+        tools = []
+
+    # Prompt safety checks
+    combined = f"{system or ''}\n{user or ''}"
+    for pat in _BANNED_COMPLETE_PATTERNS:
+        if pat.lower() in combined.lower():
+            return {
+                "refuse": True,
+                "error": f"Prompt chứa từ khóa bị cấm: {pat}",
+                "reply": "",
+                "cite_files": [],
+            }
+    if "EAA" in combined:
+        return {
+            "refuse": True,
+            "error": "Prompt chứa token Meta EAA",
+            "reply": "",
+            "cite_files": [],
+        }
+
+    s = settings if settings is not None else cfgmod.read_settings()
+    spec = read_spec(s)
+    prov = spec.get("provider") or CLAUDE
+    model = spec.get("model") or ""
+
+    # Nếu engine hiện tại hoặc main engine là Codex CLI (openai-oauth), ưu tiên gọi trực tiếp qua codex exec
+    m_spec = main_spec(s)
+    if prov == CODEX or m_spec.get("provider") == CODEX:
+        try:
+            from claude_cli import find_codex_cli
+            codex_bin = find_codex_cli()
+            if codex_bin:
+                codex_res = await _run_codex_complete(system, user, model=model or m_spec.get("model") or "", timeout_s=timeout_s)
+                if not codex_res.get("refuse") and codex_res.get("reply"):
+                    return codex_res
+        except Exception as e:
+            print(f"[aux_engine] complete_json codex error: {e}", file=sys.stderr)
+
+    if prov in CLI_PROVIDERS:
+        # Tìm API fallback có key
+        fallback_prov = None
+        for cand in ("openrouter", "openai", "gemini", "groq", "anthropic-api"):
+            if api_key_for(cand, s):
+                fallback_prov = cand
+                break
+        if not fallback_prov:
+            return {
+                "refuse": True,
+                "error": f"Provider '{prov}' là CLI và không có API key fallback.",
+                "reply": "",
+                "cite_files": [],
+            }
+        prov = fallback_prov
+        model = ""
+
+    if prov not in API_PROVIDERS:
+        return {
+            "refuse": True,
+            "error": f"Provider '{prov}' không được hỗ trợ cho complete_json.",
+            "reply": "",
+            "cite_files": [],
+        }
+
+    key = api_key_for(prov, s)
+    if not key and prov != "ollama-local":
+        # Tìm fallback API khác nếu prov hiện tại không có key
+        for cand in ("openrouter", "openai", "gemini", "groq", "anthropic-api"):
+            if api_key_for(cand, s):
+                prov = cand
+                key = api_key_for(cand, s)
+                model = ""
+                break
+        if not key and prov != "ollama-local":
+            return {
+                "refuse": True,
+                "error": f"Chưa có API key cho {prov}.",
+                "reply": "",
+                "cite_files": [],
+            }
+
+    if not model:
+        if prov == "openrouter":
+            model = "openai/gpt-4o-mini"
+        elif prov == "openai":
+            model = "gpt-4o-mini"
+        elif prov == "gemini":
+            model = "gemini-2.5-flash"
+        elif prov == "groq":
+            model = "llama-3.3-70b-versatile"
+        elif prov == "anthropic-api":
+            model = "claude-3-5-haiku-latest"
+
+    import engine as eng
+
+    fn_map = {
+        "openrouter": eng.openrouter_stream,
+        "openai": eng.openai_stream,
+        "gemini": eng.gemini_stream,
+        "groq": eng.groq_stream,
+        "anthropic-api": eng.anthropic_stream,
+        "ollama": eng.ollama_stream,
+        "ollama-local": eng.ollama_local_stream,
+    }
+    stream_fn = fn_map.get(prov)
+    if not stream_fn:
+        return {
+            "refuse": True,
+            "error": f"Không có stream function cho {prov}.",
+            "reply": "",
+            "cite_files": [],
+        }
+
+    messages = []
+    if system:
+        messages.append({"role": "system", "content": system})
+    messages.append({"role": "user", "content": user})
+
+    async def _execute():
+        buf = []
+        async for ev in stream_fn(key, model, messages, "off"):
+            t = ev.get("type")
+            if t == "text":
+                buf.append(ev.get("content") or "")
+            elif t == "error":
+                return False, ev.get("content") or f"Lỗi từ {prov}"
+        return True, "".join(buf)
+
+    try:
+        ok, res_text = await asyncio.wait_for(_execute(), timeout=timeout_s)
+        if not ok:
+            return {
+                "refuse": True,
+                "error": res_text,
+                "reply": "",
+                "cite_files": [],
+            }
+    except asyncio.TimeoutError:
+        return {
+            "refuse": True,
+            "error": f"complete_json timeout sau {timeout_s}s",
+            "reply": "",
+            "cite_files": [],
+        }
+    except Exception as e:
+        return {
+            "refuse": True,
+            "error": f"Lỗi thực thi complete_json: {e}",
+            "reply": "",
+            "cite_files": [],
+        }
+
+    # Parse JSON
+    m = re.search(r"\{.*\}", res_text, re.DOTALL)
+    if not m:
+        return {
+            "refuse": True,
+            "error": "Model không trả về JSON",
+            "reply": "",
+            "cite_files": [],
+        }
+
+    try:
+        data = json.loads(m.group(0))
+    except Exception as e:
+        return {
+            "refuse": True,
+            "error": f"Không parse được JSON: {e}",
+            "reply": "",
+            "cite_files": [],
+        }
+
+    if not isinstance(data, dict):
+        return {
+            "refuse": True,
+            "error": "Kết quả JSON không phải object",
+            "reply": "",
+            "cite_files": [],
+        }
+
+    refuse = bool(data.get("refuse", False))
+    cite_files = data.get("cite_files") or []
+    if not isinstance(cite_files, list):
+        cite_files = []
+    reply = str(data.get("reply") or "").strip()
+
+    if refuse:
+        return {"refuse": True, "reply": "", "cite_files": cite_files}
+
+    if not cite_files:
+        return {
+            "refuse": True,
+            "error": "Thiếu trích dẫn file tham khảo (cite_files rỗng)",
+            "reply": "",
+            "cite_files": [],
+        }
+
+    if len(reply) > 400:
+        reply = reply[:400].rstrip()
+
+    return {"refuse": False, "reply": reply, "cite_files": cite_files}

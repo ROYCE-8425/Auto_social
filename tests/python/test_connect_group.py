@@ -69,7 +69,7 @@ def test_steps_dung_schema():
             # "domain" là ô copy tên miền cho bản cài VPS - console.js dựng nó bằng
             # domainCopyBox(). Danh sách này viết hồi chỉ có mỗi ô Redirect URI, và vì test
             # chưa từng chạy nên không ai thấy nó đã lạc hậu so với giao diện.
-            assert s.get("copy", "") in ("", "redirect", "domain"), f"{cid} bước {i}: copy lạ"
+            assert s.get("copy", "") in ("", "redirect", "domain", "site"), f"{cid} bước {i}: copy lạ"
 
 
 def test_oauth_byo_co_buoc_redirect():
