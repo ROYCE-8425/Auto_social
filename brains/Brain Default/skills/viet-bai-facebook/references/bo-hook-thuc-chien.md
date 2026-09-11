@@ -8,7 +8,7 @@ Tuyển tập các mẫu câu mở đầu bài viết Facebook đã được đo
 
 1. Cùng là nhân viên văn phòng nhưng người tan làm lúc 5h chiều, người ngồi mò Excel đến 8h tối. Khác nhau ở đúng 3 phím tắt này.
 2. Sếp bảo: "Làm lại cái báo cáo này đi, nhìn rối mắt quá!". Cảm giác lúc đó vừa tủi vừa bực.
-3. Đừng dùng hàm VLOOKUP nữa nếu bạn chưa biết đến hàm XLOOKUP xử lý nhanh gấp đôi.
+3. Đừng dùng hàm VLOOKUP nữa nếu bạn chưa biết đến hàm XLOOKUP linh hoạt và chuẩn xác hơn rất nhiều.
 4. Mất 2 tiếng ngồi dò từng dòng so sánh dữ liệu, trong khi chỉ cần 1 cú click chuột với PivotTable.
 5. Soạn xong cái hợp đồng 10 trang mà in ra nhảy lung tung, lề trên lệch lề dưới. Lỗi cơ bản nhưng ai cũng từng dính.
 6. Người ta gõ 10 ngón mắt nhìn màn hình thoăn thoắt, còn mình vẫn mổ cò từng chữ bằng hai ngón trỏ.
@@ -30,7 +30,7 @@ Tuyển tập các mẫu câu mở đầu bài viết Facebook đã được đo
 ## 3. Ngành Cơ khí, AutoCAD & SolidWorks
 
 14. Cầm bản vẽ gia công xuống xưởng bị thợ mắng vì ghi thiếu kích thước dung sai. Cảm giác quê không tả nổi.
-15. Vẽ AutoCAD 3 năm mà vẫn dùng lệnh cơ bản, trong khi đồng nghiệp đã dùng Lisp và Block thuộc tính vẽ nhanh gấp 3 lần.
+15. Vẽ AutoCAD 3 năm mà vẫn dùng lệnh cơ bản, trong khi đồng nghiệp đã dùng Lisp và Block thuộc tính làm việc chuẩn xác và nhàn hơn rất nhiều.
 16. Dựng hình 3D trên SolidWorks bị lỗi gãy mặt, xoay góc nào cũng không khớp chi tiết lắp ráp.
 17. Muốn xin làm kỹ sư thiết kế nhưng CV chỉ có lý thuyết suông, nhà tuyển dụng nhìn qua là lắc đầu.
 18. Từ thợ đứng máy tiện CNC muốn nâng cấp lên vẽ lập trình bản vẽ, con đường ngắn nhất là học kèm thực chiến.
@@ -40,7 +40,7 @@ Tuyển tập các mẫu câu mở đầu bài viết Facebook đã được đo
 ## 4. Ngành Thiết kế đồ họa (Photoshop, Illustrator)
 
 19. Nhìn mẫu poster trên mạng người ta làm đẹp mê ly, còn mình hí hoáy cả buổi ra một bức hình màu sắc chói lọi.
-20. Khách hàng gửi ảnh bảo: "Xóa giùm chị người phía sau và chỉnh cho da sáng tự nhiên nhé". 5 phút là xong nếu biết tính năng này.
+20. Khách hàng gửi ảnh bảo: "Xóa giùm chị người phía sau và chỉnh cho da sáng tự nhiên nhé". Xử lý rất gọn gàng nếu biết tính năng Generative Fill và Select & Mask.
 21. Thiết kế xong file in ra bị nhòe màu, lệch font chữ, đền tiền in cho khách hết nửa tháng lương.
 22. Không cần phải có năng khiếu vẽ voi vẽ vượn mới học được đồ họa, chỉ cần nắm vững tư duy bố cục và công cụ.
 23. Muốn làm thêm nghề tay trái kiếm thêm thu nhập buổi tối, thiết kế banner quảng cáo là lựa chọn số một hiện nay.

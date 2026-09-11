@@ -43,7 +43,7 @@ BẮT BUỘC: Nếu kết quả có NEXT=1, bạn PHẢI THỰC THI LIÊN TỤC 
    - Lấy đường dẫn ảnh vừa tạo (dạng `attachments/dataset/_xuat/...png`). TUYỆT ĐỐI CẤM dùng lại ảnh cover cũ.
 
 4. **Đăng Album Fanpage chuẩn Tỷ Lệ Vàng 2026**:
-   - Soạn caption theo skill `viet-bai-facebook`: độ dài 28-45 dòng (chưa tính `CHAN_TRANG`), mở bài gọn, ngắt dòng thoáng mắt trên mobile.
+   - Soạn caption theo skill `viet-bai-facebook`: độ dài 28-45 dòng (chưa tính `CHAN_TRANG`), mở bài gọn, ngắt dòng thoáng mắt trên mobile. TUYỆT ĐỐI CẤM các con số khẳng định phóng đại khó kiểm chứng ("gấp 3 lần", "trong 5 phút", "trong 30 giây") và CẤM bịa quà tặng, học phí, chứng chỉ nếu file course/brand kit không có.
    - Bố cục theo đúng `<angle>`:
      * Nếu `<angle>` là `tuyen_sinh`: Móc câu -> Nỗi đau (`👉`) -> Giải pháp kỹ năng -> Khối cam kết đào tạo (4-5 dòng `📌`) -> Khối ưu đãi học viên (3-4 dòng `🎁`) -> CTA tuyển sinh.
      * Nếu `<angle>` là `meo_thuc_chien` / `tinh_huong` / `tai_lieu`: Móc câu trực diện -> Tình huống/vấn đề thực tế -> Hướng dẫn chi tiết / Các bước xử lý / Bảng công thức, phím tắt -> Lời khuyên/Lưu ý -> CTA mềm 1-2 dòng (`👉 Lưu lại bài viết... / Nhắn tin Fanpage để nhận tư vấn...`). TUYỆT ĐỐI KHÔNG nhồi nhét khối `🎁` ưu đãi học phí hay `📌` tuyển sinh vào bài chia sẻ kiến thức.

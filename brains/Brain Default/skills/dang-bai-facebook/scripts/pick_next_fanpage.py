@@ -263,11 +263,11 @@ def load_state(today):
                     st["cursor"] = int(raw.get("cursor") or 0)
                 except Exception:
                     pass
+            st["last_angle"] = raw.get("last_angle", "")
             if raw.get("date") == today:
                 st["ok"] = list(raw.get("ok") or [])
                 st["skip"] = list(raw.get("skip") or [])
                 st["last_course"] = raw.get("last_course", "")
-                st["last_angle"] = raw.get("last_angle", "")
             # Tự động dọn dẹp các page_id trong pending_course/pending_angle đã nằm trong ok
             if st.get("ok"):
                 ok_set = set(str(x) for x in st["ok"])
@@ -277,6 +277,11 @@ def load_state(today):
                 if isinstance(st.get("pending_angle"), dict):
                     st["pending_angle"] = {
                         k: v for k, v in st["pending_angle"].items() if str(k) not in ok_set}
+            # Đồng bộ pending_course và pending_angle: chỉ giữ lại các page_id có mặt ở cả hai
+            if isinstance(st.get("pending_course"), dict) and isinstance(st.get("pending_angle"), dict):
+                common_pending = set(st["pending_course"].keys()) & set(st["pending_angle"].keys())
+                st["pending_course"] = {k: v for k, v in st["pending_course"].items() if k in common_pending}
+                st["pending_angle"] = {k: v for k, v in st["pending_angle"].items() if k in common_pending}
         except Exception:
             pass
     return st
@@ -509,8 +514,12 @@ def main(argv):
             available_tags = unique_tags
         tag = random.choice(available_tags or ["tin-hoc _ai"])
 
-        last_angle = (st.get("page_last_angle") or {}).get(row["page_id"]) or ""
-        angle = specific_angle or pick_next_angle(last_angle)
+        # Xoay tua toàn cục (Global Round-Robin) giữa các bài đăng liên tiếp
+        global_last_angle = st.get("last_angle") or ""
+        page_last_angle = (st.get("page_last_angle") or {}).get(row["page_id"]) or ""
+        angle = specific_angle or pick_next_angle(global_last_angle)
+        if not specific_angle and page_last_angle and angle == page_last_angle:
+            angle = pick_next_angle(angle)
 
         if "pending_course" not in st or not isinstance(st["pending_course"], dict):
             st["pending_course"] = {}
@@ -518,6 +527,7 @@ def main(argv):
         if "pending_angle" not in st or not isinstance(st["pending_angle"], dict):
             st["pending_angle"] = {}
         st["pending_angle"][row["page_id"]] = angle
+        st["last_angle"] = angle
         save_state(st)
         print("NEXT=1")
         print("page_id=" + row["page_id"])
@@ -725,8 +735,12 @@ def main(argv):
 
     tag = random.choice(available_tags or ["tin-hoc _ai"])
 
-    last_angle = (st.get("page_last_angle") or {}).get(row["page_id"]) or ""
-    angle = specific_angle or pick_next_angle(last_angle)
+    # Xoay tua toàn cục (Global Round-Robin) giữa các bài đăng liên tiếp
+    global_last_angle = st.get("last_angle") or ""
+    page_last_angle = (st.get("page_last_angle") or {}).get(row["page_id"]) or ""
+    angle = specific_angle or pick_next_angle(global_last_angle)
+    if not specific_angle and page_last_angle and angle == page_last_angle:
+        angle = pick_next_angle(angle)
 
     if "pending_course" not in st or not isinstance(st["pending_course"], dict):
         st["pending_course"] = {}
@@ -734,6 +748,7 @@ def main(argv):
     if "pending_angle" not in st or not isinstance(st["pending_angle"], dict):
         st["pending_angle"] = {}
     st["pending_angle"][row["page_id"]] = angle
+    st["last_angle"] = angle
     save_state(st)
     print("NEXT=1")
     print("page_id=" + row["page_id"])

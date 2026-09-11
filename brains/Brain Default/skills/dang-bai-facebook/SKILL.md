@@ -97,9 +97,9 @@ Hệ thống tự động điều phối bài viết theo **4 Góc Nội Dung (C
 
    #### A. Khung bài Góc 1: Mẹo & Thủ thuật / Phím tắt thực chiến (`angle == "meo_thuc_chien"`)
    * **Tiêu đề IN HOA + Icon Hook**:
-     - AutoCAD: `💡 5 LỆNH TẮT AUTOCAD VẼ NHANH GẤP 3 LẦN CHO DÂN KỸ THUẬT`
-     - Kế toán: `💡 7 LỖI HÓA ĐƠN ĐIỆN TỬ DỄ BỊ PHẠT & CÁCH XỬ LÝ NHANH TRONG 5 PHÚT`
-     - Đồ họa: `💡 10 PHÍM TẮT PHOTOSHOP GIÚP THIẾT KẾ NHANH GẤP ĐÔI`
+     - AutoCAD: `💡 5 LỆNH TẮT AUTOCAD TỐI ƯU THAO TÁC CHO DÂN KỸ THUẬT`
+     - Kế toán: `💡 7 LỖI HÓA ĐƠN ĐIỆN TỬ DỄ BỊ PHẠT & QUY TRÌNH XỬ LÝ CHUẨN THEO TT 78`
+     - Đồ họa: `💡 10 PHÍM TẮT PHOTOSHOP GIÚP TỐI ƯU THỜI GIAN THIẾT KẾ`
      - Tin học: `💡 5 HÀM EXCEL THAY THẾ HOÀN TOÀN VLOOKUP KHI ĐI LÀM`
    * **Đoạn mở đầu (2-3 dòng)**: Nêu rõ khó khăn khi thao tác thủ công, mất thời gian và mục tiêu của các mẹo này giúp tối ưu công việc ra sao.
    * **Chi tiết 4-5 mẹo thực chiến (12-18 dòng)**:
@@ -113,7 +113,7 @@ Hệ thống tự động điều phối bài viết theo **4 Góc Nội Dung (C
 
    #### B. Khung bài Góc 2: Tình huống thực tế & Giải pháp nghề nghiệp (`angle == "tinh_huong"`)
    * **Tiêu đề IN HOA + Icon Hook**:
-     - AutoCAD: `⚙️ BẢN VẼ AUTOCAD BỊ NẶNG, GIẬT LAG? 3 BƯỚC KHẮC PHỤC TRIỆT ĐỂ TRONG 30 GIÂY`
+     - AutoCAD: `⚙️ BẢN VẼ AUTOCAD BỊ NẶNG, GIẬT LAG? 3 BƯỚC KHẮC PHỤC TRIỆT ĐỂ VỚI PURGE VÀ AUDIT`
      - Kế toán: `📑 HÓA ĐƠN ĐẦU VÀO SAI SỐ TIỀN HOẶC MÃ SỐ THUẾ? QUY TRÌNH XỬ LÝ CHUẨN THEO TT 78`
      - Đồ họa: `🎨 CÁCH TÁCH TÓC MẪU TRONG PHOTOSHOP KHÔNG BỊ LEM VIỀN TRẮNG BẰNG SELECT & MASK`
      - Tin học: `📊 CÁCH TẠO BÁO CÁO DASHBOARD ĐỘNG BẰNG PIVOTTABLE TỰ ĐỘNG CẬP NHẬT SỐ LIỆU`
@@ -196,3 +196,4 @@ Hệ thống tự động điều phối bài viết theo **4 Góc Nội Dung (C
 - CẤM gọi subagent kiểm chứng độc lập (verifier) vì Graph API đã tự động verify kết quả.
 - CẤM dán nguyên văn caption dài hay nhật ký suy luận vào kết quả cuối.
 - CẤM bịa post_id hoặc dừng ở bản nháp hỏi lại.
+- CẤM TUYỆT ĐỐI CÁC KHẲNG ĐỊNH PHÓNG ĐẠI / KHÔNG THỂ KIỂM CHỨNG: Cấm dùng các cụm từ như "gấp 3 lần", "gấp đôi", "trong 5 phút", "trong 30 giây", "xử lý thần tốc", hoặc tự bịa các lời hứa "tặng quà khủng", "cấp chứng chỉ quốc tế", "giảm 50% học phí" nếu trong file course hoặc brand kit không có thông tin xác thực. Mọi khẳng định phải bám sát chuyên môn kỹ thuật chính xác, chuyên nghiệp và có thể kiểm chứng được.

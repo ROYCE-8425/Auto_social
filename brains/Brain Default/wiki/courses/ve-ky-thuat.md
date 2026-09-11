@@ -49,19 +49,19 @@ updated: 2026-09-06
 
 ### A. Góc Mẹo & Thủ thuật thực chiến (meo_thuc_chien):
 - **Tiêu đề gợi ý:**
-  * 💡 5 LỆNH TẮT AUTOCAD VẼ NHANH GẤP 3 LẦN CHO DÂN KỸ THUẬT
+  * 💡 5 LỆNH TẮT AUTOCAD TỐI ƯU THAO TÁC CHO DÂN KỸ THUẬT
   * 💡 MẸO IN BẢN VẼ AUTOCAD ĐÚNG TỶ LỆ VÀ KHÔNG BỊ MẤT NÉT
-  * 💡 BÍ QUYẾT TẠO BLOCK ĐỘNG TIẾT KIỆM 50% THỜI GIAN TRIỂN KHAI HỒ SƠ
+  * 💡 BÍ QUYẾT TẠO BLOCK ĐỘNG TỐI ƯU THỜI GIAN TRIỂN KHAI HỒ SƠ
 - **Nội dung mẹo chi tiết:**
   * Phím F8 (Ortho) & F10 (Polar Tracking): Giữ đường gióng thẳng trục và góc chuẩn xác nhanh chóng.
   * Lệnh MA (Matchprop): Sao chép thuộc tính Layer, màu sắc, nét đứt giữa các đối tượng chỉ trong 1 click chuột.
   * Lệnh LAYOFF & LAYON: Ẩn/hiện layer tức thì để chỉnh sửa bản vẽ phức tạp mà không xóa nhầm đối tượng.
   * Lệnh STRETCH (S): Co kéo kích thước cụm chi tiết mà không làm vỡ liên kết đường Dim.
-  * Lệnh PURGE (PU) & AUDIT: Quét dọn rác và sửa lỗi bản vẽ, giảm tới 70% dung lượng file giúp CAD chạy mượt.
+  * Lệnh PURGE (PU) & AUDIT: Quét dọn rác và sửa lỗi bản vẽ, giảm dung lượng file giúp CAD chạy mượt mà.
 
 ### B. Góc Tình huống & Sự cố thực tế (tinh_huong):
 - **Tiêu đề gợi ý:**
-  * ⚙️ BẢN VẼ AUTOCAD BỊ NẶNG, GIẬT LAG? 3 BƯỚC LÀM NHẸ FILE TRONG 30 GIÂY
+  * ⚙️ BẢN VẼ AUTOCAD BỊ NẶNG, GIẬT LAG? 3 BƯỚC KHẮC PHỤC TRIỆT ĐỂ VỚI PURGE VÀ AUDIT
   * ⚙️ XỬ LÝ LỖI FONT CHỮ VĂNG DẤU HỎI (?) TRONG BẢN VẼ KỸ THUẬT
   * ⚙️ BẢN VẼ IN RA BỊ MẤT NÉT HOẶC SAI TỶ LỆ: NGUYÊN NHÂN VÀ CÁCH KHẮC PHỤC
 - **Giải pháp thực tế:**

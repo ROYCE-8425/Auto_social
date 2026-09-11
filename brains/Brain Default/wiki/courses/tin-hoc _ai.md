@@ -17,7 +17,7 @@ updated: 2026-09-06
   - CHINH PHỤC CHỨNG CHỈ QUỐC TẾ MOS
 - **Phụ đề gợi ý (Subtitle):**
   - Thành Thạo Sau 1 Khóa Học - Đi Làm Ngay
-  - Tối Ưu Hiệu Suất Làm Việc Gấp 5 Lần
+  - Tối Ưu Hiệu Suất Làm Việc & Tự Động Hóa
   - Kèm 1-1 Thực Hành 100% Trên Máy Tính
   - Lộ Trình Từ Cơ Bản Đến Nâng Cao
 - **Kho Highlights chuẩn (Chọn 2-3 ý phù hợp góc bài viết):**

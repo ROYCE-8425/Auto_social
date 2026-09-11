@@ -2,27 +2,21 @@
   "date": "2026-09-11",
   "ok": [],
   "skip": [],
-  "cursor": 2,
+  "cursor": 0,
   "page_last_course": {
     "101084059225733": "tin-hoc _ai",
-    "347101481809822": "ve-ky-thuat"
+    "347101481809822": "ve-ky-thuat",
+    "261386753728501": "ve-ky-thuat",
+    "246780635193685": "ve-ky-thuat",
+    "139538609253068": "ve-ky-thuat"
   },
   "page_last_angle": {
-    "347101481809822": "tuyen_sinh"
+    "347101481809822": "tuyen_sinh",
+    "261386753728501": "tinh_huong",
+    "246780635193685": "tai_lieu",
+    "139538609253068": "tuyen_sinh"
   },
-  "pending_course": {
-    "109128125071092": "tin-hoc _ai",
-    "107108788759946": "tin-hoc _ai",
-    "109280655477819": "tin-hoc _ai",
-    "988656934325292": "do-hoa",
-    "452301177973210": "tin-hoc _ai",
-    "100181125985092": "tin-hoc _ai",
-    "284859368039913": "ve-ky-thuat",
-    "290400614148885": "ve-ky-thuat"
-  },
-  "pending_angle": {
-    "100181125985092": "meo_thuc_chien",
-    "284859368039913": "meo_thuc_chien",
-    "290400614148885": "meo_thuc_chien"
-  }
+  "pending_course": {},
+  "pending_angle": {},
+  "last_angle": "meo_thuc_chien"
 }

@@ -95,7 +95,7 @@ Tài liệu tham chiếu các cấu trúc bài viết thực chiến (Caption Fr
 > **Mục tiêu**: Chia sẻ giá trị ngắn gọn, dễ share, dễ lưu bài viết.
 
 - **Hook mở đầu (1-2 dòng)**:
-  `💡 5 PHÍM TẮT PHOTOSHOP GIÚP THIẾT KẾ NHANH GẤP 3 LẦN BẠN CẦN BIẾT`
+  `💡 5 PHÍM TẮT PHOTOSHOP GIÚP TỐI ƯU TỐC ĐỘ THIẾT KẾ BẠN CẦN BIẾT`
 - **Nội dung 4-5 mẹo chi tiết**: Nêu tên phím tắt + Tác dụng thực tế + Cách bấm.
 - **Lời kêu gọi mềm**:
   `👉 Thử áp dụng ngay hôm nay để thấy tốc độ làm việc cải thiện rõ rệt!`
