@@ -309,7 +309,7 @@ def _manual_pages(cctx=None):
                                 "name": info.get("name") or f"Page {pid}",
                                 "access_token": str(info["access_token"]).strip(),
                                 "category": "Community",
-                                "tasks": ["MANAGE", "CREATE_CONTENT"]
+                                "tasks": ["MANAGE", "CREATE_CONTENT", "MODERATE"]
                             }
             except Exception:
                 pass
@@ -330,7 +330,7 @@ def _manual_pages(cctx=None):
                             "name": name,
                             "access_token": str(tok).strip(),
                             "category": "Community",
-                            "tasks": ["MANAGE", "CREATE_CONTENT"]
+                            "tasks": ["MANAGE", "CREATE_CONTENT", "MODERATE"]
                         }
                 except Exception:
                     pass
@@ -452,30 +452,37 @@ async def _pages(user_token=None, cctx=None):
     return list(by_id.values()), None
 
 
-async def _resolve_page(args, user_token, cctx=None):
-    """Chọn Trang thao tác. Trả (page_id, page_token, page_name, err).
+async def _resolve_page_info(args, user_token, cctx=None):
+    """Chọn Trang thao tác. Trả (page_dict, err).
     ƯU TIÊN TUYỆT ĐỐI: Dùng ngay Page Access Token trong page_tokens.json / brand-kits nếu có,
-    không gọi OAuth me/accounts và không fallback về app cũ."""
+    không gọi OAuth me/accounts và không fallback về app cũ.
+    Tự suy page_id từ prefix dạng {page_id}_... trong post_id, comment_id hoặc object_id."""
     manual = _manual_pages(cctx)
-    ref = str((args or {}).get("page_id") or (args or {}).get("page") or "").strip()
+    args = args or {}
+    ref = str(args.get("page_id") or args.get("page") or "").strip()
+    if not ref:
+        obj_ref = str(args.get("post_id") or args.get("comment_id") or args.get("object_id") or "").strip()
+        if "_" in obj_ref:
+            cand = obj_ref.split("_", 1)[0].strip()
+            if cand:
+                ref = cand
+
     if ref and manual:
         # Khớp theo ID
         if ref in manual:
-            p = manual[ref]
-            return p.get("id"), p.get("access_token"), p.get("name"), None
+            return manual[ref], None
         # Khớp theo tên
         rl = ref.lower()
         for pid, p in manual.items():
             if str(pid) == ref or rl in str(p.get("name", "")).lower():
-                return p.get("id"), p.get("access_token"), p.get("name"), None
+                return p, None
 
     if not ref and len(manual) == 1:
-        p = next(iter(manual.values()))
-        return p.get("id"), p.get("access_token"), p.get("name"), None
+        return next(iter(manual.values())), None
 
     pages, err = await _pages(user_token, cctx)
     if err and not manual:
-        return None, None, None, err
+        return None, err
     all_pages_dict = {}
     for pid, p in (manual or {}).items():
         all_pages_dict[pid] = p
@@ -485,20 +492,27 @@ async def _resolve_page(args, user_token, cctx=None):
             all_pages_dict[pid] = p
     all_pages = list(all_pages_dict.values())
     if not all_pages:
-        return None, None, None, ("ERROR: Không thấy Trang nào bạn quản lý. Kiểm tra: bạn là Admin của Trang, "
-                                  "và khi đăng nhập Facebook đã TICK chọn Trang đó cho app.")
+        return None, ("ERROR: Không thấy Trang nào bạn quản lý. Kiểm tra: bạn là Admin của Trang, "
+                      "và khi đăng nhập Facebook đã TICK chọn Trang đó cho app.")
     if ref:
         rl = ref.lower()
         for p in all_pages:
             if str(p.get("id")) == ref or rl in str(p.get("name", "")).lower():
-                return p.get("id"), p.get("access_token"), p.get("name"), None
+                return p, None
         avail = ", ".join(f"{p.get('name')} ({p.get('id')})" for p in all_pages)
-        return None, None, None, f"ERROR: Không khớp Trang '{ref}'. Trang bạn có: {avail}"
+        return None, f"ERROR: Không khớp Trang '{ref}'. Trang bạn có: {avail}"
     if len(all_pages) == 1:
-        p = all_pages[0]
-        return p.get("id"), p.get("access_token"), p.get("name"), None
+        return all_pages[0], None
     avail = ", ".join(f"{p.get('name')} ({p.get('id')})" for p in all_pages)
-    return None, None, None, f"ERROR: Bạn có nhiều Trang, cần chỉ rõ page_id hoặc page (tên). Trang: {avail}"
+    return None, f"ERROR: Bạn có nhiều Trang, cần chỉ rõ page_id hoặc page (tên). Trang: {avail}"
+
+
+async def _resolve_page(args, user_token, cctx=None):
+    """Chọn Trang thao tác. Trả (page_id, page_token, page_name, err)."""
+    p, err = await _resolve_page_info(args, user_token, cctx)
+    if err:
+        return None, None, None, err
+    return p.get("id"), p.get("access_token"), p.get("name"), None
 
 
 async def _list(args, ctx):
@@ -550,9 +564,24 @@ async def _comments(args, ctx):
         limit = max(1, min(100, int(args.get("limit") or 25)))
     except (TypeError, ValueError):
         limit = 25
-    d = await _get(f"{obj}/comments",
-                   {"fields": "id,from,message,created_time,like_count",
-                    "order": "reverse_chronological", "limit": limit}, ptok)
+    params = {
+        "fields": "id,from{id,name},message,created_time,like_count,comment_count,parent,is_hidden,can_comment,can_hide,can_like,can_remove,message_tags,attachment{type,url}",
+        "order": "reverse_chronological",
+        "limit": limit
+    }
+    if args.get("filter"):
+        params["filter"] = str(args["filter"])
+    if args.get("since"):
+        params["since"] = str(args["since"])
+    if args.get("after"):
+        params["after"] = str(args["after"])
+    d = await _get(f"{obj}/comments", params, ptok)
+    # Fallback nếu Graph v25.0 trả lỗi filter
+    if isinstance(d, dict) and d.get("error") and args.get("filter"):
+        err_msg = str(d["error"].get("message", ""))
+        if "filter" in err_msg.lower():
+            params.pop("filter", None)
+            d = await _get(f"{obj}/comments", params, ptok)
     return _fmt(d)
 
 
@@ -1191,11 +1220,14 @@ async def _reply(args, ctx):
         return "ERROR: " + (_check() or "chưa kết nối")
     args = args or {}
     target = str(args.get("comment_id") or args.get("object_id") or args.get("post_id") or "").strip()
-    msg = str(args.get("message") or "").strip()
+    raw_msg = str(args.get("message") or "").strip()
+    msg = _fb_plain_caption(raw_msg)
     if not target:
         return "ERROR: thiếu 'comment_id' (bình luận cần trả lời) hoặc 'post_id' (để bình luận vào bài)."
     if not msg:
         return "ERROR: thiếu 'message' (nội dung trả lời)."
+    if not (args.get("page_id") or args.get("page")) and "_" in target:
+        args = {**args, "page_id": target.split("_", 1)[0]}
     pid, ptok, pname, err = await _resolve_page(args, token)
     if err:
         return err
@@ -1205,6 +1237,245 @@ async def _reply(args, ctx):
     return json.dumps({"ok": True, "page": pname,
                        "reply_id": d.get("id") if isinstance(d, dict) else None},
                       ensure_ascii=False, default=str)
+
+
+async def _inbox_comments(args, ctx):
+    token = await _token()
+    if not token:
+        return "ERROR: " + (_check() or "chưa kết nối")
+    p, err = await _resolve_page_info(args, token)
+    if err:
+        return err
+    pid = p.get("id")
+    ptok = p.get("access_token")
+    pname = p.get("name")
+    args = args or {}
+    try:
+        posts_limit = max(1, min(15, int(args.get("posts_limit") or 5)))
+    except (TypeError, ValueError):
+        posts_limit = 5
+    try:
+        comments_per_post = max(1, min(50, int(args.get("comments_per_post") or 25)))
+    except (TypeError, ValueError):
+        comments_per_post = 25
+    filter_mode = str(args.get("filter") or "stream").strip()
+    since = str(args.get("since") or "").strip()
+
+    feed_params = {
+        "fields": "id,created_time,comments.summary(true).limit(0)",
+        "limit": posts_limit,
+    }
+    if since:
+        feed_params["since"] = since
+    feed_res = await _get(f"{pid}/feed", feed_params, ptok)
+    if isinstance(feed_res, dict) and feed_res.get("error"):
+        return _fmt(feed_res)
+
+    posts = (feed_res or {}).get("data") or []
+    items = []
+    scanned_posts = 0
+    skipped_unchanged = 0
+
+    for post in posts:
+        post_id = str(post.get("id") or "")
+        if not post_id:
+            continue
+        scanned_posts += 1
+        summary = (post.get("comments") or {}).get("summary") or {}
+        total_count = summary.get("total_count", 0)
+        if total_count == 0:
+            skipped_unchanged += 1
+            continue
+
+        c_params = {
+            "fields": "id,from{id,name},message,created_time,like_count,parent,is_hidden",
+            "order": "chronological",
+            "limit": comments_per_post,
+        }
+        if filter_mode:
+            c_params["filter"] = filter_mode
+        if since:
+            c_params["since"] = since
+
+        c_res = await _get(f"{post_id}/comments", c_params, ptok)
+        if isinstance(c_res, dict) and c_res.get("error"):
+            err_msg = str(c_res["error"].get("message", ""))
+            if "filter" in err_msg.lower():
+                c_params.pop("filter", None)
+                c_res = await _get(f"{post_id}/comments", c_params, ptok)
+
+        if isinstance(c_res, dict) and not c_res.get("error"):
+            for c in (c_res.get("data") or []):
+                from_info = c.get("from") or {}
+                parent = c.get("parent") or {}
+                items.append({
+                    "comment_id": c.get("id"),
+                    "post_id": post_id,
+                    "parent_id": parent.get("id"),
+                    "from_id": from_info.get("id"),
+                    "from_name": from_info.get("name") or "Ẩn danh",
+                    "message": c.get("message") or "",
+                    "created_time": c.get("created_time"),
+                    "is_hidden": bool(c.get("is_hidden", False)),
+                    "like_count": c.get("like_count", 0),
+                })
+
+    return json.dumps({
+        "ok": True,
+        "page_id": pid,
+        "page_name": pname,
+        "items": items,
+        "scanned_posts": scanned_posts,
+        "skipped_unchanged": skipped_unchanged,
+    }, ensure_ascii=False, default=str)
+
+
+async def _comment_hide(args, ctx):
+    token = await _token()
+    if not token:
+        return "ERROR: " + (_check() or "chưa kết nối")
+    args = args or {}
+    cid = str(args.get("comment_id") or "").strip()
+    if not cid:
+        return "ERROR: thiếu 'comment_id'."
+    p, err = await _resolve_page_info(args, token)
+    if err:
+        return err
+    tasks = [t.upper() for t in (p.get("tasks") or [])]
+    if tasks and "MODERATE" not in tasks:
+        return "ERROR: Page không có quyền MODERATE để ẩn bình luận."
+    is_hidden = args.get("is_hidden")
+    if is_hidden is None:
+        is_hidden = True
+    else:
+        is_hidden = bool(is_hidden)
+    ptok = p.get("access_token")
+    d = await _post(f"{cid}", {"is_hidden": str(is_hidden).lower()}, ptok)
+    if isinstance(d, dict) and d.get("error"):
+        return _fmt(d)
+    return json.dumps({"ok": True, "comment_id": cid, "is_hidden": is_hidden, "page": p.get("name")}, ensure_ascii=False, default=str)
+
+
+async def _comment_like(args, ctx):
+    token = await _token()
+    if not token:
+        return "ERROR: " + (_check() or "chưa kết nối")
+    args = args or {}
+    cid = str(args.get("comment_id") or "").strip()
+    if not cid:
+        return "ERROR: thiếu 'comment_id'."
+    p, err = await _resolve_page_info(args, token)
+    if err:
+        return err
+    tasks = [t.upper() for t in (p.get("tasks") or [])]
+    if tasks and "MODERATE" not in tasks and "CREATE_CONTENT" not in tasks:
+        return "ERROR: Page không có quyền like bình luận."
+    unlike = bool(args.get("unlike", False))
+    ptok = p.get("access_token")
+    if unlike:
+        d = await _delete(f"{cid}/likes", ptok)
+    else:
+        d = await _post(f"{cid}/likes", {}, ptok)
+    if isinstance(d, dict) and d.get("error"):
+        return _fmt(d)
+    return json.dumps({"ok": True, "comment_id": cid, "liked": not unlike, "page": p.get("name")}, ensure_ascii=False, default=str)
+
+
+async def _comment_delete(args, ctx):
+    token = await _token()
+    if not token:
+        return "ERROR: " + (_check() or "chưa kết nối")
+    args = args or {}
+    cid = str(args.get("comment_id") or "").strip()
+    if not cid:
+        return "ERROR: thiếu 'comment_id'."
+    p, err = await _resolve_page_info(args, token)
+    if err:
+        return err
+    tasks = [t.upper() for t in (p.get("tasks") or [])]
+    if tasks and "MODERATE" not in tasks:
+        return "ERROR: Page không có quyền MODERATE để xoá bình luận."
+    ptok = p.get("access_token")
+    d = await _delete(f"{cid}", ptok)
+    if isinstance(d, dict) and d.get("error"):
+        return _fmt(d)
+    return json.dumps({"ok": True, "comment_id": cid, "deleted": True, "page": p.get("name")}, ensure_ascii=False, default=str)
+
+
+async def _conversations(args, ctx):
+    token = await _token()
+    if not token:
+        return "ERROR: " + (_check() or "chưa kết nối")
+    pid, ptok, pname, err = await _resolve_page(args, token)
+    if err:
+        return err
+    args = args or {}
+    try:
+        limit = max(1, min(100, int(args.get("limit") or 20)))
+    except (TypeError, ValueError):
+        limit = 20
+    d = await _get(
+        f"{pid}/conversations",
+        {
+            "fields": "id,updated_time,message_count,unread_count,participants,snippet",
+            "limit": limit,
+        },
+        ptok,
+    )
+    return _fmt(d)
+
+
+async def _conversation_thread(args, ctx):
+    token = await _token()
+    if not token:
+        return "ERROR: " + (_check() or "chưa kết nối")
+    args = args or {}
+    cid = str(args.get("conversation_id") or "").strip()
+    if not cid:
+        return "ERROR: thiếu 'conversation_id' (id hội thoại cần đọc tin nhắn; lấy từ fb_conversations)."
+    pid, ptok, pname, err = await _resolve_page(args, token)
+    if err:
+        return err
+    try:
+        limit = max(1, min(100, int(args.get("limit") or 25)))
+    except (TypeError, ValueError):
+        limit = 25
+    d = await _get(
+        f"{cid}/messages",
+        {
+            "fields": "id,from,to,message,created_time,attachments",
+            "limit": limit,
+        },
+        ptok,
+    )
+    return _fmt(d)
+
+
+async def _message_send(args, ctx):
+    token = await _token()
+    if not token:
+        return "ERROR: " + (_check() or "chưa kết nối")
+    args = args or {}
+    recipient_id = str(args.get("recipient_id") or "").strip()
+    if not recipient_id:
+        return "ERROR: thiếu 'recipient_id' (PSID người nhận tin nhắn)."
+    msg = str(args.get("message") or "").strip()
+    if not msg:
+        return "ERROR: thiếu 'message' (nội dung tin nhắn cần gửi)."
+    pid, ptok, pname, err = await _resolve_page(args, token)
+    if err:
+        return err
+    clean_msg = _fb_plain_caption(msg)
+    mtype = str(args.get("messaging_type") or "RESPONSE").strip()
+    payload = {
+        "recipient": {"id": recipient_id},
+        "message": {"text": clean_msg},
+        "messaging_type": mtype,
+    }
+    d = await _post(f"{pid}/messages", payload, ptok)
+    if isinstance(d, dict) and d.get("error"):
+        return _fmt(d)
+    return json.dumps({"ok": True, "recipient_id": recipient_id, "message_id": (d or {}).get("message_id")}, ensure_ascii=False, default=str)
 
 
 def register(ctx):
@@ -1235,6 +1506,18 @@ def register(ctx):
             "page": {"type": "string", "description": "tên Trang (tuỳ chọn)"},
             "limit": {"type": "integer", "description": "Số bình luận tối đa (mặc định 25)"}},
             "required": ["post_id"]},
+    )
+    ctx.register_tool(
+        name="fb_page_inbox_comments", min_mode="readonly", check_fn=_check, handler=_inbox_comments,
+        description=("Quét bình luận mới trên N bài gần nhất của một Trang (hỗ trợ cả reply lồng filter=stream). "
+                     "Primitive cho vòng lặp chăm sóc Fanpage. Bỏ trống page nếu chỉ có 1 Trang."),
+        schema={"type": "object", "properties": {
+            "page_id": {"type": "string", "description": "id Trang (bỏ trống nếu chỉ có 1 Trang)"},
+            "page": {"type": "string", "description": "tên Trang (thay cho page_id)"},
+            "posts_limit": {"type": "integer", "description": "Số bài quét, mặc định 5, max 15"},
+            "comments_per_post": {"type": "integer", "description": "Số bình luận mỗi bài, mặc định 25, max 50"},
+            "since": {"type": "string", "description": "ISO8601; bỏ trống = 24h"},
+            "filter": {"type": "string", "description": "Mặc định stream (cả reply lồng)"}}},
     )
     ctx.register_tool(
         name="fb_page_post", min_mode="full", check_fn=_check, handler=_publish,
@@ -1321,3 +1604,68 @@ def register(ctx):
             "page": {"type": "string", "description": "tên Trang (khi có nhiều Trang)"}},
             "required": ["message"]},
     )
+    ctx.register_tool(
+        name="fb_page_comment_hide", min_mode="full", check_fn=_check, handler=_comment_hide,
+        description=("ẨN hoặc HIỆN LẠI một bình luận trên Trang - hành động THẬT, cần quyền MODERATE trên Trang. "
+                     "Cần comment_id. is_hidden=true (ẩn, mặc định) hoặc false (hiện lại)."),
+        schema={"type": "object", "required": ["comment_id"], "properties": {
+            "comment_id": {"type": "string", "description": "id bình luận cần ẩn hoặc hiện lại"},
+            "is_hidden": {"type": "boolean", "description": "true ẩn, false hiện lại. Mặc định true"},
+            "page_id": {"type": "string", "description": "id Trang (suy được từ comment_id)"},
+            "page": {"type": "string", "description": "tên Trang"},
+            "post_id": {"type": "string", "description": "id bài chứa bình luận"}}},
+    )
+    ctx.register_tool(
+        name="fb_page_comment_like", min_mode="full", check_fn=_check, handler=_comment_like,
+        description=("LIKE hoặc BỎ LIKE một bình luận trên Trang bằng tư cách Trang - hành động THẬT. "
+                     "Cần comment_id. unlike=true để bỏ like."),
+        schema={"type": "object", "required": ["comment_id"], "properties": {
+            "comment_id": {"type": "string", "description": "id bình luận cần like hoặc bỏ like"},
+            "unlike": {"type": "boolean", "description": "true bỏ like, false like. Mặc định false"},
+            "page_id": {"type": "string", "description": "id Trang (suy được từ comment_id)"},
+            "page": {"type": "string", "description": "tên Trang"},
+            "post_id": {"type": "string", "description": "id bài chứa bình luận"}}},
+    )
+    ctx.register_tool(
+        name="fb_page_comment_delete", min_mode="full", check_fn=_check, handler=_comment_delete,
+        description=("XOÁ HẲN một bình luận trên Trang - hành động THẬT, KHÔNG HOÀN TÁC ĐƯỢC. Cần comment_id "
+                     "và quyền MODERATE."),
+        schema={"type": "object", "required": ["comment_id"], "properties": {
+            "comment_id": {"type": "string", "description": "id bình luận cần xoá hẳn"},
+            "page_id": {"type": "string", "description": "id Trang (suy được từ comment_id)"},
+            "page": {"type": "string", "description": "tên Trang"},
+            "post_id": {"type": "string", "description": "id bài chứa bình luận"}}},
+    )
+    ctx.register_tool(
+        name="fb_conversations", min_mode="readonly", check_fn=_check, handler=_conversations,
+        description=("Đọc danh sách các hội thoại Messenger trên Trang của bạn (id hội thoại, số tin chưa đọc, "
+                     "người tham gia, tin nhắn gần nhất). Bỏ trống page nếu chỉ có 1 Trang."),
+        schema={"type": "object", "properties": {
+            "page_id": {"type": "string", "description": "id Trang (bỏ trống nếu chỉ có 1 Trang)"},
+            "page": {"type": "string", "description": "tên Trang (thay cho page_id)"},
+            "limit": {"type": "integer", "description": "Số hội thoại tối đa, mặc định 20"}}},
+    )
+    ctx.register_tool(
+        name="fb_conversation_thread", min_mode="readonly", check_fn=_check, handler=_conversation_thread,
+        description=("Đọc chi tiết các tin nhắn trong một hội thoại Messenger trên Trang. Cần conversation_id "
+                     "lấy từ fb_conversations."),
+        schema={"type": "object", "properties": {
+            "conversation_id": {"type": "string", "description": "id hội thoại (từ fb_conversations)"},
+            "page_id": {"type": "string", "description": "id Trang (bỏ trống nếu chỉ có 1 Trang)"},
+            "page": {"type": "string", "description": "tên Trang"},
+            "limit": {"type": "integer", "description": "Số tin nhắn tối đa, mặc định 25"}},
+            "required": ["conversation_id"]},
+    )
+    ctx.register_tool(
+        name="fb_message_send", min_mode="full", check_fn=_check, handler=_message_send,
+        description=("GỬI TIN NHẮN Messenger đến người dùng (PSID) từ Trang của bạn - hành động THẬT. "
+                     "Cần recipient_id (PSID) và message. Tuân thủ cửa sổ chuẩn 24 giờ của Meta."),
+        schema={"type": "object", "properties": {
+            "recipient_id": {"type": "string", "description": "PSID người nhận tin nhắn"},
+            "message": {"type": "string", "description": "Nội dung tin nhắn cần gửi"},
+            "page_id": {"type": "string", "description": "id Trang (bỏ trống nếu chỉ có 1 Trang)"},
+            "page": {"type": "string", "description": "tên Trang"},
+            "messaging_type": {"type": "string", "enum": ["RESPONSE", "UPDATE"], "description": "Mặc định RESPONSE"}},
+            "required": ["recipient_id", "message"]},
+    )
+

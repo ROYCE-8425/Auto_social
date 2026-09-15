@@ -449,6 +449,24 @@ _DEFAULT = {
             "capability_profiles": [],
         },
     },
+    "fanpage_care": {
+        "enabled": False,
+        "mode": "suggest",
+        "brain": "",
+        "poll_interval_min": 5,
+        "posts_per_poll": 5,
+        "comments_per_post": 25,
+        "max_replies_per_hour": 8,
+        "reply_cooldown_sec": 45,
+        "quiet_hours_start": "21:00",
+        "quiet_hours_end": "07:00",
+        "backup_crm": True,
+        "like_khen": False,
+        "delete_spam": False,
+        "webhook_verify_token": "",
+        "spam_patterns": [],
+        "pages": {},
+    },
 }
 
 
@@ -464,7 +482,7 @@ _SECRET_PATHS = (
     "telegram.token", "zalo_bot.token", "backup.token", "voice.elevenlabs_key",
     # Secret TOTP là thứ SINH RA mã đăng nhập, nên nó ngang hàng mật khẩu chứ không phải một
     # tuỳ chọn. Ai đọc được nó thì tự sinh mã 2FA mãi mãi, và chủ máy không hề hay biết.
-    "auth.totp.secret",
+    "auth.totp.secret", "fanpage_care.webhook_verify_token",
 )
 
 

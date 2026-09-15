@@ -121,18 +121,7 @@ def _isolate(cli):
 
 # Frontmatter: ---\n<yaml>\n---\n<body>
 _FM_RE = re.compile(r"^---\s*\n(.*?)\n---\s*\n?(.*)$", re.DOTALL)
-_QH_RE = re.compile(r"^\s*(\d{1,2})\s*-\s*(\d{1,2})\s*$")
-
-
-def _in_quiet_hours(spec: str, hour: int) -> bool:
-    """'23-07' = im lặng 23h..7h (giờ VN). Sai format / rỗng / a==b → không im lặng."""
-    m = _QH_RE.match(spec or "")
-    if not m:
-        return False
-    a, b = int(m.group(1)) % 24, int(m.group(2)) % 24
-    if a == b:
-        return False
-    return (a <= hour < b) if a < b else (hour >= a or hour < b)
+from quiet_hours import _QH_RE, _in_quiet_hours
 
 
 def _this_week() -> str:

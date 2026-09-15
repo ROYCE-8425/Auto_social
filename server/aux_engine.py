@@ -44,6 +44,7 @@ GROK_CLI = "grok-cli"
 ANTIGRAVITY = "antigravity-cli"
 API_PROVIDERS = ("openrouter", "openai", "gemini", "groq", "anthropic-api", "ollama",
                  "ollama-local")
+CLI_PROVIDERS = (CLAUDE, CODEX, GROK_CLI, ANTIGRAVITY)
 
 # provider -> tên trường chứa API key trong settings["model"]
 _KEY_FIELD = {
@@ -881,3 +882,217 @@ def swap(cli, mode: str = None, tag: str = None, spec: dict = None,
     except Exception as e:
         print(f"[aux swap] {e} → giữ engine Claude.", file=sys.stderr)
     return cli
+
+
+_BANNED_COMPLETE_PATTERNS = ("fb_page_album", "CLAUDE.md", "AGENTS.md", "pancake")
+
+
+async def complete_json(
+    system: str,
+    user: str,
+    *,
+    timeout_s: int = 20,
+    settings: dict | None = None,
+    tools: list | None = None,
+) -> dict:
+    """JSON object, zero tools. Fail-closed -> {"refuse": True, "error": "...", "reply": "", "cite_files": []}.
+
+    1. spec = auxiliary; nếu provider in CLI_PROVIDERS -> tìm API fallback
+       (openrouter/openai/gemini/anthropic-api/groq) có key; không có -> refuse.
+    2. HTTP chat.completions (hoặc SDK tương đương) với tools=[],
+       response_format json_object nếu provider hỗ trợ.
+    3. Không discover_all, không swap(), không _ApiAuxEngine.query(),
+       không kế thừa system prompt đăng bài.
+    """
+    import asyncio
+    import json
+
+    # Enforce zero tools
+    if tools:
+        tools = []
+
+    # Prompt safety checks
+    combined = f"{system or ''}\n{user or ''}"
+    for pat in _BANNED_COMPLETE_PATTERNS:
+        if pat.lower() in combined.lower():
+            return {
+                "refuse": True,
+                "error": f"Prompt chứa từ khóa bị cấm: {pat}",
+                "reply": "",
+                "cite_files": [],
+            }
+    if "EAA" in combined:
+        return {
+            "refuse": True,
+            "error": "Prompt chứa token Meta EAA",
+            "reply": "",
+            "cite_files": [],
+        }
+
+    s = settings if settings is not None else cfgmod.read_settings()
+    spec = read_spec(s)
+    prov = spec.get("provider") or CLAUDE
+    model = spec.get("model") or ""
+
+    if prov in CLI_PROVIDERS:
+        # Tìm API fallback có key
+        fallback_prov = None
+        for cand in ("openrouter", "openai", "gemini", "groq", "anthropic-api"):
+            if api_key_for(cand, s):
+                fallback_prov = cand
+                break
+        if not fallback_prov:
+            return {
+                "refuse": True,
+                "error": f"Provider '{prov}' là CLI và không có API key fallback.",
+                "reply": "",
+                "cite_files": [],
+            }
+        prov = fallback_prov
+        model = ""
+
+    if prov not in API_PROVIDERS:
+        return {
+            "refuse": True,
+            "error": f"Provider '{prov}' không được hỗ trợ cho complete_json.",
+            "reply": "",
+            "cite_files": [],
+        }
+
+    key = api_key_for(prov, s)
+    if not key and prov != "ollama-local":
+        # Tìm fallback API khác nếu prov hiện tại không có key
+        for cand in ("openrouter", "openai", "gemini", "groq", "anthropic-api"):
+            if api_key_for(cand, s):
+                prov = cand
+                key = api_key_for(cand, s)
+                model = ""
+                break
+        if not key and prov != "ollama-local":
+            return {
+                "refuse": True,
+                "error": f"Chưa có API key cho {prov}.",
+                "reply": "",
+                "cite_files": [],
+            }
+
+    if not model:
+        if prov == "openrouter":
+            model = "openai/gpt-4o-mini"
+        elif prov == "openai":
+            model = "gpt-4o-mini"
+        elif prov == "gemini":
+            model = "gemini-2.5-flash"
+        elif prov == "groq":
+            model = "llama-3.3-70b-versatile"
+        elif prov == "anthropic-api":
+            model = "claude-3-5-haiku-latest"
+
+    import engine as eng
+
+    fn_map = {
+        "openrouter": eng.openrouter_stream,
+        "openai": eng.openai_stream,
+        "gemini": eng.gemini_stream,
+        "groq": eng.groq_stream,
+        "anthropic-api": eng.anthropic_stream,
+        "ollama": eng.ollama_stream,
+        "ollama-local": eng.ollama_local_stream,
+    }
+    stream_fn = fn_map.get(prov)
+    if not stream_fn:
+        return {
+            "refuse": True,
+            "error": f"Không có stream function cho {prov}.",
+            "reply": "",
+            "cite_files": [],
+        }
+
+    messages = []
+    if system:
+        messages.append({"role": "system", "content": system})
+    messages.append({"role": "user", "content": user})
+
+    async def _execute():
+        buf = []
+        async for ev in stream_fn(key, model, messages, "off"):
+            t = ev.get("type")
+            if t == "text":
+                buf.append(ev.get("content") or "")
+            elif t == "error":
+                return False, ev.get("content") or f"Lỗi từ {prov}"
+        return True, "".join(buf)
+
+    try:
+        ok, res_text = await asyncio.wait_for(_execute(), timeout=timeout_s)
+        if not ok:
+            return {
+                "refuse": True,
+                "error": res_text,
+                "reply": "",
+                "cite_files": [],
+            }
+    except asyncio.TimeoutError:
+        return {
+            "refuse": True,
+            "error": f"complete_json timeout sau {timeout_s}s",
+            "reply": "",
+            "cite_files": [],
+        }
+    except Exception as e:
+        return {
+            "refuse": True,
+            "error": f"Lỗi thực thi complete_json: {e}",
+            "reply": "",
+            "cite_files": [],
+        }
+
+    # Parse JSON
+    m = re.search(r"\{.*\}", res_text, re.DOTALL)
+    if not m:
+        return {
+            "refuse": True,
+            "error": "Model không trả về JSON",
+            "reply": "",
+            "cite_files": [],
+        }
+
+    try:
+        data = json.loads(m.group(0))
+    except Exception as e:
+        return {
+            "refuse": True,
+            "error": f"Không parse được JSON: {e}",
+            "reply": "",
+            "cite_files": [],
+        }
+
+    if not isinstance(data, dict):
+        return {
+            "refuse": True,
+            "error": "Kết quả JSON không phải object",
+            "reply": "",
+            "cite_files": [],
+        }
+
+    refuse = bool(data.get("refuse", False))
+    cite_files = data.get("cite_files") or []
+    if not isinstance(cite_files, list):
+        cite_files = []
+    reply = str(data.get("reply") or "").strip()
+
+    if refuse:
+        return {"refuse": True, "reply": "", "cite_files": cite_files}
+
+    if not cite_files:
+        return {
+            "refuse": True,
+            "error": "Thiếu trích dẫn file tham khảo (cite_files rỗng)",
+            "reply": "",
+            "cite_files": [],
+        }
+
+    if len(reply) > 400:
+        reply = reply[:400].rstrip()
+
+    return {"refuse": False, "reply": reply, "cite_files": cite_files}

@@ -38,6 +38,7 @@
     models: "cpu",
     channels: "send",
     mcp: "plug",
+    fanpagecare: "messages-square",
     plugins: "toolbox",
     brandkits: "palette",
     logs: "scroll-text",
@@ -80,7 +81,7 @@
   // tiếng Việt khi thiếu key, nên một bản dịch làm dở không bao giờ để lại key trần trên rail.
   const RAIL_ITEMS = [
     "home", "chat", "settings", "workflows", "agents", "skills", "chatbots", "files",
-    "terminal", "selfimprove", "learn", "kanban", "models", "channels", "mcp", "plugins",
+    "terminal", "selfimprove", "learn", "kanban", "models", "channels", "mcp", "fanpagecare", "plugins",
     "brandkits", "logs", "account", "usage",
   ].map(id => ({ id, icon: ICON[id], get label() { return t(`page.${id}.label`); } }));
 
@@ -98,7 +99,7 @@
     { get label() { return t("nav.group.code"); },        icon: GICON["Code"],     ids: ["terminal"] },
     { get label() { return t("nav.group.nang_luc"); },    icon: GICON["Năng lực"], ids: ["agents", "chatbots", "skills", "workflows", "plugins", "brandkits"] },
     { get label() { return t("nav.group.viec"); },        icon: GICON["Việc"],     ids: ["kanban", "selfimprove"] },
-    { get label() { return t("nav.group.ket_noi"); },     icon: GICON["Kết nối"],  ids: ["mcp", "channels", "models"] },
+    { get label() { return t("nav.group.ket_noi"); },     icon: GICON["Kết nối"],  ids: ["mcp", "channels", "fanpagecare", "models"] },
     { get label() { return t("nav.group.he_thong"); },    icon: GICON["Hệ thống"], ids: ["usage", "settings", "logs", "account"], foot: true },
   ];
   const RAIL_BY_ID = Object.fromEntries(RAIL_ITEMS.map(i => [i.id, i]));
@@ -129,7 +130,7 @@
   //
   // `page.<id>.title` cho phép tiêu đề trang KHÁC nhãn trên rail khi cần (rail chật nên
   // "Việc", trang rộng nên "Việc (Kanban)"); thiếu key đó thì tự rơi về `page.<id>.label`.
-  const VIEW_META = Object.fromEntries(["home", "chat", "settings", "workflows", "agents", "skills", "files", "terminal", "selfimprove", "chatbots", "learn", "kanban", "models", "channels", "mcp", "plugins", "brandkits", "logs", "account", "usage"].map(id => [id, {
+  const VIEW_META = Object.fromEntries(["home", "chat", "settings", "workflows", "agents", "skills", "files", "terminal", "selfimprove", "chatbots", "learn", "kanban", "models", "channels", "mcp", "fanpagecare", "plugins", "brandkits", "logs", "account", "usage"].map(id => [id, {
     icon: VIEW_ICON[id],
     get label() {
       const rieng = t(`page.${id}.title`);
@@ -373,6 +374,11 @@
     if (id === "brandkits") {
       if (window.JavisBrandKits && JavisBrandKits.render) return JavisBrandKits.render(el);
       el.innerHTML = placeholder(id, "brand-kits-ui.js chưa sẵn sàng.");
+      return;
+    }
+    if (id === "fanpagecare") {
+      if (window.JavisFanpageCare && JavisFanpageCare.render) return JavisFanpageCare.render(el);
+      el.innerHTML = placeholder(id, "fanpage-care.js chưa sẵn sàng.");
       return;
     }
     if (id === "logs")     return renderLogs(el);

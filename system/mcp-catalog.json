@@ -577,7 +577,7 @@
         "provider": "meta",
         "authorize_url": "https://www.facebook.com/v25.0/dialog/oauth",
         "token_url": "https://graph.facebook.com/v25.0/oauth/access_token",
-        "scopes": ["pages_show_list", "pages_read_engagement", "pages_manage_posts", "pages_manage_engagement"],
+        "scopes": ["pages_show_list", "pages_read_engagement", "pages_manage_posts", "pages_manage_engagement", "pages_manage_metadata", "pages_messaging"],
         "fields": [
           { "key": "client_id", "label": "App ID (Facebook)", "placeholder": "Ví dụ: 1122334455667788" },
           { "key": "client_secret", "label": "App Secret (Facebook)", "placeholder": "Ví dụ: a1b2c3d4e5f6..." }
@@ -606,8 +606,8 @@
         }
       },
       "tool_meta": {
-        "read": ["fb_pages_list", "fb_page_posts", "fb_page_comments"],
-        "danger": ["fb_page_post", "fb_page_photo", "fb_page_album", "fb_page_video", "fb_page_edit", "fb_page_reply", "fb_page_delete"]
+        "read": ["fb_pages_list", "fb_page_posts", "fb_page_comments", "fb_page_inbox_comments", "fb_conversations", "fb_conversation_thread"],
+        "danger": ["fb_page_post", "fb_page_photo", "fb_page_album", "fb_page_video", "fb_page_edit", "fb_page_reply", "fb_page_delete", "fb_page_comment_hide", "fb_page_comment_like", "fb_page_comment_delete", "fb_message_send"]
       },
       "default_perm": "readonly",
       "risk": "Mức Toàn quyền cho phép Javis ĐĂNG BÀI, TRẢ LỜI BÌNH LUẬN và XOÁ BÀI trên Trang của bạn. Hành động thật, công khai.\n\nXoá bài là KHÔNG HOÀN TÁC ĐƯỢC - Trang không có thùng rác, bài xoá rồi là mất hẳn.\n\nGiữ mức Chỉ đọc thì Javis chỉ xem Trang, bài và bình luận, không đăng, không sửa, không xoá.\n\nToken chỉ thao tác được trên Trang mà chính bạn là admin."

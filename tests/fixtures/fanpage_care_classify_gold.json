@@ -1,0 +1,327 @@
+[
+  {
+    "id": "tc_01",
+    "text": "học phí bao nhiêu ad ơi",
+    "expected_class": "faq",
+    "expected_faq_intent": "hoc_phi",
+    "expected_phones": []
+  },
+  {
+    "id": "tc_02",
+    "text": "Khoá học tin học văn phòng giá bao nhiêu ạ?",
+    "expected_class": "faq",
+    "expected_faq_intent": "hoc_phi",
+    "expected_phones": []
+  },
+  {
+    "id": "tc_03",
+    "text": "Học phí lớp kế toán thực hành thế nào vậy ad?",
+    "expected_class": "faq",
+    "expected_faq_intent": "hoc_phi",
+    "expected_phones": []
+  },
+  {
+    "id": "tc_04",
+    "text": "Khóa học autocad bao nhiêu tiền vậy ạ",
+    "expected_class": "faq",
+    "expected_faq_intent": "hoc_phi",
+    "expected_phones": []
+  },
+  {
+    "id": "tc_05",
+    "text": "Q7 ở đâu vậy trung tâm",
+    "expected_class": "faq",
+    "expected_faq_intent": "dia_chi",
+    "expected_phones": []
+  },
+  {
+    "id": "tc_06",
+    "text": "Địa chỉ cơ sở Thủ Dầu Một ở chỗ nào vậy ạ?",
+    "expected_class": "faq",
+    "expected_faq_intent": "dia_chi",
+    "expected_phones": []
+  },
+  {
+    "id": "tc_07",
+    "text": "Bên mình có chi nhánh ở Biên Hòa không ad?",
+    "expected_class": "faq",
+    "expected_faq_intent": "dia_chi",
+    "expected_phones": []
+  },
+  {
+    "id": "tc_08",
+    "text": "Địa điểm học tại Dĩ An ở đường nào thế shop",
+    "expected_class": "faq",
+    "expected_faq_intent": "dia_chi",
+    "expected_phones": []
+  },
+  {
+    "id": "tc_09",
+    "text": "Lịch học ca tối thế nào ạ?",
+    "expected_class": "faq",
+    "expected_faq_intent": "lich_hoc",
+    "expected_phones": []
+  },
+  {
+    "id": "tc_10",
+    "text": "Có lớp học ca sáng thứ 7 không ad?",
+    "expected_class": "faq",
+    "expected_faq_intent": "lich_hoc",
+    "expected_phones": []
+  },
+  {
+    "id": "tc_11",
+    "text": "Thời gian học mỗi buổi mấy tiếng vậy?",
+    "expected_class": "faq",
+    "expected_faq_intent": "lich_hoc",
+    "expected_phones": []
+  },
+  {
+    "id": "tc_12",
+    "text": "Khi nào khai giảng lớp photoshop mới ạ?",
+    "expected_class": "faq",
+    "expected_faq_intent": "khai_giang",
+    "expected_phones": []
+  },
+  {
+    "id": "tc_13",
+    "text": "Lịch khai giảng tuần tới còn chỗ không trung tâm?",
+    "expected_class": "faq",
+    "expected_faq_intent": "khai_giang",
+    "expected_phones": []
+  },
+  {
+    "id": "tc_14",
+    "text": "Cho mình xin số zalo để nhắn tin hỏi nhé",
+    "expected_class": "faq",
+    "expected_faq_intent": "zalo",
+    "expected_phones": []
+  },
+  {
+    "id": "tc_15",
+    "text": "Tư vấn qua zalo giúp em với ạ",
+    "expected_class": "faq",
+    "expected_faq_intent": "zalo",
+    "expected_phones": []
+  },
+  {
+    "id": "tc_16",
+    "text": "0901 234 567 muốn học excel",
+    "expected_class": "lead",
+    "expected_faq_intent": null,
+    "expected_phones": ["0901234567"]
+  },
+  {
+    "id": "tc_17",
+    "text": "Tư vấn cho mình khóa tin học nhé 0935.195.118",
+    "expected_class": "lead",
+    "expected_faq_intent": null,
+    "expected_phones": ["0935195118"]
+  },
+  {
+    "id": "tc_18",
+    "text": "+84 935 195 118 đăng ký học autocad",
+    "expected_class": "lead",
+    "expected_faq_intent": null,
+    "expected_phones": ["0935195118"]
+  },
+  {
+    "id": "tc_19",
+    "text": "Học phí bao nhiêu? Gọi em số 0912-345-678 nhé",
+    "expected_class": "lead",
+    "expected_faq_intent": null,
+    "expected_phones": ["0912345678"]
+  },
+  {
+    "id": "tc_20",
+    "text": "Em muốn đăng ký học thử lớp kế toán cơ bản",
+    "expected_class": "lead",
+    "expected_faq_intent": null,
+    "expected_phones": []
+  },
+  {
+    "id": "tc_21",
+    "text": "Muốn học tin học văn phòng cấp tốc tại Q7",
+    "expected_class": "lead",
+    "expected_faq_intent": null,
+    "expected_phones": []
+  },
+  {
+    "id": "tc_22",
+    "text": "Nhận tư vấn lộ trình học vẽ kỹ thuật cho người mới",
+    "expected_class": "lead",
+    "expected_faq_intent": null,
+    "expected_phones": []
+  },
+  {
+    "id": "tc_23",
+    "text": "Inbox em đăng ký suất ưu đãi nhé",
+    "expected_class": "lead",
+    "expected_faq_intent": null,
+    "expected_phones": []
+  },
+  {
+    "id": "tc_24",
+    "text": "Bấm vào link nhận quà miễn phí https://bit.ly/nhanqua_vip",
+    "expected_class": "spam",
+    "expected_faq_intent": null,
+    "expected_phones": []
+  },
+  {
+    "id": "tc_25",
+    "text": "Kiếm tiền online 500k/ngày tại tinyurl.com/kiemtien",
+    "expected_class": "spam",
+    "expected_faq_intent": null,
+    "expected_phones": []
+  },
+  {
+    "id": "tc_26",
+    "text": "Kèo bóng ngoại hạng tối nay bao ăn casino tài xỉu",
+    "expected_class": "spam",
+    "expected_faq_intent": null,
+    "expected_phones": []
+  },
+  {
+    "id": "tc_27",
+    "text": "Bán thuốc kích dục viagra chính hãng giá rẻ",
+    "expected_class": "spam",
+    "expected_faq_intent": null,
+    "expected_phones": []
+  },
+  {
+    "id": "tc_28",
+    "text": "aaaaaaaaaaaaaaaaaaaaaa",
+    "expected_class": "spam",
+    "expected_faq_intent": null,
+    "expected_phones": []
+  },
+  {
+    "id": "tc_29",
+    "text": "ib mình qua link https://fb.me/group_x nhé mn",
+    "expected_class": "spam",
+    "expected_faq_intent": null,
+    "expected_phones": []
+  },
+  {
+    "id": "tc_30",
+    "text": "Cái lũ lừa đảo đm chúng mày",
+    "expected_class": "toxic",
+    "expected_faq_intent": null,
+    "expected_phones": []
+  },
+  {
+    "id": "tc_31",
+    "text": "Trung tâm làm ăn mất dạy lừa đảo trắng trợn",
+    "expected_class": "toxic",
+    "expected_faq_intent": null,
+    "expected_phones": []
+  },
+  {
+    "id": "tc_32",
+    "text": "Bài viết hay quá, cảm ơn thầy cô!",
+    "expected_class": "khen",
+    "expected_faq_intent": null,
+    "expected_phones": []
+  },
+  {
+    "id": "tc_33",
+    "text": "Tuyệt vời trung tâm ơi 👍💯",
+    "expected_class": "khen",
+    "expected_faq_intent": null,
+    "expected_phones": []
+  },
+  {
+    "id": "tc_34",
+    "text": "👍",
+    "expected_class": "khen",
+    "expected_faq_intent": null,
+    "expected_phones": []
+  },
+  {
+    "id": "tc_35",
+    "text": "Cảm ơn ad đã chia sẻ tài liệu hữu ích ạ ❤️",
+    "expected_class": "khen",
+    "expected_faq_intent": null,
+    "expected_phones": []
+  },
+  {
+    "id": "tc_36",
+    "text": "Lỗi hàm VLOOKUP ra #N/A thì sửa làm sao vậy ad?",
+    "expected_class": "ky_thuat",
+    "expected_faq_intent": null,
+    "expected_phones": []
+  },
+  {
+    "id": "tc_37",
+    "text": "AutoCAD bị giật chuột trong model space phải chỉnh thế nào?",
+    "expected_class": "ky_thuat",
+    "expected_faq_intent": null,
+    "expected_phones": []
+  },
+  {
+    "id": "tc_38",
+    "text": "Trong Photoshop lệnh crop ảnh phím tắt là gì ạ?",
+    "expected_class": "ky_thuat",
+    "expected_faq_intent": null,
+    "expected_phones": []
+  },
+  {
+    "id": "tc_39",
+    "text": "Công ty mình MST 3603708616 muốn xuất hóa đơn VAT",
+    "expected_class": "ambiguous",
+    "expected_faq_intent": null,
+    "expected_phones": []
+  },
+  {
+    "id": "tc_40",
+    "text": "Page ID: 108426965133947 cần hỗ trợ",
+    "expected_class": "ambiguous",
+    "expected_faq_intent": null,
+    "expected_phones": []
+  },
+  {
+    "id": "tc_41",
+    "text": "Dạ cảm ơn bạn đã quan tâm đến Sao Việt",
+    "page_id": "P_SAOVIET",
+    "from_id": "P_SAOVIET",
+    "expected_class": "ignore",
+    "expected_faq_intent": null,
+    "expected_phones": []
+  },
+  {
+    "id": "tc_42",
+    "text": "",
+    "expected_class": "ignore",
+    "expected_faq_intent": null,
+    "expected_phones": []
+  },
+  {
+    "id": "tc_43",
+    "text": "   ...   ",
+    "expected_class": "ignore",
+    "expected_faq_intent": null,
+    "expected_phones": []
+  },
+  {
+    "id": "tc_44",
+    "text": "Ad ơi",
+    "expected_class": "ambiguous",
+    "expected_faq_intent": null,
+    "expected_phones": []
+  },
+  {
+    "id": "tc_45",
+    "text": "Alo có ai trực không",
+    "expected_class": "ambiguous",
+    "expected_faq_intent": null,
+    "expected_phones": []
+  },
+  {
+    "id": "tc_46",
+    "text": "0987654321 alo tư vấn em với",
+    "is_reply_to_page": true,
+    "expected_class": "lead",
+    "expected_faq_intent": null,
+    "expected_phones": ["0987654321"]
+  }
+]

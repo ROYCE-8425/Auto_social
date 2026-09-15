@@ -10,8 +10,8 @@
  *   node webcake-pke.js encode  input.json [output.pke]    # JSON -> PKE  (upload lại Webcake)
  *
  * File JSON cho lệnh encode có thể là:
- *   (a) nguyên envelope {source,name,engine,...}  - giữ nguyên mọi meta, HOẶC
- *   (b) chỉ mình "source" {settings,page,...}      - sẽ tự bọc envelope (cần --name / --owner nếu muốn).
+ *   (a) nguyên envelope {source,name,engine,...}  — giữ nguyên mọi meta, HOẶC
+ *   (b) chỉ mình "source" {settings,page,...}      — sẽ tự bọc envelope (cần --name / --owner nếu muốn).
  */
 'use strict';
 const fs = require('fs');

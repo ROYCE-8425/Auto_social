@@ -217,7 +217,9 @@ _AUTH_PUBLIC_EXACT = ("/", "/favicon.ico", "/auth/status", "/auth/login", "/auth
                       "/brand-logo", "/tls-check",
                       # /hub/mcp: Claude CLI/Codex gọi bằng Bearer hub_token riêng (không có cookie).
                       # /connect/oauth/callback: browser redirect từ provider OAuth về.
-                      "/hub/mcp", "/connect/oauth/callback")
+                      "/hub/mcp", "/connect/oauth/callback",
+                      # /hook/facebook: webhook Graph API từ Meta
+                      "/hook/facebook")
 # Endpoint CHỈ-LOCALHOST: agent (Claude CLI chạy cùng máy/container) curl được mà không cần
 # cookie đăng nhập; request từ ngoài (qua Traefik/Caddy/LAN) đến từ IP khác loopback → vẫn bị chặn.
 # /reminders/cancel đi cùng nhóm với /reminders (TẠO nhắc): huỷ là thao tác YẾU HƠN tạo, nên
@@ -7862,6 +7864,18 @@ tasks_feature = tasks_mod.register(app, tasks_mod.TasksDeps(
 # Nối learn → Kanban: engine học đề xuất việc nền → enqueue vào backlog.
 # Gate ở learn.py (cap "task" mặc định off + chỉ enqueue khi allow_write); dedup ở tasks.enqueue.
 learn_feature.deps.enqueue_task = tasks_feature.enqueue
+
+import fanpage_care as fanpage_care_mod
+_care_brain = cfgmod.read_settings().get("fanpage_care", {}).get("brain", "Brain Default")
+_care_vault = _brain_root(_care_brain)
+fanpage_care_feature = fanpage_care_mod.register(app, fanpage_care_mod.FanpageCareDeps(
+    vault_root=_care_vault,
+    brain=_care_brain,
+    get_settings=cfgmod.read_settings,
+    update_settings=cfgmod.write_settings,
+    tasks_feature=tasks_feature,
+    inbox_add=inbox.add,
+))
 
 
 # ============================================================

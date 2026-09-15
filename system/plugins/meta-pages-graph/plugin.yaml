@@ -9,6 +9,7 @@ tools:
   - fb_pages_list
   - fb_page_posts
   - fb_page_comments
+  - fb_page_inbox_comments
   - fb_page_post
   - fb_page_photo
   - fb_page_album
@@ -16,4 +17,10 @@ tools:
   - fb_page_edit
   - fb_page_delete
   - fb_page_reply
+  - fb_page_comment_hide
+  - fb_page_comment_like
+  - fb_page_comment_delete
+  - fb_conversations
+  - fb_conversation_thread
+  - fb_message_send
 hooks: []

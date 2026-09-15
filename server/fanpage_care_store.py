@@ -1,0 +1,833 @@
+"""Lưu trữ SQLite WAL cho Fanpage Care (events, drafts, actions, CRM, rate, windows, cursors).
+
+Vị trí mặc định: STATE_DIR / "fanpage_care.sqlite3".
+Không dùng FTS v1 - search LIKE trên phones và name.
+Gộp danh tính:
+- fb_comment_from + page_id: page-scoped
+- fb_psid + page_id: page-scoped
+- phone: GLOBAL (page_id = '' bắt buộc)
+"""
+from __future__ import annotations
+
+import json
+import sqlite3
+import time
+import uuid
+from pathlib import Path
+from typing import Any
+
+try:
+    from config import STATE_DIR
+except ImportError:
+    STATE_DIR = Path(__file__).resolve().parent
+
+DEFAULT_DB_PATH = STATE_DIR / "fanpage_care.sqlite3"
+
+
+def get_connection(db_path: Path | str | None = None) -> sqlite3.Connection:
+    """Mở kết nối SQLite WAL, row_factory là Row để truy xuất dict-like."""
+    p = Path(db_path or DEFAULT_DB_PATH)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    conn = sqlite3.connect(str(p), timeout=30.0)
+    conn.execute("PRAGMA journal_mode=WAL;")
+    conn.execute("PRAGMA busy_timeout=5000;")
+    conn.row_factory = sqlite3.Row
+    return conn
+
+
+def init_db(db_path: Path | str | None = None) -> None:
+    """Khởi tạo toàn bộ schema bảng nếu chưa tồn tại."""
+    with get_connection(db_path) as conn:
+        conn.executescript("""
+        CREATE TABLE IF NOT EXISTS events (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          kind TEXT NOT NULL,          -- comment | message | echo | action
+          page_id TEXT NOT NULL,
+          object_id TEXT NOT NULL,     -- comment_id | message_id
+          thread_id TEXT,
+          from_id TEXT,
+          from_name TEXT,
+          body TEXT,
+          class TEXT,
+          faq_intent TEXT,
+          created_ts REAL,
+          ingested_ts REAL,
+          UNIQUE(kind, object_id)
+        );
+
+        CREATE TABLE IF NOT EXISTS drafts (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          event_id INTEGER,
+          page_id TEXT,
+          target_id TEXT,              -- comment_id or psid
+          proposed TEXT,
+          class TEXT,
+          status TEXT DEFAULT 'pending', -- pending | approved | rejected | sent | expired
+          created_ts REAL
+        );
+
+        CREATE TABLE IF NOT EXISTS actions (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          event_id INTEGER,
+          action TEXT,                 -- reply | hide | like | send | skip
+          graph_id TEXT,
+          mode TEXT,
+          actor TEXT,                  -- care-worker | user | agent
+          ts REAL
+        );
+
+        CREATE TABLE IF NOT EXISTS customers (
+          crm_id TEXT PRIMARY KEY,
+          name TEXT,
+          phones TEXT,                 -- JSON array
+          tags TEXT,                   -- JSON array
+          course_interest TEXT,
+          campus TEXT,
+          page_ids TEXT,               -- JSON array
+          md_path TEXT,
+          updated_ts REAL
+        );
+
+        CREATE TABLE IF NOT EXISTS identities (
+          kind TEXT NOT NULL,          -- fb_comment_from | fb_psid | phone
+          page_id TEXT NOT NULL,       -- '' (chuỗi rỗng) KHI kind=phone; else Page ID
+          ext_id TEXT NOT NULL,
+          crm_id TEXT NOT NULL,
+          PRIMARY KEY (kind, page_id, ext_id)
+        );
+
+        CREATE TABLE IF NOT EXISTS page_cursors (
+          page_id TEXT,
+          post_id TEXT,
+          last_count INTEGER,
+          last_comment_id TEXT,
+          PRIMARY KEY (page_id, post_id)
+        );
+
+        CREATE TABLE IF NOT EXISTS messaging_windows (
+          page_id TEXT,
+          psid TEXT,
+          last_user_ts REAL,
+          last_page_ts REAL,
+          takeover_until REAL,         -- human takeover cooldown
+          PRIMARY KEY (page_id, psid)
+        );
+
+        CREATE TABLE IF NOT EXISTS rate_buckets (
+          page_id TEXT,
+          hour_key TEXT,               -- YYYY-MM-DDTHH
+          replies INTEGER DEFAULT 0,
+          PRIMARY KEY (page_id, hour_key)
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_events_page_ts ON events(page_id, created_ts);
+        CREATE INDEX IF NOT EXISTS idx_identities_crm ON identities(crm_id);
+        CREATE INDEX IF NOT EXISTS idx_customers_updated ON customers(updated_ts);
+        CREATE INDEX IF NOT EXISTS idx_drafts_status ON drafts(status, created_ts);
+        """)
+
+
+def record_event(
+    event: dict[str, Any], db_path: Path | str | None = None
+) -> tuple[int, bool]:
+    """Ghi event vào SQLite. Trả (id, is_new). Dedup qua UNIQUE(kind, object_id)."""
+    init_db(db_path)
+    now = time.time()
+    kind = str(event.get("kind") or "comment").strip()
+    page_id = str(event.get("page_id") or "").strip()
+    object_id = str(event.get("object_id") or "").strip()
+    thread_id = str(event.get("thread_id") or "").strip() or None
+    from_id = str(event.get("from_id") or "").strip() or None
+    from_name = str(event.get("from_name") or "").strip() or None
+    body = str(event.get("body") or "").strip()
+    cls = str(event.get("class") or "").strip() or None
+    faq_intent = str(event.get("faq_intent") or "").strip() or None
+    created_ts = float(event.get("created_ts") or now)
+    ingested_ts = float(event.get("ingested_ts") or now)
+
+    with get_connection(db_path) as conn:
+        try:
+            cur = conn.execute(
+                """
+                INSERT INTO events (
+                    kind, page_id, object_id, thread_id, from_id, from_name,
+                    body, class, faq_intent, created_ts, ingested_ts
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    kind, page_id, object_id, thread_id, from_id, from_name,
+                    body, cls, faq_intent, created_ts, ingested_ts,
+                ),
+            )
+            return cur.lastrowid, True
+        except sqlite3.IntegrityError:
+            # Đã tồn tại -> lấy id cũ
+            row = conn.execute(
+                "SELECT id FROM events WHERE kind = ? AND object_id = ?",
+                (kind, object_id),
+            ).fetchone()
+            return (row["id"] if row else -1), False
+
+
+def update_event_body(
+    kind: str,
+    object_id: str,
+    body: str,
+    from_name: str | None = None,
+    db_path: Path | str | None = None,
+) -> bool:
+    """Cập nhật nội dung bình luận khi có webhook verb=edited."""
+    init_db(db_path)
+    with get_connection(db_path) as conn:
+        if from_name is not None:
+            cur = conn.execute(
+                "UPDATE events SET body = ?, from_name = ? WHERE kind = ? AND object_id = ?",
+                (str(body), str(from_name), str(kind), str(object_id)),
+            )
+        else:
+            cur = conn.execute(
+                "UPDATE events SET body = ? WHERE kind = ? AND object_id = ?",
+                (str(body), str(kind), str(object_id)),
+            )
+        return cur.rowcount > 0
+
+
+def find_identity(
+    kind: str, page_id: str, ext_id: str, db_path: Path | str | None = None
+) -> str | None:
+    """Tìm crm_id theo định danh. kind=phone bắt buộc page_id = ''."""
+    init_db(db_path)
+    k = str(kind).strip()
+    p = "" if k == "phone" else str(page_id or "").strip()
+    x = str(ext_id or "").strip()
+    if not x:
+        return None
+
+    with get_connection(db_path) as conn:
+        row = conn.execute(
+            "SELECT crm_id FROM identities WHERE kind = ? AND page_id = ? AND ext_id = ?",
+            (k, p, x),
+        ).fetchone()
+        return row["crm_id"] if row else None
+
+
+def link_identity(
+    kind: str,
+    page_id: str,
+    ext_id: str,
+    crm_id: str,
+    db_path: Path | str | None = None,
+) -> None:
+    """Gắn một định danh vào crm_id."""
+    init_db(db_path)
+    k = str(kind).strip()
+    p = "" if k == "phone" else str(page_id or "").strip()
+    x = str(ext_id or "").strip()
+    c = str(crm_id).strip()
+    if not x or not c:
+        return
+
+    with get_connection(db_path) as conn:
+        conn.execute(
+            """
+            INSERT INTO identities (kind, page_id, ext_id, crm_id)
+            VALUES (?, ?, ?, ?)
+            ON CONFLICT(kind, page_id, ext_id) DO UPDATE SET crm_id = excluded.crm_id
+            """,
+            (k, p, x, c),
+        )
+
+
+def get_customer(crm_id: str, db_path: Path | str | None = None) -> dict[str, Any] | None:
+    """Đọc thông tin khách hàng từ SQLite theo crm_id."""
+    init_db(db_path)
+    with get_connection(db_path) as conn:
+        row = conn.execute("SELECT * FROM customers WHERE crm_id = ?", (crm_id,)).fetchone()
+        if not row:
+            return None
+        d = dict(row)
+        d["phones"] = json.loads(d.get("phones") or "[]")
+        d["tags"] = json.loads(d.get("tags") or "[]")
+        d["page_ids"] = json.loads(d.get("page_ids") or "[]")
+        return d
+
+
+def get_or_create_customer(
+    *,
+    name: str | None = None,
+    phones: list[str] | None = None,
+    page_id: str | None = None,
+    from_id: str | None = None,
+    psid: str | None = None,
+    course_interest: str | None = None,
+    campus: str | None = None,
+    tag: str = "lead",
+    db_path: Path | str | None = None,
+) -> tuple[dict[str, Any], bool]:
+    """Tìm hoặc tạo mới khách hàng (gộp mạnh theo phone, gộp page theo from_id/psid).
+
+    Trả (customer_dict, is_new).
+    """
+    init_db(db_path)
+    phones = [str(p).strip() for p in (phones or []) if str(p).strip()]
+    crm_id = None
+
+    # 1. Tìm theo SĐT trước (GLOBAL xuyên page)
+    for p in phones:
+        cid = find_identity("phone", "", p, db_path)
+        if cid:
+            crm_id = cid
+            break
+
+    # 2. Tìm theo from_id (page-scoped)
+    if not crm_id and page_id and from_id:
+        crm_id = find_identity("fb_comment_from", page_id, from_id, db_path)
+
+    # 3. Tìm theo psid (page-scoped)
+    if not crm_id and page_id and psid:
+        crm_id = find_identity("fb_psid", page_id, psid, db_path)
+
+    now = time.time()
+    is_new = False
+
+    if crm_id:
+        existing = get_customer(crm_id, db_path)
+    else:
+        existing = None
+
+    if not existing:
+        is_new = True
+        crm_id = "c_" + uuid.uuid4().hex[:12]
+        cust_name = str(name or "Ẩn danh").strip()
+        merged_phones = list(dict.fromkeys(phones))
+        merged_pages = [str(page_id)] if page_id else []
+        tags = [tag] if tag else []
+        md_path = f"crm/customers/{crm_id}.md"
+
+        cust_dict = {
+            "crm_id": crm_id,
+            "name": cust_name,
+            "phones": merged_phones,
+            "tags": tags,
+            "course_interest": course_interest or "",
+            "campus": campus or "",
+            "page_ids": merged_pages,
+            "md_path": md_path,
+            "updated_ts": now,
+        }
+        with get_connection(db_path) as conn:
+            conn.execute(
+                """
+                INSERT INTO customers (
+                    crm_id, name, phones, tags, course_interest, campus, page_ids, md_path, updated_ts
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    crm_id,
+                    cust_name,
+                    json.dumps(merged_phones, ensure_ascii=False),
+                    json.dumps(tags, ensure_ascii=False),
+                    course_interest or "",
+                    campus or "",
+                    json.dumps(merged_pages, ensure_ascii=False),
+                    md_path,
+                    now,
+                ),
+            )
+    else:
+        # Cập nhật thông tin khách cũ
+        cust_name = existing.get("name") or "Ẩn danh"
+        if cust_name in ("Ẩn danh", "") and name and name not in ("Ẩn danh", ""):
+            cust_name = str(name).strip()
+
+        old_phones = existing.get("phones") or []
+        merged_phones = list(dict.fromkeys(old_phones + phones))
+
+        old_pages = existing.get("page_ids") or []
+        merged_pages = list(dict.fromkeys(old_pages + ([str(page_id)] if page_id else [])))
+
+        old_tags = existing.get("tags") or []
+        if tag and tag not in old_tags:
+            old_tags.append(tag)
+
+        cust_course = existing.get("course_interest") or course_interest or ""
+        cust_campus = existing.get("campus") or campus or ""
+        md_path = existing.get("md_path") or f"crm/customers/{crm_id}.md"
+
+        cust_dict = {
+            "crm_id": crm_id,
+            "name": cust_name,
+            "phones": merged_phones,
+            "tags": old_tags,
+            "course_interest": cust_course,
+            "campus": cust_campus,
+            "page_ids": merged_pages,
+            "md_path": md_path,
+            "updated_ts": now,
+        }
+        with get_connection(db_path) as conn:
+            conn.execute(
+                """
+                UPDATE customers SET
+                    name = ?, phones = ?, tags = ?, course_interest = ?, campus = ?,
+                    page_ids = ?, md_path = ?, updated_ts = ?
+                WHERE crm_id = ?
+                """,
+                (
+                    cust_name,
+                    json.dumps(merged_phones, ensure_ascii=False),
+                    json.dumps(old_tags, ensure_ascii=False),
+                    cust_course,
+                    cust_campus,
+                    json.dumps(merged_pages, ensure_ascii=False),
+                    md_path,
+                    now,
+                    crm_id,
+                ),
+            )
+
+    # Gắn mọi định danh cung cấp vào crm_id này
+    for p in merged_phones:
+        link_identity("phone", "", p, crm_id, db_path)
+    if page_id and from_id:
+        link_identity("fb_comment_from", page_id, from_id, crm_id, db_path)
+    if page_id and psid:
+        link_identity("fb_psid", page_id, psid, crm_id, db_path)
+
+    return cust_dict, is_new
+
+
+def search_customers(
+    query: str, db_path: Path | str | None = None, limit: int = 50
+) -> list[dict[str, Any]]:
+    """Tìm kiếm khách hàng bằng LIKE trên phones và name (không FTS5 v1)."""
+    init_db(db_path)
+    q = f"%{str(query or '').strip()}%"
+    with get_connection(db_path) as conn:
+        rows = conn.execute(
+            """
+            SELECT * FROM customers
+            WHERE name LIKE ? OR phones LIKE ?
+            ORDER BY updated_ts DESC
+            LIMIT ?
+            """,
+            (q, q, limit),
+        ).fetchall()
+        out = []
+        for r in rows:
+            d = dict(r)
+            d["phones"] = json.loads(d.get("phones") or "[]")
+            d["tags"] = json.loads(d.get("tags") or "[]")
+            d["page_ids"] = json.loads(d.get("page_ids") or "[]")
+            out.append(d)
+        return out
+
+
+def delete_customer(crm_id: str, db_path: Path | str | None = None) -> bool:
+    """Xóa khách theo chuẩn PDPD (xóa identities, customers, ẩn SĐT trong events)."""
+    init_db(db_path)
+    c = str(crm_id).strip()
+    cust = get_customer(c, db_path)
+    if not cust:
+        return False
+
+    phones = cust.get("phones") or []
+
+    with get_connection(db_path) as conn:
+        conn.execute("DELETE FROM identities WHERE crm_id = ?", (c,))
+        conn.execute("DELETE FROM customers WHERE crm_id = ?", (c,))
+        # Ẩn SĐT trong events còn lại
+        for p in phones:
+            if p:
+                conn.execute(
+                    "UPDATE events SET body = REPLACE(body, ?, '[redacted]') WHERE body LIKE ?",
+                    (p, f"%{p}%"),
+                )
+    return True
+
+
+def create_draft(
+    event_id: int | None,
+    page_id: str,
+    target_id: str,
+    proposed: str,
+    class_name: str,
+    db_path: Path | str | None = None,
+) -> int:
+    """Tạo bản ghi draft chờ nhân viên duyệt."""
+    init_db(db_path)
+    now = time.time()
+    with get_connection(db_path) as conn:
+        cur = conn.execute(
+            """
+            INSERT INTO drafts (event_id, page_id, target_id, proposed, class, status, created_ts)
+            VALUES (?, ?, ?, ?, ?, 'pending', ?)
+            """,
+            (event_id, str(page_id), str(target_id), str(proposed), str(class_name), now),
+        )
+        return cur.lastrowid
+
+
+def list_drafts(
+    page_id: str | None = None,
+    status: str = "pending",
+    db_path: Path | str | None = None,
+    limit: int = 50,
+) -> list[dict[str, Any]]:
+    """Liệt kê danh sách draft."""
+    init_db(db_path)
+    with get_connection(db_path) as conn:
+        if page_id:
+            rows = conn.execute(
+                "SELECT * FROM drafts WHERE page_id = ? AND status = ? ORDER BY created_ts DESC LIMIT ?",
+                (str(page_id), status, limit),
+            ).fetchall()
+        else:
+            rows = conn.execute(
+                "SELECT * FROM drafts WHERE status = ? ORDER BY created_ts DESC LIMIT ?",
+                (status, limit),
+            ).fetchall()
+        return [dict(r) for r in rows]
+
+
+def update_draft_status(
+    draft_id: int, status: str, db_path: Path | str | None = None
+) -> bool:
+    """Cập nhật trạng thái draft (approved | rejected | sent | expired)."""
+    init_db(db_path)
+    with get_connection(db_path) as conn:
+        cur = conn.execute(
+            "UPDATE drafts SET status = ? WHERE id = ?", (status, draft_id)
+        )
+        return cur.rowcount > 0
+
+
+def record_action(
+    event_id: int | None,
+    action: str,
+    graph_id: str | None,
+    mode: str,
+    actor: str,
+    db_path: Path | str | None = None,
+) -> int:
+    """Ghi nhận hành động đã thực hiện (reply/hide/like/send/skip)."""
+    init_db(db_path)
+    now = time.time()
+    with get_connection(db_path) as conn:
+        cur = conn.execute(
+            """
+            INSERT INTO actions (event_id, action, graph_id, mode, actor, ts)
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            (event_id, action, graph_id, mode, actor, now),
+        )
+        return cur.lastrowid
+
+
+def get_rate_count(page_id: str, hour_key: str, db_path: Path | str | None = None) -> int:
+    """Lấy số lượng replies đã gửi trong 1 giờ."""
+    init_db(db_path)
+    with get_connection(db_path) as conn:
+        row = conn.execute(
+            "SELECT replies FROM rate_buckets WHERE page_id = ? AND hour_key = ?",
+            (str(page_id), str(hour_key)),
+        ).fetchone()
+        return int(row["replies"]) if row else 0
+
+
+def increment_rate_count(
+    page_id: str, hour_key: str, db_path: Path | str | None = None
+) -> int:
+    """Tăng số lượng replies trong 1 giờ thêm 1."""
+    init_db(db_path)
+    with get_connection(db_path) as conn:
+        conn.execute(
+            """
+            INSERT INTO rate_buckets (page_id, hour_key, replies)
+            VALUES (?, ?, 1)
+            ON CONFLICT(page_id, hour_key) DO UPDATE SET replies = replies + 1
+            """,
+            (str(page_id), str(hour_key)),
+        )
+        row = conn.execute(
+            "SELECT replies FROM rate_buckets WHERE page_id = ? AND hour_key = ?",
+            (str(page_id), str(hour_key)),
+        ).fetchone()
+        return int(row["replies"]) if row else 1
+
+
+def get_messaging_window(
+    page_id: str, psid: str, db_path: Path | str | None = None
+) -> dict[str, Any] | None:
+    """Đọc thông tin cửa sổ 24h và takeover của PSID."""
+    init_db(db_path)
+    with get_connection(db_path) as conn:
+        row = conn.execute(
+            "SELECT * FROM messaging_windows WHERE page_id = ? AND psid = ?",
+            (str(page_id), str(psid)),
+        ).fetchone()
+        return dict(row) if row else None
+
+
+def update_messaging_window(
+    page_id: str,
+    psid: str,
+    *,
+    user_ts: float | None = None,
+    page_ts: float | None = None,
+    takeover_until: float | None = None,
+    db_path: Path | str | None = None,
+) -> None:
+    """Cập nhật thời điểm user nhắn, page nhắn, hoặc takeover."""
+    init_db(db_path)
+    now = time.time()
+    with get_connection(db_path) as conn:
+        cur = conn.execute(
+            "SELECT * FROM messaging_windows WHERE page_id = ? AND psid = ?",
+            (str(page_id), str(psid)),
+        ).fetchone()
+        if not cur:
+            conn.execute(
+                """
+                INSERT INTO messaging_windows (page_id, psid, last_user_ts, last_page_ts, takeover_until)
+                VALUES (?, ?, ?, ?, ?)
+                """,
+                (
+                    str(page_id),
+                    str(psid),
+                    user_ts or now,
+                    page_ts or 0.0,
+                    takeover_until or 0.0,
+                ),
+            )
+        else:
+            sets = []
+            vals = []
+            if user_ts is not None:
+                sets.append("last_user_ts = ?")
+                vals.append(user_ts)
+            if page_ts is not None:
+                sets.append("last_page_ts = ?")
+                vals.append(page_ts)
+            if takeover_until is not None:
+                sets.append("takeover_until = ?")
+                vals.append(takeover_until)
+            if sets:
+                vals.extend([str(page_id), str(psid)])
+                conn.execute(
+                    f"UPDATE messaging_windows SET {', '.join(sets)} WHERE page_id = ? AND psid = ?",
+                    vals,
+                )
+
+
+def get_cursor(
+    page_id: str, post_id: str, db_path: Path | str | None = None
+) -> dict[str, Any] | None:
+    """Đọc cursor quét post (last_count, last_comment_id)."""
+    init_db(db_path)
+    with get_connection(db_path) as conn:
+        row = conn.execute(
+            "SELECT * FROM page_cursors WHERE page_id = ? AND post_id = ?",
+            (str(page_id), str(post_id)),
+        ).fetchone()
+        return dict(row) if row else None
+
+
+def set_cursor(
+    page_id: str,
+    post_id: str,
+    last_count: int,
+    last_comment_id: str,
+    db_path: Path | str | None = None,
+) -> None:
+    """Cập nhật cursor quét post."""
+    init_db(db_path)
+    with get_connection(db_path) as conn:
+        conn.execute(
+            """
+            INSERT INTO page_cursors (page_id, post_id, last_count, last_comment_id)
+            VALUES (?, ?, ?, ?)
+            ON CONFLICT(page_id, post_id) DO UPDATE SET
+                last_count = excluded.last_count,
+                last_comment_id = excluded.last_comment_id
+            """,
+            (str(page_id), str(post_id), int(last_count), str(last_comment_id)),
+        )
+
+
+def gc_events(older_than_days: int = 90, db_path: Path | str | None = None) -> int:
+    """Xóa các events cũ hơn N ngày để giải phóng dung lượng."""
+    init_db(db_path)
+    threshold = time.time() - (older_than_days * 86400.0)
+    with get_connection(db_path) as conn:
+        cur = conn.execute("DELETE FROM events WHERE created_ts < ?", (threshold,))
+        return cur.rowcount
+
+
+def list_events(
+    page_id: str | None = None,
+    class_name: str | None = None,
+    limit: int = 50,
+    offset: int = 0,
+    db_path: Path | str | None = None,
+) -> list[dict[str, Any]]:
+    """Truy vấn danh sách sự kiện từ bảng events."""
+    init_db(db_path)
+    conds = []
+    params: list[Any] = []
+    if page_id:
+        conds.append("page_id = ?")
+        params.append(str(page_id))
+    if class_name:
+        conds.append("class = ?")
+        params.append(str(class_name))
+
+    where = f"WHERE {' AND '.join(conds)}" if conds else ""
+    sql = f"SELECT * FROM events {where} ORDER BY created_ts DESC LIMIT ? OFFSET ?"
+    params.extend([limit, offset])
+
+    with get_connection(db_path) as conn:
+        rows = conn.execute(sql, params).fetchall()
+        return [dict(r) for r in rows]
+
+
+def get_draft(draft_id: int, db_path: Path | str | None = None) -> dict[str, Any] | None:
+    """Đọc 1 draft theo ID."""
+    init_db(db_path)
+    with get_connection(db_path) as conn:
+        row = conn.execute("SELECT * FROM drafts WHERE id = ?", (draft_id,)).fetchone()
+        return dict(row) if row else None
+
+
+def get_identities_for_customer(
+    crm_id: str, db_path: Path | str | None = None
+) -> list[dict[str, Any]]:
+    """Đọc danh sách identities của 1 khách hàng."""
+    init_db(db_path)
+    with get_connection(db_path) as conn:
+        rows = conn.execute(
+            "SELECT * FROM identities WHERE crm_id = ?", (str(crm_id),)
+        ).fetchall()
+        return [dict(r) for r in rows]
+
+
+def get_stats(db_path: Path | str | None = None) -> dict[str, Any]:
+    """Lấy số liệu tổng quan nhanh cho dashboard."""
+    init_db(db_path)
+    now = time.time()
+    day_ago = now - 86400.0
+
+    with get_connection(db_path) as conn:
+        total_ev = conn.execute("SELECT COUNT(*) FROM events").fetchone()[0]
+        ev_24h = conn.execute("SELECT COUNT(*) FROM events WHERE ingested_ts >= ?", (day_ago,)).fetchone()[0]
+        leads_24h = conn.execute("SELECT COUNT(*) FROM events WHERE ingested_ts >= ? AND class = 'lead'", (day_ago,)).fetchone()[0]
+        human_24h = conn.execute("SELECT COUNT(*) FROM events WHERE ingested_ts >= ? AND class IN ('ambiguous', 'ky_thuat')", (day_ago,)).fetchone()[0]
+        replies_24h = conn.execute("SELECT COUNT(*) FROM actions WHERE action = 'reply' AND ts >= ?", (day_ago,)).fetchone()[0]
+        spam_hidden_24h = conn.execute("SELECT COUNT(*) FROM actions WHERE action = 'hide' AND ts >= ?", (day_ago,)).fetchone()[0]
+        pending_dr = conn.execute("SELECT COUNT(*) FROM drafts WHERE status = 'pending'").fetchone()[0]
+        total_cust = conn.execute("SELECT COUNT(*) FROM customers").fetchone()[0]
+
+        return {
+            "total_events": total_ev,
+            "events_24h": ev_24h,
+            "leads_24h": leads_24h,
+            "human_needed_24h": human_24h,
+            "replies_24h": replies_24h,
+            "spam_hidden_24h": spam_hidden_24h,
+            "pending_drafts": pending_dr,
+            "total_customers": total_cust,
+        }
+
+
+def get_messaging_window(
+    page_id: str, psid: str, db_path: Path | str | None = None
+) -> dict[str, Any] | None:
+    """Lấy thông tin cửa sổ 24h và takeover của một cuộc trò chuyện Messenger."""
+    init_db(db_path)
+    with get_connection(db_path) as conn:
+        row = conn.execute(
+            "SELECT page_id, psid, last_user_ts, last_page_ts, takeover_until FROM messaging_windows WHERE page_id = ? AND psid = ?",
+            (str(page_id), str(psid)),
+        ).fetchone()
+        if not row:
+            return None
+        return dict(row)
+
+
+def update_messaging_window(
+    page_id: str,
+    psid: str,
+    *,
+    is_user: bool = True,
+    takeover_until: float | None = None,
+    db_path: Path | str | None = None,
+) -> None:
+    """Cập nhật timestamp tin nhắn mới (user hoặc page) và takeover_until nếu có."""
+    init_db(db_path)
+    now = time.time()
+    pid = str(page_id)
+    sid = str(psid)
+
+    with get_connection(db_path) as conn:
+        row = conn.execute(
+            "SELECT last_user_ts, last_page_ts, takeover_until FROM messaging_windows WHERE page_id = ? AND psid = ?",
+            (pid, sid),
+        ).fetchone()
+
+        if row:
+            l_user = now if is_user else (row["last_user_ts"] or 0.0)
+            l_page = now if not is_user else (row["last_page_ts"] or 0.0)
+            t_until = takeover_until if takeover_until is not None else (row["takeover_until"] or 0.0)
+            conn.execute(
+                "UPDATE messaging_windows SET last_user_ts = ?, last_page_ts = ?, takeover_until = ? WHERE page_id = ? AND psid = ?",
+                (l_user, l_page, t_until, pid, sid),
+            )
+        else:
+            l_user = now if is_user else 0.0
+            l_page = now if not is_user else 0.0
+            t_until = takeover_until if takeover_until is not None else 0.0
+            conn.execute(
+                "INSERT INTO messaging_windows (page_id, psid, last_user_ts, last_page_ts, takeover_until) VALUES (?, ?, ?, ?, ?)",
+                (pid, sid, l_user, l_page, t_until),
+            )
+
+
+def set_human_takeover(
+    page_id: str, psid: str, duration_hours: float = 4.0, db_path: Path | str | None = None
+) -> float:
+    """Đóng băng tự động cho thread khi nhân viên can thiệp (takeover_until = now + 4h)."""
+    now = time.time()
+    until = now + (duration_hours * 3600.0)
+    update_messaging_window(page_id, psid, is_user=False, takeover_until=until, db_path=db_path)
+    return until
+
+
+def release_human_takeover(page_id: str, psid: str, db_path: Path | str | None = None) -> None:
+    """Gỡ bỏ takeover (Javis nhận lại) -> takeover_until = 0."""
+    update_messaging_window(page_id, psid, is_user=False, takeover_until=0.0, db_path=db_path)
+
+
+def is_in_24h_window(page_id: str, psid: str, db_path: Path | str | None = None) -> bool:
+    """Kiểm tra tin nhắn người dùng gần nhất có trong vòng 24 giờ hay không."""
+    win = get_messaging_window(page_id, psid, db_path)
+    if not win or not win.get("last_user_ts"):
+        return False
+    return (time.time() - float(win["last_user_ts"])) < (24.0 * 3600.0)
+
+
+def is_under_takeover(page_id: str, psid: str, db_path: Path | str | None = None) -> bool:
+    """Kiểm tra thread có đang bị nhân viên takeover không."""
+    win = get_messaging_window(page_id, psid, db_path)
+    if not win or not win.get("takeover_until"):
+        return False
+    return float(win["takeover_until"]) > time.time()
+
+
+def get_recent_conversations(db_path: Path | str | None = None) -> list[dict[str, Any]]:
+    """Danh sách các cuộc hội thoại Messenger gần đây kèm trạng thái takeover."""
+    init_db(db_path)
+    with get_connection(db_path) as conn:
+        rows = conn.execute(
+            "SELECT page_id, psid, last_user_ts, last_page_ts, takeover_until FROM messaging_windows ORDER BY MAX(COALESCE(last_user_ts,0), COALESCE(last_page_ts,0)) DESC LIMIT 50"
+        ).fetchall()
+        return [dict(r) for r in rows]
