@@ -1,0 +1,51 @@
+# -*- coding: utf-8 -*-
+# ^ DÒNG TRÊN KHÔNG PHẢI TRANG TRÍ, ĐỪNG XOÁ. pip đọc file này bằng auto_decode(): không có
+# BOM và không có khai báo encoding kiểu PEP-263 ở HAI DÒNG ĐẦU thì nó decode bằng
+# locale.getpreferredencoding() - trên Windows tiếng Việt là cp1252/cp1258, và mọi chú thích
+# tiếng Việt bên dưới làm `pip install -r requirements.txt` NỔ UnicodeDecodeError ngay bước
+# cài đặt (setup.bat [2/3]). chcp 65001 KHÔNG cứu được: nó đổi codepage của console, còn
+# locale.getpreferredencoding() đọc ANSI codepage của hệ thống.
+# QUAN TRỌNG: fastapi và starlette bị KHOÁ CẶP. fastapi 0.115.0 cần starlette<0.39;
+# fastapi 0.115.6 cần starlette>=0.40. Engine Agent SDK yêu cầu giữ starlette<0.39
+# (pin bên dưới), nên fastapi PHẢI ở 0.115.0 - đừng bump lên 0.115.6 nếu chưa gỡ pin
+# starlette, kẻo pip resolve gãy (CI đỏ ở bước cài deps). Bộ này khớp .venv đang chạy thật.
+fastapi==0.115.0
+uvicorn[standard]==0.51.0
+httpx==0.27.2
+claude-agent-sdk==0.2.116
+# mcp (dep của claude-agent-sdk) chấp nhận starlette>=0.27; giữ <0.39 cho khớp fastapi 0.115.0.
+starlette>=0.37.2,<0.39
+sse-starlette>=1.6.1,<3
+python-dotenv==1.0.1
+websockets==13.1
+edge-tts>=7.0.0
+python-multipart==0.0.18
+pyyaml>=6.0
+cryptography>=42.0
+jsonschema>=4.20,<5
+# segno: vẽ mã QR cho việc bật xác thực 2 lớp (2FA). Thuần Python, KHÔNG kéo theo dependency
+# nào - chọn nó thay vì `qrcode` (cần Pillow) vì Pillow là một khối biên dịch nặng chỉ để vẽ
+# một ô vuông đen trắng. Thiếu segno thì màn bật 2FA lui về cho nhập tay secret, không vỡ.
+segno>=1.6,<2
+# uv: KHÔNG phải thư viện app import, mà là runner cho các connector MCP khai `command: uvx`
+# trong system/mcp-catalog.json (google-keep, google-sheets, google-search-console, google-ads,
+# tiktok-ads). Cài qua đây là đủ cho cả Docker lẫn máy cá nhân - `pip install uv` sinh ra sẵn
+# lệnh `uvx`. ĐỪNG gỡ dòng này, mấy connector đó sẽ chết lặng lẽ.
+uv>=0.5
+# gpsoauth: đổi Google App Password -> master token NGAY TRÊN UI (server/cred_exchange.py), để
+# connector google-keep khỏi bắt user mở terminal chạy lệnh. Kéo theo pycryptodomex/requests/
+# urllib3; đã kiểm bằng `pip install --dry-run`: KHÔNG đụng tới pin fastapi/starlette ở trên.
+gpsoauth>=1.0
+# Pillow: Xử lý kích thước ảnh, crop vuông 1:1 cho album Facebook, overlay logo và sinh banner đồ hoạ.
+Pillow>=10.0.0
+
+# yt-dlp: quân dự bị cho việc đọc phụ đề YouTube (server/youtube_read.py). Sáu client
+# InnerTube tự viết lo phần lớn ca; khi YouTube siết và chặn sạch chúng thì nhánh này gánh,
+# vì yt-dlp cập nhật theo từng đợt siết còn code trong repo thì không. Thuần Python, không
+# biên dịch, không kéo theo dependency nào đụng tới pin fastapi/starlette ở trên (đã kiểm
+# bằng pip install). Thiếu nó app VẪN chạy: nhánh yt-dlp tự tắt và chỉ ghi một dòng note.
+# SÀN PHIÊN BẢN QUAN TRỌNG: yt-dlp giữ danh sách client InnerTube và phải theo kịp từng đợt
+# YouTube siết. Bản 2025.x không biết client `visionos` (mặc định số một của 2026) và còn ghim
+# `tv_embedded` - cái tên đã bị xoá. Cài bản cũ thì quân dự bị coi như không có. Máy nào cập
+# nhật Javis từ trước 0.41.1 nên chạy thẳng: pip install -U yt-dlp
+yt-dlp>=2026.8.19

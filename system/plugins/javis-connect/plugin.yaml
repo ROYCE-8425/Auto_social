@@ -1,0 +1,10 @@
+name: Đấu thêm MCP
+slug: javis-connect
+version: 1.0.0
+description: Đấu một MCP server vào kho Kết nối của Javis ngay từ chat, để nó HIỆN ra trang Kết nối như mọi tài khoản khác. Trước tool này Javis chỉ còn đường `claude mcp add` - thứ rơi vào config riêng của Claude Code, không bộ não nào khác thấy và người dùng cũng không thấy trên trang Kết nối.
+author: Javis (bundled)
+enabled: true
+min_mode: safe
+tools:
+  - javis_add_mcp
+hooks: []

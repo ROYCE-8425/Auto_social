@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Javis Voice - Test</title>
+  <style>
+    body {
+      background: #0a0a0f; color: #e8e8f0;
+      font-family: -apple-system, sans-serif;
+      max-width: 700px; margin: 40px auto; padding: 20px;
+    }
+    h1 { color: #ff6b2b; }
+    .row { margin: 20px 0; padding: 16px; background: #111118; border-radius: 8px; border: 1px solid #2a2a3a; }
+    .label { font-size: 11px; color: #8888aa; letter-spacing: 2px; margin-bottom: 8px; }
+    button {
+      background: #ff6b2b; color: white; border: none;
+      padding: 10px 18px; border-radius: 6px; cursor: pointer;
+      font-size: 14px; font-weight: 600; margin-right: 8px;
+    }
+    button:hover { opacity: 0.85; }
+    .recording { background: #ef4444; animation: pulse 1s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
+    .output {
+      background: #1a1a24; padding: 14px; border-radius: 6px;
+      margin-top: 12px; min-height: 30px; line-height: 1.6;
+      font-size: 15px;
+    }
+    .interim { color: #8888aa; font-style: italic; }
+    input, textarea {
+      width: 100%; background: #1a1a24; border: 1px solid #2a2a3a;
+      color: white; padding: 10px; border-radius: 6px;
+      font-family: inherit; font-size: 14px;
+    }
+    textarea { min-height: 80px; resize: vertical; }
+    select {
+      background: #1a1a24; border: 1px solid #2a2a3a;
+      color: white; padding: 8px; border-radius: 6px;
+    }
+  </style>
+</head>
+<body>
+  <h1>⬡ Javis Voice - Test Lab</h1>
+  <p style="color:#8888aa">Test STT + TTS không cần backend. Mở file này trong Chrome / Edge.</p>
+
+  <div class="row">
+    <div class="label">STT - NHẬN DẠNG GIỌNG NÓI</div>
+    <button id="micBtn">🎤 Bấm để nói</button>
+    <button id="stopBtn">⏹ Dừng</button>
+    <div class="output">
+      <div id="finalText">-</div>
+      <div class="interim" id="interimText"></div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="label">TTS - GIỌNG ĐỌC (EDGE TTS BACKEND)</div>
+    <p style="font-size:12px;color:#22c55e;margin-bottom:10px">⬤ Dùng giọng Vietnamese từ Microsoft Edge - yêu cầu backend đang chạy ở localhost:7777</p>
+    <select id="voiceSelect" style="margin-bottom:10px">
+      <option value="vi-VN-HoaiMyNeural">Ngọc Thu (nữ) - tự nhiên, ấm áp</option>
+      <option value="vi-VN-NamMinhNeural">Nam Minh (nam) - trầm</option>
+    </select>
+    <textarea id="ttsText">Xin chào, em là Javis, trợ lý AI của bạn. Em sẽ báo cáo kết quả kinh doanh và cuộc sống dựa trên các nguồn dữ liệu bạn kết nối. Hôm nay bạn muốn xem báo cáo gì?</textarea>
+    <div style="margin-top:10px">
+      <button id="speakBtn">🔊 Đọc (Edge TTS)</button>
+      <button id="speakBrowserBtn" style="background:#7c3aed">🔊 Đọc (Browser - fallback)</button>
+      <button id="stopSpeakBtn">⏹ Dừng đọc</button>
+      <label style="margin-left:14px;font-size:13px">Tốc độ:
+        <input type="range" id="rate" min="0.7" max="1.8" step="0.05" value="1.1" style="width:140px;vertical-align:middle">
+        <span id="rateVal" style="font-family:monospace;color:#ff6b2b;margin-left:6px">1.10×</span>
+      </label>
+    </div>
+    <div id="ttsStatus" style="margin-top:10px;font-size:12px;color:#8888aa"></div>
+  </div>
+
+  <div class="row">
+    <div class="label">PUSH-TO-TALK - GIỮ PHÍM CÁCH</div>
+    <p style="font-size:13px;color:#8888aa">Giữ phím <kbd style="background:#1a1a24;padding:2px 8px;border-radius:3px;border:1px solid #2a2a3a">Space</kbd> để nói liên tục (khi text input không focus).</p>
+  </div>
+
+  <script src="voice.js"></script>
+  <script>
+    const finalText = document.getElementById("finalText");
+    const interimText = document.getElementById("interimText");
+    const micBtn = document.getElementById("micBtn");
+    const stopBtn = document.getElementById("stopBtn");
+    const ttsText = document.getElementById("ttsText");
+    const speakBtn = document.getElementById("speakBtn");
+    const stopSpeakBtn = document.getElementById("stopSpeakBtn");
+    const voiceSelect = document.getElementById("voiceSelect");
+    const rate = document.getElementById("rate");
+    const rateVal = document.getElementById("rateVal");
+
+    const voice = new JavisVoice({
+      lang: "vi-VN",
+      onStart: () => { micBtn.classList.add("recording"); interimText.textContent = "đang nghe..."; },
+      onInterim: t => interimText.textContent = t,
+      onTranscript: t => { finalText.textContent = t; interimText.textContent = ""; },
+      onEnd: () => { micBtn.classList.remove("recording"); interimText.textContent = ""; },
+      onError: e => alert("Lỗi: " + e),
+    });
+
+    micBtn.onclick = () => voice.toggleListening();
+    stopBtn.onclick = () => voice.stopListening();
+
+    // Edge TTS voices đã hardcode trong HTML, không cần populate từ browser
+
+    const ttsStatus = document.getElementById("ttsStatus");
+    const speakBrowserBtn = document.getElementById("speakBrowserBtn");
+    let currentAudio = null;
+
+    // Rate slider - update display + apply realtime nếu đang đọc
+    const rateValEl = document.getElementById("rateVal");
+    rate.oninput = () => {
+      const r = parseFloat(rate.value);
+      rateValEl.textContent = r.toFixed(2) + "×";
+      if (currentAudio) {
+        currentAudio.playbackRate = r;
+        currentAudio.preservesPitch = true;
+      }
+    };
+
+    function applyRate(audio) {
+      audio.playbackRate = parseFloat(rate.value);
+      audio.preservesPitch = true;
+      audio.mozPreservesPitch = true;
+      audio.webkitPreservesPitch = true;
+    }
+
+    // Edge TTS qua backend (nếu chạy)
+    speakBtn.onclick = async () => {
+      const voiceName = voiceSelect.value;
+      const text = ttsText.value;
+      const ratePct = ((parseFloat(rate.value) - 1) * 100).toFixed(0);
+      const ratePctStr = (ratePct >= 0 ? "+" : "") + ratePct + "%";
+
+      const backendUp = await fetch("http://localhost:7777/health").then(() => true).catch(() => false);
+
+      if (backendUp) {
+        ttsStatus.textContent = "Đang dùng Edge TTS backend...";
+        if (currentAudio) currentAudio.pause();
+        const url = `http://localhost:7777/tts?text=${encodeURIComponent(text)}&voice=${encodeURIComponent(voiceName)}&rate=${encodeURIComponent(ratePctStr)}`;
+        currentAudio = new Audio(url);
+        currentAudio.onplay = () => ttsStatus.textContent = `▶ Đang đọc bằng ${voiceName} (Edge TTS, ${ratePctStr})`;
+        currentAudio.onended = () => ttsStatus.textContent = "✓ Đọc xong";
+        currentAudio.onerror = () => playGoogleTTS(text);
+        await currentAudio.play().catch(() => playGoogleTTS(text));
+      } else {
+        ttsStatus.textContent = "Backend không chạy - dùng Google Translate TTS";
+        playGoogleTTS(text);
+      }
+    };
+
+    function playGoogleTTS(text) {
+      if (currentAudio) currentAudio.pause();
+      const chunks = splitText(text, 180);
+      let idx = 0;
+      const playNext = () => {
+        if (idx >= chunks.length) { ttsStatus.textContent = "✓ Đọc xong (Google TTS)"; return; }
+        const chunk = chunks[idx++];
+        const url = `https://translate.google.com/translate_tts?ie=UTF-8&tl=vi&client=tw-ob&q=${encodeURIComponent(chunk)}`;
+        currentAudio = new Audio(url);
+        applyRate(currentAudio);
+        currentAudio.onplay = () => ttsStatus.textContent = `▶ Google TTS - ${idx}/${chunks.length} - ${rate.value}×`;
+        currentAudio.onended = playNext;
+        currentAudio.onerror = () => ttsStatus.textContent = "✗ Lỗi: Trình duyệt chặn Google TTS.";
+        currentAudio.play().catch(e => ttsStatus.textContent = "Lỗi: " + e.message);
+      };
+      playNext();
+    }
+
+    function splitText(text, maxLen) {
+      const sentences = text.match(/[^.!?]+[.!?]+|\s*[^.!?]+$/g) || [text];
+      const chunks = []; let current = "";
+      for (const s of sentences) {
+        if ((current + s).length > maxLen && current) { chunks.push(current.trim()); current = s; }
+        else current += s;
+      }
+      if (current.trim()) chunks.push(current.trim());
+      return chunks;
+    }
+
+    speakBrowserBtn.onclick = () => {
+      const voices = speechSynthesis.getVoices();
+      const selected = voices[voiceSelect.selectedIndex] || voices.find(v => v.lang.startsWith('vi')) || voices[0];
+      speechSynthesis.cancel();
+      const text = ttsText.value;
+      const chunks = text.match(/[^.!?]+[.!?]+|\s*[^.!?]+$/g) || [text];
+      chunks.forEach(c => {
+        const u = new SpeechSynthesisUtterance(c.trim());
+        if (selected) u.voice = selected;
+        u.lang = 'vi-VN';
+        u.rate = 1.05;
+        speechSynthesis.speak(u);
+      });
+      ttsStatus.textContent = `▶ Đang đọc bằng browser (${selected ? selected.name : 'default'})`;
+    };
+
+    stopSpeakBtn.onclick = () => {
+      speechSynthesis.cancel();
+      if (currentAudio) currentAudio.pause();
+      ttsStatus.textContent = "⏹ Đã dừng";
+    };
+
+    // Push-to-talk
+    let space = false;
+    document.addEventListener("keydown", e => {
+      if (e.code === "Space" && !space && document.activeElement.tagName !== "TEXTAREA") {
+        e.preventDefault(); space = true; voice.startListening();
+      }
+    });
+    document.addEventListener("keyup", e => {
+      if (e.code === "Space" && space) { space = false; voice.stopListening(); }
+    });
+  </script>
+</body>
+</html>

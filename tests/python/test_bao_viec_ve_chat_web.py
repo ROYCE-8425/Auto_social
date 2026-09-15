@@ -1,0 +1,176 @@
+"""Regression: việc chạy nền phải BÁO VỀ đúng khung chat đã giao nó.
+
+Lỗi thật 0.9.289: người dùng ngồi dashboard bảo Javis chạy mấy agent nền. Javis đáp "em sẽ
+đợi các agent chạy nền hoàn tất (có thông báo tự động khi xong) rồi tổng hợp cho anh" rồi
+im lặng vĩnh viễn - không trạng thái, không hồi âm.
+
+Hai gốc rễ, test này canh cả hai:
+  1. `_notify_owner` CHỈ biết gửi Telegram. Máy không đấu Telegram thì nó trả (False, ...) và
+     `TaskRunner._report` nuốt luôn - kết quả bay vào hư không. Người dùng web không có kênh
+     nào nhận cả.
+  2. System prompt hứa "tự có thông báo khi xong" mà không nói kênh nào, nên Javis còn hứa
+     thêm là sẽ NGỒI ĐỢI rồi tổng hợp - điều nó không làm được: lượt trả lời đóng lại ngay
+     sau khi nó nói xong, không ai đánh thức nó dậy.
+
+Cập nhật 0.49.0: hòm thư (inbox.py) trở thành kênh mặc định và LUÔN có, nên `_notify_owner`
+đổi nghĩa - nó trả True khi tin đã tới được người dùng, kể cả khi Telegram tắt. Phần "gửi
+qua kênh nào, hỏng vì sao" tách xuống `_gui_qua_kenh`, và mấy ca dưới đo ở đúng tầng đó.
+
+Chạy:
+    .venv/Scripts/python.exe tests/python/test_bao_viec_ve_chat_web.py
+"""
+import asyncio
+import os
+import re
+import sys
+import tempfile
+
+os.environ.setdefault("JAVIS_STATE_DIR", tempfile.mkdtemp(prefix="javis-push-test-"))
+
+from _paths import ROOT, SERVER  # noqa: E402,F401  - nạp server/ vào sys.path
+
+import channel_context  # noqa: E402
+import main  # noqa: E402
+
+APP = (ROOT / "dashboard" / "app.js").read_text(encoding="utf-8")
+CLAUDE_MD = (ROOT / "CLAUDE.md").read_text(encoding="utf-8")
+
+fails = []
+
+
+def check(name: str, condition: bool) -> None:
+    print(("PASS: " if condition else "FAIL: ") + name)
+    if not condition:
+        fails.append(name)
+
+
+# ─────────── 1. Đường báo: việc xong -> đúng phiên chat web ───────────
+SID = "sid_test_bao_viec"
+
+
+async def _run():
+    got = []
+
+    async def writer(obj):
+        got.append(obj)
+
+    main._CHAT_RUNTIME.add_client("test-client", writer)
+    store = main.get_store()
+    store.get_or_create(SID, brain="brain", engine="cli", model="x")
+
+    ok, err = await main._notify_owner(main.WEB_CHAT_PREFIX + SID, "✅ Việc 'So sánh skill' đã xong.")
+    check(f"việc giao từ web báo được dù Telegram TẮT (err={err!r})", ok is True)
+
+    pushes = [e for e in got if e.get("type") == "push"]
+    check("bắn đúng 1 sự kiện push qua WebSocket", len(pushes) == 1)
+    check("push mang đúng session_id để client định tuyến",
+          bool(pushes) and pushes[0].get("session_id") == SID)
+    check("push mang nội dung báo cáo",
+          bool(pushes) and "So sánh skill" in (pushes[0].get("content") or ""))
+
+    # Ghi vào kho phiên TRƯỚC khi bắn: đóng tab / F5 rồi mở lại vẫn còn.
+    msgs = store.get_messages(SID)
+    check("kết quả lưu vào kho phiên (F5 vẫn còn)",
+          bool(msgs) and msgs[-1]["role"] == "assistant" and "So sánh skill" in msgs[-1]["content"])
+
+    # HỢP ĐỒNG ĐỔI Ở 0.49.0. Trước đây "không có kênh" = mất tin, nên `_notify_owner` phải
+    # trả False để chỗ gọi còn biết mà kêu. Từ khi có HÒM THƯ thì tin không mất nữa: nó nằm
+    # ở server, mở dashboard là thấy. Vì vậy `_notify_owner` giờ trả True (đã tới được người
+    # dùng), còn phần "kênh nào hỏng vì sao" chuyển xuống `_gui_qua_kenh`.
+    #
+    # Ý ĐỊNH GỐC của mấy ca dưới vẫn được canh nguyên vẹn, chỉ đo ở đúng tầng của nó: tầng
+    # KÊNH không được bịa thành công khi chẳng gửi đi đâu cả.
+    ok2, err2 = await main._gui_qua_kenh("", "báo linh tinh")
+    check("kênh: không rõ người nhận + Telegram tắt -> thất bại có lý do",
+          ok2 is False and "Telegram" in err2)
+    ok3, err3 = await main._gui_qua_kenh(main.WEB_CHAT_PREFIX, "rỗng")
+    check("kênh: tiền tố web: nhưng thiếu mã phiên -> thất bại, không im lặng",
+          ok3 is False and "phiên chat web" in err3)
+
+    # Telegram vẫn là đường riêng: chat_id thường KHÔNG được coi là phiên web.
+    ok4, err4 = await main._gui_qua_kenh("123456789", "gửi telegram")
+    check("kênh: chat_id Telegram vẫn đi nhánh Telegram như cũ",
+          ok4 is False and "Telegram" in err4)
+
+    # Và đây là điều MỚI phải giữ: kênh hỏng nhưng hòm thư nhận được thì lượt báo vẫn tính
+    # là đã tới. Thiếu luật này thì nhắc hẹn trên máy chưa đấu Telegram bị ghi "failed"
+    # trong khi nội dung đang nằm sẵn trong hòm - vô lý với người dùng.
+    ok5, err5 = await main._notify_owner("", "hòm thư đỡ")
+    check("hòm thư đỡ được lượt báo khi không có kênh nào", ok5 is True and err5 == "")
+
+    # ─── Báo LẶNG (0.52.7): việc chạy xong trót lọt thì đừng gọi người dùng dậy ───
+    # Chủ repo chốt 01/09/2026 sau khi chuông kêu liên hồi giữa lúc đang chat. Ranh giới:
+    # chỉ việc BỊ CHẶN / CHỜ DUYỆT mới kêu, vì đó là thứ cần anh ra tay. Việc xong thì kết
+    # quả vẫn phải đi qua kênh và vẫn phải vào hòm - chỉ là vào ở dạng ĐÃ ĐỌC.
+    import inbox as inbox_mod
+
+    truoc = inbox_mod.so_chua_doc()
+    ok6, _ = await main._notify_owner(main.WEB_CHAT_PREFIX + SID, "✅ Việc 'Lấy bảng giá' đã xong.",
+                                      quiet=True)
+    check("báo lặng vẫn tính là đã tới người dùng", ok6 is True)
+    check("báo lặng KHÔNG cộng thêm số chưa đọc (chuông không nổi chấm đỏ)",
+          inbox_mod.so_chua_doc() == truoc)
+    thu = inbox_mod.danh_sach(5)
+    check("nhưng thư VẪN nằm trong hòm để mở ra xem lại",
+          bool(thu) and "Lấy bảng giá" in (thu[0].get("body") or ""))
+    check("và thư đó được đánh dấu đã đọc sẵn", bool(thu) and thu[0].get("read") is True)
+    check("nội dung vẫn rơi vào ĐÚNG khung chat đã giao việc",
+          any("Lấy bảng giá" in (m.get("content") or "") for m in store.get_messages(SID)))
+
+    # Ngược lại: mặc định (việc kẹt / chờ duyệt) phải KÊU như cũ. Đây là vế dễ mất nhất khi
+    # ai đó sau này đổi mặc định của `quiet` cho gọn.
+    truoc2 = inbox_mod.so_chua_doc()
+    await main._notify_owner(main.WEB_CHAT_PREFIX + SID, "⚠ Việc 'Ramp ngân sách' bị chặn.")
+    check("việc kẹt VẪN cộng số chưa đọc (vẫn kêu)", inbox_mod.so_chua_doc() == truoc2 + 1)
+
+
+asyncio.run(_run())
+
+
+# ─────────── 2. Javis phải BIẾT mã phiên và nói đúng sự thật ───────────
+blk = channel_context.build_channel_block("dashboard", {"session_id": "abc123"}, port=7777)
+check("khối kênh dashboard nêu mã phiên chat hiện tại", "abc123" in blk)
+check("dạy Javis gắn chat_id 'web:<sid>' khi giao việc", '"chat_id":"web:abc123"' in blk)
+check("dạy Javis gắn owner_chat cho loop", 'owner_chat: "web:abc123"' in blk)
+check("cấm hứa ngồi đợi rồi tổng hợp",
+      "KHÔNG hứa" in blk and "đợi các agent chạy xong" in blk)
+check("chỉ đường thay thế: giao thêm việc tổng hợp bằng deps", "deps" in blk)
+
+# Không có mã phiên (đường gọi cũ) thì không được vỡ, chỉ là thiếu khối đó.
+blk0 = channel_context.build_channel_block("dashboard", port=7777)
+check("thiếu mã phiên vẫn dựng được khối kênh, không nổ", "Dashboard web Javis" in blk0)
+check("thiếu mã phiên thì không bịa ra hướng dẫn web:", "web:" not in blk0)
+
+# Telegram giữ nguyên đường cũ.
+tblk = channel_context.build_channel_block("telegram", {"chat_id": "999"}, port=7777)
+check("nhánh Telegram vẫn dạy kèm chat_id như cũ", '\\"chat_id\\":\\"999\\"' in tblk or '"chat_id":"999"' in tblk)
+
+
+# ─────────── 3. Client hiển thị được tin đẩy vào ───────────
+_push = APP.split('if (data.type === "push")', 1)
+check("app.js có nhánh xử lý sự kiện push", len(_push) == 2)
+_body = _push[1].split("if (data.type === \"status\")", 1)[0] if len(_push) == 2 else ""
+check("push vẽ thành bong bóng Javis", "appendJavisMessage(data.content" in _body)
+# Bỏ chú thích trước khi soi: chú thích được quyền NHẮC tới turns[sid] để giải thích vì sao
+# không đụng vào nó.
+_code = re.sub(r"//[^\n]*", "", _body)
+check("push KHÔNG đụng turns[sid] (lượt đang chạy vẫn stream bình thường)",
+      "turns[" not in _code and "t.bubble" not in _code)
+check("đang xem phiên khác thì vẫn làm tươi Lịch sử để phiên đó nổi lên",
+      "notifySessions();" in _body)
+
+
+# ─────────── 4. System prompt ───────────
+check("system prompt nêu 3 kênh nhận báo theo nơi giao việc",
+      '"web:<chat session id>"' in CLAUDE_MD
+      and "chat_id of the person speaking" in CLAUDE_MD)
+check("system prompt cảnh báo bỏ trống là mất hút khi chưa đấu Telegram",
+      "nothing goes missing" in CLAUDE_MD)
+check("system prompt cấm hứa ngồi đợi tổng hợp",
+      re.search(r"NEVER promise .*wait for the job to finish and then summarize", CLAUDE_MD)
+      is not None)
+
+
+if fails:
+    raise SystemExit(f"\nFAIL - test_bao_viec_ve_chat_web: {len(fails)} lỗi")
+print("\nOK - test_bao_viec_ve_chat_web: tất cả pass")

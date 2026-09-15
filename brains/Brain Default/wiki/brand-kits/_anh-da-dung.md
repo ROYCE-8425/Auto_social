@@ -1,0 +1,123 @@
+---
+type: wiki
+updated: 2026-09-03
+---
+# Ảnh đã dùng khi đăng
+
+Mỗi mục = 1 slug Fanpage. Worker bỏ các path **gốc dataset** khi chọn ảnh album. Sau post_id chi ghi path raw (tin-hoc, ke-toan, ...). Khong ghi `_xuat`. Anh gen dang xong thi xoa, khong dung lai.
+
+## royce-shop
+- attachments/dataset/tin-hoc _ai/lop-tin-hoc-van-phong-word-excel.jpg
+- attachments/dataset/_xuat/thong-bao-nghi-le-trung-thu-2026.png
+- attachments/dataset/tin-hoc _ai/dao-tao-tin-hoc-van-phong.jpg
+- attachments/dataset/tin-hoc _ai/hoc-tin-hoc-van-phong-cap-toc.jpg
+- attachments/dataset/tin-hoc _ai/trung-tam-tin-hoc-Sao-Viet.jpg
+- attachments/dataset/_xuat/royce-shop-tin-hoc-van-phong-01-cover.jpg
+- attachments/dataset/_xuat/royce-shop-excel-nang-cao-01-cover.jpg
+- attachments/dataset/_xuat/royce-shop-powerpoint-thuyet-trinh-01-cover.jpg
+- attachments/dataset/_xuat/royce-shop-thong-bao-hoat-dong-0309-01-cover.png
+- attachments/dataset/_xuat/royce-shop-mos-01-cover.jpg
+- attachments/dataset/_xuat/royce-shop-ai-van-phong-01-cover.jpg
+- attachments/dataset/ai/Khoa-Hoc-AI-In-Office-Ung-Dung-AI-Trong-Van-Phong.jpg
+- attachments/dataset/ai/Gioi-Thieu-Cac-khoa-hoc-AI-tai-Tin-Hoc-Sao-Viet.jpg
+- attachments/dataset/ai/Khoa-Hoc-N8N-Automation-Tu-Dong-Hoa-Tac-Vu-Van-Phong-Bang-Workflow-AI.jpg
+- attachments/dataset/ai/Khoa-Hoc-Ung-Dung-AI-Trong-Marketing.jpg
+- attachments/dataset/ai/Khoa-hoc-Vibe-Coding-ung-dung-AI-xay-chatbot-va-agent.jpg
+- attachments/dataset/_xuat/royce-shop-ke-toan-thuc-hanh-01-cover.jpg
+- attachments/dataset/ke-toan/khoa-hoc-ke-toan-ngan-han.jpg
+- attachments/dataset/ke-toan/khoa-hoc-ke-toan-ngan-han-tp-hcm.jpg
+- attachments/dataset/ke-toan/khoa-hoc-ke-toan-ngan-han-tp-hcm (1).jpg
+- attachments/dataset/_xuat/royce-shop-autocad-co-khi-01-cover.jpg
+- attachments/dataset/co-khi/khoa-hoc-autocad.jpg
+- attachments/dataset/_xuat/royce-shop-thiet-ke-do-hoa-01-cover.jpg
+- attachments/dataset/do-hoa/Khoa-Hoc-Thiet-Ke-Do-Hoa-Tai-Trung-Tam-Tin-Hoc-Sao-Viet.jpg
+- attachments/dataset/do-hoa/Hoc-thiet-ke-do-hoa---tro-thanh-chuyen-gia-thiet-ke.jpg
+- attachments/dataset/do-hoa/San-Pham-Hoc-Vien-Khoa-Hoc-Thiet-Ke-Do-Hoa.jpg
+- attachments/dataset/do-hoa/Muc-Tieu-Sau-Khoa-Hoc-Thiet-Ke-Do-Hoa.jpg
+- attachments/dataset/do-hoa/Khoa-Hoc-Thiet-Ke-Do-Hoa-Co-Ban-Den-Chuyen-Nghiep-scaled.jpg
+- attachments/dataset/do-hoa/Hoc-thiet-ke-do-hoa-tu-co-ban-den-chuyen-nghiep.jpg
+- attachments/dataset/_xuat/royce-shop-ai-van-phong-02-cover.jpg
+- attachments/dataset/ai/Khoa-Hoc-Su-Dung-AI-Danh-Cho-Giao-Vien.jpg
+- attachments/dataset/ai/Gioi-Thieu-Cac-khoa-hoc-AI-tai-Tin-Hoc-Sao-Viet.jpg
+- attachments/dataset/co-khi/09e4be9a2ccba295fbda4.jpg
+- attachments/dataset/co-khi/0fd0aee40d57b709ee46.jpg
+- attachments/dataset/co-khi/14942311dddc6c8235cd.jpg
+- attachments/dataset/co-khi/1d90182865bdd4e38dac.jpg
+- attachments/dataset/co-khi/1db64636d4675a39037611.jpg
+- attachments/dataset/co-khi/2a20215eb30f3d51641e1.jpg
+- attachments/dataset/co-khi/z7423854924766_744a40c5ca5eb56e77566f97ed399692.jpg
+- attachments/dataset/do-hoa/z7447269430299_c9f3292f3b60eb48c93fe3b6ebaf5bc6.jpg
+- attachments/dataset/do-hoa/6059a7b9e32c52720b3d.jpg
+- attachments/dataset/do-hoa/z7333634118249_be8a20045605264022f40850766ecef9.jpg
+- attachments/dataset/do-hoa/z5979820239772_732e9c751116ddff8821efbd3a9caada.jpg
+- attachments/dataset/do-hoa/z5993136449316_8dbafca788011e7e8bbb20f7cab1d378.jpg
+- attachments/dataset/do-hoa/z7381949008282_d9215a76a1964d4c7f9838062eb82146.jpg
+- attachments/dataset/do-hoa/0ece6df45e70d22e8b61.jpg
+- attachments/dataset/do-hoa/d9205ef36d77e129b866.jpg
+- attachments/dataset/do-hoa/e1e1cd37bca20dfc54b3.jpg
+- attachments/dataset/do-hoa/z5941020100066_b3ed98e4ae000e73a2c83c95256f82b0.jpg
+- attachments/dataset/do-hoa/z5963742969173_365610790ab97c4c2a429d4c9aaa50d4.jpg
+- attachments/dataset/ke-toan/0670a13976bdfae3a3ac.jpg
+- attachments/dataset/ke-toan/11d4eb4bddcf519108de.jpg
+- attachments/dataset/ke-toan/20ea1fa7c823447d1d32.jpg
+- attachments/dataset/ke-toan/33201499612799873872.jpg
+- attachments/dataset/ke-toan/38619537503225865661.jpg
+- attachments/dataset/ke-toan/38dd7fdaa85e24007d4f.jpg
+- attachments/dataset/ke-toan/4428a06b77effbb1a2fe.jpg
+- attachments/dataset/tin-hoc _ai/f4f0baca894e05105c5f.jpg
+- attachments/dataset/tin-hoc _ai/3e5b54a3a611284f710034.jpg
+- attachments/dataset/tin-hoc _ai/Tin-hoc-00007.jpg
+- attachments/dataset/tin-hoc _ai/Tin-hoc-00075.jpg
+- attachments/dataset/tin-hoc _ai/368177035591437655947.jpg
+- attachments/dataset/tin-hoc _ai/1ae28055c2ad75f32cbc38.jpg
+- attachments/dataset/ke-toan/fabe944666f4e8aab1e539.jpg
+- attachments/dataset/ke-toan/a68b7b0a009fb1c1e88e.jpg
+- attachments/dataset/ke-toan/95cc1497c3134f4d1602.jpg
+- attachments/dataset/co-khi/362e4de63473852ddc62.jpg
+- attachments/dataset/co-khi/3f0ec9715b20d57e8c312.jpg
+- attachments/dataset/co-khi/49e8a1adfd5c4002194d.jpg
+- attachments/dataset/co-khi/4e2bbfaa2dfba3a5faea6.jpg
+- attachments/dataset/co-khi/4f1e45013e948fcad685.jpg
+- attachments/dataset/co-khi/5ad6e42cd7a85bf602b9.jpg
+- attachments/dataset/ke-toan/e1e1cd37bca20dfc54b3.jpg
+- attachments/dataset/ke-toan/z7313180134843_0d3dc0c9863ac6f6f0ab7702a8a6a7e0.jpg
+- attachments/dataset/ke-toan/9a09cd481acc9692cfdd.jpg
+- attachments/dataset/ke-toan/9931c75b10df9c81c5ce.jpg
+- attachments/dataset/ve-ky-thuat/z7447269430279_adad2be0a7cdd885340dcddc6f58c23d.jpg
+- attachments/dataset/ve-ky-thuat/z7381961034297_a8e7320d7c06df9a9c00be2252e01f1a.jpg
+- attachments/dataset/ve-ky-thuat/hoc-ung-dung-ai-trong-thiet-ke-ban-ve-ky-thuat-autocad.jpg
+- attachments/dataset/do-hoa/z7400314059576_bdc2e98973c8341ee3aeb533843d74ae.jpg
+- attachments/dataset/do-hoa/z7414475729796_c283a8d232470658ce1ec6f3e4f3a929.jpg
+- attachments/dataset/do-hoa/z6016063954673_62e0f5609549593a7f11012aa51998b2.jpg
+- attachments/dataset/do-hoa/z7333728533428_26457c0cefa782571c9b89ac96ecb719.jpg
+- attachments/dataset/do-hoa/z7391140423085_160f7d43c0afc471ae380710fe0141a3.jpg
+- attachments/dataset/do-hoa/z7368945307967_3fc98c61a12185f79694021179ab1c2e.jpg
+- attachments/dataset/tin-hoc _ai/67739142574909391054.jpg
+- attachments/dataset/tin-hoc _ai/43b6a87925be92e0cbaf.jpg
+- attachments/dataset/tin-hoc _ai/44b6623720cf9791cede6.jpg
+- attachments/dataset/tin-hoc _ai/Tin-hoc-00023.jpg
+- attachments/dataset/tin-hoc _ai/Tin-hoc-00071.jpg
+- attachments/dataset/tin-hoc _ai/ce424489-8bc3-4102-9251-431a97faf7e1.jpg
+- attachments/dataset/tin-hoc _ai/Tin-hoc-00080.jpg
+- attachments/dataset/tin-hoc _ai/a4ea5cd26f56e308ba47.jpg
+- attachments/dataset/tin-hoc _ai/15908c234006fe58a717.jpg
+- attachments/dataset/tin-hoc _ai/Tin-hoc-00060.jpg
+- attachments/dataset/tin-hoc _ai/Tin-hoc-00092.jpg
+- attachments/dataset/tin-hoc _ai/004ab02acbd27c8c25c3.jpg
+- attachments/dataset/tin-hoc _ai/Tin-hoc-00059.jpg
+- attachments/dataset/tin-hoc _ai/67739142574909391052.jpg
+- attachments/dataset/tin-hoc _ai/Tin-hoc-00088.jpg
+- attachments/dataset/tin-hoc _ai/a66a331de7a269fc30b38.jpg
+- attachments/dataset/tin-hoc _ai/264ab0c3f23b45651c2a31.jpg
+- attachments/dataset/tin-hoc _ai/4ab66e3b2cc39b9dc2d240.jpg
+- attachments/dataset/tin-hoc _ai/290652938340154794455.jpg
+- attachments/dataset/tin-hoc _ai/z7441102482368_9ab23aa589aa55b78fc426e144f56d59.jpg
+- attachments/dataset/tin-hoc _ai/z7462399610052_3c62644219b3695fa4af25aa0f81000a.jpg
+- attachments/dataset/tin-hoc _ai/z7430943190085_37c3a68f014fe72d10df6f74ad9ec444.jpg
+- attachments/dataset/tin-hoc _ai/z7275609732536_14903c52ce671be5aa2c2c57158fe380.jpg
+- attachments/dataset/tin-hoc _ai/z5986626217957_fcc7305cb42ead123a293b48a7ea96d7.jpg
+- attachments/dataset/tin-hoc _ai/Screenshot 2024-11-11 135952.jpg
+- attachments/dataset/tin-hoc _ai/z7441102518604_f0799eb73f48cd7a524518794debf487.jpg
+- attachments/dataset/tin-hoc _ai/z7368945307967_3fc98c61a12185f79694021179ab1c2e.jpg
+- attachments/dataset/tin-hoc _ai/z6016063954673_62e0f5609549593a7f11012aa51998b2.jpg
+- attachments/dataset/tin-hoc _ai/z7381949008282_d9215a76a1964d4c7f9838062eb82146.jpg

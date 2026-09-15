@@ -1,0 +1,31 @@
+# /etc/systemd/system/javis.service - native (non-Docker) systemd unit.
+# Install:
+#   sudo cp javis.service /etc/systemd/system/javis.service
+#   sudo sed -i "s|__APP_DIR__|$(pwd)|g; s|__USER__|$(whoami)|g" /etc/systemd/system/javis.service
+#   sudo systemctl daemon-reload && sudo systemctl enable --now javis
+#   journalctl -u javis -f
+[Unit]
+Description=Javis OS
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+User=__USER__
+WorkingDirectory=__APP_DIR__/server
+Environment="JAVIS_HOST=127.0.0.1"
+Environment="JAVIS_PORT=7777"
+Environment="JAVIS_STATE_DIR=__APP_DIR__/server"
+Environment="PATH=__APP_DIR__/.venv/bin:/usr/local/bin:/usr/bin:/bin"
+ExecStart=__APP_DIR__/.venv/bin/python -m uvicorn main:app --host 127.0.0.1 --port 7777
+Restart=always
+RestartSec=5
+KillMode=mixed
+KillSignal=SIGTERM
+TimeoutStopSec=30
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

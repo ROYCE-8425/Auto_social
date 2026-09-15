@@ -1,0 +1,25 @@
+# Chuẩn hoá line-ending để deploy đa nền tảng.
+# Mặc định: tự nhận text, lưu LF trong repo.
+* text=auto eol=lf
+
+# Shell script + file config Linux BẮT BUỘC LF (CRLF sẽ làm bash lỗi "bad interpreter").
+*.sh        text eol=lf
+*.yml       text eol=lf
+*.yaml      text eol=lf
+Dockerfile  text eol=lf
+.dockerignore text eol=lf
+javis.service text eol=lf
+
+# Script Windows giữ CRLF.
+*.bat       text eol=crlf
+*.vbs       text eol=crlf
+*.ps1       text eol=crlf
+
+# Nhị phân - không đụng.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.mp3 binary
+*.db binary

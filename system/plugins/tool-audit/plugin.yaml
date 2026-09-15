@@ -1,0 +1,11 @@
+name: Nhật ký dùng tool
+slug: tool-audit
+version: 1.0.0
+description: Đếm số lần MỖI tool được engine gọi (qua hook post_tool_call) và cho xem thống kê tool hay dùng. Đây là ví dụ minh hoạ cơ chế HOOK của plugin. Mặc định TẮT - bật qua POST /plugins/toggle (slug=tool-audit) để thử.
+author: Javis (bundled)
+enabled: false
+min_mode: readonly
+tools:
+  - javis_tool_stats
+hooks:
+  - post_tool_call

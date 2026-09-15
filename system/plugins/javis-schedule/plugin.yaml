@@ -1,0 +1,10 @@
+name: Đặt việc định kỳ & nhắc hẹn
+slug: javis-schedule
+version: 1.0.0
+description: Tạo/liệt kê/huỷ việc chạy định kỳ và nhắc hẹn ngay từ chat. Tự chọn kho - việc lặp và bền thì ghi Javis/loops/<slug>.md để sửa được trong Obsidian; nhắc một lần hoặc lịch cron thì vào kho nhắc hẹn (đã có sẵn cron 5 trường). Thay cho việc gõ YAML tay hoặc curl.
+author: Javis (bundled)
+enabled: true
+min_mode: safe
+tools:
+  - javis_schedule
+hooks: []

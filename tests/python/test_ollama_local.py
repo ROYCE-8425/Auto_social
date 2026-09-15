@@ -1,0 +1,424 @@
+"""Ollama chạy trên MÁY NHÀ: dò endpoint, đọc cấu hình máy, gợi ý, tải và gỡ model.
+
+    python tests/run.py ollama_local
+
+Test này dựng một Ollama GIẢ bằng http.server rồi cho Javis nói chuyện thật với nó. Không có
+cách nào khác: máy chạy CI không có Ollama, mà đây lại là tính năng mà toàn bộ giá trị nằm ở
+chỗ nói chuyện đúng giao thức với một tiến trình bên ngoài.
+
+Thứ được canh kỹ nhất là GIẢ ĐỊNH NỀN mà bản thiết kế đầu tiên làm sai: nút "Cài Ollama" tự
+chạy script và tự đọc RAM/GPU "máy này" chỉ đúng khi Javis và Ollama cùng một máy vật lý.
+Phần đông người dùng chạy Javis trong Docker/VPS, nơi `localhost` là chính cái container.
+Đó đúng là lý do provider ollama local bị chặn cố ý từ đầu (server/config.py), nên mọi thứ ở
+đây phải chứng minh là nó không lặp lại giả định cũ.
+"""
+from _paths import ROOT, SERVER  # noqa: E402,F401
+import json
+import os
+import sys
+import tempfile
+import threading
+from http.server import BaseHTTPRequestHandler, HTTPServer
+
+os.environ.setdefault("JAVIS_STATE_DIR", tempfile.mkdtemp(prefix="javis-ollama-"))
+
+from fastapi.testclient import TestClient  # noqa: E402
+import main  # noqa: E402
+import ollama_local  # noqa: E402
+import ollama_catalog  # noqa: E402
+
+fails = []
+
+
+def check(name, cond, them=""):
+    print(("ok   " if cond else "FAIL ") + name + (("  [" + str(them) + "]") if not cond and them else ""))
+    if not cond:
+        fails.append(name)
+
+
+# ---- Ollama giả: đủ bốn endpoint Javis dùng ----------------------------------
+DA_XOA = []
+
+
+class OllamaGia(BaseHTTPRequestHandler):
+    def log_message(self, *a):
+        pass
+
+    def _tra(self, code, obj):
+        body = json.dumps(obj).encode("utf-8")
+        self.send_response(code)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def do_GET(self):
+        if self.path == "/api/tags":
+            return self._tra(200, {"models": [
+                {"name": "qwen3:8b", "size": 5_200_000_000, "modified_at": "2026-08-28T10:00:00Z"},
+                {"name": "gemma3:4b", "size": 3_300_000_000, "modified_at": "2026-08-20T10:00:00Z"},
+                {"name": "nomic-embed-text", "size": 274_000_000, "modified_at": "2026-08-20T10:00:00Z"},
+            ]})
+        if self.path == "/api/ps":
+            return self._tra(200, {"models": [{"name": "qwen3:8b", "size_vram": 5_000_000_000}]})
+        self._tra(404, {"error": "not found"})
+
+    def do_POST(self):
+        n = int(self.headers.get("Content-Length") or 0)
+        body = json.loads(self.rfile.read(n) or b"{}")
+        if self.path == "/api/show":
+            ten = body.get("model") or body.get("name") or ""
+            if not SHOW_CO_KHA_NANG[0]:
+                return self._tra(200, {"details": {}})      # bản Ollama cũ: không có trường này
+            kn = ["embedding"] if "embed" in ten or ten.startswith("bge-") else ["completion", "tools"]
+            return self._tra(200, {"capabilities": kn})
+        if self.path == "/api/pull":
+            self.send_response(200)
+            self.send_header("Content-Type", "application/x-ndjson")
+            self.end_headers()
+            for mo in ({"status": "pulling manifest"},
+                       {"status": "downloading", "completed": 500, "total": 1000},
+                       {"status": "downloading", "completed": 1000, "total": 1000},
+                       {"status": "success"}):
+                self.wfile.write((json.dumps(mo) + "\n").encode("utf-8"))
+                self.wfile.flush()
+            return
+        self._tra(404, {"error": "not found"})
+
+    def do_DELETE(self):
+        n = int(self.headers.get("Content-Length") or 0)
+        body = json.loads(self.rfile.read(n) or b"{}")
+        DA_XOA.append(body.get("model") or body.get("name"))
+        self._tra(200, {})
+
+
+SHOW_CO_KHA_NANG = [True]
+srv = HTTPServer(("127.0.0.1", 0), OllamaGia)
+threading.Thread(target=srv.serve_forever, daemon=True).start()
+EP = f"http://127.0.0.1:{srv.server_address[1]}"
+
+c = TestClient(main.app, base_url="http://127.0.0.1")
+
+# ---- 1. Rào địa chỉ (đây là ô người dùng nhập mà SERVER tự đi gọi) -------------
+for xau, vi_sao in [("file:///etc/passwd", "giao thức lạ"),
+                    ("http://169.254.169.254", "dải metadata máy ảo đám mây"),
+                    ("http://224.0.0.1", "địa chỉ multicast")]:
+    try:
+        ollama_local.chuan_hoa_endpoint(xau)
+        check(f"chặn {vi_sao}", False, xau)
+    except ollama_local.LoiEndpoint:
+        check(f"chặn {vi_sao}", True)
+# LoiEndpoint là con của ValueError. Gói phép thử "có phải IP không" chung một try với phát
+# ném thì chính except ValueError nuốt mất phát ném đó, và địa chỉ metadata lọt lưới. Đã dính
+# đúng vậy lúc viết, nên canh lại bằng một ca cụ thể.
+check("CANARY: LoiEndpoint không bị chính except ValueError nuốt",
+      issubclass(ollama_local.LoiEndpoint, ValueError))
+check("gõ thiếu http:// vẫn hiểu được",
+      ollama_local.chuan_hoa_endpoint("192.168.1.20:11434") == "http://192.168.1.20:11434")
+check("cắt đường dẫn thừa", ollama_local.chuan_hoa_endpoint("http://a.vn:11434/") == "http://a.vn:11434")
+
+# ---- 1b. Thiếu CỔNG: vụ thật 02/09 -------------------------------------------
+# Chủ repo gõ mỗi IP máy chủ VPS, không cổng. Javis hiểu thành cổng 80, đi trúng web server
+# của chính VPS đó và nhận 301 - một mã lỗi không nói gì về Ollama, không có đường lần ra.
+check("CANARY: gõ thiếu cổng thì thêm 11434, KHÔNG rơi về cổng 80",
+      ollama_local.chuan_hoa_endpoint("72.62.73.98") == "http://72.62.73.98:11434")
+check("và cũng vậy khi có sẵn http://",
+      ollama_local.chuan_hoa_endpoint("http://172.18.0.1") == "http://172.18.0.1:11434")
+check("cổng người dùng ghi rõ thì giữ nguyên",
+      ollama_local.chuan_hoa_endpoint("http://a.vn:8080") == "http://a.vn:8080")
+# https không cổng là ý đi qua reverse proxy ở 443. Nhét 11434 vào đó là bẻ gãy đúng cấu hình
+# người ta cố tình dựng, nên phải để yên.
+check("CANARY: https không cổng thì để yên (reverse proxy ở 443)",
+      ollama_local.chuan_hoa_endpoint("https://ollama.vidu.com") == "https://ollama.vidu.com")
+
+# Ollama không có mật khẩu, nên IP công khai = máy chủ model ai cũng gọi được. Không CHẶN
+# (trỏ sang máy khác qua Internet là hợp lệ), nhưng phải nói.
+check("nhận ra IP công khai để cảnh báo", ollama_local.la_ip_cong_khai("72.62.73.98"))
+check("IP nội bộ thì không cảnh báo", not ollama_local.la_ip_cong_khai("172.18.0.1"))
+check("localhost thì không cảnh báo", not ollama_local.la_ip_cong_khai("127.0.0.1:11434"))
+check("tên miền thì không kết luận", not ollama_local.la_ip_cong_khai("https://ollama.vidu.com"))
+
+# ---- 2. same_host: KHÔNG được suy ra từ mỗi chữ localhost ---------------------
+check("địa chỉ LAN thì chắc chắn không cùng máy", not ollama_local.same_host("http://192.168.1.20:11434"))
+_that = main.deploy_info.deploy_mode
+try:
+    main.deploy_info.deploy_mode = lambda: "docker"
+    ollama_local.deploy_info.deploy_mode = lambda: "docker"
+    # Đây là giả định đã làm hỏng bản thiết kế đầu: trong container, 127.0.0.1 là chính cái
+    # container chứ không phải máy người dùng ngồi trước.
+    check("CANARY: trong Docker thì localhost KHÔNG phải máy người dùng",
+          not ollama_local.same_host("http://127.0.0.1:11434"))
+finally:
+    main.deploy_info.deploy_mode = _that
+    ollama_local.deploy_info.deploy_mode = _that
+check("chạy native + localhost thì mới là cùng máy", ollama_local.same_host("http://127.0.0.1:11434"))
+
+# ---- 3. Vòng đời qua HTTP API ------------------------------------------------
+r = c.get("/ollama-local/status").json()
+check("chưa cấu hình thì không báo là nối được", r["reachable"] is False and r["endpoint"] == "")
+check("có gợi ý sẵn địa chỉ mặc định", r["goi_y_endpoint"].endswith(":11434"))
+
+r = c.post("/ollama-local/endpoint", data={"endpoint": EP}).json()
+check("lưu địa chỉ xong dò được luôn", r.get("reachable") is True, r)
+check("địa chỉ sai bị từ chối kèm lý do",
+      c.post("/ollama-local/endpoint", data={"endpoint": "file:///x"}).status_code == 400)
+
+r = c.get("/ollama-local/installed").json()
+ten = [m["name"] for m in r["models"]]
+check("liệt kê được model đã cài", ten == ["gemma3:4b", "nomic-embed-text", "qwen3:8b"], ten)
+check("đổi byte sang GB cho người đọc",
+      [m["size_gb"] for m in r["models"] if m["name"] == "qwen3:8b"] == [4.8])
+# /api/ps là thứ DUY NHẤT cho biết model nào đang chiếm RAM/VRAM lúc này.
+check("biết model nào đang nạp sẵn trong bộ nhớ",
+      [m["loaded"] for m in r["models"] if m["name"] == "qwen3:8b"] == [True])
+
+# ---- 3b. Model nào CHAT được: hỏi Ollama, không đoán qua tên -------------------
+# 02/09: chủ repo cài 2 model, một cái là embeddinggemma, và hỏi vì sao chỉ một cái đặt được
+# làm model chính. Câu trả lời đúng, nhưng phép lọc lúc đó chỉ dò chữ "embed" trong tên.
+import asyncio as _aio1  # noqa: E402
+
+check("Ollama nói embedding thì KHÔNG cho làm model chính",
+      not ollama_local.chat_duoc("bat-ky-ten-gi", ["embedding"]))
+check("Ollama nói completion thì cho", ollama_local.chat_duoc("qwen3:4b", ["completion", "tools"]))
+# Đây là cái hố của bản cũ: ba model embedding phổ biến NHẤT lại không có chữ "embed" trong
+# tên. Đặt nhầm một cái làm model chính là mọi lượt chat chết bằng câu lỗi khó hiểu.
+for _t in ("all-minilm", "bge-m3", "paraphrase-multilingual"):
+    check(f"CANARY: {_t} là model embedding dù tên không có chữ embed",
+          not ollama_local.chat_duoc(_t))
+check("model chat bình thường vẫn qua được", ollama_local.chat_duoc("qwen3:4b-instruct"))
+check("hỏi được capabilities thật qua /api/show",
+      _aio1.run(ollama_local.kha_nang(EP, "qwen3:8b")) == ["completion", "tools"])
+
+_r = c.get("/ollama-local/installed").json()
+_map = {m["name"]: m.get("chat_duoc") for m in _r["models"]}
+check("route trả cờ chat_duoc cho MỌI model", all(v is not None for v in _map.values()), _map)
+# Đúng cảnh chủ repo gặp: danh sách có cả model chat lẫn model embedding, và chỉ model chat
+# mới được mời đặt làm model chính.
+check("model chat được đánh dấu chat được",
+      _map.get("gemma3:4b") is True and _map.get("qwen3:8b") is True, _map)
+check("CANARY: model embedding trong danh sách bị đánh dấu KHÔNG chat được",
+      _map.get("nomic-embed-text") is False, _map)
+
+# Ollama cũ không có trường capabilities -> phải LUI VỀ đoán tên, không được coi mọi thứ là
+# chat được (đó là cách hỏng im lặng: nút hiện ra, bấm vào rồi chat mới chết).
+SHOW_CO_KHA_NANG[0] = False
+check("CANARY: bản Ollama cũ thì lui về đoán tên, không mặc định cho qua hết",
+      not ollama_local.chat_duoc("embeddinggemma:latest",
+                                 _aio1.run(ollama_local.kha_nang(EP, "embeddinggemma:latest"))))
+SHOW_CO_KHA_NANG[0] = True
+
+# ---- 4. Tải model: tiến độ phải chảy về qua SSE -------------------------------
+with c.stream("POST", "/ollama-local/pull", data={"model": "qwen3:4b"}) as resp:
+    moc = [json.loads(d[6:]) for d in resp.iter_lines() if d.startswith("data: ")]
+check("có mốc tiến độ kèm số byte", any(m.get("total") for m in moc), moc[:3])
+check("có mốc báo xong", any(m.get("status") == "success" for m in moc))
+check("đóng luồng bằng một mốc riêng, client biết dừng đọc",
+      moc and moc[-1].get("status") == "__done__")
+# Ollama không có endpoint huỷ, và pull sau tự tiếp tục từ chỗ dở theo digest. Một endpoint
+# /pull/cancel sẽ là API không làm gì cả - một lời hứa suông.
+check("KHÔNG bịa ra endpoint huỷ tải",
+      not any(getattr(r, "path", "") == "/ollama-local/pull/cancel" for r in main.app.routes))
+
+# ---- 4b. Trỏ nhầm vào WEB SERVER: phải nói đúng bệnh, không phải mã số trần ----
+# Vụ thật 02/09: gõ thiếu cổng -> trúng web server của chính VPS -> nó đá HTTPS bằng 301, và
+# màn hình chỉ hiện "Máy chủ trả lỗi 301". Người dùng không có đường nào lần từ con số đó ra
+# nguyên nhân, nên đứng im ở đó luôn.
+class WebServerGia(BaseHTTPRequestHandler):
+    def log_message(self, *a):
+        pass
+
+    def do_GET(self):
+        if TRA_LOI[0] == "301":
+            self.send_response(301)
+            self.send_header("Location", "https://vidu.com" + self.path)
+            self.end_headers()
+            return
+        body = b"<html><body>Xin chao</body></html>"
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+
+TRA_LOI = ["301"]
+srv2 = HTTPServer(("127.0.0.1", 0), WebServerGia)
+threading.Thread(target=srv2.serve_forever, daemon=True).start()
+EP2 = f"http://127.0.0.1:{srv2.server_address[1]}"
+
+import asyncio as _aio  # noqa: E402
+
+_p = _aio.run(ollama_local.probe(EP2))
+check("301 không còn báo bằng mã số trần", "301" in (_p["error"] or "")
+      and "chuyển hướng" in (_p["error"] or ""), _p["error"])
+check("và câu đó chỉ đúng chỗ cần sửa: cổng 11434", "11434" in (_p["error"] or ""))
+check("301 thì KHÔNG coi là nối được", _p["reachable"] is False)
+
+TRA_LOI[0] = "html"
+_p = _aio.run(ollama_local.probe(EP2))
+# Trả 200 nhưng là HTML: có máy chủ ở đó, chỉ là không phải Ollama. Bản cũ để r.json() ném
+# rồi rơi vào except chung, hiện ra một câu lỗi parse JSON không ai hiểu.
+check("máy chủ trả 200 nhưng không phải Ollama cũng nói rõ",
+      _p["reachable"] is False and "không phải Ollama" in (_p["error"] or ""), _p["error"])
+
+r = c.post("/ollama-local/delete", data={"model": "gemma3:4b"}).json()
+check("gỡ model gọi đúng sang Ollama", r.get("ok") is True and "gemma3:4b" in DA_XOA, DA_XOA)
+
+# ---- 5. Gợi ý theo cấu hình máy ----------------------------------------------
+c.post("/ollama-local/specs", data={"ram_gb": 32, "has_gpu": "1", "vram_gb": 8})
+manh = c.get("/ollama-local/recommended").json()
+c.post("/ollama-local/specs", data={"ram_gb": 8, "has_gpu": "0", "vram_gb": 0})
+yeu = c.get("/ollama-local/recommended").json()
+check("gợi ý tối đa 6 model", len(manh["models"]) <= 6 and len(yeu["models"]) <= 6)
+check("máy yếu không bị mời model quá sức",
+      all(m["size_gb"] <= 8 * 0.8 for m in yeu["models"]),
+      [(m["name"], m["size_gb"]) for m in yeu["models"]])
+# LỖI THẬT lúc dựng: xếp "lọt VRAM lên đầu" khiến máy 32GB nhận ĐÚNG cùng sáu model như máy
+# 8GB, vì tám model dưới 8GB chiếm sạch chỗ. Người mua máy mạnh mở ra không thấy model lớn nào.
+check("CANARY: máy mạnh phải thấy model lớn, không trùng khít máy yếu",
+      {m["name"] for m in manh["models"]} != {m["name"] for m in yeu["models"]})
+check("và thật sự có model lớn trong đó",
+      max(m["size_gb"] for m in manh["models"]) > 9,
+      [(m["name"], m["size_gb"]) for m in manh["models"]])
+# Danh sách gợi ý không nói vì sao thì người dùng không có cơ sở nào để tin nó.
+check("mỗi gợi ý kèm lý do vì sao nó ở đây", all(m.get("note") for m in manh["models"]))
+# Ollama giả khai qwen3:8b và gemma3:4b đã cài; máy CPU xếp bản thinking (qwen3:8b) xuống
+# sau nên có thể rớt khỏi 6 suất - vậy soi cái nào còn trong danh sách cũng được, miễn có.
+check("model đã cài được đánh dấu, khỏi mời cài lại",
+      any(m["installed"] for m in yeu["models"] if m["name"] in ("qwen3:8b", "gemma3:4b")),
+      [(m["name"], m["installed"]) for m in yeu["models"]])
+# Một họ chiếm nhiều suất thì trông như nhiều lựa chọn mà thật ra chỉ có một.
+_ho = [m["family"] for m in manh["models"]]
+check("không để một họ model chiếm quá nửa danh sách",
+      max(_ho.count(h) for h in set(_ho)) <= 3, _ho)
+
+# ---- 5b. Đọc cấu hình máy: hụt thì phải NÓI là hụt ----------------------------
+# psutil KHÔNG phải dependency của Javis. Bản đầu chỉ có đường Linux (/proc) và Mac (sysctl),
+# nên máy Windows luôn trả 0 GB - mà "máy cá nhân cài Javis" thì Windows là ca thường gặp
+# nhất. Tệ hơn: nó vẫn khai source="auto", tức máy 64GB bị mời toàn model dưới 8GB mà không
+# có dấu hiệu nào cho thấy sai. Đó là hỏng lặng lẽ, loại khó phát hiện nhất.
+import unittest.mock as _mock  # noqa: E402
+with _mock.patch.object(ollama_local, "_ram_gb", lambda: 0.0):
+    _hut = ollama_local.detect_specs()
+check("CANARY: đọc hụt RAM thì KHÔNG được khai là 'auto'", _hut["source"] == "unknown", _hut)
+check("đọc được RAM thì mới khai auto", ollama_local.detect_specs()["source"] == "auto")
+check("có đường đọc RAM cho Windows, không trông vào psutil",
+      "GlobalMemoryStatusEx" in (ROOT / "server" / "ollama_local.py").read_text(encoding="utf-8"))
+# source='unknown' phải kéo theo gợi ý nói thẳng là đang đoán, chứ không im lặng.
+_goi_y_khi_hut = ollama_catalog.goi_y({"source": "unknown", "ram_gb": 0})
+check("và gợi ý lúc đó nói rõ là đang đoán ở mức an toàn",
+      all("chưa đọc được" in (m.get("note") or "").lower() for m in _goi_y_khi_hut),
+      [m.get("note") for m in _goi_y_khi_hut[:2]])
+
+# ---- 5c. Địa chỉ máy chủ nhìn từ trong Docker: DÒ chứ không đoán --------------
+# 172.17.0.1 là cổng của mạng bridge MẶC ĐỊNH, chỉ đúng với `docker run` trần. Javis cài bằng
+# docker-compose thì nằm trên mạng RIÊNG của project (dải cấp phát từ 172.18.0.0/16 trở đi vì
+# 172.17 đã bị docker0 chiếm). Nên con số viết cứng đó SAI với gần như mọi bản cài theo đúng
+# hướng dẫn - người dùng điền y như bảo mà vẫn không nối được.
+import deploy_info  # noqa: E402
+import re as _re  # noqa: E402
+# Soi phần MÃ THẬT: chú thích vẫn được nhắc con số cũ để giải thích vì sao nó sai, nhưng
+# nhắc trong chú thích thì không ai điền nhầm được.
+_ma_js = _re.sub(r"^\s*//.*$", "", (ROOT / "dashboard" / "console.js").read_text(encoding="utf-8"),
+                 flags=_re.M)
+check("CANARY: không còn viết cứng 172.17.0.1 ở giao diện", "172.17.0.1" not in _ma_js)
+check("không chạy Docker thì không có cổng cầu nối", deploy_info.docker_gateway() == "")
+with _mock.patch.object(deploy_info, "deploy_mode", lambda: "docker"):
+    _cong = deploy_info.docker_gateway()
+check("trong Docker thì dò được cổng thật từ bảng định tuyến",
+      _cong.count(".") == 3 and _cong != "0.0.0.0", _cong)
+# Địa chỉ phải ĐIỀN SẴN vào ô, không nằm trong placeholder xám: chủ repo báo 02/09 là thấy
+# chữ "điền địa chỉ này" mà không biết địa chỉ nào - vì chữ xám trông như gợi ý, lại bị ô hẹp
+# cắt cụt giữa chừng.
+_js = (ROOT / "dashboard" / "console.js").read_text(encoding="utf-8")
+check("địa chỉ dò được điền THẲNG vào ô nhập",
+      'st.goi_y_endpoint ? \' value="\' + esc(st.goi_y_endpoint)' in _js)
+# Dò hụt mà để ô trống, im lặng, là đẩy người dùng vào ngõ cụt.
+check("dò không ra thì nói thẳng và đưa lệnh tự tìm", "ol.dk_khong_do_duoc" in _js)
+_vi = json.loads((ROOT / "dashboard" / "i18n" / "vi.json").read_text(encoding="utf-8"))
+check("câu hướng dẫn nói là đã điền sẵn, không bắt người dùng tự tìm địa chỉ",
+      "điền sẵn" in _vi.get("ol.dk_b4", ""), _vi.get("ol.dk_b4"))
+check("ví dụ tường lửa không viết cứng dải mạng sai nữa",
+      "172.17.0.0/16" not in _vi.get("ol.dk_canh_bao", ""))
+
+# ---- 6. Tìm kiếm + danh mục nền ----------------------------------------------
+r = c.get("/ollama-local/search", params={"q": "coder"}).json()
+check("tìm theo tên chạy", any("coder" in m["name"] for m in r["models"]))
+check("lọc theo năng lực chạy",
+      all("vision" in m["tags"] for m in c.get("/ollama-local/search",
+                                               params={"capability": "vision"}).json()["models"]))
+# Đây là điểm khác spec: chưa cào được ollama.com nên có danh mục nền đi kèm app. Nhờ vậy
+# lần chạy ĐẦU TIÊN, khi chưa có cache nào, tab vẫn có dữ liệu - lỗ mà "giữ cache cũ" không bịt.
+check("lần đầu chạy, chưa cache gì, danh mục vẫn không rỗng",
+      len(ollama_catalog.thu_vien()["items"]) > 10)
+check("và nói rõ dữ liệu đang lấy từ đâu", r.get("catalog_source") in ("builtin", "live"))
+check("có sẵn chỗ cắm nguồn danh mục sống", callable(ollama_catalog.dat_nguon_song))
+
+# ---- 7. Đấu vào lớp provider chung --------------------------------------------
+check("ollama-local là một provider như mọi provider khác",
+      any(p["id"] == "ollama-local" for p in main.PROVIDER_DEFS))
+check("nó KHÔNG dùng ô API key (thứ xác thực nó là địa chỉ)",
+      [p for p in main.PROVIDER_DEFS if p["id"] == "ollama-local"][0]["key_field"] is None)
+import config as cfgmod  # noqa: E402
+check("khoá của nó vẫn được mã hoá at rest như mọi khoá khác",
+      "model.ollama_local_key" in cfgmod._SECRET_PATHS)
+import engine  # noqa: E402
+check("chat dùng lại nguyên đường OpenAI-compat, chỉ đổi URL",
+      callable(engine.ollama_local_stream) and callable(engine.ollama_local_chat_with_mcp))
+check("URL chat dựng từ cấu hình, không hằng số hoá",
+      engine.ollama_local_url().startswith(EP.rsplit(":", 1)[0]) or engine.ollama_local_url() != "")
+
+# ---- 8. Ô chọn model phải THẤY model đã cài (vụ thật 02/09) --------------------
+# Đã nối Ollama, tab Local liệt kê đủ model, vậy mà ô chọn model chính vẫn báo "Provider chưa
+# kết nối hoặc không có model". _fetch_provider_models không có nhánh ollama-local nên luôn
+# trả None, và provider_models_index rơi về catalog - thứ chưa bao giờ được ghi cho nhà này.
+c.post("/ollama-local/endpoint", data={"endpoint": EP})
+_pm = _aio.run(main.provider_models_index("ollama-local", refresh=True))
+check("CANARY: ô chọn model lấy được danh sách LIVE từ Ollama", _pm.get("live") is True, _pm)
+check("và đó đúng là model đang cài trên máy đó", "qwen3:8b" in _pm.get("models", []), _pm.get("models"))
+# Model embedding không chat được; bày nó ra ô chọn là mời người dùng chọn một model chết.
+check("model embedding không chen vào ô chọn model chat",
+      "nomic-embed-text" not in _pm.get("models", []), _pm.get("models"))
+_pv = main._providers_view(cfgmod.read_settings())
+_ol = [p for p in _pv if p["id"] == "ollama-local"][0]
+check("đã đặt địa chỉ thì provider báo đã kết nối", _ol["configured"] is True)
+check("tên hiển thị là Local, không còn 'máy nhà'", _ol["label"] == "Ollama (Local)", _ol["label"])
+
+# Gỡ địa chỉ: provider phải về "chưa kết nối", và ô chọn model không được giữ danh sách của
+# máy cũ - key_field=None làm configured luôn True là cái bẫy đã dính với Claude/Codex.
+c.post("/ollama-local/endpoint", data={"endpoint": ""})
+_pv = main._providers_view(cfgmod.read_settings())
+check("chưa đặt địa chỉ thì KHÔNG báo bừa là đã kết nối",
+      [p for p in _pv if p["id"] == "ollama-local"][0]["configured"] is False)
+_pm = _aio.run(main.provider_models_index("ollama-local", refresh=True))
+check("chưa đặt địa chỉ thì không còn model nào và nói rõ vì sao",
+      not _pm.get("models") and "địa chỉ" in (_pm.get("error") or "").lower(), _pm)
+c.post("/ollama-local/endpoint", data={"endpoint": EP})
+
+# ---- 9. Máy không GPU: ưu tiên bản instruct, cảnh báo bản suy nghĩ dài ----------
+# Vụ thật 02/09 trên VPS 2 vCPU: qwen3:4b (bản thinking) nhận "Say hi in 3 words" rồi sinh
+# gần 2.800 token suy nghĩ trước khi trả lời, quá giờ chờ. qwen3:4b-instruct trả lời gọn
+# trong 23 giây. Gợi ý cho máy CPU mà đứng đầu là bản thinking là mời người ta vào đúng bẫy đó.
+_cpu = ollama_catalog.goi_y({"source": "manual", "ram_gb": 8, "has_gpu": False, "vram_gb": 0})
+_ten_cpu = [m["name"] for m in _cpu]
+check("máy không GPU được mời bản instruct của Qwen3", "qwen3:4b-instruct" in _ten_cpu, _ten_cpu)
+check("và gợi ý ĐẦU TIÊN cho máy CPU không phải model suy nghĩ dài",
+      _cpu and "thinking" not in (_cpu[0].get("tags") or []), _ten_cpu)
+check("model suy nghĩ dài trên máy CPU được nói thẳng là chậm",
+      all("chậm" in (m.get("note") or "").lower() for m in _cpu if "thinking" in (m.get("tags") or [])),
+      [(m["name"], m.get("note")) for m in _cpu])
+
+# ---- 10. Chữ trên giao diện: "Local", không còn "máy nhà" ------------------------
+_vi = json.loads((ROOT / "dashboard" / "i18n" / "vi.json").read_text(encoding="utf-8"))
+_en = json.loads((ROOT / "dashboard" / "i18n" / "en.json").read_text(encoding="utf-8"))
+check("tab gọi là Local Model", _vi.get("models.tab_local") == "Local Model", _vi.get("models.tab_local"))
+check("không còn 'máy nhà' trong chuỗi giao diện tab Local",
+      not any("máy nhà" in v for k, v in _vi.items() if k.startswith("ol.")))
+check("có nút đặt làm model chính ngay trong tab Local", "ol.use_main" in _vi and "ol.use_main" in _en)
+
+srv.shutdown()
+print("")
+if fails:
+    print(f"ĐỎ {len(fails)} mục")
+    sys.exit(1)
+print("Tất cả xanh.")

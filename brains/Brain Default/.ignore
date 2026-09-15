@@ -1,0 +1,4 @@
+# Loại bỏ các file snapshot và nhật ký thô để tránh ripgrep (rg) phình hàng chục ngàn token context
+Javis/kanban.json
+memory/agents/*/runs/
+attachments/dataset/_xuat/album_ready/

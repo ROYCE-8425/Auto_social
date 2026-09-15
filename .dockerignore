@@ -1,0 +1,80 @@
+# Keep build context small + never bake secrets/state into the image.
+# LƯU Ý: KHÔNG loại .claude/skills và system/ - đó là TẦNG HỆ THỐNG (skill/loop mặc định)
+# phải nằm trong image để update theo phiên bản.
+.git
+.venv
+.claude/worktrees/
+.claude/settings.local.json
+**/.claude/skills/.disabled/
+**/__pycache__
+*.pyc
+*.pyo
+.env
+.env.*
+# env.example (không chấm đầu) không khớp pattern trên nên vẫn vào image - khỏi cần negation
+# Dev artifact nặng (đều gitignore, nhưng Dockerfile dùng `COPY . .` nên .dockerignore
+# là hàng rào DUY NHẤT - thiếu ở đây là chúng vào thẳng build context).
+# BẪY: .dockerignore khớp pattern từ GỐC context, KHÔNG tự khớp ở mọi độ sâu như .gitignore.
+# `.staging/` trần chỉ loại <gốc>/.staging, KHÔNG loại server/.staging (114MB) - suốt từ đầu.
+# Muốn khớp mọi độ sâu phải viết `**/`, đúng như dòng `**/__pycache__` ở trên.
+.learn/
+.gitnexus/
+.superpowers/
+.pytest_cache/
+videos/
+**/.staging
+# Test không chạy trong image. Từ 0.9.242 chúng nằm gọn ở tests/ nên loại được bằng một dòng;
+# trước đó chúng rải trong server/ và dashboard/ nên không có cách nào loại mà không đụng nguồn.
+tests/
+
+# Dữ liệu brain
+Brain Default/
+brain/
+brains/
+**/brains-backup
+**/brain-trash
+vault/
+
+# TRẠNG THÁI + BÍ MẬT trong server/. Danh sách này phải bám theo mục "Runtime / temp" của
+# .gitignore. Trước 0.9.241 nó là bản sao cũ và yếu hơn nhiều: thiếu .secret_key, .hub_token,
+# .oauth_mcp.json, plugins/, connector-home/, các file .db... nên bất kỳ ai `docker build`
+# cục bộ đều nướng khoá bí mật của chính mình vào image. Build trên GHCR chạy từ checkout
+# sạch nên không dính, đó là lý do lỗi này sống lâu mà không ai thấy.
+server/settings.json
+server/.sessions.json
+server/.secret_key
+server/.hub_token
+server/.oauth_mcp.json
+server/.mcp_config.json
+server/.mcp_hub_*.json
+server/mcp_servers.json
+server/mcp_servers.v1.bak.json
+server/mcp_audit.jsonl*
+server/loop_config.json
+server/learn_config.json
+server/metrics_cache.json
+server/plugins.json
+server/plugins/
+server/plugin-data/
+server/connector-home/
+server/connector-files/
+server/usage.json
+server/usage-events.jsonl*
+server/usage_index.db*
+server/session_brain.db*
+server/kanban.sqlite3*
+server/conversations.db
+server/conversations.db-wal
+server/conversations.db-shm
+server/tg_brain.json
+server/update_state.json
+server/logs/
+server/brain-trash/
+server/tmp/
+server/_selfupdate.bat
+server/javis.log
+*.log
+*.mp3
+.DS_Store
+Thumbs.db
+desktop.ini

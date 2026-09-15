@@ -1,0 +1,78 @@
+name: CI
+
+on:
+  push:
+    # `claude/**` là các nhánh phiên Claude Code làm việc trên repo này. Chúng luôn đẩy commit
+    # lên TRƯỚC rồi mới mở PR, mà lúc đó chưa có PR nên `pull_request` không bắt được, và mở
+    # PR sau đó có lúc GitHub không sinh run cho commit đã nằm sẵn ở nhánh. Kết quả: nhiều lần
+    # phải vào tab Actions bấm chạy tay, dễ sót. Nghe `push` trên đúng tiền tố này thì commit
+    # vừa lên là CI chạy ngay.
+    # Nhánh có PR mở sẽ chạy hai lần (một do push, một do pull_request). Chấp nhận: repo public
+    # nên Actions không tính phút, và hai run xanh đọc rõ hơn là một run bị huỷ giữa chừng.
+    branches: [ main, 'claude/**' ]
+  # BẮT BUỘC giữ: PR từ fork KHÔNG sinh sự kiện `push` ở repo này, chỉ `pull_request` mới bắt
+  # được. Repo đang có hơn 100 fork nên bỏ dòng này là đóng CI với mọi đóng góp bên ngoài.
+  pull_request:
+  # Chạy tay từ tab Actions. Vẫn giữ làm lối thoát cho nhánh không mang tiền tố `claude/`, và
+  # cho việc chạy lại một commit cũ mà không phải đẩy thêm commit rác.
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Cài dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          # pytest KHÔNG phải dependency của app nên không nằm trong requirements.txt.
+          # Nhóm test Adaptive Runtime viết theo kiểu pytest (fixture tmp_path/monkeypatch);
+          # thiếu pytest thì block __main__ của chúng tự bỏ qua và cả trăm test "xanh" mà
+          # chưa chạy assertion nào.
+          pip install pytest
+
+      - name: Byte-compile toàn bộ server + plugin
+        run: python -m compileall -q server system/plugins
+
+      # Byte-compile KHÔNG chạy code nên không thấy vòng import bị gãy. Server có 3 vòng
+      # đang được phá bằng import trong hàm (config<->secrets_store, oauth_mcp<->mcp_store,
+      # claude_cli<->claude_sdk_engine) cộng 8 module nữa dựa vào mẹo đó. Nâng nhầm một
+      # import lên đầu file là app chết lúc khởi động chứ không phải lúc build, mà CI cũ
+      # vẫn xanh rồi tự deploy lên VPS. Bước này đóng đúng khe hở đó.
+      - name: Import thật main (bắt vòng import mà byte-compile bỏ lọt)
+        env:
+          PYTHONIOENCODING: utf-8
+        run: |
+          cd server
+          python -c "import main; print(f'ok, nap duoc main voi {len(main.app.routes)} muc route')"
+
+      # Trước 0.9.242 chỉ 4 trong 11 test JS được liệt tay ở đây, 7 cái còn lại chưa từng
+      # chạy lần nào. Nay quét cả thư mục nên thêm test mới là tự chạy.
+      - name: Chạy test JS dashboard
+        run: |
+          status=0
+          for f in tests/js/test_*.js tests/js/test_*.mjs; do
+            echo "==== $(basename "$f") ===="
+            node "$f" || status=1
+          done
+          exit $status
+
+      # KHÔNG còn `cd server`: từ 0.9.242 test tự nạp đường dẫn qua tests/python/_paths.py
+      # nên chạy được từ bất kỳ thư mục làm việc nào. Trước đây chạy sai chỗ là hàng loạt
+      # test đỏ vì `import main` không thấy module, hoặc lặng lẽ đọc nhầm file.
+      - name: Chạy test Python (auth/secret/MCP-perm/traversal/CSRF + plugin)
+        env:
+          PYTHONIOENCODING: utf-8
+        run: |
+          status=0
+          for f in tests/python/test_*.py; do
+            echo "==== $(basename "$f") ===="
+            python "$f" || status=1
+          done
+          exit $status

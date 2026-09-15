@@ -1,0 +1,165 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Environment (cấu hình local; env.example là bản mẫu)
+.env
+
+# Runtime / temp
+.staging/
+server/*.pid
+*.mp3
+test_output*.mp3
+server/*.log
+server/loop_config.json
+server/learn_config.json
+server/usage.json
+server/usage-events.jsonl*
+server/usage_index.db*
+server/session_brain.db*
+server/metrics_cache.json
+server/settings.json
+server/plugins.json
+server/plugins/
+server/plugin-data/
+server/.sessions.json
+server/mcp_servers.json
+server/mcp_servers.v1.bak.json
+server/.mcp_config.json
+server/.mcp_hub_*.json
+server/.secret_key
+server/.hub_token
+# Mã thiết lập lần đầu (in ra log server, dùng để tạo tài khoản admin). Nó chỉ sinh ra
+# trên máy chạy thật nên dễ lọt vào `git add -A` mà không ai để ý.
+server/.setup_token
+# Token API của CLI: file chứa bản BĂM + tên token, vẫn là bí mật vận hành, không vào repo.
+server/.api_tokens.json
+server/auth_audit.jsonl*
+server/.oauth_mcp.json
+server/mcp_audit.jsonl*
+server/connector-home/
+server/connector-files/
+server/conversations.db
+server/conversations.db-wal
+server/conversations.db-shm
+server/runtime.db
+server/runtime.db-wal
+server/runtime.db-shm
+server/capability_registry.db
+server/capability_registry.db-wal
+server/capability_registry.db-shm
+server/capability_registry.db*.corrupt-*
+# Bổ sung 0.9.241: 6 artifact dưới đây vừa KHÔNG track vừa KHÔNG ignore, nên một cú
+# `git add -A` là commit thẳng dữ liệu chạy + trạng thái deploy vào repo.
+server/kanban.sqlite3*
+server/tg_brain.json
+server/update_state.json
+server/logs/
+server/brain-trash/
+server/tmp/
+.dataset_cache.json
+*.dataset_cache.json
+server/_selfupdate.bat
+# Bổ sung 0.12.4: kho bot Telegram của trang Chatbot (0.19.0) và nhật ký hội thoại của
+# chúng. Cả hai là dữ liệu chạy trong STATE_DIR (chatbot_store.py, chatbot_log.py) và
+# chatbots.json còn chứa token bot.
+server/chatbots.json
+# Hòm thư + Web Push: state chạy thật (STATE_DIR mặc định là chính server/ khi chưa
+# đặt JAVIS_STATE_DIR). vapid.json chứa KHOÁ RIÊNG - lọt vào repo là ai cũng đẩy được
+# thông báo giả tới trình duyệt đã đăng ký.
+server/inbox.json
+server/vapid.json
+server/push_subs.json
+server/chatbot-logs/
+# Video làm bằng HyperFrames (rất nặng, không thuộc mã nguồn)
+videos/
+
+# Vault mặc định in-repo (dữ liệu cá nhân, không version)
+vault/
+
+# Bộ nhớ cá nhân của project brain (thay đổi mỗi phiên, không cần version)
+brain/Memory/
+
+# Dev artifact - repo ngoài clone về để tham khảo (rất nặng, có .git riêng)
+.learn/
+
+# Cache/artifact của công cụ dev. Các thư mục này phải được bỏ qua trong mọi clone.
+# .git/info/exclude trên máy một người - mà file đó KHÔNG được commit. Nghĩa là bất kỳ ai
+# clone mới hay fork dự án đều thấy chúng hiện ra untracked, và 106MB index của GitNexus
+# commit được. test_ignore_files.py bắt được đúng chỗ này khi chạy trên CI.
+.gitnexus/
+.superpowers/
+.claude/worktrees/
+.codex-tmp/
+
+# Cấu hình chạy dev preview cục bộ (đường dẫn theo máy, không thuộc sản phẩm)
+.claude/launch.json
+
+# Local dev & runtime tools
+/.agents/
+/.grok/
+/scratch/
+server/memory_index.db*
+server/usage-marks.jsonl*
+server/.mcp_agy_*.json
+server/*-prompt.json
+server/md_*.json
+
+# Thư mục brains: Quản lý agent, skills, brand-kits, templates, workflows
+# Chỉ bỏ qua bộ nhớ phiên chạy, cache, database sqlite và output tạm
+brains/*/memory/
+brains/*/05 - Data Cache/
+brains/*/*.md
+!brains/*/CLAUDE.md
+!brains/*/AGENTS.md
+brains/*/.agents/
+brains/*/.grok/
+brains/*/.antigravitycli/
+brains/*/.claude/
+brains/*/.javis/
+brains/*/.javis-learn.lock
+brains/*/kanban.sqlite3*
+brains/*/attachments/dataset/_xuat/*
+!brains/*/attachments/dataset/_xuat/.gitkeep
+brains/*/scratch/*
+!brains/*/scratch/.gitkeep
+!brains/*/scratch/hub_call.py
+!brains/*/scratch/kit_chan_trang.py
+!brains/*/scratch/kit_tim.py
+!brains/*/scratch/make_square_cover.py
+!brains/*/scratch/make_cover_autocad.py
+
+
+# Ban backup brain do server tu tao
+brains-backup/
+
+# Dữ liệu CÁ NHÂN trong brain mặc định CŨ (không version): bộ nhớ, cache số liệu KD,
+# automations (chứa chat_id). Cấu trúc thư mục + agent/workflow mẫu vẫn được version.
+Brain Default/Memory/
+Brain Default/05 - Data Cache/
+Brain Default/Attachments/
+Brain Default/Javis/automations.json
+
+# Brain Default mẫu sau khi gom vào brain/ - chỉ commit cấu trúc + agent/workflow mẫu,
+# KHÔNG commit dữ liệu cá nhân (bộ nhớ, cache số liệu KD, attachments, automations chứa chat_id).
+brain/Brain Default/Memory/
+brain/Brain Default/05 - Data Cache/
+brain/Brain Default/Attachments/
+brain/Brain Default/Javis/automations.json
+
+# Skill bị tắt (chuyển vào .disabled khi tắt) - trạng thái cục bộ, không version
+**/.claude/skills/.disabled/
+
+# File rác / script cá nhân ở gốc (không thuộc sản phẩm public)
+# Đã gỡ hai dòng /agents và /workflows ở 0.9.241: chúng sinh ra để che hai file rác 28 byte
+# (mảnh log "- Move: Jarvis\agents -" do một lệnh redirect hỏng), nhưng hệ quả là chặn vĩnh
+# viễn việc tạo thư mục agents/ hay workflows/ THẬT ở gốc. Hai file rác đã xoá hẳn.
+parse_ads*.ps1
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+server/stop-last.log

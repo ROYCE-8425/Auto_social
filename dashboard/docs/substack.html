@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kết nối Substack - Hướng dẫn Javis</title>
+<link rel="icon" href="/static/logos/substack.svg">
+<style>
+  :root{
+    --bg:#0e0e16; --bg2:#181822; --bg3:#22222e; --border:#36364c;
+    --accent:#ff7a3c; --accent2:#8b5cf6; --substack:#ff6719;
+    --text:#f3f3fb; --text2:#c0c0da; --text3:#9a9ab6;
+    --ok:#3fb96b; --warn:#e0664a;
+    --font:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--text); font-family:var(--font);
+    line-height:1.65; font-size:15.5px;
+    padding:0 20px 80px;
+  }
+  .wrap{max-width:820px; margin:0 auto}
+  header{
+    display:flex; align-items:center; gap:16px;
+    padding:38px 0 22px; border-bottom:1px solid var(--border); margin-bottom:30px;
+  }
+  header img{width:52px; height:52px; border-radius:12px; flex:none}
+  header h1{font-size:25px; margin:0 0 4px; letter-spacing:.2px}
+  header p{margin:0; color:var(--text3); font-size:14px}
+  h2{
+    font-size:19px; margin:38px 0 14px; padding-left:12px;
+    border-left:3px solid var(--accent);
+  }
+  h3{font-size:16px; margin:22px 0 8px; color:var(--text)}
+  p{margin:10px 0; color:var(--text2)}
+  a{color:var(--accent); text-decoration:none}
+  a:hover{text-decoration:underline}
+  code{
+    background:var(--bg3); border:1px solid var(--border); border-radius:5px;
+    padding:1px 6px; font-family:"Cascadia Code",Consolas,monospace; font-size:13.5px;
+    color:#ffd7b0;
+  }
+  .lead{font-size:16.5px; color:var(--text2)}
+  .card{
+    background:var(--bg2); border:1px solid var(--border); border-radius:12px;
+    padding:18px 20px; margin:16px 0;
+  }
+  ol.steps{list-style:none; counter-reset:s; margin:14px 0; padding:0}
+  ol.steps>li{
+    counter-increment:s; position:relative; padding:2px 0 16px 44px; margin:0;
+    color:var(--text2);
+  }
+  ol.steps>li::before{
+    content:counter(s); position:absolute; left:0; top:0;
+    width:28px; height:28px; border-radius:8px; background:var(--bg3);
+    border:1px solid var(--border); color:var(--accent); font-weight:700;
+    display:flex; align-items:center; justify-content:center; font-size:14px;
+  }
+  ol.steps>li:not(:last-child)::after{
+    content:""; position:absolute; left:13px; top:30px; bottom:2px; width:1px;
+    background:var(--border);
+  }
+  .note{
+    border-radius:10px; padding:14px 16px; margin:16px 0; font-size:14.5px;
+    border:1px solid; display:flex; gap:11px; align-items:flex-start;
+  }
+  .note .ico{font-size:17px; line-height:1.4; flex:none}
+  .note.warn{background:rgba(224,102,74,.09); border-color:rgba(224,102,74,.5); color:#ffb59e}
+  .note.ok{background:rgba(63,185,107,.08); border-color:rgba(63,185,107,.42); color:#a7e6bf}
+  .note.info{background:rgba(139,92,246,.08); border-color:rgba(139,92,246,.4); color:#cfc0f6}
+  .note b{color:#fff}
+  .tools{display:grid; gap:12px; margin:16px 0}
+  .tool{
+    background:var(--bg2); border:1px solid var(--border); border-radius:11px;
+    padding:14px 16px;
+  }
+  .tool .top{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+  .tool .nm{font-family:"Cascadia Code",Consolas,monospace; font-size:14px; color:var(--text)}
+  .tool .desc{margin:7px 0 0; color:var(--text3); font-size:14px}
+  .pill{
+    font-size:11.5px; font-weight:700; padding:2px 9px; border-radius:20px;
+    text-transform:uppercase; letter-spacing:.4px;
+  }
+  .pill.read{background:rgba(63,185,107,.16); color:#7fe0a1}
+  .pill.write{background:rgba(255,122,60,.16); color:#ffb184}
+  .pill.danger{background:rgba(224,102,74,.18); color:#ff9d84}
+  table{width:100%; border-collapse:collapse; margin:16px 0; font-size:14px}
+  th,td{text-align:left; padding:10px 12px; border-bottom:1px solid var(--border); vertical-align:top}
+  th{color:var(--text3); font-weight:600; font-size:13px}
+  td b{color:var(--text)}
+  .mini{color:var(--text3); font-size:13px}
+  footer{margin-top:46px; padding-top:20px; border-top:1px solid var(--border); color:var(--text3); font-size:13px}
+  .kbd{background:var(--bg3); border:1px solid var(--border); border-bottom-width:2px; border-radius:5px; padding:1px 6px; font-size:12.5px}
+  .helper{background:linear-gradient(180deg,rgba(255,103,25,.07),rgba(139,92,246,.05)); border:1px solid rgba(255,122,60,.38); border-radius:14px; padding:18px 20px; margin:18px 0 8px}
+  .helper-h{font-size:16.5px; font-weight:700; color:#ffb184; margin:0 0 4px}
+  .way{margin:18px 0 0; padding:14px 16px; background:rgba(0,0,0,.18); border:1px solid var(--border); border-radius:11px}
+  .way h4{margin:0 0 6px; font-size:14.5px; color:var(--text)}
+  .way h4 .tag{font-size:11.5px; font-weight:700; color:#7fe0a1; background:rgba(63,185,107,.14); border-radius:20px; padding:1px 9px; margin-left:6px; vertical-align:middle}
+  .uidrow2{display:flex; gap:8px; align-items:stretch}
+  .uidin{flex:1; min-width:0; background:var(--bg); border:1px solid var(--border); border-radius:9px; color:var(--text); padding:11px 13px; font-size:14.5px; font-family:var(--font)}
+  .uidin:focus{outline:none; border-color:var(--accent)}
+  #uidgo{white-space:nowrap; flex:none}
+  #uidgo:disabled{opacity:.6; cursor:default}
+  .pubsug{margin-top:12px}
+  .pubsug-h{font-size:13px; color:var(--text3); margin-bottom:6px}
+  .pubchip{display:block; width:100%; text-align:left; background:var(--bg); border:1px solid var(--border); color:var(--text2); border-radius:8px; padding:8px 11px; margin-bottom:6px; font-size:13.5px; cursor:pointer; font-family:var(--font)}
+  .pubchip:hover{border-color:var(--accent); color:var(--text)}
+  .uidout-row{margin-top:11px; font-size:14.5px; color:var(--text2); display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+  #uidout{font-family:"Cascadia Code",Consolas,monospace; color:#7fe0a1; font-weight:700; font-size:16px}
+  #uidout.empty{color:var(--text3); font-weight:400; font-size:13.5px}
+  .snip{position:relative; margin-top:10px}
+  .snip pre{background:var(--bg); border:1px solid var(--border); border-radius:9px; padding:13px 14px; padding-top:15px; overflow-x:auto; margin:0}
+  .snip code{background:none; border:none; padding:0; color:#cfe3ff; font-size:12.5px; white-space:pre; line-height:1.55}
+  .copybtn{background:var(--accent); color:#20120a; border:none; border-radius:7px; padding:6px 13px; font-size:13px; font-weight:700; cursor:pointer; font-family:var(--font)}
+  .copybtn:hover{filter:brightness(1.09)}
+  .snip-copy{position:absolute; top:8px; right:8px; z-index:2}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <img src="/static/logos/substack.svg" alt="Substack">
+    <div>
+      <h1>Kết nối Substack với Javis</h1>
+      <p>Soạn, lưu nháp và đăng bài newsletter ngay trong lúc trò chuyện với Javis</p>
+    </div>
+  </header>
+
+  <p class="lead">Sau khi đấu Substack, bạn có thể nhờ Javis viết bài rồi lưu thành nháp, hoặc đăng thẳng lên trang của bạn. Javis nối trực tiếp vào tài khoản Substack của bạn bằng ba thông tin đăng nhập bên dưới, không cần cài thêm phần mềm gì.</p>
+
+  <h2>1. Lấy ba thông tin đăng nhập</h2>
+  <p>Mở trình duyệt và đăng nhập vào Substack trước, rồi lấy đủ ba thứ sau dán vào form Kết nối của Javis. Phần <b>Publication URL</b> bạn đã biết, còn <b>User ID</b> có trợ lý lấy nhanh ngay bên dưới.</p>
+
+  <div class="helper">
+    <div class="helper-h">⚡ Trợ lý lấy nhanh User ID</div>
+    <p class="mini" style="margin-top:2px">Chọn một trong hai cách. Riêng session token, do Substack khoá cookie ở chế độ bảo mật (HttpOnly) nên trình duyệt không cho tự đọc, bạn copy tay theo bước ở dưới.</p>
+
+    <div class="way">
+      <h4>Cách A: dán link trang Hồ sơ <span class="tag">không cần DevTools</span></h4>
+      <p style="margin:6px 0 10px">Vào substack.com, bấm avatar &rsaquo; <b>Profile</b>, copy địa chỉ trên thanh URL (dạng <code>substack.com/@ten-cua-ban</code>) rồi dán vào đây và bấm <b>Lấy User ID</b>:</p>
+      <div class="uidrow2">
+        <input class="uidin" id="uidin" type="text" placeholder="vd https://substack.com/@blogminhquy" autocomplete="off" onkeydown="if(event.key==='Enter')resolveUid()">
+        <button class="copybtn" id="uidgo" onclick="resolveUid()">Lấy User ID</button>
+      </div>
+      <div class="uidout-row">User ID: <span id="uidout" class="empty">chưa có, dán link rồi bấm Lấy User ID</span> <button id="uidcopy" class="copybtn" style="display:none" onclick="copyUid(this)">Copy</button></div>
+      <div id="pubsug" class="pubsug"></div>
+    </div>
+
+    <div class="way">
+      <h4>Cách B: dán 1 dòng lệnh, lấy cả User ID và Publication URL</h4>
+      <p style="margin:6px 0 10px">Mở <a href="https://substack.com" target="_blank" rel="noopener">substack.com</a> (đã đăng nhập), nhấn <span class="kbd">F12</span> &rsaquo; tab <b>Console</b>, dán đoạn dưới rồi Enter. Nó in ra User ID + Publication URL và tự copy User ID vào clipboard.</p>
+      <div class="snip">
+        <button class="copybtn snip-copy" onclick="copySnip(this)">Copy mã</button>
+        <pre><code id="snip"></code></pre>
+      </div>
+    </div>
+  </div>
+
+  <h3>Địa chỉ trang (Publication URL)</h3>
+  <div class="card">
+    <p style="margin-top:0">Là địa chỉ trang Substack của bạn, dạng <code>https://tencuaban.substack.com</code>. Nếu bạn dùng tên miền riêng thì điền tên miền đó.</p>
+  </div>
+
+  <h3>Session token (cookie <code>substack.sid</code>)</h3>
+  <ol class="steps">
+    <li>Mở <a href="https://substack.com" target="_blank" rel="noopener">substack.com</a> ở trạng thái đã đăng nhập.</li>
+    <li>Nhấn <span class="kbd">F12</span> để mở DevTools, chọn tab <b>Application</b> (Firefox gọi là <b>Storage</b>).</li>
+    <li>Bên trái vào <b>Cookies</b> &rsaquo; chọn <code>https://substack.com</code>.</li>
+    <li>Tìm dòng cookie tên <code>substack.sid</code>, copy <b>toàn bộ giá trị</b> ở cột Value.</li>
+    <li>Dán vào ô "Session token" trong form Kết nối.</li>
+  </ol>
+  <div class="note warn"><span class="ico">🔒</span><div>Token này giống chìa khoá tài khoản Substack của bạn, hãy giữ kín như mật khẩu. Nó sẽ hết hạn khi bạn <b>đăng xuất</b> Substack, lúc đó chỉ cần lấy lại token mới và cập nhật vào kết nối.</div></div>
+
+  <h3>User ID (dãy số)</h3>
+  <p class="mini" style="margin-top:0">Substack đã đổi link Hồ sơ sang dạng <code>substack.com/@ten</code> (không còn dãy số trong URL), nên dùng <b>Cách A</b> hoặc <b>Cách B</b> ở khung trợ lý phía trên để lấy User ID. Cả hai đều nhả ra đúng dãy số cần điền.</p>
+
+  <div class="note ok"><span class="ico">✓</span><div>Điền xong ba ô, bấm <b>Kết nối</b> rồi <b>Test</b>. Javis sẽ thử lấy danh sách nháp để chắc chắn token còn sống. Nếu báo lỗi, thường là token sai hoặc đã hết hạn, hãy lấy lại <code>substack.sid</code>.</div></div>
+
+  <h2>2. Javis làm được gì</h2>
+  <div class="tools">
+    <div class="tool">
+      <div class="top"><span class="nm">substack_list_drafts</span><span class="pill read">Đọc</span></div>
+      <p class="desc">Liệt kê các bản nháp gần đây (tiêu đề, đã đăng hay chưa). Dùng để xem lại hoặc chọn một nháp có sẵn để đăng.</p>
+    </div>
+    <div class="tool">
+      <div class="top"><span class="nm">substack_create_draft</span><span class="pill write">Ghi</span></div>
+      <p class="desc">Tạo một bản nháp mới. Chưa đăng, chưa gửi cho ai, bạn tự vào Substack xem lại và bấm đăng khi muốn.</p>
+    </div>
+    <div class="tool">
+      <div class="top"><span class="nm">substack_publish</span><span class="pill danger">Nguy hiểm</span></div>
+      <p class="desc">Đăng bài thật. Có thể tạo mới rồi đăng, hoặc đăng một nháp có sẵn. Mặc định chỉ đăng lên web; chỉ khi bạn yêu cầu rõ mới gửi email cho người đăng ký.</p>
+    </div>
+  </div>
+
+  <h2>3. Quyền đăng bài và an toàn</h2>
+  <p>Đăng bài là việc không rút lại được, nên Javis đặt nhiều lớp chặn. Quan trọng nhất: <b>mặc định Javis chỉ tạo được nháp, chưa đăng được</b>.</p>
+
+  <table>
+    <tr><th>Mức quyền của kết nối</th><th>Javis được làm gì</th></tr>
+    <tr><td><b>Chỉ đọc</b></td><td>Chỉ xem danh sách nháp.</td></tr>
+    <tr><td><b>Ghi nháp</b> <span class="mini">(mặc định)</span></td><td>Xem nháp và <b>tạo nháp</b>. Không đăng được.</td></tr>
+    <tr><td><b>Toàn quyền</b></td><td>Thêm quyền <b>đăng bài thật</b>.</td></tr>
+  </table>
+
+  <div class="note info"><span class="ico">⚙️</span><div><b>Muốn Javis đăng bài:</b> vào trang <b>Kết nối</b>, mở kết nối Substack và nâng mức lên <b>Toàn quyền</b>. Đây là công tắc duy nhất bạn cần bật.</div></div>
+
+  <p>Kể cả khi đã ở Toàn quyền, vẫn còn hai lớp an toàn:</p>
+  <div class="note warn"><span class="ico">🤖</span><div><b>Loop chạy nền không bao giờ tự đăng.</b> Javis chỉ đăng khi chính bạn yêu cầu trực tiếp trong lúc trò chuyện. Các tác vụ tự động chạy nền bị chặn đăng bài hoàn toàn.</div></div>
+  <div class="note warn"><span class="ico">📧</span><div><b>Mặc định không gửi email.</b> Bài được đăng lên web nhưng không bắn email cho người đăng ký. Chỉ khi bạn nói rõ kiểu "đăng và gửi mail cho subscriber" thì Javis mới bật cờ gửi email, và <b>email đã gửi thì không thu hồi được</b>.</div></div>
+
+  <h2>4. Mẹo khi nhờ Javis viết bài</h2>
+  <p>Bạn cứ mô tả bằng lời, Javis lo phần định dạng. Thân bài hỗ trợ markdown gọn, tự chuyển sang đúng định dạng của Substack:</p>
+  <table>
+    <tr><th>Bạn viết</th><th>Kết quả trên Substack</th></tr>
+    <tr><td><code># Tiêu đề</code></td><td>Đề mục lớn</td></tr>
+    <tr><td><code>- mục</code> hoặc <code>1. mục</code></td><td>Danh sách gạch đầu dòng / danh sách số</td></tr>
+    <tr><td><code>&gt; câu</code></td><td>Trích dẫn</td></tr>
+    <tr><td><code>---</code></td><td>Kẻ ngang</td></tr>
+    <tr><td><code>**đậm**</code>, <code>*nghiêng*</code></td><td>Chữ đậm, chữ nghiêng</td></tr>
+    <tr><td><code>[chữ](https://link)</code></td><td>Liên kết</td></tr>
+  </table>
+
+  <div class="note ok"><span class="ico">💬</span><div>Ví dụ nhắn cho Javis: <i>"Viết giúp tôi bài newsletter tuần này về ba mẹo bán hàng dịp lễ, lưu nháp thôi"</i> hoặc <i>"Đăng luôn bài vừa rồi lên web, chưa cần gửi mail"</i>.</div></div>
+
+  <footer>
+    Javis nối thẳng vào API Substack của tài khoản bạn (chạy nội bộ, không cần Node/npx). Đây là tài liệu của Javis OS, cập nhật theo phiên bản app. Ý tưởng tool tạo nháp tham khảo từ dự án nguồn mở substack-mcp.
+  </footer>
+
+</div>
+
+<script type="text/plain" id="snipsrc">(async () => {
+  try {
+    const p = await fetch('/api/v1/user/profile/self', { credentials: 'include' }).then(r => r.json());
+    const u = (p.publicationUsers || []).find(x => x.is_primary) || (p.publicationUsers || [])[0] || {};
+    const b = u.publication || {};
+    const url = b.custom_domain ? 'https://' + b.custom_domain
+              : (b.subdomain ? 'https://' + b.subdomain + '.substack.com' : '(khong thay, dien tay)');
+    const m = document.cookie.match(/substack\.sid=([^;]+)/);
+    const token = m ? decodeURIComponent(m[1]) : '(HttpOnly - lay o tab Application > Cookies)';
+    console.log('%c[Javis] Thong tin Substack', 'color:#ff6719;font-weight:bold;font-size:15px');
+    console.table({ 'User ID': p.id, 'Publication URL': url, 'Session token': token });
+    try { copy(String(p.id)); console.log('-> Da copy User ID vao clipboard'); } catch (e) {}
+  } catch (e) {
+    console.error('Chua lay duoc. Mo tab substack.com va dang nhap roi thu lai.', e);
+  }
+})();</script>
+<script>
+  (function () {
+    var SNIP = (document.getElementById('snipsrc').textContent || '').trim();
+    var codeEl = document.getElementById('snip');
+    if (codeEl) codeEl.textContent = SNIP;
+
+    window.copySnip = function (btn) {
+      navigator.clipboard.writeText(SNIP).then(function () {
+        var old = btn.textContent; btn.textContent = '✓ Da copy';
+        setTimeout(function () { btn.textContent = old; }, 1600);
+      });
+    };
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+      });
+    }
+
+    window.resolveUid = async function () {
+      var v = (document.getElementById('uidin').value || '').trim();
+      var out = document.getElementById('uidout');
+      var cp = document.getElementById('uidcopy');
+      var go = document.getElementById('uidgo');
+      var sug = document.getElementById('pubsug');
+      sug.innerHTML = ''; cp.style.display = 'none';
+      if (!v) { out.textContent = 'chưa có, dán link rồi bấm Lấy User ID'; out.className = 'empty'; return; }
+      out.textContent = 'đang lấy...'; out.className = 'empty'; go.disabled = true;
+      try {
+        var r = await fetch('/connect/substack/resolve-uid?q=' + encodeURIComponent(v), { credentials: 'same-origin' });
+        var d = await r.json();
+        if (d && d.ok) {
+          out.textContent = d.user_id; out.className = '';
+          cp.style.display = 'inline-block';
+          if (d.publications && d.publications.length) {
+            sug.innerHTML = '<div class="pubsug-h">Publication URL gợi ý (bấm để copy):</div>' +
+              d.publications.map(function (p) {
+                return '<button class="pubchip" data-url="' + encodeURIComponent(p.url) + '">' +
+                  (p.name ? escapeHtml(p.name) + ': ' : '') + escapeHtml(p.url) + '</button>';
+              }).join('');
+            sug.querySelectorAll('.pubchip').forEach(function (b) {
+              b.addEventListener('click', function () {
+                navigator.clipboard.writeText(decodeURIComponent(b.getAttribute('data-url'))).then(function () {
+                  var o = b.textContent; b.textContent = '✓ đã copy'; setTimeout(function () { b.textContent = o; }, 1200);
+                });
+              });
+            });
+          }
+        } else {
+          out.textContent = (d && d.error) ? d.error : 'Không lấy được. Thử Cách B (Console) bên dưới.';
+          out.className = 'empty';
+        }
+      } catch (e) {
+        out.textContent = 'Lỗi kết nối (bạn đã đăng nhập Javis chưa?). Thử Cách B (Console) bên dưới.';
+        out.className = 'empty';
+      } finally { go.disabled = false; }
+    };
+
+    window.copyUid = function (btn) {
+      navigator.clipboard.writeText(document.getElementById('uidout').textContent).then(function () {
+        var old = btn.textContent; btn.textContent = '✓';
+        setTimeout(function () { btn.textContent = old; }, 1200);
+      });
+    };
+  })();
+</script>
+</body>
+</html>

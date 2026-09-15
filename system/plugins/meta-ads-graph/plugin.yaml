@@ -1,0 +1,13 @@
+name: Meta Ads (Graph API)
+slug: meta-ads-graph
+version: 1.0.0
+description: Đọc số liệu quảng cáo Facebook/Instagram (tài khoản ads, chiến dịch, hiệu suất) qua Graph API, dùng token của kết nối "Meta Ads (tự tạo app)". CHỈ ĐỌC, không tiêu tiền.
+author: Javis (bundled)
+enabled: true
+min_mode: readonly
+tools:
+  - meta_ads_accounts
+  - meta_ads_insights
+  - meta_ads_campaigns
+  - meta_ads_get
+hooks: []
