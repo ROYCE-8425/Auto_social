@@ -105,6 +105,37 @@ def list_eligible_pages(vault_root: str | Path) -> list[dict[str, Any]]:
     return out
 
 
+def facebook_pages_status() -> dict[str, Any]:
+    """Fail-closed: chưa nối -> connected=False, perm=readonly.
+    Đọc mcp_store.list_connections() theo connector_id == 'facebook-pages'.
+    Nếu có nhiều connection: ưu tiên cái perm=='full' đang enabled.
+    """
+    try:
+        import mcp_store
+        conns = mcp_store.list_connections()
+        fb_conns = [c for c in conns if c.get("connector_id") == "facebook-pages"]
+        if not fb_conns:
+            return {"connected": False, "perm": "readonly", "label": ""}
+
+        # Ưu tiên connection enabled và có quyền full
+        full_conn = next((c for c in fb_conns if c.get("enabled", True) and c.get("perm") == "full"), None)
+        if full_conn:
+            return {
+                "connected": True,
+                "perm": "full",
+                "label": full_conn.get("name") or full_conn.get("label") or "Facebook Trang",
+            }
+
+        first_enabled = next((c for c in fb_conns if c.get("enabled", True)), fb_conns[0])
+        return {
+            "connected": True,
+            "perm": first_enabled.get("perm") or "readonly",
+            "label": first_enabled.get("name") or first_enabled.get("label") or "Facebook Trang",
+        }
+    except Exception:
+        return {"connected": False, "perm": "readonly", "label": ""}
+
+
 class FanpageCareFeature:
     def __init__(self, deps: FanpageCareDeps) -> None:
         self.deps = deps
@@ -918,20 +949,15 @@ class FanpageCareFeature:
             cfg = self.get_config()
             eligible = list_eligible_pages(self.vault_root)
             st = store.get_stats()
-            conn_perm = "readonly"
-            try:
-                import mcp_catalog
-                conn = mcp_catalog.get_connection("facebook-pages")
-                if conn:
-                    conn_perm = conn.get("perm", "readonly")
-            except Exception:
-                pass
+            fb_st = facebook_pages_status()
             return {
                 "ok": True,
                 "config": cfg,
                 "stats": st,
                 "eligible_pages": eligible,
-                "connection_perm": conn_perm,
+                "connection_perm": fb_st.get("perm", "readonly"),
+                "facebook_connected": fb_st.get("connected", False),
+                "facebook_label": fb_st.get("label", ""),
                 "is_quiet": in_quiet_hours(cfg.get("quiet_hours", "21-07")),
                 "poller_running": self._tick_running,
             }
