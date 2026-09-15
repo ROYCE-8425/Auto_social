@@ -132,3 +132,20 @@ async def test_send_daily_digest_to_inbox(monkeypatch):
     assert "lead (có SĐT)" in msg_body
     assert "spam đã ẩn" in msg_body
     assert "draft chờ duyệt" in msg_body
+
+
+def test_backup_crm_setting_exclusion(monkeypatch):
+    """Khi người dùng tắt 'sao lưu CRM GitHub' (backup_crm=False), git_brain phải bỏ qua crm/."""
+    import git_brain
+
+    # 1. Khi bật sao lưu (mặc định) -> không bỏ qua file CRM
+    monkeypatch.setattr(config, "read_settings", lambda: {"fanpage_care": {"backup_crm": True}})
+    assert git_brain._backup_skip("crm/customers/c_12345.md") is False
+    assert git_brain._backup_skip("crm/index.md") is False
+
+    # 2. Khi tắt sao lưu (backup_crm=False) -> git_brain bỏ qua toàn bộ crm/
+    monkeypatch.setattr(config, "read_settings", lambda: {"fanpage_care": {"backup_crm": False}})
+    assert git_brain._backup_skip("crm/customers/c_12345.md") is True
+    assert git_brain._backup_skip("crm/index.md") is True
+    assert git_brain._backup_skip("wiki/courses/tin-hoc.md") is False  # wiki thường vẫn được sao lưu
+
