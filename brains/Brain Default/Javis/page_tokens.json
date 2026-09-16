@@ -6,5 +6,14 @@
     "app_id": "1736160434100617",
     "expires_at": "never",
     "updated_at": "2026-09-09"
+  },
+  "343562028848465": {
+    "name": "Game Giá Rẻ BSN",
+    "page_id": "343562028848465",
+    "access_token": "EAGUzxZB5SyTgBSTnW9w3NZCLo6pzyxdFs8uSDpNv1932tyEuejdowUi58NoWIH3dVdiPYl96f96fe4fZBQ8qfUsgalHZBayiM4D7zr5EeMX3yt6bgFFutKb5vVpaoYb7BvZB4fXR04IjfOIv47uPX7WCYECYI0lf0ZBTE2f6zFjrTbEbVhMrcqZCNMGEm3UZCnaZCPkjEZC3LTfLSZC4Hu8zFm2Awl9VcClZAMMmkwJvR0tgk2iz0f08Fhj9iieDSvMZD",
+    "app_id": "28485906437687608",
+    "app_secret": "5cb81875342f2d16962ea7021a134e53",
+    "expires_at": "never",
+    "updated_at": "2026-09-17"
   }
 }
