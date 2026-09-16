@@ -126,11 +126,45 @@ def test_custom_spam_patterns():
     check("custom spam pattern khớp", res["class"] == "spam")
 
 
+# ---- 5. Test Brand & Platform packs (Sao Việt FB, Sao Việt TT, Game Giá Rẻ BSN) ----
+def test_brand_and_platform_packs():
+    # 5a. Sao Việt FB: học phí Q7
+    r_sv_fb = classify_comment("học phí Q7 bao nhiêu vậy ad?", platform="facebook", brand="saoviet")
+    check("saoviet_fb: học phí Q7 -> hoc_phi", r_sv_fb["class"] == "faq" and r_sv_fb["faq_intent"] == "hoc_phi")
+    check("saoviet_fb: brand=saoviet platform=facebook", r_sv_fb["brand"] == "saoviet" and r_sv_fb["platform"] == "facebook")
+
+    # 5b. Sao Việt TT: ib bio / link bio
+    r_sv_tt_bio = classify_comment("ib bio tư vấn em với", platform="tiktok", brand="saoviet")
+    check("saoviet_tt: ib bio -> lead", r_sv_tt_bio["class"] == "lead")
+    check("saoviet_tt: brand=saoviet platform=tiktok", r_sv_tt_bio["brand"] == "saoviet" and r_sv_tt_bio["platform"] == "tiktok")
+
+    r_sv_tt_addr = classify_comment("địa chỉ học ở đâu ạ", platform="tiktok", brand="saoviet")
+    check("saoviet_tt: địa chỉ học ở đâu -> dia_chi", r_sv_tt_addr["class"] == "faq" and r_sv_tt_addr["faq_intent"] == "dia_chi")
+    check("saoviet_tt: reason chứa saoviet_tt:faq:dia_chi", "saoviet_tt:faq:dia_chi" in r_sv_tt_addr["reasons"])
+
+    # 5c. Game Giá Rẻ BSN: Steam / Key / Bảo hành / Việt hóa
+    r_bsn_bh = classify_comment("key steam bảo hành thế nào shop?", brand="bsn")
+    check("bsn: key steam bảo hành -> bao_hanh", r_bsn_bh["class"] == "faq" and r_bsn_bh["faq_intent"] == "bao_hanh")
+    check("bsn: brand=bsn", r_bsn_bh["brand"] == "bsn")
+    check("bsn: không map khóa học Excel/MISA", "tin-hoc" not in r_bsn_bh["course_hints"] and "ke-toan" not in r_bsn_bh["course_hints"])
+
+    r_bsn_buy = classify_comment("mình muốn mua key wukong", brand="game-gia-re-bsn")
+    check("bsn: mua key -> lead", r_bsn_buy["class"] == "lead")
+    check("bsn: slug game-gia-re-bsn nhận diện brand bsn", r_bsn_buy["brand"] == "bsn")
+
+    r_bsn_vh = classify_comment("game này có việt hóa không shop", brand="bsn")
+    check("bsn: việt hóa -> viet_hoa", r_bsn_vh["class"] == "faq" and r_bsn_vh["faq_intent"] == "viet_hoa")
+
+    r_bsn_price = classify_comment("game wukong bao nhiêu shop", brand="bsn")
+    check("bsn: giá game -> gia_game", r_bsn_price["class"] == "faq" and r_bsn_price["faq_intent"] == "gia_game")
+
+
 def main():
     test_phone_extraction()
     test_gold_fixtures()
     test_parent_child_conversation()
     test_custom_spam_patterns()
+    test_brand_and_platform_packs()
 
     if _fails:
         print(f"\nFAIL - {len(_fails)} test: {_fails}")
@@ -140,3 +174,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

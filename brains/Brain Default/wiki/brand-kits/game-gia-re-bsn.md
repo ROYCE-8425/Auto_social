@@ -17,8 +17,24 @@ Gốc cho Fanpage Game Giá Rẻ BSN.
 - Icon: attachments/dataset/chung/logog-game-gia-re-bsn-512x512.png
 - Phong cách hình ảnh: Gaming, Cyberpunk, Dark Modern, sắc nét, tôn vinh poster và screenshot in-game
 - Tone of voice: Hào hứng, thân thiện, gần gũi cộng đồng game thủ, uy tín, phản hồi nhanh chóng
-- Quy tắc bố cục: logo đặt góc trên, lề an toàn 15-18%, ảnh vuông 1:1 chuẩn Facebook 2026, nổi bật tên game & badge giá sinh viên
 - Điều không được làm: bóp méo logo, dùng văn mẫu đào tạo hay tin học văn phòng, đăng ảnh nhòe vỡ
+
+## Kênh Facebook
+- Bật: true
+- Page ID: 343562028848465
+- Tỷ lệ ảnh: 1:1
+- Caption: dài (album)
+
+## Kênh TikTok
+- Bật: false
+- accountId: CHƯA_NỐI
+- username: @gamegiarebsn
+- Tỷ lệ: 9:16
+- Caption: ngắn (8–18 dòng)
+- Hashtag: #GameGiaReBSN #SteamOffline #GameBanQuyen #KeyGameGiaRe #VietHoa
+- Tắt Duet: true
+- Tắt Stitch: true
+- Video CDN: https://laptrinhpython.tinhocsaoviet.com/storage/videos/ready/
 
 ## Pháp nhân & Giới thiệu
 - Tên thương hiệu: Game Giá Rẻ BSN

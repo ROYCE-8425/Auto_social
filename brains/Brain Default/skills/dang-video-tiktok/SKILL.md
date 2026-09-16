@@ -25,24 +25,27 @@ Chạy script `pick_next_tiktok.py`:
   Nhận các tham số: `account_id`, `video_url`, `the`, `kit`, `caption_ctx`.
 
 ### 2. Viết caption chuẩn TikTok (8–18 dòng):
+- Đọc thông tin từ **khối Kênh TikTok** trong Brand Kit (hashtag, username, disable_duet, caption_mode).
+- **Phân biệt thương hiệu**:
+  * **Sao Việt**: Mẹo tin học, thủ thuật Excel/Word/AI, khoá học thực chiến. Hashtag: `#TinhocSaoViet #HocExcel...`.
+  * **Game Giá Rẻ BSN**: Giới thiệu game Steam, cốt truyện, tính năng bản quyền, bảo hành trọn đời. Hashtag: `#GameGiaRe #SteamGame...`. **TUYỆT ĐỐI CẤM** dùng mẫu caption tin học / khoá học cho BSN.
 - **Dòng 1 (Hook giật tít)**: Câu mở đầu in hoa nổi bật, đánh đúng nỗi đau hoặc tính năng đặc sắc trong video (ví dụ: `BẬT TÍNH NĂNG NÀY TRONG EXCEL ĐỂ TIẾT KIỆM 2 TIẾNG MỖI NGÀY! 🔥`).
 - **Dòng 2–6 (Nội dung cốt lõi)**: 3 điểm lợi ích hoặc 3 bước thực hiện ngắn gọn, dùng gạch đầu dòng:
-  * Bước 1 / Mẹo 1: ...
-  * Bước 2 / Mẹo 2: ...
-  * Bước 3 / Mẹo 3: ...
+  * Bước 1 / Điểm 1: ...
+  * Bước 2 / Điểm 2: ...
+  * Bước 3 / Điểm 3: ...
 - **Dòng 7–10 (CTA ngắn gọn)**:
-  * Kêu gọi lưu clip, thả tim hoặc bình luận nhận file thực hành.
-  * Thông tin khoá học kèm 1-1 cấp tốc tại Sao Việt.
-  * Hotline / Zalo tư vấn: lấy từ Brand Kit.
-- **Dòng cuối (Hashtag)**: Tối đa 3–5 hashtag liên quan:
-  `#TinhocSaoViet #HocExcel #MeoTinHoc #TinHocVanPhong #HocAI`
+  * Kêu gọi lưu clip, thả tim hoặc bình luận nhận tài liệu / link tải.
+  * Hướng dẫn xem link bio hoặc liên hệ hotline.
+- **Dòng cuối (Hashtag)**: Tối đa 3–5 hashtag từ Brand Kit hoặc mặc định của brand.
 
 ---
 
 ## Quy tắc cấm trên TikTok:
-- **CẤM viết caption dài 30–70 dòng**: TikTok là nền tảng video ngắn, caption dài che hết màn hình clip và người xem sẽ lướt qua. Giữ đúng khung 8–18 dòng.
-- **CẤM nhồi nhiều ngành**: Video về Excel thì chỉ nói Excel và Tin học văn phòng, tuyệt đối không nhồi AutoCAD hay MISA vào.
-- **CẤM hứa hẹn phi thực tế**: Không dùng các từ "thành thạo sau 5 phút", "x5 mức lương ngay lập tức".
+- **CẤM dán chân trang Fanpage 13 cơ sở (CHAN_TRANG)**: Không bao giờ nhồi danh sách 13 chi nhánh vào clip TikTok.
+- **CẤM viết caption dài 30–70 dòng**: Giữ đúng khung 8–18 dòng.
+- **CẤM nhồi nhiều ngành**: Clip Excel chỉ nói Excel; clip game chỉ nói game, không nhồi chéo.
+- **CẤM hứa hẹn phi thực tế**: Không dùng "thành thạo sau 5 phút", "x5 mức lương".
 - **CẤM truyền đường dẫn file local**: Tool `postpeer_tiktok_post` bắt buộc URL video `https://...` công khai (CDN).
 
 ---

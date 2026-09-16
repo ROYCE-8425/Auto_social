@@ -46,6 +46,7 @@ export interface CareState {
 export interface CareEvent {
   id: number
   kind: 'comment' | 'message' | 'echo' | 'action'
+  platform?: 'facebook' | 'tiktok' | 'messenger'
   page_id: string
   object_id: string
   thread_id?: string | null
@@ -222,10 +223,11 @@ export const api = {
   pollNow: () => request<{ ok: boolean; result?: any }>('/fanpage-care/poll-now', { method: 'POST' }),
 
   // Inbox: Comments & Drafts
-  getInbox: (params?: { page_id?: string; class_name?: string; limit?: number; offset?: number }) => {
+  getInbox: (params?: { page_id?: string; class_name?: string; platform?: string; limit?: number; offset?: number }) => {
     const query = new URLSearchParams()
     if (params?.page_id) query.set('page_id', params.page_id)
     if (params?.class_name) query.set('class_name', params.class_name)
+    if (params?.platform) query.set('platform', params.platform)
     if (params?.limit) query.set('limit', String(params.limit))
     if (params?.offset) query.set('offset', String(params.offset))
     const qs = query.toString()

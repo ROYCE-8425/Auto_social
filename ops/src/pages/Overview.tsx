@@ -27,6 +27,29 @@ export const Overview: React.FC<OverviewProps> = ({ onNavigate }) => {
   const [drafts, setDrafts] = useState<CareDraft[]>([])
   const [loading, setLoading] = useState<boolean>(true)
 
+  const renderPlatformChip = (platform?: string) => {
+    const p = (platform || 'facebook').toLowerCase()
+    if (p === 'tiktok') {
+      return (
+        <span className="text-[10px] px-1.5 py-0.5 rounded font-bold bg-slate-900 text-white tracking-wide">
+          TikTok
+        </span>
+      )
+    }
+    if (p === 'messenger') {
+      return (
+        <span className="text-[10px] px-1.5 py-0.5 rounded font-medium bg-indigo-50 text-indigo-700 border border-indigo-200">
+          Messenger
+        </span>
+      )
+    }
+    return (
+      <span className="text-[10px] px-1.5 py-0.5 rounded font-medium bg-blue-50 text-blue-700 border border-blue-200">
+        Facebook
+      </span>
+    )
+  }
+
   useEffect(() => {
     let mounted = true
     const load = async () => {
@@ -220,6 +243,7 @@ export const Overview: React.FC<OverviewProps> = ({ onNavigate }) => {
                           <div>
                             <div className="flex items-center space-x-2">
                               <span className="font-bold text-xs text-slate-900">{ev?.from_name || 'Khách hàng'}</span>
+                              {renderPlatformChip(ev?.platform || 'facebook')}
                               {draft.class && (
                                 <span className="text-[10px] px-1.5 py-0.2 rounded bg-blue-50 text-blue-700 font-medium">
                                   {draft.class}
@@ -259,7 +283,8 @@ export const Overview: React.FC<OverviewProps> = ({ onNavigate }) => {
                         </div>
                         <div>
                           <div className="flex items-center space-x-2">
-                            <span className="font-bold text-xs text-slate-900">{item.from_name || 'Khách Facebook'}</span>
+                            <span className="font-bold text-xs text-slate-900">{item.from_name || 'Khách hàng'}</span>
+                            {renderPlatformChip(item.platform || 'facebook')}
                             <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-100 text-slate-600 capitalize">
                               {item.kind}
                             </span>

@@ -42,6 +42,7 @@ def init_db(db_path: Path | str | None = None) -> None:
         CREATE TABLE IF NOT EXISTS events (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           kind TEXT NOT NULL,          -- comment | message | echo | action
+          platform TEXT NOT NULL DEFAULT 'facebook', -- facebook | tiktok | messenger
           page_id TEXT NOT NULL,
           object_id TEXT NOT NULL,     -- comment_id | message_id
           thread_id TEXT,
@@ -126,6 +127,13 @@ def init_db(db_path: Path | str | None = None) -> None:
         CREATE INDEX IF NOT EXISTS idx_drafts_status ON drafts(status, created_ts);
         """)
 
+        # Migration: add platform column if table already existed without it
+        cur = conn.execute("PRAGMA table_info(events)")
+        cols = [r["name"] for r in cur.fetchall()]
+        if cols and "platform" not in cols:
+            conn.execute("ALTER TABLE events ADD COLUMN platform TEXT NOT NULL DEFAULT 'facebook'")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_events_platform_ts ON events(platform, created_ts)")
+
 
 def record_event(
     event: dict[str, Any], db_path: Path | str | None = None
@@ -134,6 +142,9 @@ def record_event(
     init_db(db_path)
     now = time.time()
     kind = str(event.get("kind") or "comment").strip()
+    platform = str(event.get("platform") or "facebook").strip().lower()
+    if platform not in ("facebook", "tiktok", "messenger"):
+        platform = "facebook"
     page_id = str(event.get("page_id") or "").strip()
     object_id = str(event.get("object_id") or "").strip()
     thread_id = str(event.get("thread_id") or "").strip() or None
@@ -150,12 +161,12 @@ def record_event(
             cur = conn.execute(
                 """
                 INSERT INTO events (
-                    kind, page_id, object_id, thread_id, from_id, from_name,
+                    kind, platform, page_id, object_id, thread_id, from_id, from_name,
                     body, class, faq_intent, created_ts, ingested_ts
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
-                    kind, page_id, object_id, thread_id, from_id, from_name,
+                    kind, platform, page_id, object_id, thread_id, from_id, from_name,
                     body, cls, faq_intent, created_ts, ingested_ts,
                 ),
             )
@@ -667,6 +678,7 @@ def gc_events(older_than_days: int = 90, db_path: Path | str | None = None) -> i
 def list_events(
     page_id: str | None = None,
     class_name: str | None = None,
+    platform: str | None = None,
     limit: int = 50,
     offset: int = 0,
     db_path: Path | str | None = None,
@@ -681,6 +693,9 @@ def list_events(
     if class_name:
         conds.append("class = ?")
         params.append(str(class_name))
+    if platform:
+        conds.append("platform = ?")
+        params.append(str(platform).strip().lower())
 
     where = f"WHERE {' AND '.join(conds)}" if conds else ""
     sql = f"SELECT * FROM events {where} ORDER BY created_ts DESC LIMIT ? OFFSET ?"

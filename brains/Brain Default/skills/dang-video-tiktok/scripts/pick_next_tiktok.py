@@ -24,11 +24,28 @@ else:
     # fallback
     VAULT = Path(__file__).resolve().parents[3]
 
+# Tìm server directory và nạp module brand_kit
+current = Path(__file__).resolve()
+server_dir = None
+for parent in [current] + list(current.parents):
+    if (parent / "server" / "brand_kit.py").is_file():
+        server_dir = parent / "server"
+        break
+
+if server_dir and str(server_dir) not in sys.path:
+    sys.path.insert(0, str(server_dir))
+
+try:
+    from brand_kit import parse_brand_kit_channels, ParsedBrandKit, detect_brand_from_kit
+except ImportError:
+    parse_brand_kit_channels = None
+    detect_brand_from_kit = lambda stem: "bsn" if "bsn" in str(stem).lower() else "saoviet"
+
 STATE_FILE = VAULT / "Javis" / "tiktok-queue.json"
 MAX_PER_DAY = 1
 
-# Danh sách video CDN mẫu sẵn sàng (9:16 dọc)
-DEFAULT_VIDEOS = [
+# Danh sách video CDN mẫu sẵn sàng (9:16 dọc) cho Sao Việt
+DEFAULT_SAOVIET_VIDEOS = [
     {
         "url": "https://laptrinhpython.tinhocsaoviet.com/storage/videos/ready/rendered_tin_hoc_ai_01.mp4",
         "the": "tin-hoc_ai",
@@ -43,6 +60,20 @@ DEFAULT_VIDEOS = [
         "url": "https://laptrinhpython.tinhocsaoviet.com/storage/videos/ready/rendered_tin_hoc_ai_03.mp4",
         "the": "tin-hoc_ai",
         "title": "Cách tạo báo cáo tự động bằng ChatGPT và Excel",
+    },
+]
+
+# Danh sách video CDN mẫu cho Game Giá Rẻ BSN (cấm dùng tin-hoc)
+DEFAULT_BSN_VIDEOS = [
+    {
+        "url": "https://laptrinhpython.tinhocsaoviet.com/storage/videos/ready/rendered_game_bsn_01.mp4",
+        "the": "game-bsn",
+        "title": "Top 3 Game Steam Offline Đáng Mua Nhất 2026",
+    },
+    {
+        "url": "https://laptrinhpython.tinhocsaoviet.com/storage/videos/ready/rendered_game_bsn_02.mp4",
+        "the": "game-bsn",
+        "title": "Cách kích hoạt Key Steam bản quyền và cài đặt nhanh",
     },
 ]
 
@@ -61,38 +92,70 @@ def save_state(state: dict) -> None:
     STATE_FILE.write_text(json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
-def find_tiktok_account() -> tuple[str, str, str, str]:
-    """Tìm accountId và hotline từ brand kit."""
+def find_tiktok_account() -> dict | None:
+    """Tìm kit có kênh TikTok được bật và accountId hợp lệ qua parse_brand_kit_channels."""
     bk_dir = VAULT / "wiki" / "brand-kits"
     if not bk_dir.is_dir():
-        return "", "", "", ""
+        return None
 
+    candidates = []
+    # Quét các kit cụ thể
     for p in sorted(bk_dir.glob("*.md")):
         if p.name.startswith("_"):
             continue
-        try:
-            md = p.read_text(encoding="utf-8")
-        except OSError:
-            continue
-        m_id = re.search(r"^[ \t]*[-*][ \t]*(?:TikTok accountId|tiktok_account_id|TikTok Account ID)[ \t]*:[ \t]*(.+)$", md, re.M | re.I)
-        if m_id:
-            acc_id = m_id.group(1).strip()
-            m_user = re.search(r"^[ \t]*[-*][ \t]*(?:TikTok username|tiktok_username|TikTok User)[ \t]*:[ \t]*(.+)$", md, re.M | re.I)
-            username = m_user.group(1).strip() if m_user else "@tinhocsaoviet"
-            m_hotline = re.search(r"^[ \t]*[-*][ \t]*(?:Hotline|Hotline / Zalo)[ \t]*:[ \t]*(.+)$", md, re.M | re.I)
-            hotline = m_hotline.group(1).strip() if m_hotline else "0823 552 558"
-            return acc_id, username, hotline, p.name
+        if parse_brand_kit_channels:
+            candidates.append(parse_brand_kit_channels(p))
+        else:
+            candidates.append(p)
 
-    # Fallback to _mac-dinh.md
+    # Thêm fallback _mac-dinh.md
     mac_dinh = bk_dir / "_mac-dinh.md"
     if mac_dinh.is_file():
-        md = mac_dinh.read_text(encoding="utf-8")
-        m_id = re.search(r"^[ \t]*[-*][ \t]*(?:TikTok accountId|tiktok_account_id|TikTok Account ID)[ \t]*:[ \t]*(.+)$", md, re.M | re.I)
-        if m_id:
-            acc_id = m_id.group(1).strip()
-            return acc_id, "@tinhocsaoviet", "0823 552 558", "_mac-dinh.md"
+        if parse_brand_kit_channels:
+            candidates.append(parse_brand_kit_channels(mac_dinh))
+        else:
+            candidates.append(mac_dinh)
 
-    return "", "", "", ""
+    for item in candidates:
+        if parse_brand_kit_channels and isinstance(item, ParsedBrandKit):
+            tt = item.tiktok
+            acc_id = (tt.ids.get("account_id") or tt.ids.get("accountId") or "").strip()
+            # Bắt buộc: Kênh TikTok Bật: true VÀ accountId không rỗng, không phải CHƯA_NỐI
+            if tt.enabled and acc_id and acc_id not in ("CHƯA_NỐI", "CHUA_NOI", "CHƯA_CÓ", ""):
+                return {
+                    "account_id": acc_id,
+                    "username": tt.ids.get("username", "@tinhocsaoviet" if item.brand == "saoviet" else "@gamegiarebsn"),
+                    "brand": item.brand,
+                    "kit_file": item.filename,
+                    "caption_mode": tt.caption_mode,
+                    "hashtag": tt.extras.get("hashtag", ""),
+                    "disable_duet": tt.extras.get("disable_duet", True),
+                    "disable_stitch": tt.extras.get("disable_stitch", True),
+                    "video_cdn": tt.extras.get("video_cdn", ""),
+                }
+        elif isinstance(item, Path):
+            # Fallback regex nếu không có module brand_kit
+            try:
+                md = item.read_text(encoding="utf-8")
+                m_id = re.search(r"^[ \t]*[-*][ \t]*(?:accountId|TikTok accountId)[ \t]*:[ \t]*(.+)$", md, re.M | re.I)
+                if m_id:
+                    acc_id = m_id.group(1).strip()
+                    if acc_id and acc_id not in ("CHƯA_NỐI", "CHUA_NOI", ""):
+                        return {
+                            "account_id": acc_id,
+                            "username": "@tinhocsaoviet",
+                            "brand": "bsn" if "bsn" in item.name.lower() else "saoviet",
+                            "kit_file": item.name,
+                            "caption_mode": "short",
+                            "hashtag": "",
+                            "disable_duet": True,
+                            "disable_stitch": True,
+                            "video_cdn": "",
+                        }
+            except OSError:
+                pass
+
+    return None
 
 
 def main():
@@ -137,15 +200,23 @@ def main():
         print(f"NEXT=NONE da-du-quota-hom-nay ({state['today_count']}/{MAX_PER_DAY})")
         return
 
-    # Tìm accountId
-    acc_id, username, hotline, kit_file = find_tiktok_account()
-    if not acc_id:
-        print("NEXT=NONE chua-cau-hinh-tiktok-account-id-trong-brand-kit")
+    # Tìm accountId qua Brand Kit kênh TikTok
+    kit_info = find_tiktok_account()
+    if not kit_info:
+        # Khi chưa có kit nào bật kênh TikTok hoặc accountId còn là CHƯA_NỐI
+        print("NEXT=NONE chua-noi-tiktok")
         return
+
+    brand = kit_info.get("brand", "saoviet")
+    if brand == "bsn":
+        videos = DEFAULT_BSN_VIDEOS
+        default_hashtag = "#GameGiaRe #SteamGame #SteamVN #GamingPC #GameOffline"
+    else:
+        videos = DEFAULT_SAOVIET_VIDEOS
+        default_hashtag = "#TinhocSaoViet #HocExcel #KienthucTinhoctonghop"
 
     # Lấy danh sách video từ file nếu có
     videos_file = VAULT / "Javis" / "tiktok-videos.json"
-    videos = DEFAULT_VIDEOS
     if videos_file.is_file():
         try:
             custom_vids = json.loads(videos_file.read_text(encoding="utf-8"))
@@ -167,14 +238,19 @@ def main():
         return
 
     selected = unposted[0]
+    hashtag = kit_info.get("hashtag") or default_hashtag
+
     print("NEXT=1")
-    print(f"account_id={acc_id}")
-    print(f"username={username}")
+    print(f"account_id={kit_info['account_id']}")
+    print(f"username={kit_info['username']}")
+    print(f"brand={brand}")
     print(f"video_url={selected['url']}")
-    print(f"the={selected.get('the', 'tin-hoc_ai')}")
+    print(f"the={selected.get('the', 'game-bsn' if brand == 'bsn' else 'tin-hoc_ai')}")
     print(f"title={selected.get('title', '')}")
-    print(f"kit_file={kit_file}")
-    print(f"hotline={hotline}")
+    print(f"kit_file={kit_info['kit_file']}")
+    print(f"hashtag={hashtag}")
+    print(f"disable_duet={str(kit_info.get('disable_duet', True)).lower()}")
+    print(f"disable_stitch={str(kit_info.get('disable_stitch', True)).lower()}")
 
 
 if __name__ == "__main__":

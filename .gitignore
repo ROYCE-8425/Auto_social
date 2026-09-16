@@ -54,6 +54,7 @@ server/capability_registry.db*.corrupt-*
 # Bổ sung 0.9.241: 6 artifact dưới đây vừa KHÔNG track vừa KHÔNG ignore, nên một cú
 # `git add -A` là commit thẳng dữ liệu chạy + trạng thái deploy vào repo.
 server/kanban.sqlite3*
+server/*.sqlite3*
 server/tg_brain.json
 server/update_state.json
 server/logs/

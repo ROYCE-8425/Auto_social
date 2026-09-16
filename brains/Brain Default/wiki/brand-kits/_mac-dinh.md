@@ -15,8 +15,23 @@ Gốc cho mọi Fanpage. Tạo page mới = copy khối Nhận diện thương h
 - Icon: attachments/dataset/chung/thsv-logo-2025.png
 - Phong cách hình ảnh: công nghệ, tối giản, premium
 - Tone of voice: chuyên nghiệp, trẻ, hiện đại
-- Quy tắc bố cục: logo góc trên, lề an toàn 15-18%, cover chuẩn vuông 1:1 (chuẩn Facebook 2026), không che mặt học viên
 - Điều không được làm: đổi màu logo, bóp méo logo, dùng màu ngoài palette, brand khác (Bách Khoa, Trường Thịnh)
+
+## Kênh Facebook
+- Bật: true
+- Tỷ lệ ảnh: 1:1
+- Caption: dài (album)
+
+## Kênh TikTok
+- Bật: false
+- accountId: CHƯA_NỐI
+- username: @tinhocsaoviet
+- Tỷ lệ: 9:16
+- Caption: ngắn (8–18 dòng)
+- Hashtag: #TinhocSaoViet #HocExcel #HocTinHoc #SaoViet
+- Tắt Duet: true
+- Tắt Stitch: true
+- Video CDN: https://laptrinhpython.tinhocsaoviet.com/storage/videos/ready/
 
 ## Pháp nhân
 - Tên giao dịch: Trung Tâm Tin Học Sao Việt

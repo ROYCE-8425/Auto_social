@@ -29,6 +29,7 @@ from config import STATE_DIR
 import fanpage_care_crm as crm
 import fanpage_care_graph
 import fanpage_care_store as store
+from brand_kit import detect_brand_from_kit
 from fanpage_care_classify import classify_comment
 from fanpage_care_ground import address_short, get_course_fee, render_template, sanitize_kit
 from fanpage_care_policy import effective_mode, policy_allows
@@ -369,6 +370,7 @@ class FanpageCareFeature:
             cfg = self.get_config()
 
         kit = _load_kit_for_page(self.vault_root, pid)
+        brand = detect_brand_from_kit(kit["file"]) if (kit and kit.get("file")) else "saoviet"
         pages_cfg = cfg.get("pages", {})
         page_mode = pages_cfg.get(pid, {}).get("mode")
         eff_m = effective_mode(cfg.get("mode", "suggest"), page_mode)
@@ -377,11 +379,19 @@ class FanpageCareFeature:
         max_rate = int(cfg.get("rate_limit", {}).get("max_replies_per_page_per_hour", 8))
 
         # 1. Phân loại comment thuần Python
-        cls_res = classify_comment(body, page_id=pid, from_id=from_id, parent_id=parent_id)
+        cls_res = classify_comment(
+            body,
+            page_id=pid,
+            from_id=from_id,
+            parent_id=parent_id,
+            platform="facebook",
+            brand=brand,
+        )
 
         # 2. Ghi nhận event vào SQLite (dedup qua kind + object_id)
         ev_id, is_new = store.record_event({
             "kind": "comment",
+            "platform": "facebook",
             "page_id": pid,
             "object_id": cid,
             "thread_id": post_id,
@@ -703,6 +713,7 @@ class FanpageCareFeature:
                 until = store.set_human_takeover(pid, psid, duration_hours=takeover_hours)
                 store.record_event({
                     "kind": "echo",
+                    "platform": "messenger",
                     "page_id": pid,
                     "object_id": mid,
                     "thread_id": psid,
@@ -722,6 +733,7 @@ class FanpageCareFeature:
 
         ev_id, is_new = store.record_event({
             "kind": "message",
+            "platform": "messenger",
             "page_id": pid,
             "object_id": mid,
             "thread_id": psid,
@@ -734,13 +746,20 @@ class FanpageCareFeature:
             return out
 
         # 3. Phân loại tin nhắn
-        cls_res = classify_comment(text, page_id=pid, from_id=psid)
+        kit = _load_kit_for_page(self.vault_root, pid)
+        brand = detect_brand_from_kit(kit["file"]) if (kit and kit.get("file")) else "saoviet"
+        cls_res = classify_comment(
+            text,
+            page_id=pid,
+            from_id=psid,
+            platform="messenger",
+            brand=brand,
+        )
         class_name = cls_res.get("class", "ambiguous")
         phones_list = cls_res.get("phones", [])
         course_hints = cls_res.get("course_hints", [])
 
         # 4. Ghi nhận CRM
-        kit = _load_kit_for_page(self.vault_root, pid)
         try:
             cust, is_new_cust = store.get_or_create_customer(
                 name=f"Khách Messenger {psid[-4:] if len(psid) >= 4 else psid}",
@@ -971,10 +990,17 @@ class FanpageCareFeature:
         async def care_inbox(
             page_id: str | None = None,
             class_name: str | None = None,
+            platform: str | None = None,
             limit: int = 50,
             offset: int = 0,
         ):
-            events = store.list_events(page_id=page_id, class_name=class_name, limit=limit, offset=offset)
+            events = store.list_events(
+                page_id=page_id,
+                class_name=class_name,
+                platform=platform,
+                limit=limit,
+                offset=offset,
+            )
             drafts = store.list_drafts(status="pending", limit=50)
             return {
                 "ok": True,

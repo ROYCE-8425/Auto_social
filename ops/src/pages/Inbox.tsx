@@ -17,6 +17,7 @@ import { formatTime, timeAgo } from '../lib/utils'
 
 export const Inbox: React.FC = () => {
   const [activeSubTab, setActiveSubTab] = useState<'comments' | 'messenger'>('comments')
+  const [platformFilter, setPlatformFilter] = useState<'all' | 'facebook' | 'tiktok'>('all')
   const [events, setEvents] = useState<CareEvent[]>([])
   const [drafts, setDrafts] = useState<CareDraft[]>([])
   const [conversations, setConversations] = useState<CareConversation[]>([])
@@ -32,10 +33,36 @@ export const Inbox: React.FC = () => {
   const [handoffIntent, setHandoffIntent] = useState<string>('')
   const [handoffCommentId, setHandoffCommentId] = useState<string>('')
 
-  const loadData = async () => {
+  const renderPlatformChip = (platform?: string) => {
+    const p = (platform || 'facebook').toLowerCase()
+    if (p === 'tiktok') {
+      return (
+        <span className="text-[10px] px-2 py-0.5 rounded font-bold bg-slate-900 text-white tracking-wide">
+          TikTok
+        </span>
+      )
+    }
+    if (p === 'messenger') {
+      return (
+        <span className="text-[10px] px-2 py-0.5 rounded font-medium bg-indigo-50 text-indigo-700 border border-indigo-200">
+          Messenger
+        </span>
+      )
+    }
+    return (
+      <span className="text-[10px] px-2 py-0.5 rounded font-medium bg-blue-50 text-blue-700 border border-blue-200">
+        Facebook
+      </span>
+    )
+  }
+
+  const loadData = async (filter = platformFilter) => {
     try {
       const [inboxRes, convRes] = await Promise.all([
-        api.getInbox({ limit: 50 }).catch(() => null),
+        api.getInbox({
+          limit: 50,
+          platform: filter === 'all' ? undefined : filter,
+        }).catch(() => null),
         api.getConversations().catch(() => null),
       ])
       if (inboxRes) {
@@ -51,10 +78,10 @@ export const Inbox: React.FC = () => {
   }
 
   useEffect(() => {
-    loadData()
-    const interval = setInterval(loadData, 15000)
+    loadData(platformFilter)
+    const interval = setInterval(() => loadData(platformFilter), 15000)
     return () => clearInterval(interval)
-  }, [])
+  }, [platformFilter])
 
   const handleSendDraft = async (draft: CareDraft) => {
     setActionLoading(draft.id)
@@ -185,7 +212,7 @@ export const Inbox: React.FC = () => {
             }`}
           >
             <MessageSquare className="w-4 h-4 text-saoviet-500" />
-            <span>Bình luận Fanpage ({pendingDrafts.length} chờ duyệt)</span>
+            <span>Bình luận ({pendingDrafts.length} chờ duyệt)</span>
           </button>
           <button
             onClick={() => setActiveSubTab('messenger')}
@@ -206,27 +233,51 @@ export const Inbox: React.FC = () => {
         <div className="space-y-4">
           {/* Filter Bar */}
           <div className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-between gap-3">
-            <div className="flex items-center space-x-1.5 overflow-x-auto w-full md:w-auto">
-              <button
-                onClick={() => setFilterView('pending')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors ${
-                  filterView === 'pending'
-                    ? 'bg-slate-900 text-white'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                }`}
-              >
-                Nháp chờ duyệt ({pendingDrafts.length})
-              </button>
-              <button
-                onClick={() => setFilterView('events')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors ${
-                  filterView === 'events'
-                    ? 'bg-slate-900 text-white'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                }`}
-              >
-                Tất cả sự kiện bình luận ({events.length})
-              </button>
+            <div className="flex items-center space-x-3 overflow-x-auto w-full md:w-auto">
+              <div className="flex items-center space-x-1.5">
+                <button
+                  onClick={() => setFilterView('pending')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors ${
+                    filterView === 'pending'
+                      ? 'bg-slate-900 text-white'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  Nháp chờ duyệt ({pendingDrafts.length})
+                </button>
+                <button
+                  onClick={() => setFilterView('events')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors ${
+                    filterView === 'events'
+                      ? 'bg-slate-900 text-white'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  Tất cả sự kiện bình luận ({events.length})
+                </button>
+              </div>
+
+              {/* Platform selector */}
+              <div className="flex items-center space-x-1 border-l border-slate-200 pl-3">
+                <span className="text-[11px] font-medium text-slate-400 mr-1">Kênh:</span>
+                {(['all', 'facebook', 'tiktok'] as const).map((p) => (
+                  <button
+                    key={p}
+                    onClick={() => setPlatformFilter(p)}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
+                      platformFilter === p
+                        ? p === 'tiktok'
+                          ? 'bg-slate-900 text-white shadow-sm'
+                          : p === 'facebook'
+                          ? 'bg-blue-600 text-white shadow-sm'
+                          : 'bg-slate-700 text-white shadow-sm'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    }`}
+                  >
+                    {p === 'all' ? 'Tất cả' : p === 'facebook' ? 'Facebook' : 'TikTok'}
+                  </button>
+                ))}
+              </div>
             </div>
 
             <div className="relative w-full md:w-72">
@@ -274,6 +325,7 @@ export const Inbox: React.FC = () => {
                         <div>
                           <div className="flex flex-wrap items-center gap-2">
                             <span className="font-bold text-sm text-slate-900">{ev?.from_name || 'Khách hàng'}</span>
+                            {renderPlatformChip(ev?.platform || 'facebook')}
                             {draft.class && (
                               <span className="text-[11px] px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 font-medium border border-blue-100">
                                 Phân loại: {draft.class}
@@ -355,8 +407,17 @@ export const Inbox: React.FC = () => {
               {filteredDrafts.length === 0 && (
                 <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center text-slate-400 text-xs">
                   <CheckCircle2 className="w-10 h-10 mx-auto mb-3 text-emerald-400" />
-                  <p className="font-semibold text-slate-600 text-sm">Không có nháp nào đang chờ duyệt</p>
-                  <p className="text-slate-400 mt-1">Khi có bình luận mới cần xác nhận, Javis sẽ chuẩn bị nháp tại đây</p>
+                  {platformFilter === 'tiktok' ? (
+                    <>
+                      <p className="font-semibold text-slate-700 text-sm">Chưa có bình luận TikTok — kênh này dùng để đăng video.</p>
+                      <p className="text-slate-400 mt-1">PostPeer hiện chỉ hỗ trợ đăng video, chưa có luồng ingest comment TikTok.</p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="font-semibold text-slate-600 text-sm">Không có nháp nào đang chờ duyệt</p>
+                      <p className="text-slate-400 mt-1">Khi có bình luận mới cần xác nhận, Javis sẽ chuẩn bị nháp tại đây</p>
+                    </>
+                  )}
                 </div>
               )}
             </div>
@@ -377,7 +438,8 @@ export const Inbox: React.FC = () => {
                       </div>
                       <div>
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className="font-bold text-sm text-slate-900">{item.from_name || 'Khách Facebook'}</span>
+                          <span className="font-bold text-sm text-slate-900">{item.from_name || 'Khách hàng'}</span>
+                          {renderPlatformChip(item.platform || 'facebook')}
                           <span className="text-[10px] px-2 py-0.5 rounded bg-slate-100 text-slate-600 capitalize">
                             {item.kind}
                           </span>
@@ -427,7 +489,17 @@ export const Inbox: React.FC = () => {
               {filteredEvents.length === 0 && (
                 <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center text-slate-400 text-xs">
                   <MessageSquare className="w-10 h-10 mx-auto mb-3 text-slate-300" />
-                  <p className="font-semibold text-slate-600">Không có sự kiện nào phù hợp</p>
+                  {platformFilter === 'tiktok' ? (
+                    <>
+                      <p className="font-semibold text-slate-700 text-sm">Chưa có bình luận TikTok — kênh này dùng để đăng video.</p>
+                      <p className="text-slate-400 mt-1">PostPeer hiện chỉ hỗ trợ đăng video, chưa có luồng ingest comment TikTok.</p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="font-semibold text-slate-600">Không có sự kiện nào phù hợp</p>
+                      <p className="text-slate-400 mt-1">Các bình luận và tương tác mới sẽ xuất hiện tại đây</p>
+                    </>
+                  )}
                 </div>
               )}
             </div>
