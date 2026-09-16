@@ -115,6 +115,8 @@ def test_rbac_matrix_staff():
 
     # Các quyền ĐƯỢC PHÉP của Staff:
     allowed_routes = [
+        ("/", "GET"),
+        ("/chao", "GET"),
         ("/ops", "GET"),
         ("/ops/inbox", "GET"),
         ("/ops/customers", "GET"),
@@ -137,7 +139,7 @@ def test_rbac_matrix_staff():
 
     # Các hành vi CẤM TUYỆT ĐỐI của Staff (403):
     forbidden_routes = [
-        ("/", "GET"),                    # Console chủ máy
+        ("/app", "GET"),                  # Console chủ máy
         ("/index.html", "GET"),           # Console chủ máy
         ("/terminal", "GET"),             # Terminal máy chủ
         ("/mcp/tools", "GET"),            # MCP
@@ -165,6 +167,8 @@ def test_rbac_matrix_manager():
 
     # Các quyền ĐƯỢC PHÉP của Manager:
     allowed_routes = [
+        ("/", "GET"),
+        ("/chao", "GET"),
         ("/ops", "GET"),
         ("/fanpage-care/customers/merge", "POST"),
         ("/fanpage-care/customers/c_1", "DELETE"),
@@ -189,7 +193,7 @@ def test_rbac_matrix_manager():
 
     # CẤM Manager buồng lái và tài khoản chủ:
     forbidden_routes = [
-        ("/", "GET"),
+        ("/app", "GET"),
         ("/terminal", "GET"),
         ("/mcp", "GET"),
         ("/chat", "POST"),

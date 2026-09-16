@@ -1,0 +1,13 @@
+name: TikTok (PostPeer)
+slug: postpeer-tiktok
+version: 1.0.0
+description: Đăng video lên TikTok tự động qua PostPeer API. Hỗ trợ lấy danh sách tài khoản, creator info, đăng video 9:16 kèm caption và theo dõi bài đăng. Dùng token của kết nối "postpeer".
+author: Javis (bundled)
+enabled: true
+min_mode: readonly
+tools:
+  - postpeer_accounts
+  - postpeer_tiktok_creator
+  - postpeer_post_get
+  - postpeer_tiktok_post
+hooks: []

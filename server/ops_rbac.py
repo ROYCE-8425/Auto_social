@@ -266,8 +266,10 @@ def check_access_permission(user: Optional[dict], path: str, method: str, payloa
 
     m = method.upper()
 
-    # Chặn console chủ máy `/` và các tài nguyên console đối với staff / manager
-    if path == "/" or path == "/index.html":
+    # Landing `/` `/chao` công khai. Console chủ máy chuyển sang `/app`.
+    if path in ("/", "/chao"):
+        return True, None
+    if path in ("/app", "/index.html"):
         return False, "Chỉ chủ máy mới được truy cập console điều khiển"
 
     # Các route cấm hoàn toàn với staff và manager:

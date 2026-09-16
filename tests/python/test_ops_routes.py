@@ -65,8 +65,11 @@ def test_ops_login_and_logout(client):
     assert res_me.status_code == 200
     assert res_me.json()["user"]["username"] == "staff_nga"
 
-    # Staff cố tình mở / (console chủ máy) -> BỊ CHẶN 403 THẬT
-    res_console = c.get("/")
+    # Staff được xem landing `/`; cấm buồng lái `/app`
+    res_landing = c.get("/")
+    assert res_landing.status_code == 200
+    assert "Sao Việt Ops" in res_landing.text
+    res_console = c.get("/app")
     assert res_console.status_code == 403
     assert "Chỉ chủ máy mới được truy cập console điều khiển" in res_console.text
 
@@ -100,8 +103,8 @@ def test_manager_permissions(client):
     res_users = c.get("/ops/users")
     assert res_users.status_code == 403
 
-    # Manager cố tình mở buồng lái / -> 403
-    res_cockpit = c.get("/")
+    # Manager cố tình mở buồng lái /app -> 403
+    res_cockpit = c.get("/app")
     assert res_cockpit.status_code == 403
 
     # Manager cố bật mode=full -> 403

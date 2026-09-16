@@ -1298,6 +1298,35 @@
       },
       "default_perm": "readonly",
       "risk": "Đây là chìa khoá vào hạ tầng website của bạn, nên mặc định để mức Chỉ đọc.\n\nMức Ghi nháp cho phép Javis SỬA thật: đổi bản ghi DNS, tạo và sửa website, subdomain, hộp thư, cron, cài plugin WordPress. Sai một bản ghi DNS là website hoặc email tắt ngay.\n\nMức Toàn quyền mở thêm nhóm nguy hiểm: XOÁ website, tên miền, hộp thư, VPS; tắt hoặc khởi động lại VPS; khôi phục và reset bản sao lưu.\nNhóm này còn có các thao tác TIÊU TIỀN: mua tên miền, mua VPS, gia hạn gói. Trừ tiền thật trong tài khoản Hostinger và không hoàn tác được.\n\nChỉ nâng quyền khi bạn thật sự muốn Javis tự tay làm những việc đó."
+    },
+    {
+      "id": "postpeer",
+      "name": "TikTok (PostPeer)",
+      "icon": "video",
+      "category": "Mạng xã hội",
+      "description": "Đăng video lên TikTok tự động qua dịch vụ PostPeer. BYO API key, quản lý kết nối TikTok OAuth trên dashboard của PostPeer. Chỉ cần URL video HTTPS và caption là đăng được.",
+      "status": "beta",
+      "transport": "http",
+      "url": "https://api.postpeer.dev",
+      "auth": {
+        "type": "apikey",
+        "fields": [
+          {
+            "key": "postpeer_key",
+            "label": "PostPeer access key",
+            "placeholder": "Ví dụ: pp_...",
+            "env": "POSTPEER_API_KEY"
+          }
+        ],
+        "guide": "1. Đăng ký postpeer.dev (20 credit free).\n2. Dashboard > Access Keys > copy key.\n3. Dán vào đây, bấm Kết nối.\n4. Vào postpeer.dev/dashboard bấm Connect TikTok (OAuth).\n5. Gọi tool postpeer_accounts để lấy accountId, ghi vào brand kit.\n\nKHÔNG dùng PostPeer để đăng Facebook - Fanpage đi Graph Javis.\nMỗi video TikTok trừ 1 credit.",
+        "guide_url": "https://docs.postpeer.dev"
+      },
+      "tool_meta": {
+        "read": ["postpeer_accounts", "postpeer_tiktok_creator", "postpeer_post_get"],
+        "danger": ["postpeer_tiktok_post"]
+      },
+      "default_perm": "readonly",
+      "risk": "Mức Toàn quyền cho phép Javis ĐĂNG VIDEO lên TikTok đã nối. Hành động thật, có thể công khai hoặc vào inbox TikTok (draft).\nGiữ Chỉ đọc thì chỉ liệt kê tài khoản.\nKey PostPeer = chìa mọi mạng đã nối trên tài khoản PostPeer - đừng đưa staff."
     }
   ]
 }

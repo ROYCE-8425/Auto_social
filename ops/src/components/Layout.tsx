@@ -174,7 +174,7 @@ export const Layout: React.FC<LayoutProps> = ({ currentTab, onSelectTab, childre
               {/* Owner cockpit switch button */}
               {role === 'owner' && (
                 <a
-                  href="/"
+                  href="/app"
                   title="Vào buồng lái điều khiển Javis (chủ máy)"
                   className="hidden sm:flex items-center space-x-1 px-2.5 py-1 text-xs font-semibold text-slate-700 hover:text-saoviet-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
                 >
@@ -266,11 +266,11 @@ export const Layout: React.FC<LayoutProps> = ({ currentTab, onSelectTab, childre
 
             {role === 'owner' && (
               <a
-                href="/"
+                href="/app"
                 className="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium text-saoviet-700 hover:bg-saoviet-50"
               >
                 <ExternalLink className="w-5 h-5" />
-                <span>Buồng lái máy chủ (/)</span>
+                <span>Buồng lái máy chủ (/app)</span>
               </a>
             )}
           </div>

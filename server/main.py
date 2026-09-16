@@ -214,7 +214,7 @@ app.add_middleware(CORSMiddleware,
 # KHÔNG để cả prefix /auth public vì /auth/disable, /auth/logout phải yêu cầu đăng nhập.
 _AUTH_PUBLIC_PREFIX = ("/static", "/health", "/ops/assets")
 # /brand-logo: hiện trên màn đăng nhập (trước session). /tls-check: Caddy gọi (không đăng nhập được).
-_AUTH_PUBLIC_EXACT = ("/", "/favicon.ico", "/auth/status", "/auth/login", "/auth/setup",
+_AUTH_PUBLIC_EXACT = ("/", "/chao", "/app", "/favicon.ico", "/auth/status", "/auth/login", "/auth/setup",
                       "/brand-logo", "/tls-check",
                       # /hub/mcp: Claude CLI/Codex gọi bằng Bearer hub_token riêng (không có cookie).
                       # /connect/oauth/callback: browser redirect từ provider OAuth về.
@@ -257,9 +257,9 @@ async def _auth_guard(request: Request, call_next):
     path = request.url.path
     ops_user = ops_rbac.get_current_ops_user(request)
 
-    # 1. Bảo vệ buồng lái console điều khiển (`/` hoặc `/index.html`):
-    # Staff và Manager cấm tuyệt đối console chủ máy (docs/dev/2026-09-16-ops-dashboard-plan.md Mục 3).
-    if path in ("/", "/index.html"):
+    # 1. Bảo vệ buồng lái console (`/app`). `/` và `/chao` là landing công khai.
+    # Staff và Manager cấm tuyệt đối console chủ máy.
+    if path in ("/app", "/index.html"):
         if ops_user and ops_user.get("role") in ("staff", "manager"):
             return JSONResponse(
                 {"error": "Chỉ chủ máy mới được truy cập console điều khiển", "role": ops_user.get("role")},
@@ -839,8 +839,7 @@ for _p in (BRAINS_DIR, OBSIDIAN_VAULT_PATH):
         pass
 
 
-@app.get("/")
-async def root():
+def _console_html():
     html = (DASHBOARD_PATH / "index.html").read_text(encoding="utf-8")
     # Ép khoá cache của MỌI file .js/.css theo phiên bản app. Trước đây mỗi file có ?v=NN
     # gõ tay, và suốt hàng chục bản không ai nhớ tăng console.js?v=72 nên trình duyệt cứ
@@ -849,6 +848,25 @@ async def root():
     ver = _app_version() or "0"
     html = re.sub(r'(/static/[\w./-]+\.(?:js|css))\?v=[\w.]+', r'\1?v=' + ver, html)
     return HTMLResponse(html, headers={"Cache-Control": "no-cache, no-store, must-revalidate"})
+
+
+def _landing_html():
+    p = PROJECT_ROOT / "website" / "index.html"
+    html = p.read_text(encoding="utf-8")
+    return HTMLResponse(html, headers={"Cache-Control": "no-cache, no-store, must-revalidate"})
+
+
+@app.get("/")
+@app.get("/chao")
+async def public_landing():
+    """Trang giới thiệu công khai (cuộc thi / khách). Console chủ máy ở /app."""
+    return _landing_html()
+
+
+@app.get("/app")
+async def console_app():
+    """Buồng lái Javis (dashboard cũ tại /)."""
+    return _console_html()
 
 
 @app.post("/stop")
