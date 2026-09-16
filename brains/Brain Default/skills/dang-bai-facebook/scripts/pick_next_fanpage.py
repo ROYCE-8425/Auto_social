@@ -167,6 +167,8 @@ def infer_specialized_tag(name: str, slug: str = "", raw_tags: str = "") -> list
         return ["ke-toan"]
     if any(k in norm for k in ["tre em", "kid", "scratch"]):
         return ["tin-hoc _ai"]
+    if any(k in norm for k in ["game", "bsn"]):
+        return ["game-bsn"]
 
     if raw_tags:
         parsed = parse_tags(raw_tags)
@@ -233,6 +235,8 @@ def _canonical_tag(t: str) -> str:
         return "ve-ky-thuat"
     if re.search(r"tre[\s_-]*em", s):
         return "tin-hoc _ai"
+    if re.search(r"game[\s_-]*bsn|game", s):
+        return "game-bsn"
     return (t or "").strip()
 
 
@@ -425,6 +429,12 @@ def get_page_branches(row, tag=None):
     """
     page_name = row.get("name") or row.get("slug") or ""
     norm_name = remove_accents(page_name)
+
+    # 0. Nếu Page có địa chỉ riêng khai trong kit (như Game Giá Rẻ BSN) và không phải hệ thống Sao Việt
+    if row.get("address"):
+        addr = row["address"].strip()
+        if addr and "HE THONG 13 CHI NHANH" not in remove_accents(addr) and not any(k in norm_name for k in ["sao viet", "royce"]):
+            return [b.strip() for b in addr.split("|") if b.strip()]
 
     # 1. Cơ sở TP.HCM: chỉ hiện 1 chi nhánh tương ứng theo tên page
     if "binh thanh" in norm_name:

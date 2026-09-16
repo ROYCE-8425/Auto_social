@@ -16,3 +16,4 @@ Không có thẻ khớp chủ đề bài → không đăng page đó.
 | ve-ky-thuat | Vẽ kỹ thuật |
 | tin-hoc | tin-hoc |
 | tin-hoc_ai | tin-hoc_ai |
+| game-bsn | Game Giá Rẻ BSN (Game Bản Quyền / Offline) |

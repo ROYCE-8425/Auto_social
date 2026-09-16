@@ -23,9 +23,10 @@ updated: 2026-09-16
 
 ## Page đã có kit
 - [[brand-kits/royce-shop]] Royce Shop (Page ID: 988656934325292)
+- [[brand-kits/game-gia-re-bsn]] Game Giá Rẻ BSN (Page ID: 343562028848465)
 
 ## Bảng tra cứu bí danh nhanh (Alias Mapping)
 | Từ khóa gọi tắt | File Brand Kit chính thức | Page ID |
 |---|---|---|
-| royce, royce shop | 
-oyce-shop.md | 988656934325292 |
+| royce, royce shop | royce-shop.md | 988656934325292 |
+| bsn, game bsn, game gia re bsn | game-gia-re-bsn.md | 343562028848465 |
