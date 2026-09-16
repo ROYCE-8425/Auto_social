@@ -8033,8 +8033,8 @@ async def ops_delete_user(user_id: str, request: Request):
     return {"ok": True}
 
 
-@app.get("/ops/{full_path:path}")
-@app.get("/ops")
+@app.api_route("/ops/{full_path:path}", methods=["GET", "HEAD"])
+@app.api_route("/ops", methods=["GET", "HEAD"])
 async def serve_ops_dashboard(full_path: str = ""):
     """Phục vụ giao diện Single-Page App Ops Dashboard (HTML5 History Mode Fallback)."""
     index_file = OPS_DIST_PATH / "index.html"
@@ -8052,6 +8052,7 @@ async def serve_ops_dashboard(full_path: str = ""):
         index_file.read_text(encoding="utf-8"),
         headers={"Cache-Control": "no-cache, no-store, must-revalidate"}
     )
+
 
 
 
