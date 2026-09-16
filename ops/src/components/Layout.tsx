@@ -52,7 +52,7 @@ export const Layout: React.FC<LayoutProps> = ({ currentTab, onSelectTab, childre
     setPollMsg(null)
     try {
       const res = await api.pollNow()
-      setPollMsg(res.count !== undefined ? `Quét xong: ${res.count} mục mới` : 'Đã quét xong')
+      setPollMsg(res.result?.status ? `Quét: ${res.result.status}` : 'Đã quét xong')
       setTimeout(() => setPollMsg(null), 4000)
     } catch (err: any) {
       setPollMsg(err.message || 'Lỗi khi quét')
@@ -81,7 +81,7 @@ export const Layout: React.FC<LayoutProps> = ({ currentTab, onSelectTab, childre
       label: 'Hộp thư & Nháp',
       icon: Inbox,
       show: true,
-      badge: careState?.stats_24h?.drafts_pending || 0,
+      badge: careState?.stats?.pending_drafts || 0,
     },
     { id: 'customers', label: 'Khách hàng CRM', icon: Users, show: true },
     { id: 'tasks', label: 'Việc cần làm', icon: CheckSquare, show: true },
@@ -116,17 +116,17 @@ export const Layout: React.FC<LayoutProps> = ({ currentTab, onSelectTab, childre
 
             {/* Middle: Brain Status Pill */}
             <div className="hidden lg:flex items-center space-x-3">
-              {careState?.kill_switch ? (
+              {careState?.config?.kill_switch ? (
                 <div className="flex items-center space-x-2 px-3 py-1.5 rounded-full bg-red-50 border border-red-200 text-red-700 text-xs font-semibold animate-pulse">
                   <AlertTriangle className="w-3.5 h-3.5 text-red-600" />
                   <span>Dừng khẩn cấp (Kill Switch đang bật)</span>
                 </div>
-              ) : careState?.enabled ? (
+              ) : careState?.config?.enabled ? (
                 <div className="flex items-center space-x-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-medium">
                   <div className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
                   <Bot className="w-3.5 h-3.5 text-emerald-600 ml-1" />
                   <span>
-                    Javis đang trực: {careState.mode === 'full' ? 'Tự động trả lời' : careState.mode === 'semi' ? 'Bán tự động' : 'Tạo nháp chờ duyệt'}
+                    Javis đang trực: {careState.config?.mode === 'full' ? 'Tự động trả lời' : careState.config?.mode === 'semi' ? 'Bán tự động' : 'Tạo nháp chờ duyệt'}
                   </span>
                 </div>
               ) : (
@@ -286,7 +286,7 @@ export const Layout: React.FC<LayoutProps> = ({ currentTab, onSelectTab, childre
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-40 px-2 py-1 shadow-lg flex items-center justify-around">
         {[
           { id: 'overview', label: 'Tổng quan', icon: LayoutDashboard },
-          { id: 'inbox', label: 'Hộp thư', icon: Inbox, badge: careState?.stats_24h?.drafts_pending },
+          { id: 'inbox', label: 'Hộp thư', icon: Inbox, badge: careState?.stats?.pending_drafts },
           { id: 'customers', label: 'Khách', icon: Users },
           { id: 'tasks', label: 'Việc', icon: CheckSquare },
           { id: 'more', label: 'Thêm', icon: Menu },

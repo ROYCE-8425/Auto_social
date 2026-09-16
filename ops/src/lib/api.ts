@@ -1,4 +1,5 @@
-// API client for Ops Dashboard
+// API client for Ops Dashboard - Aligned 1-to-1 with Javis Backend
+
 export interface OpsUser {
   id: string
   username: string
@@ -8,116 +9,163 @@ export interface OpsUser {
   created_at?: number
 }
 
+export interface CareStats {
+  total_events: number
+  events_24h: number
+  leads_24h: number
+  human_needed_24h: number
+  replies_24h: number
+  spam_hidden_24h: number
+  pending_drafts: number
+  total_customers: number
+}
+
+export interface CareConfig {
+  enabled?: boolean
+  mode?: 'suggest' | 'semi' | 'full'
+  kill_switch?: boolean
+  quiet_hours?: string
+  poll_interval_min?: number
+  app_secret?: string
+  webhook_verify_token?: string
+  [key: string]: any
+}
+
 export interface CareState {
-  enabled: boolean
-  mode: 'suggest' | 'semi' | 'full'
-  kill_switch: boolean
-  page_name?: string
-  page_id?: string
-  connected?: boolean
-  readonly?: boolean
-  stats_24h?: {
-    comments?: number
-    leads?: number
-    drafts_pending?: number
-    replied?: number
-    handoff?: number
-  }
-  last_poll_ts?: number
+  ok: boolean
+  config: CareConfig
+  stats: CareStats
+  eligible_pages?: Array<{ id: string; name: string }>
+  connection_perm?: 'readonly' | 'full'
+  facebook_connected?: boolean
+  facebook_label?: string
+  is_quiet?: boolean
+  poller_running?: boolean
 }
 
-export interface InboxItem {
-  id: string
-  post_id: string
-  comment_id: string
-  author_id?: string
-  author_name: string
-  author_pic?: string
-  created_time: string | number
-  message: string
-  intent?: string
-  sentiment?: string
-  phone?: string
-  branch?: string
-  confidence?: number
-  draft_response?: string
-  status: 'pending' | 'sent' | 'rejected' | 'handoff'
-  category?: string
-  post_summary?: string
+export interface CareEvent {
+  id: number
+  kind: 'comment' | 'message' | 'echo' | 'action'
+  page_id: string
+  object_id: string
+  thread_id?: string | null
+  from_id?: string | null
+  from_name?: string | null
+  body: string
+  class?: string | null
+  faq_intent?: string | null
+  created_ts: number
+  ingested_ts: number
 }
 
-export interface ConversationItem {
-  id: string
-  recipient_id: string
-  recipient_name: string
-  recipient_pic?: string
-  last_message: string
-  last_message_ts: number
-  unread_count?: number
-  takeover?: {
-    active: boolean
-    by?: string
-    since?: number
-    expires_at?: number
-  }
+export interface CareDraft {
+  id: number
+  event_id?: number | null
+  page_id: string
+  target_id: string
+  proposed: string
+  class?: string | null
+  status: 'pending' | 'approved' | 'rejected' | 'sent' | 'expired'
+  created_ts: number
 }
 
-export interface CustomerItem {
-  id: string
-  psid?: string
+export interface CareConversation {
+  page_id: string
+  psid: string
+  last_user_ts?: number
+  last_page_ts?: number
+  takeover_until?: number
+}
+
+export interface CareCustomer {
+  crm_id: string
   name: string
-  phone?: string
-  branch?: string
-  status?: string
-  tags?: string[]
-  sentiment?: string
-  interaction_count?: number
-  last_seen_ts?: number
-  first_seen_ts?: number
-  notes?: string
-  history?: Array<{
-    type: 'comment' | 'message'
-    ts: number
-    text: string
-    intent?: string
-  }>
+  phones: string[]
+  tags: string[]
+  course_interest?: string
+  campus?: string
+  page_ids?: string[]
+  md_path?: string
+  updated_ts: number
+}
+
+export interface CareIdentity {
+  kind: string
+  page_id: string
+  ext_id: string
+  crm_id: string
+}
+
+export interface CareCustomerDetail {
+  ok: boolean
+  customer: CareCustomer
+  identities: CareIdentity[]
+  markdown: string
 }
 
 export interface KanbanTask {
   id: string
+  brain_root?: string
   title: string
-  description?: string
-  status: 'todo' | 'in_progress' | 'done'
-  assignee?: string
+  normalized_title?: string
+  intent?: string
+  route?: string
+  capability?: string
+  execution_mode?: string
+  priority: number
+  status: 'triage' | 'todo' | 'ready' | 'running' | 'review' | 'blocked' | 'done' | 'cancelled' | 'archived'
+  needs_approval?: boolean
+  block_kind?: string
+  block_reason?: string
+  created_by?: string
+  chat_id?: string
+  idempotency_key?: string
   created_at: number
-  priority?: 'low' | 'medium' | 'high'
-  lead_phone?: string
-  branch?: string
+  updated_at: number
+  metadata?: Record<string, any>
+  artifacts?: any[]
+  deps?: string[]
 }
 
-export interface AuditLogItem {
-  id: string
-  ts: number
-  actor: string
-  action: string
-  target?: string
-  details?: string
-  status?: 'success' | 'warning' | 'error'
+export interface KanbanBoardView {
+  schema: number
+  brain_root: string
+  orchestration: string
+  dispatcher?: {
+    running: boolean
+    max_workers: number
+    active_workers: number
+    workers?: any[]
+  }
+  columns: {
+    triage?: KanbanTask[]
+    todo?: KanbanTask[]
+    ready?: KanbanTask[]
+    running?: KanbanTask[]
+    review?: KanbanTask[]
+    blocked?: KanbanTask[]
+    done?: KanbanTask[]
+    cancelled?: KanbanTask[]
+    [key: string]: KanbanTask[] | undefined
+  }
+  counts: Record<string, number>
+  completed_24h: number
+  running: boolean
 }
 
 async function request<T>(url: string, options: RequestInit = {}): Promise<T> {
+  const isFormData = options.body instanceof FormData
   const res = await fetch(url, {
     ...options,
     credentials: 'include',
     headers: {
-      'Accept': 'application/json',
-      ...((options.body && !(options.body instanceof FormData)) ? { 'Content-Type': 'application/json' } : {}),
+      Accept: 'application/json',
+      ...((options.body && !isFormData) ? { 'Content-Type': 'application/json' } : {}),
       ...options.headers,
     },
   })
 
   if (res.status === 401) {
-    // Tránh loop vô tận nếu đang ở /ops/me
     if (!url.includes('/ops/me') && !url.includes('/ops/auth/login')) {
       window.dispatchEvent(new CustomEvent('ops:unauthorized'))
     }
@@ -134,7 +182,7 @@ async function request<T>(url: string, options: RequestInit = {}): Promise<T> {
     let msg = `Lỗi hệ thống (${res.status})`
     try {
       const errJson = JSON.parse(text)
-      msg = errJson.error || errJson.message || msg
+      msg = errJson.detail || errJson.error || errJson.message || msg
     } catch {
       if (text.length < 100 && text.trim()) msg = text
     }
@@ -171,70 +219,117 @@ export const api = {
 
   // Care State & Overview
   getCareState: () => request<CareState>('/fanpage-care/state'),
-  pollNow: () => request<{ ok: boolean; count?: number }>('/fanpage-care/poll-now', { method: 'POST' }),
+  pollNow: () => request<{ ok: boolean; result?: any }>('/fanpage-care/poll-now', { method: 'POST' }),
 
   // Inbox: Comments & Drafts
-  getInbox: () => request<{ items: InboxItem[] }>('/fanpage-care/inbox'),
-  sendDraft: (commentId: string, customText?: string) =>
-    request<{ ok: boolean }>(`/fanpage-care/drafts/${encodeURIComponent(commentId)}/send`, {
-      method: 'POST',
-      body: JSON.stringify(customText ? { text: customText } : {}),
-    }),
-  rejectDraft: (commentId: string, reason?: string) =>
-    request<{ ok: boolean }>(`/fanpage-care/drafts/${encodeURIComponent(commentId)}/reject`, {
-      method: 'POST',
-      body: JSON.stringify(reason ? { reason } : {}),
-    }),
-  handoffToStaff: (commentId: string, note?: string) =>
+  getInbox: (params?: { page_id?: string; class_name?: string; limit?: number; offset?: number }) => {
+    const query = new URLSearchParams()
+    if (params?.page_id) query.set('page_id', params.page_id)
+    if (params?.class_name) query.set('class_name', params.class_name)
+    if (params?.limit) query.set('limit', String(params.limit))
+    if (params?.offset) query.set('offset', String(params.offset))
+    const qs = query.toString()
+    return request<{
+      ok: boolean
+      events: CareEvent[]
+      drafts: CareDraft[]
+      stats: CareStats
+    }>(`/fanpage-care/inbox${qs ? `?${qs}` : ''}`)
+  },
+  sendDraft: (draftId: number) =>
+    request<{ ok: boolean; status?: string; error?: string }>(
+      `/fanpage-care/drafts/${draftId}/send`,
+      { method: 'POST' }
+    ),
+  rejectDraft: (draftId: number) =>
+    request<{ ok: boolean; status?: string }>(
+      `/fanpage-care/drafts/${draftId}/reject`,
+      { method: 'POST' }
+    ),
+  handoffToStaff: (data: {
+    title: string
+    intent: string
+    priority?: number
+    comment_id?: string
+  }) =>
     request<{ ok: boolean; task_id?: string }>(`/fanpage-care/handoff`, {
       method: 'POST',
-      body: JSON.stringify({ comment_id: commentId, note }),
+      body: JSON.stringify({
+        title: data.title,
+        intent: data.intent,
+        priority: data.priority ?? 2,
+        comment_id: data.comment_id ?? '',
+      }),
     }),
 
   // Messenger Conversations
-  getConversations: () => request<{ items: ConversationItem[] }>('/fanpage-care/conversations'),
-  releaseTakeover: (threadId: string) =>
-    request<{ ok: boolean }>('/fanpage-care/conversations/release-takeover', {
-      method: 'POST',
-      body: JSON.stringify({ thread_id: threadId }),
-    }),
+  getConversations: () =>
+    request<{ ok: boolean; conversations: CareConversation[] }>('/fanpage-care/conversations'),
+  releaseTakeover: (pageId: string, psid: string) =>
+    request<{ ok: boolean; page_id: string; psid: string; takeover_until: number }>(
+      '/fanpage-care/conversations/release-takeover',
+      {
+        method: 'POST',
+        body: JSON.stringify({ page_id: pageId, psid }),
+      }
+    ),
 
   // Customers CRM
-  getCustomers: (search?: string) =>
-    request<{ customers: CustomerItem[] }>(`/fanpage-care/customers${search ? `?q=${encodeURIComponent(search)}` : ''}`),
-  getCustomerDetail: (id: string) =>
-    request<{ customer: CustomerItem }>(`/fanpage-care/customers/${encodeURIComponent(id)}`),
-  updateCustomer: (id: string, data: Partial<CustomerItem>) =>
-    request<{ ok: boolean; customer: CustomerItem }>(`/fanpage-care/customers/${encodeURIComponent(id)}`, {
-      method: 'PATCH',
-      body: JSON.stringify(data),
-    }),
-  mergeCustomers: (sourceId: string, targetId: string) =>
-    request<{ ok: boolean }>('/fanpage-care/customers/merge', {
+  getCustomers: (search?: string, tag?: string, limit = 50) => {
+    const query = new URLSearchParams()
+    if (search) query.set('q', search)
+    if (tag) query.set('tag', tag)
+    if (limit) query.set('limit', String(limit))
+    const qs = query.toString()
+    return request<{ ok: boolean; customers: CareCustomer[] }>(
+      `/fanpage-care/customers${qs ? `?${qs}` : ''}`
+    )
+  },
+  getCustomerDetail: (crmId: string) =>
+    request<CareCustomerDetail>(`/fanpage-care/customers/${encodeURIComponent(crmId)}`),
+  mergeCustomers: (primaryCrmId: string, secondaryCrmId: string) =>
+    request<{ ok: boolean; crm_id?: string }>('/fanpage-care/customers/merge', {
       method: 'POST',
-      body: JSON.stringify({ source_id: sourceId, target_id: targetId }),
+      body: JSON.stringify({
+        primary_crm_id: primaryCrmId,
+        secondary_crm_id: secondaryCrmId,
+      }),
     }),
-  deleteCustomer: (id: string) =>
-    request<{ ok: boolean }>(`/fanpage-care/customers/${encodeURIComponent(id)}`, {
-      method: 'DELETE',
-    }),
+  deleteCustomer: (crmId: string) =>
+    request<{ ok: boolean; deleted?: boolean }>(
+      `/fanpage-care/customers/${encodeURIComponent(crmId)}`,
+      { method: 'DELETE' }
+    ),
 
   // Tasks (Kanban)
-  getTasks: () => request<{ tasks: KanbanTask[] }>('/kanban'),
-  createTask: (task: Partial<KanbanTask>) =>
-    request<{ ok: boolean; task: KanbanTask }>('/kanban', {
+  getTasks: (brain = 'brain') =>
+    request<KanbanBoardView>(`/kanban?brain=${encodeURIComponent(brain)}`),
+  moveTask: (id: string, status: string, brain = 'brain') => {
+    const form = new FormData()
+    form.append('id', id)
+    form.append('status', status)
+    form.append('brain', brain)
+    return request<{ ok: boolean; status?: string; error?: string }>('/kanban/task/move', {
       method: 'POST',
-      body: JSON.stringify(task),
-    }),
-  updateTask: (id: string, data: Partial<KanbanTask>) =>
-    request<{ ok: boolean }>(`/kanban/tasks/${encodeURIComponent(id)}`, {
-      method: 'PATCH',
-      body: JSON.stringify(data),
-    }),
+      body: form,
+    })
+  },
+  createTask: (data: { title: string; intent?: string; priority?: number; brain?: string }) => {
+    const form = new FormData()
+    form.append('title', data.title)
+    form.append('intent', data.intent || data.title)
+    form.append('priority', String(data.priority ?? 2))
+    form.append('brain', data.brain || 'brain')
+    return request<{ ok: boolean; id?: string }>('/kanban/task', {
+      method: 'POST',
+      body: form,
+    })
+  },
 
   // Trends & Usage (Manager & Owner)
   getUsageSummary: () => request<any>('/usage/summary'),
-  
+
   // System Audit Log (from /inbox)
   getAuditLog: () => request<{ items?: any[] }>('/inbox'),
 }
+

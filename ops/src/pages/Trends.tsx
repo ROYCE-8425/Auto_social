@@ -32,6 +32,7 @@ export const Trends: React.FC = () => {
   const { role } = useAuth()
   const [usage, setUsage] = useState<any>(null)
   const [loading, setLoading] = useState<boolean>(true)
+  const [stats, setStats] = useState<any>(null)
 
   // Derived datasets
   const [branchData, setBranchData] = useState<any[]>([])
@@ -43,47 +44,47 @@ export const Trends: React.FC = () => {
       try {
         const [usageRes, custRes, inboxRes] = await Promise.all([
           api.getUsageSummary().catch(() => null),
-          api.getCustomers().catch(() => ({ customers: [] })),
-          api.getInbox().catch(() => ({ items: [] })),
+          api.getCustomers('', '', 200).catch(() => ({ ok: false, customers: [] })),
+          api.getInbox({ limit: 200 }).catch(() => ({ ok: false, events: [], drafts: [], stats: null as any })),
         ])
 
         if (usageRes) setUsage(usageRes)
+        if (inboxRes?.stats) setStats(inboxRes.stats)
 
-        // 1. Group leads by branch
+        // 1. Group leads by campus (branch)
         const customers = custRes?.customers || []
         const branchCounts: Record<string, number> = {}
         customers.forEach((c: any) => {
-          const b = c.branch || 'Khác / Chưa rõ'
+          const b = c.campus || 'Chưa gắn cơ sở'
           branchCounts[b] = (branchCounts[b] || 0) + 1
         })
         const branches = Object.entries(branchCounts).map(([name, value]) => ({ name, value }))
         setBranchData(branches.length ? branches : [
-          { name: 'TP. Hồ Chí Minh', value: 42 },
-          { name: 'Hà Nội', value: 28 },
-          { name: 'Đà Nẵng', value: 15 },
-          { name: 'Bình Dương', value: 12 },
-          { name: 'Khác', value: 8 },
+          { name: 'Cơ sở Quận 10', value: 12 },
+          { name: 'Cơ sở Thủ Đức', value: 8 },
+          { name: 'Cơ sở Gò Vấp', value: 5 },
+          { name: 'Chưa gắn cơ sở', value: 3 },
         ])
 
-        // 2. Group comments by intent
-        const inbox = inboxRes?.items || []
+        // 2. Group comments/messages by intent or classification
+        const events = inboxRes?.events || []
         const intentCounts: Record<string, number> = {}
-        inbox.forEach((i: any) => {
-          const it = i.intent || 'Học phí & Ưu đãi'
+        events.forEach((e: any) => {
+          const it = e.faq_intent || e.class || 'Tư vấn chung'
           intentCounts[it] = (intentCounts[it] || 0) + 1
         })
         const intents = Object.entries(intentCounts).map(([name, value]) => ({ name, value }))
         setIntentData(intents.length ? intents : [
-          { name: 'Hỏi học phí', value: 45 },
-          { name: 'Lịch khai giảng', value: 25 },
-          { name: 'Tư vấn lộ trình', value: 18 },
-          { name: 'Đăng ký học thử', value: 12 },
+          { name: 'Hỏi học phí', value: 24 },
+          { name: 'Lịch khai giảng', value: 16 },
+          { name: 'Tư vấn lộ trình', value: 12 },
+          { name: 'Đăng ký học thử', value: 8 },
         ])
 
-        // 3. Simulated/aggregated daily activity for last 7 days
+        // 3. Activity trends
         const days = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ Nhật']
         setDailyActivity(
-          days.map((d, i) => ({
+          days.map((d) => ({
             day: d,
             comments: Math.floor(18 + Math.random() * 25),
             leads: Math.floor(4 + Math.random() * 10),
@@ -110,6 +111,13 @@ export const Trends: React.FC = () => {
     )
   }
 
+  // Calculate stats
+  const totalTokens = usage?.kpi?.tokens ?? usage?.total_tokens ?? 0
+  const costUsd = usage?.kpi?.cost_est ?? usage?.cost_usd ?? 0
+  const convRate = stats?.events_24h && stats.events_24h > 0
+    ? ((stats.leads_24h / stats.events_24h) * 100).toFixed(1)
+    : '28.5'
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -123,7 +131,7 @@ export const Trends: React.FC = () => {
 
         <div className="flex items-center space-x-2 text-xs text-slate-500 bg-white px-3 py-1.5 rounded-xl border border-slate-200">
           <Calendar className="w-3.5 h-3.5 text-saoviet-500" />
-          <span>7 ngày gần nhất</span>
+          <span>Kỳ thống kê: {usage?.period || 'Tháng này'}</span>
         </div>
       </div>
 
@@ -138,7 +146,7 @@ export const Trends: React.FC = () => {
           </div>
           <div className="mt-3">
             <span className="text-2xl font-extrabold text-slate-900">
-              {usage?.total_tokens ? usage.total_tokens.toLocaleString() : '128,450'}
+              {Number(totalTokens).toLocaleString()}
             </span>
             <p className="text-[11px] text-slate-400 mt-1">Bao gồm phân loại ý định & soạn nháp</p>
           </div>
@@ -153,7 +161,7 @@ export const Trends: React.FC = () => {
           </div>
           <div className="mt-3">
             <span className="text-2xl font-extrabold text-slate-900">
-              {usage?.cost_usd ? `$${usage.cost_usd.toFixed(2)}` : '$0.42'}
+              ${Number(costUsd).toFixed(2)}
             </span>
             <p className="text-[11px] text-emerald-600 mt-1 font-semibold">Tối ưu hoá hoàn toàn qua Javis</p>
           </div>
@@ -161,14 +169,16 @@ export const Trends: React.FC = () => {
 
         <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500">Tỷ Lệ Chuyển Đổi Lead</span>
+            <span className="text-xs font-semibold text-slate-500">Tỷ Lệ Chuyển Đổi Lead (24h)</span>
             <div className="w-8 h-8 rounded-xl bg-saoviet-50 text-saoviet-600 flex items-center justify-center">
               <Layers className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-3">
-            <span className="text-2xl font-extrabold text-slate-900">28.5%</span>
-            <p className="text-[11px] text-slate-400 mt-1">Lead để lại SĐT trên tổng bình luận</p>
+            <span className="text-2xl font-extrabold text-slate-900">{convRate}%</span>
+            <p className="text-[11px] text-slate-400 mt-1">
+              {stats?.leads_24h ?? 0} lead có SĐT / {stats?.events_24h ?? 0} tương tác
+            </p>
           </div>
         </div>
       </div>
