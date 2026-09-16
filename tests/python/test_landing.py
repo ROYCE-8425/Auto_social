@@ -16,7 +16,7 @@ def test_root_is_landing(client):
     r = client.get("/")
     assert r.status_code == 200
     assert "Sao Việt Ops" in r.text
-    assert "Não AI chạy phía sau" in r.text
+    assert "Não AI phía sau" in r.text
     assert "/ops" in r.text
     assert "/app" in r.text
 

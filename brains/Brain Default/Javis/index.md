@@ -2,7 +2,7 @@
 
 > Tự sinh từ file - ĐỪNG sửa tay. Chỉ mục mọi năng lực của Javis trong brain này để bất kỳ AI/engine đọc 1 chỗ là hiểu Javis làm được gì. Song song `wiki/index.md` (tri thức).
 
-**Tổng quan:** 1 agents · 16 skills · 1 workflows (0 bật) · 3 loops (0 bật) · 13 plugins (12 chạy)
+**Tổng quan:** 1 agents · 17 skills · 1 workflows (0 bật) · 4 loops (0 bật) · 13 plugins (12 chạy)
 
 ## Agents
 - **Biên tập Facebook** (`bien-tap-facebook`) - Tạo 1 ảnh AI độc quyền mới 100%, soạn caption đúng brand kit và đăng lên Fanpage Facebook. · model gpt-5.5 · skills: dang-bai-facebook, viet-bai-facebook
@@ -28,6 +28,8 @@
 ### Marketing
 - **HTML sang Webcake** (`html-to-webcake`) - Chuyển trang HTML thành file .pke mở được trong trình dựng Webcake, giữ đúng màu, cỡ chữ, ảnh và bố cục của bản gốc.
 - **Tạo poster Facebook khóa học** (`tao-poster-facebook-khoa-hoc`) - Tạo poster Facebook 1:1 cho khóa học bằng javis_generate_image, lưu vào vault và trả markdown ảnh.
+### TikTok
+- **Đăng video TikTok** (`dang-video-tiktok`) - Đăng video dọc (9:16) lên TikTok qua PostPeer: Caption ngắn 8-18 dòng, hook giật tít, 3 lợi ích nhanh, CTA ngắn gọn, tối đa 5 hashtag.
 
 ## Workflows
 - **Đăng Facebook** (`dang-bai-that-facebook`) - True · 1 bước [bien-tap-facebook] · Đăng bài Fanpage Facebook: Album 6-8 ảnh chuẩn Tỷ Lệ Vàng 2026 (1 cover AI mới 100% bằng GPT Image 2 + ảnh lớp học thật từ dataset), đăng bằng fb_page_album.
@@ -36,6 +38,7 @@
 - **đăng bài cho t3 t6 cho all fage** (`dang-bai-3-6-cho-all-fage`) - tắt · custom/full · mỗi 18 phút
 - **Đăng bài hàng ngày - Xoay tua tất cả Fanpage** (`dang-bai-hang-ngay-xoay-tua-tat-ca-fanpage`) - tắt · custom/full · mỗi 5 phút
 - **Đăng bài hàng ngày 1 page** (`dang-bai-hang-ngay`) - tắt · custom/full · mỗi 5 phút
+- **Đăng video TikTok hàng ngày** (`dang-video-tiktok-hang-ngay`) - tắt · custom/full · mỗi 60 phút
 
 ## Plugins (tool/hook native cho mọi engine)
 - **Thời gian & ngày** (`datetime-vn`) - bundled/chạy · tools: javis_now, javis_date_add · Xem ngày giờ hiện tại theo múi giờ đã cấu hình và tính ngày tương đối (mai, mốt, N ngày nữa, tuần trước). Thuần stdlib, chỉ đọc, không cần mạng.
