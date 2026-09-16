@@ -312,16 +312,19 @@
       var i, m;
       for (i = 0; i < labels.length; i++) {
         m = md.match(new RegExp("^[ \\t]*[-*][ \\t]*" + labels[i] + ":[ \\t]*(.*)$", "m"));
-        if (m && m[1] && m[1].trim()) return m[1].trim();
+        if (m) {
+          return m[1] ? m[1].trim() : "";
+        }
       }
       return fallback || "";
     }
-    out.colorPrimary = idLine(["Màu chính", "Mau chinh"], "#6C3BFF");
-    out.colorSecondary = idLine(["Màu phụ", "Mau phu"], "#00D4FF");
-    out.fonts = idLine(["Font"], "Inter, Montserrat");
-    out.logoMain = idLine(["Logo chính", "Logo chinh"], "attachments/dataset/chung/thsv-logo-2025.png");
-    out.logoWhite = idLine(["Logo trắng", "Logo trang"], "attachments/dataset/chung/thsv-logo-big.png");
-    out.logoIcon = idLine(["Icon"], "attachments/dataset/chung/thsv-logo-2025.png");
+    var isDefaultOrSaoViet = (stem === "_mac-dinh" || stem === "royce-shop" || /saoviet|thsv/i.test(stem));
+    out.colorPrimary = idLine(["Màu chính", "Mau chinh"], isDefaultOrSaoViet ? "#6C3BFF" : "#2C7BE5");
+    out.colorSecondary = idLine(["Màu phụ", "Mau phu"], isDefaultOrSaoViet ? "#00D4FF" : "#00D4FF");
+    out.fonts = idLine(["Font"], isDefaultOrSaoViet ? "Inter, Montserrat" : "Roboto, Inter");
+    out.logoMain = idLine(["Logo chính", "Logo chinh"], isDefaultOrSaoViet ? "attachments/dataset/chung/thsv-logo-2025.png" : "");
+    out.logoWhite = idLine(["Logo trắng", "Logo trang"], isDefaultOrSaoViet ? "attachments/dataset/chung/thsv-logo-big.png" : "");
+    out.logoIcon = idLine(["Icon"], isDefaultOrSaoViet ? "attachments/dataset/chung/thsv-logo-2025.png" : "");
     out.imageStyle = idLine(["Phong cách hình ảnh", "Phong cach hinh anh"], "công nghệ, tối giản, premium");
     out.voice = idLine(["Tone of voice"], "chuyên nghiệp, trẻ, hiện đại");
     out.layout = idLine(["Quy tắc bố cục", "Quy tac bo cuc"], "logo góc trên, lề an toàn 8%, cover 16:9, không che mặt học viên");
@@ -785,9 +788,9 @@
     setFieldVal("dsFldColorSec", dp.colorSecondary || "#00D4FF");
     setFieldVal("dsColorSecPick", cleanHex(dp.colorSecondary, "#00D4FF"));
     setFieldVal("dsFldFonts", dp.fonts || "Inter, Montserrat");
-    setFieldVal("dsFldLogoMain", dp.logoMain || "attachments/dataset/chung/thsv-logo-2025.png");
-    setFieldVal("dsFldLogoWhite", dp.logoWhite || "attachments/dataset/chung/thsv-logo-big.png");
-    setFieldVal("dsFldLogoIcon", dp.logoIcon || "attachments/dataset/chung/thsv-logo-2025.png");
+    setFieldVal("dsFldLogoMain", dp.logoMain || "");
+    setFieldVal("dsFldLogoWhite", dp.logoWhite || "");
+    setFieldVal("dsFldLogoIcon", dp.logoIcon || "");
     setFieldVal("dsFldImageStyle", dp.imageStyle || "công nghệ, tối giản, premium");
     setFieldVal("dsFldVoice", dp.voice || "chuyên nghiệp, trẻ, hiện đại");
     setFieldVal("dsFldLayout", dp.layout || "logo góc trên, lề an toàn 8%, cover 16:9, không che mặt học viên");
@@ -795,11 +798,11 @@
 
     /* Cap nhat logo thumbnails */
     var mThumb = area.querySelector("#dsThumbMain");
-    if (mThumb) mThumb.innerHTML = '<img src="' + esc(rawUrl(dp.logoMain || "attachments/dataset/chung/thsv-logo-2025.png")) + '" alt="Logo chính">';
+    if (mThumb) mThumb.innerHTML = dp.logoMain ? '<img src="' + esc(rawUrl(dp.logoMain)) + '" alt="Logo chính">' : '<span class="ds-empty-thumb">Chưa có ảnh</span>';
     var wThumb = area.querySelector("#dsThumbWhite");
-    if (wThumb) wThumb.innerHTML = '<img src="' + esc(rawUrl(dp.logoWhite || "attachments/dataset/chung/thsv-logo-big.png")) + '" alt="Logo trắng">';
+    if (wThumb) wThumb.innerHTML = dp.logoWhite ? '<img src="' + esc(rawUrl(dp.logoWhite)) + '" alt="Logo trắng">' : '<span class="ds-empty-thumb">Chưa có ảnh</span>';
     var iThumb = area.querySelector("#dsThumbIcon");
-    if (iThumb) iThumb.innerHTML = '<img src="' + esc(rawUrl(dp.logoIcon || "attachments/dataset/chung/thsv-logo-2025.png")) + '" alt="Icon">';
+    if (iThumb) iThumb.innerHTML = dp.logoIcon ? '<img src="' + esc(rawUrl(dp.logoIcon)) + '" alt="Icon">' : '<span class="ds-empty-thumb">Chưa có ảnh</span>';
 
     /* Cap nhat gradient preview */
     var grad = area.querySelector("#dsColorGradientBar");
@@ -943,9 +946,9 @@
     var colorPri = p.colorPrimary || "#6C3BFF";
     var colorSec = p.colorSecondary || "#00D4FF";
     var fonts = p.fonts || "Inter, Montserrat";
-    var logoMain = p.logoMain || "attachments/dataset/chung/thsv-logo-2025.png";
-    var logoWhite = p.logoWhite || "attachments/dataset/chung/thsv-logo-big.png";
-    var logoIcon = p.logoIcon || "attachments/dataset/chung/thsv-logo-2025.png";
+    var logoMain = p.logoMain || "";
+    var logoWhite = p.logoWhite || "";
+    var logoIcon = p.logoIcon || "";
     var imageStyle = p.imageStyle || "công nghệ, tối giản, premium";
     var voice = p.voice || "chuyên nghiệp, trẻ, hiện đại";
     var layout = p.layout || "logo góc trên, lề an toàn 8%, cover 16:9, không che mặt học viên";
@@ -1082,19 +1085,19 @@
       /* Slot 1: Logo chinh */
       '<div class="ds-logo-card">' +
       '<div class="ds-logo-label">Logo chính</div>' +
-      '<div class="ds-logo-thumb" id="dsThumbMain"><img src="' + esc(rawUrl(logoMain)) + '" alt="Logo chính" onerror="this.parentNode.innerHTML=\'<span class=\\\'ds-logo-thumb-empty\\\'>Chưa có ảnh</span>\'"></div>' +
+      '<div class="ds-logo-thumb" id="dsThumbMain">' + (logoMain ? '<img src="' + esc(rawUrl(logoMain)) + '" alt="Logo chính" onerror="this.parentNode.innerHTML=\'<span class=\\\'ds-logo-thumb-empty\\\'>Chưa có ảnh</span>\'">' : '<span class="ds-logo-thumb-empty">Chưa có ảnh</span>') + '</div>' +
       '<input type="text" class="ds-input ds-logo-input" id="dsFldLogoMain" value="' + esc(logoMain) + '" placeholder="Ví dụ: attachments/dataset/chung/...">' +
       '</div>' +
       /* Slot 2: Logo trang am ban */
       '<div class="ds-logo-card">' +
       '<div class="ds-logo-label">Logo trắng (Âm bản)</div>' +
-      '<div class="ds-logo-thumb dark-bg" id="dsThumbWhite"><img src="' + esc(rawUrl(logoWhite)) + '" alt="Logo trắng" onerror="this.parentNode.innerHTML=\'<span class=\\\'ds-logo-thumb-empty\\\'>Chưa có ảnh</span>\'"></div>' +
-      '<input type="text" class="ds-input ds-logo-input" id="dsFldLogoWhite" value="' + esc(logoWhite) + '" placeholder="Ví dụ: attachments/dataset/chung/...">' +
+      '<div class="ds-logo-thumb dark-bg" id="dsThumbWhite">' + (logoWhite ? '<img src="' + esc(rawUrl(logoWhite)) + '" alt="Logo trắng" onerror="this.parentNode.innerHTML=\'<span class=\\\'ds-logo-thumb-empty\\\'>Chưa có ảnh</span>\'">' : '<span class="ds-logo-thumb-empty">Chưa có ảnh</span>') + '</div>' +
+      '<input type="text" class="ds-input ds-logo-input" id="dsFldLogoWhite" value="' + esc(logoWhite) + '" placeholder="Ví dụ: attachments/dataset/chung/... (để trống nếu không có)">' +
       '</div>' +
       /* Slot 3: Icon / Watermark */
       '<div class="ds-logo-card">' +
       '<div class="ds-logo-label">Icon / Watermark</div>' +
-      '<div class="ds-logo-thumb" id="dsThumbIcon"><img src="' + esc(rawUrl(logoIcon)) + '" alt="Icon" onerror="this.parentNode.innerHTML=\'<span class=\\\'ds-logo-thumb-empty\\\'>Chưa có ảnh</span>\'"></div>' +
+      '<div class="ds-logo-thumb" id="dsThumbIcon">' + (logoIcon ? '<img src="' + esc(rawUrl(logoIcon)) + '" alt="Icon" onerror="this.parentNode.innerHTML=\'<span class=\\\'ds-logo-thumb-empty\\\'>Chưa có ảnh</span>\'">' : '<span class="ds-logo-thumb-empty">Chưa có ảnh</span>') + '</div>' +
       '<input type="text" class="ds-input ds-logo-input" id="dsFldLogoIcon" value="' + esc(logoIcon) + '" placeholder="Ví dụ: attachments/dataset/chung/...">' +
       '</div>' +
       '</div>' +
@@ -1209,6 +1212,22 @@
     bindSyncInput("dsFldPageName");
     bindSyncInput("dsFldPageId");
     bindSyncInput("dsFldAccessToken");
+
+    function bindLogoInput(inpId, thumbId, label) {
+      var inp = area.querySelector("#" + inpId);
+      if (!inp) return;
+      inp.oninput = function () {
+        var v = this.value.trim();
+        var t = area.querySelector("#" + thumbId);
+        if (t) {
+          t.innerHTML = v ? '<img src="' + esc(rawUrl(v)) + '" alt="' + label + '" onerror="this.parentNode.innerHTML=\'<span class=\\\'ds-logo-thumb-empty\\\'>Chưa có ảnh</span>\'">' : '<span class="ds-logo-thumb-empty">Chưa có ảnh</span>';
+        }
+        syncFormToMarkdown();
+      };
+    }
+    bindLogoInput("dsFldLogoMain", "dsThumbMain", "Logo chính");
+    bindLogoInput("dsFldLogoWhite", "dsThumbWhite", "Logo trắng");
+    bindLogoInput("dsFldLogoIcon", "dsThumbIcon", "Icon");
 
     var tokInp = area.querySelector("#dsFldAccessToken");
     var togBtn = area.querySelector("#dsToggleTok");
