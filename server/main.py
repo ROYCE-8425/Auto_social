@@ -127,6 +127,7 @@ import connect_health   # sức khoẻ kết nối: vòng check nền + phân lo
 import cred_exchange   # đổi credential hộ user (vd App Password -> Google master token) khi đấu
 import plugins_host   # hệ PLUGIN: thư mục Python thả vào, tự thêm tool/hook cho mọi engine qua hub
 import web_security   # chống CSRF-to-localhost + DNS-rebinding cho web API cục bộ
+import ops_rbac       # phân quyền vận hành (staff, manager, owner) cho /ops
 import image_gen      # tạo ảnh bằng gói ChatGPT (OAuth) - Codex Responses + tool image_generation
 import media_gc       # dọn vùng cache media (attachments/ + inbox/) theo hạn tuổi + trần dung lượng
 import inbox         # hòm thư: mọi kết quả chạy nền để lại một mẩu thư bền ở server
@@ -211,7 +212,7 @@ app.add_middleware(CORSMiddleware,
 
 # Đường dẫn KHÔNG cần đăng nhập. CHỈ các auth endpoint công khai (status/login/setup) -
 # KHÔNG để cả prefix /auth public vì /auth/disable, /auth/logout phải yêu cầu đăng nhập.
-_AUTH_PUBLIC_PREFIX = ("/static", "/health")
+_AUTH_PUBLIC_PREFIX = ("/static", "/health", "/ops/assets")
 # /brand-logo: hiện trên màn đăng nhập (trước session). /tls-check: Caddy gọi (không đăng nhập được).
 _AUTH_PUBLIC_EXACT = ("/", "/favicon.ico", "/auth/status", "/auth/login", "/auth/setup",
                       "/brand-logo", "/tls-check",
@@ -219,7 +220,8 @@ _AUTH_PUBLIC_EXACT = ("/", "/favicon.ico", "/auth/status", "/auth/login", "/auth
                       # /connect/oauth/callback: browser redirect từ provider OAuth về.
                       "/hub/mcp", "/connect/oauth/callback",
                       # /hook/facebook: webhook Graph API từ Meta
-                      "/hook/facebook")
+                      "/hook/facebook",
+                      "/ops/auth/login", "/ops/auth/logout")
 # Endpoint CHỈ-LOCALHOST: agent (Claude CLI chạy cùng máy/container) curl được mà không cần
 # cookie đăng nhập; request từ ngoài (qua Traefik/Caddy/LAN) đến từ IP khác loopback → vẫn bị chặn.
 # /reminders/cancel đi cùng nhóm với /reminders (TẠO nhắc): huỷ là thao tác YẾU HƠN tạo, nên
@@ -250,10 +252,52 @@ async def _csrf_guard(request: Request, call_next):
 @app.middleware("http")
 async def _auth_guard(request: Request, call_next):
     """Chặn endpoint khi CẦN đăng nhập (đã đặt mật khẩu HOẶC chạy public) mà chưa có session.
-    Khi chạy public (0.0.0.0) lần đầu chưa có mật khẩu → vẫn chặn để ÉP tạo tài khoản trước
-    (setup_required), tránh hở dashboard điều khiển Claude full quyền ra Internet."""
+    Đồng thời áp dụng phân quyền RBAC (ops_rbac) cho nhân viên CSKH (staff) và quản lý (manager).
+    """
+    path = request.url.path
+    ops_user = ops_rbac.get_current_ops_user(request)
+
+    # 1. Bảo vệ buồng lái console điều khiển (`/` hoặc `/index.html`):
+    # Staff và Manager cấm tuyệt đối console chủ máy (docs/dev/2026-09-16-ops-dashboard-plan.md Mục 3).
+    if path in ("/", "/index.html"):
+        if ops_user and ops_user.get("role") in ("staff", "manager"):
+            return JSONResponse(
+                {"error": "Chỉ chủ máy mới được truy cập console điều khiển", "role": ops_user.get("role")},
+                status_code=403
+            )
+
+    # 2. Xử lý không gian /ops (giao diện và API vận hành)
+    if path == "/ops" or path.startswith("/ops/"):
+        if path in ("/ops/auth/login", "/ops/auth/logout") or path.startswith("/ops/assets"):
+            return await call_next(request)
+        # Trang UI frontend (/ops, /ops/inbox, /ops/customers, etc.): cho phép tải HTML5 shell
+        if not path.startswith(("/ops/me", "/ops/users")):
+            return await call_next(request)
+        # Endpoint API /ops/me hoặc /ops/users: kiểm tra phiên đăng nhập & RBAC
+        if not ops_user:
+            return JSONResponse({"error": "unauthorized", "auth_required": True}, status_code=401)
+        allowed, reason = ops_rbac.check_access_permission(ops_user, path, request.method)
+        if not allowed:
+            return JSONResponse({"error": reason or "forbidden", "role": ops_user.get("role")}, status_code=403)
+        return await call_next(request)
+
+    # 3. RBAC Policy check cho người dùng ops_session trên mọi API khác (/fanpage-care/*, /kanban, /usage/*, etc.)
+    if ops_user and ops_user.get("role") in ("staff", "manager"):
+        payload = None
+        if path == "/fanpage-care/settings" and request.method.upper() == "POST":
+            try:
+                body_bytes = await request.body()
+                if body_bytes:
+                    payload = json.loads(body_bytes.decode("utf-8"))
+            except Exception:
+                payload = None
+        allowed, reason = ops_rbac.check_access_permission(ops_user, path, request.method, payload=payload)
+        if not allowed:
+            return JSONResponse({"error": reason or "forbidden", "role": ops_user.get("role")}, status_code=403)
+        return await call_next(request)
+
+    # 4. Kiểm tra session admin Javis cũ cho các route console / API hệ thống
     if cfgmod.gate_active():
-        path = request.url.path
         client_host = request.client.host if request.client else ""
         public = (path in _AUTH_PUBLIC_EXACT
                   or any(path.startswith(p) for p in _AUTH_PUBLIC_PREFIX)
@@ -297,6 +341,10 @@ DASHBOARD_PATH = Path(__file__).parent.parent / "dashboard"
 import mimetypes
 mimetypes.add_type("image/webp", ".webp")
 app.mount("/static", StaticFiles(directory=str(DASHBOARD_PATH)), name="static")
+
+OPS_DIST_PATH = Path(__file__).parent.parent / "ops" / "dist"
+if (OPS_DIST_PATH / "assets").exists():
+    app.mount("/ops/assets", StaticFiles(directory=str(OPS_DIST_PATH / "assets")), name="ops_assets")
 
 
 @app.middleware("http")
@@ -7876,6 +7924,135 @@ fanpage_care_feature = fanpage_care_mod.register(app, fanpage_care_mod.FanpageCa
     tasks_feature=tasks_feature,
     inbox_add=inbox.add,
 ))
+
+
+# ============================================================
+# OPS DASHBOARD (/ops) - Bảng điều khiển vận hành & CSKH Sao Việt
+# docs/dev/2026-09-16-ops-dashboard-plan.md
+# ============================================================
+@app.post("/ops/auth/login")
+async def ops_auth_login(request: Request):
+    """Đăng nhập phân quyền Ops (staff, manager, hoặc chủ máy)."""
+    try:
+        data = await request.json()
+    except Exception:
+        data = {}
+    username = str(data.get("username") or "").strip()
+    password = str(data.get("password") or "")
+    if not username or not password:
+        return JSONResponse({"ok": False, "error": "Vui lòng nhập tên đăng nhập và mật khẩu"}, status_code=400)
+
+    user = ops_rbac.verify_login(username, password)
+    if not user:
+        return JSONResponse({"ok": False, "error": "Sai tên đăng nhập hoặc mật khẩu"}, status_code=401)
+
+    token = ops_rbac.create_session(user["id"], user["username"], user["role"], user.get("name", ""))
+    resp = JSONResponse({"ok": True, "user": user})
+    resp.set_cookie("ops_session", token, httponly=True, samesite="lax", max_age=30 * 86400, path="/")
+    return resp
+
+
+@app.post("/ops/auth/logout")
+async def ops_auth_logout(request: Request):
+    """Đăng xuất khỏi phân hệ Ops."""
+    tok = request.cookies.get("ops_session", "")
+    if tok:
+        ops_rbac.drop_session(tok)
+    resp = JSONResponse({"ok": True})
+    resp.delete_cookie("ops_session", path="/")
+    return resp
+
+
+@app.get("/ops/me")
+async def ops_get_me(request: Request):
+    """Trả thông tin người dùng hiện tại từ cookie javis_session hoặc ops_session."""
+    user = ops_rbac.get_current_ops_user(request)
+    return {"user": user}
+
+
+@app.get("/ops/users")
+async def ops_list_users(request: Request):
+    """Danh sách tài khoản nhân sự phụ (Owner only)."""
+    user = ops_rbac.get_current_ops_user(request)
+    if not user or user.get("role") != "owner":
+        return JSONResponse({"error": "Chỉ chủ máy mới được quản lý tài khoản nhân sự", "role": user.get("role") if user else None}, status_code=403)
+    users = [ops_rbac.sanitize_user(u) for u in ops_rbac.load_users()]
+    return {"users": users}
+
+
+@app.post("/ops/users")
+async def ops_create_user(request: Request):
+    """Tạo tài khoản nhân sự phụ mới (Owner only)."""
+    user = ops_rbac.get_current_ops_user(request)
+    if not user or user.get("role") != "owner":
+        return JSONResponse({"error": "Chỉ chủ máy mới được tạo tài khoản", "role": user.get("role") if user else None}, status_code=403)
+    try:
+        data = await request.json()
+    except Exception:
+        data = {}
+    try:
+        new_u = ops_rbac.create_user(
+            username=data.get("username", ""),
+            password=data.get("password", ""),
+            role=data.get("role", "staff"),
+            name=data.get("name", "")
+        )
+        return {"ok": True, "user": new_u}
+    except ValueError as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=400)
+
+
+@app.put("/ops/users/{user_id}")
+async def ops_update_user(user_id: str, request: Request):
+    """Cập nhật tài khoản nhân sự phụ (Owner only)."""
+    user = ops_rbac.get_current_ops_user(request)
+    if not user or user.get("role") != "owner":
+        return JSONResponse({"error": "Chỉ chủ máy mới được sửa tài khoản", "role": user.get("role") if user else None}, status_code=403)
+    try:
+        data = await request.json()
+    except Exception:
+        data = {}
+    try:
+        updated = ops_rbac.update_user(user_id, data)
+        if not updated:
+            return JSONResponse({"ok": False, "error": "Không tìm thấy người dùng"}, status_code=404)
+        return {"ok": True, "user": updated}
+    except ValueError as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=400)
+
+
+@app.delete("/ops/users/{user_id}")
+async def ops_delete_user(user_id: str, request: Request):
+    """Xoá tài khoản nhân sự phụ (Owner only)."""
+    user = ops_rbac.get_current_ops_user(request)
+    if not user or user.get("role") != "owner":
+        return JSONResponse({"error": "Chỉ chủ máy mới được xoá tài khoản", "role": user.get("role") if user else None}, status_code=403)
+    ok = ops_rbac.delete_user(user_id)
+    if not ok:
+        return JSONResponse({"ok": False, "error": "Không tìm thấy tài khoản để xoá"}, status_code=404)
+    return {"ok": True}
+
+
+@app.get("/ops/{full_path:path}")
+@app.get("/ops")
+async def serve_ops_dashboard(full_path: str = ""):
+    """Phục vụ giao diện Single-Page App Ops Dashboard (HTML5 History Mode Fallback)."""
+    index_file = OPS_DIST_PATH / "index.html"
+    if not index_file.exists():
+        return HTMLResponse(
+            "<!DOCTYPE html><html><body><h1>Ops Dashboard chưa được build.</h1>"
+            "<p>Vui lòng chạy <code>npm run build</code> trong thư mục <code>ops/</code>.</p></body></html>",
+            status_code=503
+        )
+    if full_path:
+        target = OPS_DIST_PATH / full_path
+        if target.is_file():
+            return FileResponse(str(target))
+    return HTMLResponse(
+        index_file.read_text(encoding="utf-8"),
+        headers={"Cache-Control": "no-cache, no-store, must-revalidate"}
+    )
+
 
 
 # ============================================================

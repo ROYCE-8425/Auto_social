@@ -163,3 +163,10 @@ parse_ads*.ps1
 Thumbs.db
 desktop.ini
 server/stop-last.log
+
+# Node & Ops Dashboard
+node_modules/
+ops/node_modules/
+server/ops_users.json
+server/ops_sessions.json
+tmp-video-review/
