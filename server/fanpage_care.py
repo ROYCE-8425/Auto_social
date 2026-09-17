@@ -1181,6 +1181,7 @@ class FanpageCareFeature:
             page_id: str | None = None,
             class_name: str | None = None,
             platform: str | None = None,
+            kind: str | None = None,
             limit: int = 50,
             offset: int = 0,
         ):
@@ -1188,10 +1189,11 @@ class FanpageCareFeature:
                 page_id=page_id,
                 class_name=class_name,
                 platform=platform,
+                kind=kind,
                 limit=limit,
                 offset=offset,
             )
-            drafts = store.list_drafts(status="pending", limit=50)
+            drafts = store.list_drafts(page_id=page_id, status="pending", kind=kind, limit=limit)
             return {
                 "ok": True,
                 "events": events,
@@ -1217,10 +1219,15 @@ class FanpageCareFeature:
                 except Exception:
                     ev = None
             is_msg = bool(
-                ev and (
-                    ev.get("kind") == "message"
-                    or str(ev.get("platform") or "") == "messenger"
+                d.get("event_kind") == "message"
+                or (
+                    ev
+                    and (
+                        ev.get("kind") == "message"
+                        or str(ev.get("platform") or "") == "messenger"
+                    )
                 )
+                or (not d.get("event_id") and "_" not in cid and len(cid) > 14)
             )
             if is_msg:
                 res = await fanpage_care_graph.call(

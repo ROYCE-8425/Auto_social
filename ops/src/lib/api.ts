@@ -17,6 +17,8 @@ export interface CareStats {
   replies_24h: number
   spam_hidden_24h: number
   pending_drafts: number
+  pending_comment_drafts?: number
+  pending_message_drafts?: number
   total_customers: number
 }
 
@@ -68,6 +70,12 @@ export interface CareDraft {
   class?: string | null
   status: 'pending' | 'approved' | 'rejected' | 'sent' | 'expired'
   created_ts: number
+  event_kind?: 'comment' | 'message'
+  event_platform?: string
+  from_name?: string
+  from_id?: string
+  source_body?: string
+  event_created_ts?: number
 }
 
 export interface CareConversation {
@@ -246,11 +254,19 @@ export const api = {
     }),
 
   // Inbox: Comments & Drafts
-  getInbox: (params?: { page_id?: string; class_name?: string; platform?: string; limit?: number; offset?: number }) => {
+  getInbox: (params?: {
+    page_id?: string
+    class_name?: string
+    platform?: string
+    kind?: 'comment' | 'message'
+    limit?: number
+    offset?: number
+  }) => {
     const query = new URLSearchParams()
     if (params?.page_id) query.set('page_id', params.page_id)
     if (params?.class_name) query.set('class_name', params.class_name)
     if (params?.platform) query.set('platform', params.platform)
+    if (params?.kind) query.set('kind', params.kind)
     if (params?.limit) query.set('limit', String(params.limit))
     if (params?.offset) query.set('offset', String(params.offset))
     const qs = query.toString()

@@ -13,6 +13,7 @@ import {
   MessageCircle,
   X,
   ExternalLink,
+  Sparkles,
 } from 'lucide-react'
 import { api, CareConversation, CareDraft, CareEvent, CareState } from '../lib/api'
 import { useAuth } from '../lib/auth'
@@ -262,21 +263,33 @@ export const Inbox: React.FC = () => {
     }
   }
 
-  const pendingDrafts = drafts.filter((d) => d.status === 'pending')
+  // Helper to distinguish comments from messenger
+  const isCommentDraft = (d: CareDraft) => {
+    if (d.event_kind === 'comment') return true
+    if (d.event_kind === 'message') return false
+    if (conversations.some((c) => c.psid === d.target_id)) return false
+    return d.target_id.includes('_') || (d.target_id.length <= 16 && !d.target_id.startsWith('2838'))
+  }
 
-  const filteredDrafts = pendingDrafts.filter((draft) => {
+  const commentDrafts = drafts.filter((d) => d.status === 'pending' && isCommentDraft(d))
+  const messengerDrafts = drafts.filter((d) => d.status === 'pending' && !isCommentDraft(d))
+
+  const commentEvents = events.filter((e) => e.kind === 'comment')
+  const messengerEvents = events.filter((e) => e.kind === 'message' || e.kind === 'echo')
+
+  const filteredCommentDrafts = commentDrafts.filter((draft) => {
     if (!searchQuery.trim()) return true
     const q = searchQuery.toLowerCase()
     const ev = events.find((e) => e.id === draft.event_id || e.object_id === draft.target_id)
     return (
       draft.proposed?.toLowerCase().includes(q) ||
-      ev?.from_name?.toLowerCase().includes(q) ||
-      ev?.body?.toLowerCase().includes(q) ||
+      (draft.from_name || ev?.from_name)?.toLowerCase().includes(q) ||
+      (draft.source_body || ev?.body)?.toLowerCase().includes(q) ||
       draft.target_id?.includes(q)
     )
   })
 
-  const filteredEvents = events.filter((e) => {
+  const filteredCommentEvents = commentEvents.filter((e) => {
     if (!searchQuery.trim()) return true
     const q = searchQuery.toLowerCase()
     return (
@@ -309,7 +322,7 @@ export const Inbox: React.FC = () => {
             }`}
           >
             <MessageSquare className="w-4 h-4 text-saoviet-500" />
-            <span>Bình luận ({pendingDrafts.length} chờ duyệt)</span>
+            <span>Bình luận bài viết ({commentDrafts.length} chờ duyệt)</span>
           </button>
           <button
             onClick={() => setActiveSubTab('messenger')}
@@ -320,7 +333,7 @@ export const Inbox: React.FC = () => {
             }`}
           >
             <Bot className="w-4 h-4 text-blue-500" />
-            <span>Tin nhắn Messenger / IB ({conversations.length})</span>
+            <span>Tin nhắn Messenger / IB ({conversations.length}{messengerDrafts.length > 0 ? ` · ${messengerDrafts.length} gợi ý` : ''})</span>
           </button>
         </div>
       </div>
@@ -340,7 +353,7 @@ export const Inbox: React.FC = () => {
                       : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                   }`}
                 >
-                  Nháp chờ duyệt ({pendingDrafts.length})
+                  Nháp chờ duyệt ({commentDrafts.length})
                 </button>
                 <button
                   onClick={() => setFilterView('events')}
@@ -350,7 +363,7 @@ export const Inbox: React.FC = () => {
                       : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                   }`}
                 >
-                  Tất cả sự kiện bình luận ({events.length})
+                  Tất cả sự kiện bình luận ({commentEvents.length})
                 </button>
               </div>
 
@@ -446,10 +459,12 @@ export const Inbox: React.FC = () => {
           {/* DRAFTS PENDING VIEW */}
           {filterView === 'pending' && (
             <div className="space-y-4">
-              {filteredDrafts.map((draft) => {
+              {filteredCommentDrafts.map((draft) => {
                 const ev = events.find((e) => e.id === draft.event_id || e.object_id === draft.target_id)
                 const isBusy = actionLoading === draft.id
                 const msg = actionMsg?.id === draft.id ? actionMsg : null
+                const customerName = draft.from_name || ev?.from_name || 'Khách hàng'
+                const commentText = draft.source_body || ev?.body
 
                 return (
                   <div
@@ -471,12 +486,12 @@ export const Inbox: React.FC = () => {
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex items-start space-x-3">
                         <div className="w-10 h-10 rounded-full bg-amber-100 text-amber-800 font-bold text-sm flex items-center justify-center flex-shrink-0">
-                          {ev?.from_name ? ev.from_name.slice(0, 2).toUpperCase() : 'KH'}
+                          {customerName ? customerName.slice(0, 2).toUpperCase() : 'KH'}
                         </div>
                         <div>
                           <div className="flex flex-wrap items-center gap-2">
-                            <span className="font-bold text-sm text-slate-900">{ev?.from_name || 'Khách hàng'}</span>
-                            {renderPlatformChip(ev?.platform || 'facebook')}
+                            <span className="font-bold text-sm text-slate-900">{customerName}</span>
+                            {renderPlatformChip(draft.event_platform || ev?.platform || 'facebook')}
                             {draft.class && (
                               <span className="text-[11px] px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 font-medium border border-blue-100">
                                 Phân loại: {draft.class}
@@ -498,10 +513,12 @@ export const Inbox: React.FC = () => {
                     </div>
 
                     {/* Customer's Comment */}
-                    {ev?.body && (
+                    {commentText && (
                       <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-100 text-xs text-slate-800 leading-relaxed font-normal">
-                        <span className="font-bold text-slate-900 block mb-1">Khách bình luận:</span>
-                        "{ev.body}"
+                        <span className="font-bold text-slate-900 block mb-1">
+                          Khách bình luận ({customerName}):
+                        </span>
+                        "{commentText}"
                       </div>
                     )}
 
@@ -530,8 +547,8 @@ export const Inbox: React.FC = () => {
                       <button
                         onClick={() =>
                           handleOpenHandoff(
-                            `Tư vấn khách ${ev?.from_name || 'Fanpage'}`,
-                            ev?.body || draft.proposed,
+                            `Tư vấn khách ${customerName}`,
+                            commentText || draft.proposed,
                             draft.target_id
                           )
                         }
@@ -555,7 +572,7 @@ export const Inbox: React.FC = () => {
                 )
               })}
 
-              {filteredDrafts.length === 0 && (
+              {filteredCommentDrafts.length === 0 && (
                 <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center text-slate-400 text-xs">
                   <CheckCircle2 className="w-10 h-10 mx-auto mb-3 text-emerald-400" />
                   {platformFilter === 'tiktok' ? (
@@ -565,8 +582,8 @@ export const Inbox: React.FC = () => {
                     </>
                   ) : (
                     <>
-                      <p className="font-semibold text-slate-600 text-sm">Không có nháp nào đang chờ duyệt</p>
-                      <p className="text-slate-400 mt-1">Khi có bình luận mới cần xác nhận, Javis sẽ chuẩn bị nháp tại đây</p>
+                      <p className="font-semibold text-slate-600 text-sm">Không có nháp bình luận nào đang chờ duyệt</p>
+                      <p className="text-slate-400 mt-1">Khi có bình luận bài viết mới cần phản hồi, Javis sẽ chuẩn bị nháp tại đây</p>
                     </>
                   )}
                 </div>
@@ -577,7 +594,7 @@ export const Inbox: React.FC = () => {
           {/* ALL EVENTS VIEW */}
           {filterView === 'events' && (
             <div className="space-y-4">
-              {filteredEvents.map((item) => (
+              {filteredCommentEvents.map((item) => (
                 <div
                   key={item.id}
                   className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm hover:border-slate-300 transition-all space-y-3"
@@ -637,7 +654,7 @@ export const Inbox: React.FC = () => {
                 </div>
               ))}
 
-              {filteredEvents.length === 0 && (
+              {filteredCommentEvents.length === 0 && (
                 <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center text-slate-400 text-xs">
                   <MessageSquare className="w-10 h-10 mx-auto mb-3 text-slate-300" />
                   {platformFilter === 'tiktok' ? (
@@ -647,7 +664,7 @@ export const Inbox: React.FC = () => {
                     </>
                   ) : (
                     <>
-                      <p className="font-semibold text-slate-600">Không có sự kiện nào phù hợp</p>
+                      <p className="font-semibold text-slate-600">Không có sự kiện bình luận nào phù hợp</p>
                       <p className="text-slate-400 mt-1">Các bình luận và tương tác mới sẽ xuất hiện tại đây</p>
                     </>
                   )}
@@ -778,6 +795,48 @@ export const Inbox: React.FC = () => {
                       </span>
                     </div>
                   </div>
+
+                  {/* Javis suggested reply for this conversation if any */}
+                  {(() => {
+                    const draftForConv = messengerDrafts.find(
+                      (d) => d.target_id === conv.psid || d.from_id === conv.psid
+                    )
+                    if (!draftForConv) return null
+                    const isBusyDraft = actionLoading === draftForConv.id
+                    return (
+                      <div className="p-3.5 bg-gradient-to-r from-blue-50/80 to-indigo-50/80 border border-blue-200/90 rounded-xl space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-1.5 text-xs font-bold text-blue-900">
+                            <Sparkles className="w-4 h-4 text-blue-600 animate-pulse" />
+                            <span>Gợi ý phản hồi từ Javis</span>
+                          </div>
+                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">
+                            Chờ duyệt
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-800 italic leading-relaxed">
+                          "{draftForConv.proposed}"
+                        </p>
+                        <div className="flex items-center justify-end space-x-2 pt-1.5 border-t border-blue-200/60">
+                          <button
+                            onClick={() => handleRejectDraft(draftForConv)}
+                            disabled={isBusyDraft}
+                            className="px-2.5 py-1 text-[11px] font-medium text-slate-500 hover:text-red-600 rounded-lg transition-colors cursor-pointer disabled:opacity-50"
+                          >
+                            Bỏ qua
+                          </button>
+                          <button
+                            onClick={() => handleSendDraft(draftForConv)}
+                            disabled={isBusyDraft}
+                            className="flex items-center space-x-1 px-3 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-2xs transition-all cursor-pointer disabled:opacity-50"
+                          >
+                            <Send className="w-3 h-3" />
+                            <span>{isBusyDraft ? 'Đang gửi…' : 'Duyệt & Gửi tin nhắn'}</span>
+                          </button>
+                        </div>
+                      </div>
+                    )
+                  })()}
 
                   <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
                     <button
@@ -954,6 +1013,62 @@ export const Inbox: React.FC = () => {
                 })
               )}
             </div>
+
+            {/* Suggested Draft Banner inside Modal */}
+            {(() => {
+              const activeModalDraft = messengerDrafts.find(
+                (d) => d.target_id === selectedConv.psid || d.from_id === selectedConv.psid
+              )
+              if (!activeModalDraft) return null
+              const isBusyModal = actionLoading === activeModalDraft.id
+              return (
+                <div className="px-4 py-2.5 bg-gradient-to-r from-blue-50 to-indigo-50 border-t border-blue-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                  <div className="flex items-start space-x-2 flex-1 min-w-0">
+                    <Sparkles className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
+                    <div className="min-w-0">
+                      <div className="text-[11px] font-bold text-blue-900 flex items-center gap-1.5">
+                        <span>Gợi ý phản hồi từ Javis</span>
+                        <span className="text-[10px] font-normal text-blue-600">(soạn theo Brand Kit)</span>
+                      </div>
+                      <p className="text-xs text-slate-800 line-clamp-2 italic mt-0.5">
+                        "{activeModalDraft.proposed}"
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2 flex-shrink-0 self-end sm:self-center">
+                    <button
+                      type="button"
+                      onClick={() => setDirectMsgText(activeModalDraft.proposed)}
+                      className="px-2.5 py-1 text-xs font-semibold text-blue-700 bg-white hover:bg-blue-50 border border-blue-200 rounded-lg shadow-2xs transition-colors cursor-pointer"
+                    >
+                      Điền vào ô chat
+                    </button>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        await handleSendDraft(activeModalDraft)
+                        if (selectedConv) {
+                          handleOpenConversation(selectedConv)
+                        }
+                      }}
+                      disabled={isBusyModal}
+                      className="px-3 py-1 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-2xs transition-colors cursor-pointer disabled:opacity-50"
+                    >
+                      {isBusyModal ? 'Đang gửi…' : 'Gửi ngay'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleRejectDraft(activeModalDraft)}
+                      disabled={isBusyModal}
+                      className="p-1 text-slate-400 hover:text-red-500 rounded-lg transition-colors cursor-pointer"
+                      title="Bỏ qua gợi ý này"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              )
+            })()}
 
             {/* Footer Input */}
             <div className="p-3 border-t border-slate-200 bg-white space-y-2">

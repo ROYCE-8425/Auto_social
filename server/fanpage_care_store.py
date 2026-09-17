@@ -502,22 +502,41 @@ def create_draft(
 def list_drafts(
     page_id: str | None = None,
     status: str = "pending",
+    kind: str | None = None,
     db_path: Path | str | None = None,
     limit: int = 50,
 ) -> list[dict[str, Any]]:
-    """Liệt kê danh sách draft."""
+    """Liệt kê danh sách draft. Hỗ trợ lọc theo channel kind ('comment' hoặc 'message')."""
     init_db(db_path)
+    conds = ["d.status = ?"]
+    params: list[Any] = [status]
+    if page_id:
+        conds.append("d.page_id = ?")
+        params.append(str(page_id))
+    if kind:
+        k = str(kind).strip().lower()
+        if k == "comment":
+            conds.append("(e.kind = 'comment' OR (e.kind IS NULL AND d.target_id LIKE '%_%'))")
+        elif k in ("message", "messenger"):
+            conds.append("(e.kind = 'message' OR e.platform = 'messenger' OR (e.kind IS NULL AND d.target_id NOT LIKE '%_%'))")
+    where = f"WHERE {' AND '.join(conds)}"
+    sql = f"""
+        SELECT 
+            d.*,
+            COALESCE(e.kind, CASE WHEN d.target_id NOT LIKE '%_%' AND length(d.target_id) > 14 THEN 'message' ELSE 'comment' END) as event_kind,
+            COALESCE(e.platform, CASE WHEN d.target_id NOT LIKE '%_%' AND length(d.target_id) > 14 THEN 'messenger' ELSE 'facebook' END) as event_platform,
+            e.from_name as from_name,
+            e.from_id as from_id,
+            e.body as source_body,
+            e.created_ts as event_created_ts
+        FROM drafts d
+        LEFT JOIN events e ON d.event_id = e.id
+        {where}
+        ORDER BY d.created_ts DESC LIMIT ?
+    """
+    params.append(limit)
     with get_connection(db_path) as conn:
-        if page_id:
-            rows = conn.execute(
-                "SELECT * FROM drafts WHERE page_id = ? AND status = ? ORDER BY created_ts DESC LIMIT ?",
-                (str(page_id), status, limit),
-            ).fetchall()
-        else:
-            rows = conn.execute(
-                "SELECT * FROM drafts WHERE status = ? ORDER BY created_ts DESC LIMIT ?",
-                (status, limit),
-            ).fetchall()
+        rows = conn.execute(sql, params).fetchall()
         return [dict(r) for r in rows]
 
 
@@ -699,6 +718,7 @@ def list_events(
     page_id: str | None = None,
     class_name: str | None = None,
     platform: str | None = None,
+    kind: str | None = None,
     limit: int = 50,
     offset: int = 0,
     db_path: Path | str | None = None,
@@ -716,6 +736,9 @@ def list_events(
     if platform:
         conds.append("platform = ?")
         params.append(str(platform).strip().lower())
+    if kind:
+        conds.append("kind = ?")
+        params.append(str(kind).strip().lower())
 
     where = f"WHERE {' AND '.join(conds)}" if conds else ""
     sql = f"SELECT * FROM events {where} ORDER BY created_ts DESC LIMIT ? OFFSET ?"
@@ -812,10 +835,25 @@ def customer_behavior(crm_id: str, db_path: Path | str | None = None) -> dict[st
 
 
 def get_draft(draft_id: int, db_path: Path | str | None = None) -> dict[str, Any] | None:
-    """Đọc 1 draft theo ID."""
+    """Đọc 1 draft theo ID, kèm thông tin event liên quan."""
     init_db(db_path)
     with get_connection(db_path) as conn:
-        row = conn.execute("SELECT * FROM drafts WHERE id = ?", (draft_id,)).fetchone()
+        row = conn.execute(
+            """
+            SELECT 
+                d.*,
+                COALESCE(e.kind, CASE WHEN d.target_id NOT LIKE '%_%' AND length(d.target_id) > 14 THEN 'message' ELSE 'comment' END) as event_kind,
+                COALESCE(e.platform, CASE WHEN d.target_id NOT LIKE '%_%' AND length(d.target_id) > 14 THEN 'messenger' ELSE 'facebook' END) as event_platform,
+                e.from_name as from_name,
+                e.from_id as from_id,
+                e.body as source_body,
+                e.created_ts as event_created_ts
+            FROM drafts d
+            LEFT JOIN events e ON d.event_id = e.id
+            WHERE d.id = ?
+            """,
+            (draft_id,),
+        ).fetchone()
         return dict(row) if row else None
 
 
@@ -845,6 +883,16 @@ def get_stats(db_path: Path | str | None = None) -> dict[str, Any]:
         replies_24h = conn.execute("SELECT COUNT(*) FROM actions WHERE action = 'reply' AND ts >= ?", (day_ago,)).fetchone()[0]
         spam_hidden_24h = conn.execute("SELECT COUNT(*) FROM actions WHERE action = 'hide' AND ts >= ?", (day_ago,)).fetchone()[0]
         pending_dr = conn.execute("SELECT COUNT(*) FROM drafts WHERE status = 'pending'").fetchone()[0]
+        pending_cmt_dr = conn.execute("""
+            SELECT COUNT(*) FROM drafts d
+            LEFT JOIN events e ON d.event_id = e.id
+            WHERE d.status = 'pending' AND (e.kind = 'comment' OR (e.kind IS NULL AND d.target_id LIKE '%_%'))
+        """).fetchone()[0]
+        pending_msg_dr = conn.execute("""
+            SELECT COUNT(*) FROM drafts d
+            LEFT JOIN events e ON d.event_id = e.id
+            WHERE d.status = 'pending' AND (e.kind = 'message' OR e.platform = 'messenger' OR (e.kind IS NULL AND d.target_id NOT LIKE '%_%'))
+        """).fetchone()[0]
         total_cust = conn.execute("SELECT COUNT(*) FROM customers").fetchone()[0]
 
         return {
@@ -855,6 +903,8 @@ def get_stats(db_path: Path | str | None = None) -> dict[str, Any]:
             "replies_24h": replies_24h,
             "spam_hidden_24h": spam_hidden_24h,
             "pending_drafts": pending_dr,
+            "pending_comment_drafts": pending_cmt_dr,
+            "pending_message_drafts": pending_msg_dr,
             "total_customers": total_cust,
         }
 
