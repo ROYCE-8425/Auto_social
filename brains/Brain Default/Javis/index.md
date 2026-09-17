@@ -2,10 +2,11 @@
 
 > Tự sinh từ file - ĐỪNG sửa tay. Chỉ mục mọi năng lực của Javis trong brain này để bất kỳ AI/engine đọc 1 chỗ là hiểu Javis làm được gì. Song song `wiki/index.md` (tri thức).
 
-**Tổng quan:** 1 agents · 17 skills · 1 workflows (0 bật) · 4 loops (0 bật) · 13 plugins (12 chạy)
+**Tổng quan:** 2 agents · 19 skills · 2 workflows (0 bật) · 4 loops (0 bật) · 13 plugins (12 chạy)
 
 ## Agents
 - **Biên tập Facebook** (`bien-tap-facebook`) - Tạo 1 ảnh AI độc quyền mới 100%, soạn caption đúng brand kit và đăng lên Fanpage Facebook. · model gpt-5.5 · skills: dang-bai-facebook, viet-bai-facebook
+- **Biên tập TikTok** (`bien-tap-tiktok`) - Soạn bài carousel ảnh dọc 9:16 đúng brand kit và đăng lên TikTok qua PostPeer (kèm auto nhạc gợi ý). · model gpt-5.5 · skills: dang-carousel-tiktok
 
 ## Skills
 ### AI
@@ -18,6 +19,7 @@
 - **Query Wiki** (`query-wiki`) - Khai thác tri thức trong Second Brain: tổng hợp, so sánh, giả thuyết. Trả lời có trích dẫn.
 - **Kiểm tra lại năng lực của chính mình** (`verify-own-capabilities`) - Khi không chắc về một năng lực (vd: tạo ảnh), hãy kiểm tra danh sách tool/plugin đang hoạt động thay vì khẳng định là không có.
 ### Content
+- **Soạn nháp tương tác Fanpage** (`soan-nhap-tuong-tac`) - Soạn nháp câu trả lời comment hoặc tin nhắn khi chat trực tiếp trong /app: đúng brand kit, đúng giọng điệu, chỉ gửi thật khi người dùng xác nhận. Không thay thế Care poller.
 - **Viết bài Facebook** (`viet-bai-facebook`) - Skill viết caption Facebook cho hệ thống Sao Việt: rõ người học, rõ việc làm được, giọng tự nhiên, không văn mẫu AI, tối ưu đọc lướt trên di động.
 ### Facebook
 - **Đăng bài Facebook** (`dang-bai-facebook`) - Đăng bài Fanpage Sao Việt: Album 6-8 ảnh chuẩn Tỷ Lệ Vàng 2026, cover AI mới 100%, luân phiên 4 Content Pillars kèm chân trang sạch.
@@ -29,10 +31,12 @@
 - **HTML sang Webcake** (`html-to-webcake`) - Chuyển trang HTML thành file .pke mở được trong trình dựng Webcake, giữ đúng màu, cỡ chữ, ảnh và bố cục của bản gốc.
 - **Tạo poster Facebook khóa học** (`tao-poster-facebook-khoa-hoc`) - Tạo poster Facebook 1:1 cho khóa học bằng javis_generate_image, lưu vào vault và trả markdown ảnh.
 ### TikTok
+- **Đăng TikTok carousel** (`dang-carousel-tiktok`) - Đăng carousel 4-6 ảnh dọc 9:16 lên TikTok qua PostPeer: Tự động gắn nhạc nền gợi ý (autoAddMusic), caption 8-18 dòng đúng brand kit (BSN @seotrum vs Tin học Sao Việt).
 - **Đăng video TikTok** (`dang-video-tiktok`) - Đăng video dọc (9:16) lên TikTok qua PostPeer: Caption ngắn 8-18 dòng, hook giật tít, 3 lợi ích nhanh, CTA ngắn gọn, tối đa 5 hashtag.
 
 ## Workflows
 - **Đăng Facebook** (`dang-bai-that-facebook`) - True · 1 bước [bien-tap-facebook] · Đăng bài Fanpage Facebook: Album 6-8 ảnh chuẩn Tỷ Lệ Vàng 2026 (1 cover AI mới 100% bằng GPT Image 2 + ảnh lớp học thật từ dataset), đăng bằng fb_page_album.
+- **Đăng TikTok carousel** (`dang-tiktok-carousel`) - True · 1 bước [bien-tap-tiktok] · Đăng carousel 4-6 ảnh dọc 9:16 lên TikTok qua PostPeer: Tự động gắn nhạc nền gợi ý (autoAddMusic), caption ngắn 8-18 dòng đúng brand kit (BSN @seotrum vs Tin học Sao Việt).
 
 ## Loops
 - **đăng bài cho t3 t6 cho all fage** (`dang-bai-3-6-cho-all-fage`) - tắt · custom/full · mỗi 18 phút
