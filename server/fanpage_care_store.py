@@ -13,6 +13,7 @@ import json
 import sqlite3
 import time
 import uuid
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -135,6 +136,25 @@ def init_db(db_path: Path | str | None = None) -> None:
         conn.execute("CREATE INDEX IF NOT EXISTS idx_events_platform_ts ON events(platform, created_ts)")
 
 
+def _parse_ts(val: Any, default: float) -> float:
+    """Chuyển timestamp thành float, hỗ trợ cả int/float, epoch string và ISO-8601 string (Facebook Graph API)."""
+    if val is None or val == "":
+        return default
+    if isinstance(val, (int, float)):
+        return float(val)
+    if isinstance(val, str):
+        s = val.strip()
+        try:
+            return float(s)
+        except ValueError:
+            pass
+        try:
+            return datetime.fromisoformat(s.replace("Z", "+00:00")).timestamp()
+        except Exception:
+            return default
+    return default
+
+
 def record_event(
     event: dict[str, Any], db_path: Path | str | None = None
 ) -> tuple[int, bool]:
@@ -153,8 +173,8 @@ def record_event(
     body = str(event.get("body") or "").strip()
     cls = str(event.get("class") or "").strip() or None
     faq_intent = str(event.get("faq_intent") or "").strip() or None
-    created_ts = float(event.get("created_ts") or now)
-    ingested_ts = float(event.get("ingested_ts") or now)
+    created_ts = _parse_ts(event.get("created_ts"), now)
+    ingested_ts = _parse_ts(event.get("ingested_ts"), now)
 
     with get_connection(db_path) as conn:
         try:

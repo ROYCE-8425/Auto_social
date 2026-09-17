@@ -84,3 +84,26 @@ async def test_poll_tick_only_bsn_page(monkeypatch, tmp_path):
     assert res.get("reason") != "disabled"
     assert called == ["343562028848465"]
     assert res["events_ingested"] >= 1
+
+
+def test_record_event_iso_string_timestamp(tmp_path):
+    import sys
+    sys.path.insert(0, str(ROOT / "server"))
+    import fanpage_care_store as store
+
+    db = tmp_path / "test_iso.sqlite3"
+    ev_id, is_new = store.record_event({
+        "kind": "comment",
+        "platform": "facebook",
+        "page_id": "343562028848465",
+        "object_id": "c_iso_test_1",
+        "created_ts": "2026-09-15T06:56:47+0000",
+        "body": "Test comment with ISO timestamp",
+    }, db_path=db)
+
+    assert is_new is True
+    events = store.list_events(db_path=db)
+    assert len(events) == 1
+    assert isinstance(events[0]["created_ts"], float)
+    assert events[0]["created_ts"] > 1700000000
+
