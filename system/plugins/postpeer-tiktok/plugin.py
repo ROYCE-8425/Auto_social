@@ -132,7 +132,7 @@ async def _post_media(token: str, payload: dict[str, Any]) -> dict[str, Any]:
     try:
         async with httpx.AsyncClient(timeout=60) as c:
             r = await c.post(url, headers=_headers(token), json=payload)
-            if r.status_code in (200, 201):
+            if r.status_code in (200, 201, 202):
                 return r.json()
             if r.status_code == 402:
                 return {
@@ -281,8 +281,10 @@ async def _handle_tiktok_post(args: dict[str, Any], ctx: Any) -> str:
     if isinstance(res, dict) and res.get("__error"):
         return "ERROR: " + res["__error"]
 
-    post_id = str(res.get("id") or res.get("postId") or "")
+    post_id = str(res.get("postId") or res.get("id") or "")
     post_url = str(res.get("postUrl") or res.get("url") or "")
+    if not post_url and isinstance(res.get("platforms"), list) and res["platforms"]:
+        post_url = str(res["platforms"][0].get("platformPostUrl") or "")
     status = str(res.get("status") or "published")
 
     return json.dumps({
@@ -364,11 +366,15 @@ async def _handle_tiktok_photos(args: dict[str, Any], ctx: Any) -> str:
     }
     res = await _post_media(token, payload)
     if isinstance(res, dict) and res.get("__error"):
-        return "ERROR: " + res["__error"]
+        return "ERROR: " + str(res["__error"])
+    post_id = str(res.get("postId") or res.get("id") or "")
+    post_url = str(res.get("postUrl") or res.get("url") or "")
+    if not post_url and isinstance(res.get("platforms"), list) and res["platforms"]:
+        post_url = str(res["platforms"][0].get("platformPostUrl") or "")
     return json.dumps({
         "ok": True,
-        "postpeer_id": str(res.get("id") or res.get("postId") or ""),
-        "tiktok_url": str(res.get("postUrl") or res.get("url") or ""),
+        "postpeer_id": post_id,
+        "tiktok_url": post_url,
         "status": str(res.get("status") or "published"),
         "draft": is_draft,
         "auto_add_music": bool(auto_music),

@@ -527,45 +527,39 @@ def post_photos_to_tiktok(
         "Accept": "application/json",
     }
 
+    privacy_level = kit_data.get("privacy_level") or "PUBLIC_TO_EVERYONE"
     payload = {
-        "accountId": target_acc,
-        "type": "photos",
-        "caption": final_caption.strip(),
-        "urls": public_urls,
-        "autoAddMusic": bool(auto_add_music),
-        "draft": bool(draft),
-        "disableDuet": bool(kit_data.get("disable_duet", True)),
-        "disableStitch": bool(kit_data.get("disable_stitch", True)),
+        "content": final_caption.strip(),
+        "platforms": [{
+            "platform": "tiktok",
+            "accountId": target_acc,
+            "platformSpecificData": {
+                "privacyLevel": privacy_level,
+                "disableComment": False,
+                "disableDuet": bool(kit_data.get("disable_duet", True)),
+                "disableStitch": bool(kit_data.get("disable_stitch", True)),
+                "draft": bool(draft),
+                "autoAddMusic": bool(auto_add_music),
+                "isAigc": False,
+            },
+        }],
+        "mediaItems": [{"type": "image", "url": u} for u in public_urls],
+        "publishNow": not bool(draft),
     }
 
     try:
-        resp = requests.post(f"{BASE_POSTPEER}/tiktok/photos", json=payload, headers=headers, timeout=35)
-        if resp.status_code == 404:
-            # Fallback to general /posts endpoint if /tiktok/photos isn't available
-            posts_payload = {
-                "targetAccounts": [{
-                    "platform": "tiktok",
-                    "accountId": target_acc,
-                    "platformSpecificData": {
-                        "autoAddMusic": bool(auto_add_music),
-                        "draft": bool(draft),
-                    }
-                }],
-                "mediaItems": [{"type": "image", "url": u} for u in public_urls],
-                "caption": final_caption.strip(),
-                "publishNow": not draft,
-            }
-            resp = requests.post(f"{BASE_POSTPEER}/posts", json=posts_payload, headers=headers, timeout=35)
-
-        res_json = resp.json() if resp.status_code in (200, 201) else {}
-        if resp.status_code not in (200, 201):
-            err_msg = res_json.get("message") or res_json.get("error") or resp.text[:200]
+        resp = requests.post(f"{BASE_POSTPEER}/posts", json=payload, headers=headers, timeout=60)
+        res_json = resp.json() if resp.status_code in (200, 201, 202) else {}
+        if resp.status_code not in (200, 201, 202):
+            err_msg = res_json.get("message") or res_json.get("error") or resp.text[:300]
             return {"ok": False, "error": f"Lỗi PostPeer ({resp.status_code}): {err_msg}"}
     except Exception as e:
         return {"ok": False, "error": f"Lỗi kết nối tới PostPeer: {e}"}
 
-    post_id = str(res_json.get("id") or res_json.get("postId") or "")
+    post_id = str(res_json.get("postId") or res_json.get("id") or "")
     tiktok_url = str(res_json.get("postUrl") or res_json.get("url") or "")
+    if not tiktok_url and isinstance(res_json.get("platforms"), list) and res_json["platforms"]:
+        tiktok_url = str(res_json["platforms"][0].get("platformPostUrl") or "")
     status = str(res_json.get("status") or ("draft" if draft else "published"))
 
     # 5. Ghi log JSONL
