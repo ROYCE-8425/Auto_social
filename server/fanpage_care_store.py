@@ -135,6 +135,13 @@ def init_db(db_path: Path | str | None = None) -> None:
             conn.execute("ALTER TABLE events ADD COLUMN platform TEXT NOT NULL DEFAULT 'facebook'")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_events_platform_ts ON events(platform, created_ts)")
 
+        # Migration: add brand column to customers if not present
+        cur_c = conn.execute("PRAGMA table_info(customers)")
+        c_cols = [r["name"] for r in cur_c.fetchall()]
+        if c_cols and "brand" not in c_cols:
+            conn.execute("ALTER TABLE customers ADD COLUMN brand TEXT NOT NULL DEFAULT ''")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_customers_brand_ts ON customers(brand, updated_ts)")
+
 
 def _parse_ts(val: Any, default: float) -> float:
     """Chuyển timestamp thành float, hỗ trợ cả int/float, epoch string và ISO-8601 string (Facebook Graph API)."""
@@ -269,6 +276,18 @@ def link_identity(
         )
 
 
+def resolve_brand(page_id: str | None, brand_hint: str | None = None) -> str:
+    """Xác định thương hiệu (bsn hoặc saoviet) dựa trên page_id hoặc hint."""
+    if brand_hint:
+        b = str(brand_hint).strip().lower()
+        if b in ("bsn", "saoviet"):
+            return b
+    pid = str(page_id or "").strip()
+    if pid == "343562028848465":
+        return "bsn"
+    return "saoviet"
+
+
 def get_customer(crm_id: str, db_path: Path | str | None = None) -> dict[str, Any] | None:
     """Đọc thông tin khách hàng từ SQLite theo crm_id."""
     init_db(db_path)
@@ -280,6 +299,8 @@ def get_customer(crm_id: str, db_path: Path | str | None = None) -> dict[str, An
         d["phones"] = json.loads(d.get("phones") or "[]")
         d["tags"] = json.loads(d.get("tags") or "[]")
         d["page_ids"] = json.loads(d.get("page_ids") or "[]")
+        if not d.get("brand"):
+            d["brand"] = "bsn" if ("bsn" in d["tags"] or "BSN" in (d.get("campus") or "")) else "saoviet"
         return d
 
 
@@ -292,31 +313,46 @@ def get_or_create_customer(
     psid: str | None = None,
     course_interest: str | None = None,
     campus: str | None = None,
-    tag: str = "lead",
+    tag: str = "",
+    brand: str | None = None,
     db_path: Path | str | None = None,
 ) -> tuple[dict[str, Any], bool]:
-    """Tìm hoặc tạo mới khách hàng (gộp mạnh theo phone, gộp page theo from_id/psid).
+    """Tìm hoặc tạo mới khách hàng với phân định brand nghiêm ngặt.
 
-    Trả (customer_dict, is_new).
+    - Page BSN (343562028848465) -> brand='bsn', campus='Game Giá Rẻ BSN'
+    - Page Sao Việt -> brand='saoviet', campus='Tin học Sao Việt'
+    - Cùng người comment + IB cùng page -> 1 crm_id
+    - Cùng SĐT cùng brand -> 1 crm_id
+    - Không gộp khách BSN với học viên Sao Việt dù trùng SĐT
     """
     init_db(db_path)
     phones = [str(p).strip() for p in (phones or []) if str(p).strip()]
+    effective_brand = resolve_brand(page_id, brand)
+    phone_kind = f"phone_{effective_brand}"
+
     crm_id = None
 
-    # 1. Tìm theo SĐT trước (GLOBAL xuyên page)
+    # 1. Tìm theo SĐT trong cùng brand
     for p in phones:
-        cid = find_identity("phone", "", p, db_path)
+        cid = find_identity(phone_kind, "", p, db_path)
+        if not cid:
+            # Fallback legacy phone check (chỉ dùng nếu hồ sơ đó cùng brand hoặc chưa gắn brand)
+            legacy_cid = find_identity("phone", "", p, db_path)
+            if legacy_cid:
+                cust_check = get_customer(legacy_cid, db_path)
+                if cust_check and (not cust_check.get("brand") or cust_check.get("brand") == effective_brand):
+                    cid = legacy_cid
         if cid:
             crm_id = cid
             break
 
     # 2. Tìm theo from_id (page-scoped)
     if not crm_id and page_id and from_id:
-        crm_id = find_identity("fb_comment_from", page_id, from_id, db_path)
+        crm_id = find_identity("fb_comment_from", page_id, from_id, db_path) or find_identity("fb_psid", page_id, from_id, db_path)
 
     # 3. Tìm theo psid (page-scoped)
     if not crm_id and page_id and psid:
-        crm_id = find_identity("fb_psid", page_id, psid, db_path)
+        crm_id = find_identity("fb_psid", page_id, psid, db_path) or find_identity("fb_comment_from", page_id, psid, db_path)
 
     now = time.time()
     is_new = False
@@ -326,13 +362,21 @@ def get_or_create_customer(
     else:
         existing = None
 
+    default_campus = campus or ("Game Giá Rẻ BSN" if effective_brand == "bsn" else "Tin học Sao Việt")
+
     if not existing:
         is_new = True
         crm_id = "c_" + uuid.uuid4().hex[:12]
         cust_name = str(name or "Ẩn danh").strip()
         merged_phones = list(dict.fromkeys(phones))
         merged_pages = [str(page_id)] if page_id else []
-        tags = [tag] if tag else []
+        
+        # Tags luôn có brand (bsn hoặc saoviet)
+        tags = [effective_brand]
+        clean_tag = str(tag or "").strip()
+        if clean_tag and clean_tag != effective_brand:
+            tags.append(clean_tag)
+
         md_path = f"crm/customers/{crm_id}.md"
 
         cust_dict = {
@@ -341,17 +385,18 @@ def get_or_create_customer(
             "phones": merged_phones,
             "tags": tags,
             "course_interest": course_interest or "",
-            "campus": campus or "",
+            "campus": default_campus,
             "page_ids": merged_pages,
             "md_path": md_path,
             "updated_ts": now,
+            "brand": effective_brand,
         }
         with get_connection(db_path) as conn:
             conn.execute(
                 """
                 INSERT INTO customers (
-                    crm_id, name, phones, tags, course_interest, campus, page_ids, md_path, updated_ts
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    crm_id, name, phones, tags, course_interest, campus, page_ids, md_path, updated_ts, brand
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     crm_id,
@@ -359,10 +404,11 @@ def get_or_create_customer(
                     json.dumps(merged_phones, ensure_ascii=False),
                     json.dumps(tags, ensure_ascii=False),
                     course_interest or "",
-                    campus or "",
+                    default_campus,
                     json.dumps(merged_pages, ensure_ascii=False),
                     md_path,
                     now,
+                    effective_brand,
                 ),
             )
     else:
@@ -378,12 +424,16 @@ def get_or_create_customer(
         merged_pages = list(dict.fromkeys(old_pages + ([str(page_id)] if page_id else [])))
 
         old_tags = existing.get("tags") or []
-        if tag and tag not in old_tags:
-            old_tags.append(tag)
+        if effective_brand not in old_tags:
+            old_tags.append(effective_brand)
+        clean_tag = str(tag or "").strip()
+        if clean_tag and clean_tag not in old_tags:
+            old_tags.append(clean_tag)
 
         cust_course = existing.get("course_interest") or course_interest or ""
-        cust_campus = existing.get("campus") or campus or ""
+        cust_campus = existing.get("campus") or default_campus
         md_path = existing.get("md_path") or f"crm/customers/{crm_id}.md"
+        cust_brand = existing.get("brand") or effective_brand
 
         cust_dict = {
             "crm_id": crm_id,
@@ -395,13 +445,14 @@ def get_or_create_customer(
             "page_ids": merged_pages,
             "md_path": md_path,
             "updated_ts": now,
+            "brand": cust_brand,
         }
         with get_connection(db_path) as conn:
             conn.execute(
                 """
                 UPDATE customers SET
                     name = ?, phones = ?, tags = ?, course_interest = ?, campus = ?,
-                    page_ids = ?, md_path = ?, updated_ts = ?
+                    page_ids = ?, md_path = ?, updated_ts = ?, brand = ?
                 WHERE crm_id = ?
                 """,
                 (
@@ -413,13 +464,14 @@ def get_or_create_customer(
                     json.dumps(merged_pages, ensure_ascii=False),
                     md_path,
                     now,
+                    cust_brand,
                     crm_id,
                 ),
             )
 
-    # Gắn mọi định danh cung cấp vào crm_id này
+    # Gắn định danh vào crm_id này
     for p in merged_phones:
-        link_identity("phone", "", p, crm_id, db_path)
+        link_identity(phone_kind, "", p, crm_id, db_path)
     if page_id and from_id:
         link_identity("fb_comment_from", page_id, from_id, crm_id, db_path)
     if page_id and psid:
@@ -429,29 +481,137 @@ def get_or_create_customer(
 
 
 def search_customers(
-    query: str, db_path: Path | str | None = None, limit: int = 50
+    query: str | None = None,
+    brand: str | None = None,
+    page_id: str | None = None,
+    page_ids: list[str] | None = None,
+    tag: str | None = None,
+    db_path: Path | str | None = None,
+    limit: int = 50,
 ) -> list[dict[str, Any]]:
-    """Tìm kiếm khách hàng bằng LIKE trên phones và name (không FTS5 v1)."""
+    """Tìm kiếm khách hàng có lọc theo brand và page_id."""
     init_db(db_path)
-    q = f"%{str(query or '').strip()}%"
+    conds = []
+    params: list[Any] = []
+
+    if query and str(query).strip():
+        q = f"%{str(query).strip()}%"
+        conds.append("(name LIKE ? OR phones LIKE ? OR crm_id LIKE ? OR campus LIKE ?)")
+        params.extend([q, q, q, q])
+
+    if brand and str(brand).strip():
+        b = str(brand).strip().lower()
+        if b == "bsn":
+            conds.append("(brand = 'bsn' OR (brand = '' AND (tags LIKE '%bsn%' OR campus LIKE '%BSN%' OR campus LIKE '%Game%')))")
+        elif b == "saoviet":
+            conds.append("(brand = 'saoviet' OR (brand = '' AND (tags LIKE '%saoviet%' OR campus LIKE '%Sao Việt%' OR campus LIKE '%Tin học%')))")
+        else:
+            conds.append("brand = ?")
+            params.append(b)
+
+    if page_id and str(page_id).strip():
+        conds.append("page_ids LIKE ?")
+        params.append(f'%"{str(page_id).strip()}"%')
+    elif page_ids is not None:
+        p_subconds = []
+        for pid in page_ids:
+            if pid:
+                p_subconds.append("page_ids LIKE ?")
+                params.append(f'%"{str(pid).strip()}"%')
+        if p_subconds:
+            conds.append(f"({' OR '.join(p_subconds)})")
+        else:
+            conds.append("1 = 0")
+
+    if tag and str(tag).strip():
+        conds.append("tags LIKE ?")
+        params.append(f'%"{str(tag).strip()}"%')
+
+    where_clause = f"WHERE {' AND '.join(conds)}" if conds else ""
+    sql = f"SELECT * FROM customers {where_clause} ORDER BY updated_ts DESC LIMIT ?"
+    params.append(limit)
+
     with get_connection(db_path) as conn:
-        rows = conn.execute(
-            """
-            SELECT * FROM customers
-            WHERE name LIKE ? OR phones LIKE ?
-            ORDER BY updated_ts DESC
-            LIMIT ?
-            """,
-            (q, q, limit),
-        ).fetchall()
+        rows = conn.execute(sql, params).fetchall()
         out = []
         for r in rows:
             d = dict(r)
             d["phones"] = json.loads(d.get("phones") or "[]")
             d["tags"] = json.loads(d.get("tags") or "[]")
             d["page_ids"] = json.loads(d.get("page_ids") or "[]")
+            if not d.get("brand"):
+                d["brand"] = "bsn" if ("bsn" in d["tags"] or "BSN" in (d.get("campus") or "")) else "saoviet"
             out.append(d)
         return out
+
+
+def backfill_customers_from_events(db_path: Path | str | None = None, days: int = 90) -> dict[str, int]:
+    """Quét bảng events 90 ngày để trích xuất và tạo hồ sơ CRM cho khách hàng tương tác."""
+    import re
+    init_db(db_path)
+    now = time.time()
+    cutoff_ts = now - (days * 86400.0)
+
+    phone_regex = re.compile(r"(?:0|\+84)(?:3|5|7|8|9)\d{8}\b")
+
+    created_count = 0
+    updated_count = 0
+
+    with get_connection(db_path) as conn:
+        rows = conn.execute(
+            """
+            SELECT id, kind, platform, page_id, from_id, from_name, body, class, created_ts
+            FROM events
+            WHERE kind IN ('comment', 'message') AND created_ts >= ?
+            ORDER BY created_ts ASC
+            """,
+            (cutoff_ts,),
+        ).fetchall()
+
+    for r in rows:
+        pid = str(r["page_id"] or "").strip()
+        from_id = str(r["from_id"] or "").strip()
+        from_name = str(r["from_name"] or "").strip()
+        body = str(r["body"] or "").strip()
+        kind = str(r["kind"] or "").strip()
+        cls_name = str(r["class"] or "").strip()
+
+        if not pid or not from_id:
+            continue
+
+        found_phones = phone_regex.findall(body)
+        brand = "bsn" if pid == "343562028848465" else "saoviet"
+        campus = "Game Giá Rẻ BSN" if brand == "bsn" else "Tin học Sao Việt"
+
+        is_comment = kind == "comment"
+        c_from_id = from_id if is_comment else None
+        c_psid = from_id if not is_comment else None
+
+        cust, is_new = get_or_create_customer(
+            name=from_name if from_name and from_name != "Khách hàng" else None,
+            phones=found_phones,
+            page_id=pid,
+            from_id=c_from_id,
+            psid=c_psid,
+            course_interest="",
+            campus=campus,
+            tag=cls_name or ("lead" if found_phones else ""),
+            brand=brand,
+            db_path=db_path,
+        )
+        if is_new:
+            created_count += 1
+        else:
+            updated_count += 1
+
+    return {
+        "created": created_count,
+        "updated": updated_count,
+        "total_events": len(rows),
+        "customers_created": created_count,
+        "customers_updated": updated_count,
+        "events_scanned": len(rows),
+    }
 
 
 def delete_customer(crm_id: str, db_path: Path | str | None = None) -> bool:

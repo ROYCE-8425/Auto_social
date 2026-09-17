@@ -65,6 +65,12 @@ def write_customer_markdown(
     course_interest = str(customer.get("course_interest") or "").strip()
     campus = str(customer.get("campus") or "").strip()
     page_ids = [str(pid) for pid in (customer.get("page_ids") or [])]
+    brand = str(customer.get("brand") or "").strip()
+    if not brand:
+        if any(p == "343562028848465" for p in page_ids) or "bsn" in tags:
+            brand = "bsn"
+        else:
+            brand = "saoviet"
     status = str(customer.get("status") or "open").strip()
     owner_staff = str(customer.get("owner_staff") or "").strip()
     merged_into = str(customer.get("merged_into") or "").strip()
@@ -126,6 +132,7 @@ def write_customer_markdown(
     md = f"""---
 type: crm-customer
 crm_id: {crm_id}
+brand: {json.dumps(brand, ensure_ascii=False)}
 name: {json.dumps(name, ensure_ascii=False)}
 phones: {json.dumps(phones, ensure_ascii=False)}
 tags: {json.dumps(tags, ensure_ascii=False)}
@@ -140,6 +147,7 @@ updated: {now_iso}
 
 # {name}
 
+- Thương hiệu: {brand}
 - Tên: {name}
 - SĐT: {phones_display}
 - Ngành quan tâm: {course_interest or "Chưa rõ"}
@@ -218,6 +226,7 @@ def sync_customer_markdown(
     page_id: str = "",
     timeline_entry: str | None = None,
     identities: list[str] | None = None,
+    brand: str = "",
 ) -> Path:
     """Helper đồng bộ hồ sơ khách hàng vào markdown."""
     cust = {
@@ -228,6 +237,7 @@ def sync_customer_markdown(
         "course_interest": course_interest,
         "campus": campus,
         "page_ids": [page_id] if page_id else [],
+        "brand": brand,
     }
     path = write_customer_markdown(vault_root, cust, timeline_entry=timeline_entry, identities=identities)
     rebuild_crm_index(vault_root)

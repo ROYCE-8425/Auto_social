@@ -128,6 +128,7 @@ export interface CareCustomer {
   name: string
   phones: string[]
   tags: string[]
+  brand?: string
   course_interest?: string
   campus?: string
   page_ids?: string[]
@@ -385,16 +386,42 @@ export const api = {
     ),
 
   // Customers CRM
-  getCustomers: (search?: string, tag?: string, limit = 50) => {
+  getCustomers: (
+    paramsOrSearch?: string | {
+      search?: string
+      brand?: string
+      page_id?: string
+      tag?: string
+      limit?: number
+    },
+    tag?: string,
+    limit = 50
+  ) => {
     const query = new URLSearchParams()
-    if (search) query.set('q', search)
-    if (tag) query.set('tag', tag)
-    if (limit) query.set('limit', String(limit))
+    if (typeof paramsOrSearch === 'object' && paramsOrSearch !== null) {
+      if (paramsOrSearch.search) query.set('q', paramsOrSearch.search)
+      if (paramsOrSearch.brand) query.set('brand', paramsOrSearch.brand)
+      if (paramsOrSearch.page_id) query.set('page_id', paramsOrSearch.page_id)
+      if (paramsOrSearch.tag) query.set('tag', paramsOrSearch.tag)
+      if (paramsOrSearch.limit) query.set('limit', String(paramsOrSearch.limit))
+    } else {
+      if (paramsOrSearch) query.set('q', paramsOrSearch)
+      if (tag) query.set('tag', tag)
+      if (limit) query.set('limit', String(limit))
+    }
     const qs = query.toString()
-    return request<{ ok: boolean; customers: CareCustomer[] }>(
+    return request<{ ok: boolean; customers: CareCustomer[]; total?: number; reason?: string }>(
       `/fanpage-care/customers${qs ? `?${qs}` : ''}`
     )
   },
+  backfillCustomers: (days = 90) =>
+    request<{ ok: boolean; events_scanned?: number; customers_created?: number; customers_updated?: number }>(
+      '/fanpage-care/customers/backfill',
+      {
+        method: 'POST',
+        body: JSON.stringify({ days }),
+      }
+    ),
   getCustomerDetail: (crmId: string) =>
     request<CareCustomerDetail>(`/fanpage-care/customers/${encodeURIComponent(crmId)}`),
   mergeCustomers: (primaryCrmId: string, secondaryCrmId: string) =>

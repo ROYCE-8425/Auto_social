@@ -637,6 +637,7 @@ class FanpageCareFeature:
         phones_list = cls_res.get("phones", [])
         course_hints = cls_res.get("course_hints", [])
         class_name = cls_res.get("class", "ambiguous")
+        effective_brand = store.resolve_brand(pid, brand)
 
         try:
             cust, is_new_cust = store.get_or_create_customer(
@@ -647,6 +648,7 @@ class FanpageCareFeature:
                 course_interest=course_hints[0] if course_hints else "",
                 campus=kit.get("name") if kit else "",
                 tag=class_name if class_name == "lead" else "",
+                brand=effective_brand,
             )
             cust_crm_id = cust.get("crm_id")
             if cust_crm_id:
@@ -660,6 +662,7 @@ class FanpageCareFeature:
                     campus=kit.get("name") if kit else "",
                     page_id=pid,
                     timeline_entry=f"Bình luận '{body[:100]}' (class={class_name})",
+                    brand=effective_brand,
                 )
                 out["new_customer"] = is_new_cust
         except Exception as e:
@@ -1006,6 +1009,7 @@ class FanpageCareFeature:
 
         # 4. Ghi nhận CRM
         try:
+            effective_brand = store.resolve_brand(pid, brand)
             cust, is_new_cust = store.get_or_create_customer(
                 name=cust_display_name,
                 phones=phones_list,
@@ -1014,19 +1018,21 @@ class FanpageCareFeature:
                 course_interest=course_hints[0] if course_hints else "",
                 campus=kit.get("name") if kit else "",
                 tag=class_name if class_name == "lead" else "",
+                brand=effective_brand,
             )
             cust_crm_id = cust.get("crm_id")
             if cust_crm_id:
                 crm.sync_customer_markdown(
                     self.vault_root,
                     cust_crm_id,
-                    name=f"Khách Messenger {psid[-4:] if len(psid) >= 4 else psid}",
+                    name=cust_display_name,
                     phones=phones_list,
                     tags=[class_name] if class_name == "lead" else [],
                     course_interest=course_hints[0] if course_hints else "",
                     campus=kit.get("name") if kit else "",
                     page_id=pid,
                     timeline_entry=f"Tin nhắn '{text[:100]}' (class={class_name})",
+                    brand=effective_brand,
                 )
         except Exception as e:
             print(f"[fanpage_care] CRM sync error: {e}", file=sys.stderr)
@@ -1377,9 +1383,26 @@ class FanpageCareFeature:
             return {"ok": True, "status": "rejected"}
 
         @router.get("/fanpage-care/customers")
-        async def care_customers(q: str | None = None, tag: str | None = None, limit: int = 50):
-            custs = store.search_customers(query=q, tag=tag, limit=limit)
-            return {"ok": True, "customers": custs}
+        async def care_customers(
+            q: str | None = None,
+            brand: str | None = None,
+            page_id: str | None = None,
+            tag: str | None = None,
+            limit: int = 50,
+        ):
+            custs = store.search_customers(query=q, brand=brand, page_id=page_id, tag=tag, limit=limit)
+            return {
+                "ok": True,
+                "customers": custs,
+                "total": len(custs),
+                "reason": "none_in_scope" if not custs else None,
+            }
+
+        @router.post("/fanpage-care/customers/backfill")
+        async def care_customers_backfill(days: int = Body(90, embed=True)):
+            res = store.backfill_customers_from_events(days=days)
+            crm.rebuild_crm_index(self.vault_root)
+            return {"ok": True, **res}
 
         @router.get("/fanpage-care/customers/{crm_id}")
         async def care_customer_detail(crm_id: str, format: str | None = None):

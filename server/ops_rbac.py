@@ -326,9 +326,9 @@ def check_access_permission(user: Optional[dict], path: str, method: str, payloa
         if path.startswith("/usage"):
             return False, "Nhân viên không có quyền xem chi phí token"
 
-        # Staff cấm gộp/xóa CRM
-        if path == "/fanpage-care/customers/merge" or (path.startswith("/fanpage-care/customers/") and m == "DELETE"):
-            return False, "Nhân viên không có quyền gộp hoặc xoá dữ liệu khách hàng"
+        # Staff cấm gộp/xóa CRM hoặc chạy đồng bộ lịch sử
+        if path in ("/fanpage-care/customers/merge", "/fanpage-care/customers/backfill") or (path.startswith("/fanpage-care/customers/") and m == "DELETE"):
+            return False, "Nhân viên không có quyền gộp, xoá hoặc đồng bộ lại dữ liệu khách hàng"
 
         # Staff cấm sửa settings Care và cấm bấm Quét ngay
         if path == "/fanpage-care/settings" or path == "/fanpage-care/poll-now":

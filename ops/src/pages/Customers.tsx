@@ -16,17 +16,22 @@ import {
   FileText,
   UserCheck,
   BookOpen,
+  RefreshCw,
+  Gamepad2,
 } from 'lucide-react'
 import { api, CareCustomer, CareCustomerDetail } from '../lib/api'
 import { useAuth } from '../lib/auth'
+import { useCareScope } from '../lib/scope'
 import { maskPhone, formatTime, timeAgo } from '../lib/utils'
 
 export const Customers: React.FC = () => {
   const { role, can } = useAuth()
+  const { scope, scopeBrand, scopePageId, scopeLabel, activeBrand } = useCareScope()
   const [customers, setCustomers] = useState<CareCustomer[]>([])
   const [loading, setLoading] = useState<boolean>(true)
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [unmaskAll, setUnmaskAll] = useState<boolean>(false)
+  const [isBackfilling, setIsBackfilling] = useState<boolean>(false)
 
   // Drawer state
   const [selectedCustomer, setSelectedCustomer] = useState<CareCustomer | null>(null)
@@ -45,8 +50,13 @@ export const Customers: React.FC = () => {
   const [statusMsg, setStatusMsg] = useState<{ text: string; type: 'success' | 'error' } | null>(null)
 
   const loadCustomers = async () => {
+    setLoading(true)
     try {
-      const res = await api.getCustomers(searchQuery)
+      const res = await api.getCustomers({
+        search: searchQuery || undefined,
+        brand: scope === 'brand' ? scopeBrand : undefined,
+        page_id: scope === 'page' ? scopePageId : undefined,
+      })
       setCustomers(res.customers || [])
     } catch (err: any) {
       console.error(err)
@@ -57,7 +67,7 @@ export const Customers: React.FC = () => {
 
   useEffect(() => {
     loadCustomers()
-  }, [searchQuery])
+  }, [searchQuery, scope, scopeBrand, scopePageId])
 
   const handleSelectCustomer = async (cust: CareCustomer) => {
     setSelectedCustomer(cust)
@@ -128,6 +138,35 @@ export const Customers: React.FC = () => {
     }
   }
 
+  const handleBackfill = async () => {
+    setIsBackfilling(true)
+    try {
+      const res = await api.backfillCustomers(90)
+      setStatusMsg({
+        text: `Đồng bộ hoàn tất! Quét ${res.events_scanned || 0} tương tác, tạo mới ${res.customers_created || 0} hồ sơ, cập nhật ${res.customers_updated || 0}.`,
+        type: 'success',
+      })
+      loadCustomers()
+    } catch (err: any) {
+      setStatusMsg({ text: err.message || 'Lỗi khi đồng bộ từ tương tác', type: 'error' })
+    } finally {
+      setIsBackfilling(false)
+      setTimeout(() => setStatusMsg(null), 4000)
+    }
+  }
+
+  const isBsnScope = (scope === 'brand' && scopeBrand === 'bsn') || activeBrand === 'bsn'
+
+  const displayScopeTitle = () => {
+    if (scope === 'brand') {
+      return scopeBrand === 'bsn' ? 'Game Giá Rẻ BSN' : 'Tin học Sao Việt'
+    }
+    if (scope === 'page') {
+      return scopeLabel
+    }
+    return 'Tất cả phạm vi'
+  }
+
   const canViewFullPhone = role === 'manager' || role === 'owner'
 
   return (
@@ -135,13 +174,39 @@ export const Customers: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
         <div>
-          <h1 className="text-xl font-bold text-slate-900 tracking-tight">Khách hàng CRM</h1>
+          <div className="flex items-center space-x-2.5">
+            <h1 className="text-xl font-bold text-slate-900 tracking-tight">
+              Khách hàng · {displayScopeTitle()}
+            </h1>
+            {scope === 'brand' && scopeBrand === 'bsn' && (
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                Nhóm Game BSN
+              </span>
+            )}
+            {scope === 'brand' && scopeBrand === 'saoviet' && (
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-saoviet-100 text-saoviet-800 border border-saoviet-200">
+                Sao Việt
+              </span>
+            )}
+          </div>
           <p className="text-xs text-slate-500 mt-0.5">
-            Danh sách khách hàng tiềm năng đã để lại SĐT hoặc tương tác với Fanpage.
+            Danh sách khách hàng comment, inbox hoặc để lại SĐT thuộc phạm vi đang chọn.
           </p>
         </div>
 
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center flex-wrap gap-2">
+          {(role === 'owner' || role === 'manager') && (
+            <button
+              onClick={handleBackfill}
+              disabled={isBackfilling}
+              title="Quét toàn bộ tương tác 90 ngày để tạo hồ sơ khách hàng còn thiếu"
+              className="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl hover:bg-emerald-100 transition-colors disabled:opacity-50"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 text-emerald-600 ${isBackfilling ? 'animate-spin' : ''}`} />
+              <span>{isBackfilling ? 'Đang đồng bộ...' : 'Đồng bộ từ tương tác'}</span>
+            </button>
+          )}
+
           {canViewFullPhone && (
             <button
               onClick={() => setUnmaskAll(!unmaskAll)}
@@ -152,7 +217,7 @@ export const Customers: React.FC = () => {
             </button>
           )}
 
-          <div className="relative w-64">
+          <div className="relative w-56">
             <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
             <input
               type="text"
@@ -184,8 +249,9 @@ export const Customers: React.FC = () => {
               <tr>
                 <th className="py-3.5 px-4">Họ và tên</th>
                 <th className="py-3.5 px-4">Số điện thoại</th>
-                <th className="py-3.5 px-4">Cơ sở quan tâm</th>
-                <th className="py-3.5 px-4">Khoá học / Thẻ</th>
+                <th className="py-3.5 px-4">Thương hiệu</th>
+                <th className="py-3.5 px-4">Cơ sở / Shop</th>
+                <th className="py-3.5 px-4">Nhu cầu / Tag</th>
                 <th className="py-3.5 px-4">Cập nhật lần cuối</th>
                 <th className="py-3.5 px-4 text-right">Thao tác</th>
               </tr>
@@ -193,6 +259,7 @@ export const Customers: React.FC = () => {
             <tbody className="divide-y divide-slate-100 font-medium">
               {customers.map((cust) => {
                 const primaryPhone = cust.phones?.[0]
+                const isBsn = cust.brand === 'bsn' || (cust.tags || []).includes('bsn')
                 return (
                   <tr
                     key={cust.crm_id}
@@ -201,8 +268,10 @@ export const Customers: React.FC = () => {
                   >
                     <td className="py-3 px-4">
                       <div className="flex items-center space-x-2.5">
-                        <div className="w-7 h-7 rounded-full bg-saoviet-100 text-saoviet-700 font-bold text-xs flex items-center justify-center flex-shrink-0">
-                          {cust.name ? cust.name.slice(0, 1).toUpperCase() : 'K'}
+                        <div className={`w-7 h-7 rounded-full font-bold text-xs flex items-center justify-center flex-shrink-0 ${
+                          isBsn ? 'bg-amber-100 text-amber-800' : 'bg-saoviet-100 text-saoviet-700'
+                        }`}>
+                          {cust.name ? cust.name.slice(0, 1).toUpperCase() : (isBsn ? 'B' : 'K')}
                         </div>
                         <div>
                           <span className="font-bold text-slate-900 block">{cust.name || 'Ẩn danh'}</span>
@@ -222,9 +291,21 @@ export const Customers: React.FC = () => {
                     </td>
 
                     <td className="py-3 px-4">
+                      {isBsn ? (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                          Game BSN
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-saoviet-50 text-saoviet-800 border border-saoviet-200">
+                          Sao Việt
+                        </span>
+                      )}
+                    </td>
+
+                    <td className="py-3 px-4">
                       {cust.campus ? (
                         <span className="inline-flex items-center space-x-1 text-slate-700">
-                          <MapPin className="w-3 h-3 text-saoviet-500" />
+                          <MapPin className={`w-3 h-3 ${isBsn ? 'text-amber-600' : 'text-saoviet-500'}`} />
                           <span>{cust.campus}</span>
                         </span>
                       ) : (
@@ -258,7 +339,9 @@ export const Customers: React.FC = () => {
                       <div className="flex items-center justify-end space-x-1">
                         <button
                           onClick={() => handleSelectCustomer(cust)}
-                          className="px-2.5 py-1 text-xs font-semibold text-saoviet-700 hover:bg-saoviet-50 rounded-lg transition-colors"
+                          className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-colors ${
+                            isBsn ? 'text-amber-800 hover:bg-amber-50' : 'text-saoviet-700 hover:bg-saoviet-50'
+                          }`}
                         >
                           Chi tiết
                         </button>
@@ -280,9 +363,50 @@ export const Customers: React.FC = () => {
 
               {customers.length === 0 && !loading && (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center text-slate-400">
-                    <Users className="w-8 h-8 mx-auto mb-2 text-slate-300" />
-                    <span>Không tìm thấy hồ sơ khách hàng nào</span>
+                  <td colSpan={7} className="py-14 text-center text-slate-500">
+                    {isBsnScope ? (
+                      <div className="max-w-md mx-auto space-y-3 px-4">
+                        <div className="w-12 h-12 mx-auto rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600 shadow-xs">
+                          <Gamepad2 className="w-6 h-6" />
+                        </div>
+                        <div>
+                          <p className="font-bold text-slate-900 text-sm">Chưa có hồ sơ Game BSN</p>
+                          <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                            Kéo comment/IB trên Hộp thư rồi bấm Đồng bộ từ tương tác (chủ máy / quản lý).
+                          </p>
+                        </div>
+                        {(role === 'owner' || role === 'manager') && (
+                          <button
+                            onClick={handleBackfill}
+                            disabled={isBackfilling}
+                            className="inline-flex items-center space-x-1.5 px-4 py-2 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 rounded-xl shadow-xs transition-colors disabled:opacity-50"
+                          >
+                            <RefreshCw className={`w-3.5 h-3.5 ${isBackfilling ? 'animate-spin' : ''}`} />
+                            <span>{isBackfilling ? 'Đang đồng bộ...' : 'Đồng bộ từ tương tác'}</span>
+                          </button>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="max-w-md mx-auto space-y-3 px-4">
+                        <Users className="w-10 h-10 mx-auto text-slate-300" />
+                        <div>
+                          <p className="font-bold text-slate-800 text-sm">Không tìm thấy hồ sơ khách hàng nào</p>
+                          <p className="text-xs text-slate-400 mt-1">
+                            {scope !== 'all' ? 'Thử chọn phạm vi khác hoặc tìm kiếm bằng từ khoá khác.' : 'Hệ thống sẽ tự động lập hồ sơ khi có khách hàng nhắn tin hoặc bình luận.'}
+                          </p>
+                        </div>
+                        {(role === 'owner' || role === 'manager') && (
+                          <button
+                            onClick={handleBackfill}
+                            disabled={isBackfilling}
+                            className="inline-flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold text-saoviet-700 bg-saoviet-50 border border-saoviet-200 hover:bg-saoviet-100 rounded-xl transition-colors disabled:opacity-50"
+                          >
+                            <RefreshCw className={`w-3 h-3 ${isBackfilling ? 'animate-spin' : ''}`} />
+                            <span>{isBackfilling ? 'Đang đồng bộ...' : 'Đồng bộ từ tương tác đã có'}</span>
+                          </button>
+                        )}
+                      </div>
+                    )}
                   </td>
                 </tr>
               )}
@@ -306,17 +430,35 @@ export const Customers: React.FC = () => {
             <div className="w-screen max-w-md bg-white shadow-2xl flex flex-col">
               {/* Drawer Header */}
               <div className="p-5 border-b border-slate-200 flex items-center justify-between bg-slate-50">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 rounded-full bg-saoviet-500 text-white font-bold flex items-center justify-center text-sm shadow-sm">
-                    {selectedCustomer.name ? selectedCustomer.name.slice(0, 2).toUpperCase() : 'KH'}
-                  </div>
-                  <div>
-                    <h2 className="font-bold text-slate-900 text-base leading-tight">
-                      {selectedCustomer.name || 'Ẩn danh'}
-                    </h2>
-                    <p className="text-xs text-slate-500 font-mono">CRM ID: {selectedCustomer.crm_id}</p>
-                  </div>
-                </div>
+                {(() => {
+                  const isSelectedBsn = selectedCustomer.brand === 'bsn' || (selectedCustomer.tags || []).includes('bsn')
+                  return (
+                    <div className="flex items-center space-x-3">
+                      <div className={`w-10 h-10 rounded-full text-white font-bold flex items-center justify-center text-sm shadow-sm ${
+                        isSelectedBsn ? 'bg-amber-600' : 'bg-saoviet-500'
+                      }`}>
+                        {selectedCustomer.name ? selectedCustomer.name.slice(0, 2).toUpperCase() : (isSelectedBsn ? 'BS' : 'KH')}
+                      </div>
+                      <div>
+                        <div className="flex items-center space-x-2">
+                          <h2 className="font-bold text-slate-900 text-base leading-tight">
+                            {selectedCustomer.name || 'Ẩn danh'}
+                          </h2>
+                          {isSelectedBsn ? (
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                              Game BSN
+                            </span>
+                          ) : (
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-saoviet-100 text-saoviet-800 border border-saoviet-200">
+                              Sao Việt
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-slate-500 font-mono mt-0.5">CRM ID: {selectedCustomer.crm_id}</p>
+                      </div>
+                    </div>
+                  )
+                })()}
 
                 <button
                   onClick={() => {
