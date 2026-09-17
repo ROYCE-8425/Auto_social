@@ -726,6 +726,91 @@ def list_events(
         return [dict(r) for r in rows]
 
 
+def get_event(event_id: int, db_path: Path | str | None = None) -> dict[str, Any] | None:
+    init_db(db_path)
+    with get_connection(db_path) as conn:
+        row = conn.execute("SELECT * FROM events WHERE id = ?", (int(event_id),)).fetchone()
+        return dict(row) if row else None
+
+
+def customer_behavior(crm_id: str, db_path: Path | str | None = None) -> dict[str, Any]:
+    """Tóm tắt hành vi khách từ events gắn identity (comment + messenger)."""
+    init_db(db_path)
+    crm_id = str(crm_id)
+    with get_connection(db_path) as conn:
+        ids = conn.execute(
+            "SELECT kind, page_id, ext_id FROM identities WHERE crm_id = ?",
+            (crm_id,),
+        ).fetchall()
+        cust = conn.execute("SELECT * FROM customers WHERE crm_id = ?", (crm_id,)).fetchone()
+        ext_ids = [str(r["ext_id"]) for r in ids]
+        page_ids = list({str(r["page_id"]) for r in ids if r["page_id"]})
+        events: list[dict[str, Any]] = []
+        if ext_ids:
+            placeholders = ",".join("?" * len(ext_ids))
+            events = [
+                dict(r)
+                for r in conn.execute(
+                    f"SELECT * FROM events WHERE from_id IN ({placeholders}) "
+                    "ORDER BY created_ts DESC LIMIT 200",
+                    ext_ids,
+                ).fetchall()
+            ]
+        elif page_ids:
+            events = [
+                dict(r)
+                for r in conn.execute(
+                    "SELECT * FROM events WHERE page_id = ? ORDER BY created_ts DESC LIMIT 80",
+                    (page_ids[0],),
+                ).fetchall()
+            ]
+
+    by_platform: dict[str, int] = {}
+    by_class: dict[str, int] = {}
+    msg_n = 0
+    cmt_n = 0
+    last_intent = None
+    last_body = ""
+    last_ts = 0.0
+    for e in events:
+        plat = str(e.get("platform") or "facebook")
+        by_platform[plat] = by_platform.get(plat, 0) + 1
+        cl = str(e.get("class") or "unknown")
+        by_class[cl] = by_class.get(cl, 0) + 1
+        if e.get("kind") == "message":
+            msg_n += 1
+        elif e.get("kind") == "comment":
+            cmt_n += 1
+        ts = float(e.get("created_ts") or 0)
+        if ts >= last_ts:
+            last_ts = ts
+            last_intent = e.get("faq_intent") or e.get("class")
+            last_body = str(e.get("body") or "")[:180]
+
+    stage = "moi_tiep_can"
+    if msg_n >= 3 or cmt_n >= 3:
+        stage = "dang_tu_van"
+    if by_class.get("lead", 0) > 0:
+        stage = "lead"
+    if last_ts and (time.time() - last_ts) > 7 * 86400 and by_class.get("lead", 0) == 0:
+        stage = "im_lang"
+
+    return {
+        "crm_id": crm_id,
+        "stage": stage,
+        "message_count": msg_n,
+        "comment_count": cmt_n,
+        "by_platform": by_platform,
+        "by_class": by_class,
+        "last_intent": last_intent,
+        "last_body": last_body,
+        "last_ts": last_ts,
+        "phones": json.loads((cust["phones"] if cust else None) or "[]") if cust else [],
+        "campus": (cust["campus"] if cust else "") or "",
+        "course_interest": (cust["course_interest"] if cust else "") or "",
+    }
+
+
 def get_draft(draft_id: int, db_path: Path | str | None = None) -> dict[str, Any] | None:
     """Đọc 1 draft theo ID."""
     init_db(db_path)
@@ -794,6 +879,8 @@ def update_messaging_window(
     psid: str,
     *,
     is_user: bool = True,
+    user_ts: float | None = None,
+    page_ts: float | None = None,
     takeover_until: float | None = None,
     db_path: Path | str | None = None,
 ) -> None:
@@ -810,16 +897,30 @@ def update_messaging_window(
         ).fetchone()
 
         if row:
-            l_user = now if is_user else (row["last_user_ts"] or 0.0)
-            l_page = now if not is_user else (row["last_page_ts"] or 0.0)
+            curr_user = row["last_user_ts"] or 0.0
+            curr_page = row["last_page_ts"] or 0.0
+            if user_ts is not None:
+                l_user = max(curr_user, float(user_ts))
+            elif is_user:
+                l_user = max(curr_user, now)
+            else:
+                l_user = curr_user
+
+            if page_ts is not None:
+                l_page = max(curr_page, float(page_ts))
+            elif not is_user:
+                l_page = max(curr_page, now)
+            else:
+                l_page = curr_page
+
             t_until = takeover_until if takeover_until is not None else (row["takeover_until"] or 0.0)
             conn.execute(
                 "UPDATE messaging_windows SET last_user_ts = ?, last_page_ts = ?, takeover_until = ? WHERE page_id = ? AND psid = ?",
                 (l_user, l_page, t_until, pid, sid),
             )
         else:
-            l_user = now if is_user else 0.0
-            l_page = now if not is_user else 0.0
+            l_user = float(user_ts) if user_ts is not None else (now if is_user else 0.0)
+            l_page = float(page_ts) if page_ts is not None else (now if not is_user else 0.0)
             t_until = takeover_until if takeover_until is not None else 0.0
             conn.execute(
                 "INSERT INTO messaging_windows (page_id, psid, last_user_ts, last_page_ts, takeover_until) VALUES (?, ?, ?, ?, ?)",
@@ -858,11 +959,125 @@ def is_under_takeover(page_id: str, psid: str, db_path: Path | str | None = None
     return float(win["takeover_until"]) > time.time()
 
 
-def get_recent_conversations(db_path: Path | str | None = None) -> list[dict[str, Any]]:
-    """Danh sách các cuộc hội thoại Messenger gần đây kèm trạng thái takeover."""
+def get_recent_conversations(
+    page_id: str | None = None,
+    limit: int = 50,
+    db_path: Path | str | None = None,
+) -> list[dict[str, Any]]:
+    """Danh sách các cuộc hội thoại Messenger gần đây kèm tên khách và trạng thái takeover."""
+    init_db(db_path)
+    with get_connection(db_path) as conn:
+        if page_id:
+            rows = conn.execute(
+                "SELECT page_id, psid, last_user_ts, last_page_ts, takeover_until FROM messaging_windows "
+                "WHERE page_id = ? "
+                "ORDER BY COALESCE(last_user_ts,0) DESC, COALESCE(last_page_ts,0) DESC LIMIT ?",
+                (str(page_id), int(limit)),
+            ).fetchall()
+        else:
+            rows = conn.execute(
+                "SELECT page_id, psid, last_user_ts, last_page_ts, takeover_until FROM messaging_windows "
+                "ORDER BY COALESCE(last_user_ts,0) DESC, COALESCE(last_page_ts,0) DESC LIMIT ?",
+                (int(limit),),
+            ).fetchall()
+
+        out = []
+        for r in rows:
+            d = dict(r)
+            pid = d["page_id"]
+            sid = d["psid"]
+
+            last = conn.execute(
+                "SELECT body, class, created_ts, from_name FROM events "
+                "WHERE page_id = ? AND (from_id = ? OR thread_id = ?) AND kind IN ('message','echo') "
+                "ORDER BY created_ts DESC LIMIT 1",
+                (pid, sid, sid),
+            ).fetchone()
+            if last:
+                d["last_body"] = last["body"]
+                d["last_class"] = last["class"]
+                d["last_event_ts"] = last["created_ts"]
+
+            # Lấy tên khách hàng
+            name_row = conn.execute(
+                "SELECT from_name FROM events "
+                "WHERE page_id = ? AND from_id = ? AND kind = 'message' AND from_name IS NOT NULL "
+                "AND from_name != '' AND from_name NOT LIKE 'Khách Messenger%' "
+                "ORDER BY created_ts DESC LIMIT 1",
+                (pid, sid),
+            ).fetchone()
+
+            if name_row and name_row["from_name"]:
+                d["customer_name"] = name_row["from_name"]
+            else:
+                ident = conn.execute(
+                    "SELECT crm_id FROM identities WHERE kind = 'fb_psid' AND page_id = ? AND ext_id = ?",
+                    (pid, sid),
+                ).fetchone()
+                if ident:
+                    c_row = conn.execute("SELECT name FROM customers WHERE crm_id = ?", (ident["crm_id"],)).fetchone()
+                    if c_row and c_row["name"] and not c_row["name"].startswith("Khách Messenger"):
+                        d["customer_name"] = c_row["name"]
+
+            if not d.get("customer_name"):
+                d["customer_name"] = f"Khách Messenger {sid[-4:] if len(sid) >= 4 else sid}"
+
+            out.append(d)
+        return out
+
+
+def ensure_conversation(
+    page_id: str,
+    psid: str,
+    customer_name: str | None = None,
+    last_ts: float | None = None,
+    snippet: str | None = None,
+    db_path: Path | str | None = None,
+) -> None:
+    """Đảm bảo một cuộc hội thoại từ Graph API được lưu vào messaging_windows và customers."""
+    init_db(db_path)
+    pid = str(page_id)
+    sid = str(psid)
+    now = time.time()
+    ts = float(last_ts) if last_ts else now
+
+    update_messaging_window(pid, sid, is_user=True, user_ts=ts, db_path=db_path)
+
+    with get_connection(db_path) as conn:
+        if customer_name and not customer_name.startswith("Khách Messenger"):
+            get_or_create_customer(
+                name=customer_name,
+                page_id=pid,
+                psid=sid,
+                db_path=db_path,
+            )
+
+        if snippet:
+            existing = conn.execute(
+                "SELECT id FROM events WHERE page_id = ? AND (from_id = ? OR thread_id = ?) AND kind IN ('message','echo') LIMIT 1",
+                (pid, sid, sid),
+            ).fetchone()
+            if not existing:
+                conn.execute(
+                    "INSERT INTO events (kind, platform, page_id, object_id, thread_id, from_id, from_name, body, created_ts, ingested_ts) "
+                    "VALUES ('message', 'messenger', ?, ?, ?, ?, ?, ?, ?, ?)",
+                    (pid, f"conv_{sid}_{int(ts)}", sid, sid, customer_name or f"Khách {sid[-4:]}", snippet, ts, now),
+                )
+
+
+def get_conversation_thread_events(
+    page_id: str,
+    psid: str,
+    limit: int = 50,
+    db_path: Path | str | None = None,
+) -> list[dict[str, Any]]:
+    """Lấy danh sách tin nhắn / echoes trong thread giữa page_id và psid."""
     init_db(db_path)
     with get_connection(db_path) as conn:
         rows = conn.execute(
-            "SELECT page_id, psid, last_user_ts, last_page_ts, takeover_until FROM messaging_windows ORDER BY MAX(COALESCE(last_user_ts,0), COALESCE(last_page_ts,0)) DESC LIMIT 50"
+            "SELECT id, kind, platform, page_id, object_id, thread_id, from_id, from_name, body, class, created_ts "
+            "FROM events WHERE page_id = ? AND (from_id = ? OR thread_id = ?) AND kind IN ('message','echo') "
+            "ORDER BY created_ts ASC LIMIT ?",
+            (str(page_id), str(psid), str(psid), int(limit)),
         ).fetchall()
         return [dict(r) for r in rows]

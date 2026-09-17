@@ -107,3 +107,18 @@ def test_policy_full_mode():
     assert ok
     ok, _ = policy_allows("llm_reply", mode="full", class_name="ambiguous")
     assert ok
+
+    ok, _ = policy_allows("messenger_reply", mode="full", class_name="faq")
+    assert ok
+
+
+def test_policy_messenger_auto_faq_lead():
+    ok, why = policy_allows("messenger_reply", mode="auto", class_name="faq")
+    assert ok
+    assert why == "allowed_messenger_faq_lead_auto"
+    ok, why = policy_allows("messenger_reply", mode="auto", class_name="lead")
+    assert ok
+    ok, why = policy_allows("messenger_reply", mode="auto", class_name="ambiguous")
+    assert not ok
+    ok, why = policy_allows("messenger_reply", mode="suggest", class_name="faq")
+    assert not ok

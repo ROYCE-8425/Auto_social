@@ -1451,6 +1451,8 @@ async def _conversations(args, ctx):
         {
             "fields": "id,updated_time,message_count,unread_count,participants,snippet",
             "limit": limit,
+            "platform": "messenger",
+            "folder": "inbox",
         },
         ptok,
     )

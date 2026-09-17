@@ -152,6 +152,12 @@ def test_brand_and_platform_packs():
     check("bsn: mua key -> lead", r_bsn_buy["class"] == "lead")
     check("bsn: slug game-gia-re-bsn nhận diện brand bsn", r_bsn_buy["brand"] == "bsn")
 
+    r_bsn_ib = classify_comment("Check ib mình với ạ", brand="bsn")
+    check("bsn: check ib -> lead (không học phí tin học)", r_bsn_ib["class"] == "lead")
+
+    r_bsn_gia = classify_comment("giá cả sao q uy tín không ạ", brand="bsn")
+    check("bsn: giá/uy tín -> gia_game", r_bsn_gia["class"] == "faq" and r_bsn_gia["faq_intent"] == "gia_game")
+
     r_bsn_vh = classify_comment("game này có việt hóa không shop", brand="bsn")
     check("bsn: việt hóa -> viet_hoa", r_bsn_vh["class"] == "faq" and r_bsn_vh["faq_intent"] == "viet_hoa")
 

@@ -11,6 +11,8 @@ import {
   Bot,
   AlertCircle,
   MessageCircle,
+  X,
+  ExternalLink,
 } from 'lucide-react'
 import { api, CareConversation, CareDraft, CareEvent, CareState } from '../lib/api'
 import { useAuth } from '../lib/auth'
@@ -32,6 +34,13 @@ export const Inbox: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true)
   const [actionLoading, setActionLoading] = useState<string | number | null>(null)
   const [actionMsg, setActionMsg] = useState<{ id: string | number; msg: string; type: 'success' | 'error' } | null>(null)
+
+  // Chat conversation modal state
+  const [selectedConv, setSelectedConv] = useState<CareConversation | null>(null)
+  const [threadEvents, setThreadEvents] = useState<CareEvent[]>([])
+  const [threadLoading, setThreadLoading] = useState<boolean>(false)
+  const [directMsgText, setDirectMsgText] = useState<string>('')
+  const [sendingDirectMsg, setSendingDirectMsg] = useState<boolean>(false)
 
   // Handoff note modal state
   const [handoffModalOpen, setHandoffModalOpen] = useState<boolean>(false)
@@ -70,7 +79,7 @@ export const Inbox: React.FC = () => {
           platform: filter === 'all' ? undefined : filter,
           page_id: pageId || undefined,
         }).catch(() => null),
-        api.getConversations().catch(() => null),
+        api.getConversations(pageId || undefined).catch(() => null),
         api.getCareState().catch(() => null),
       ])
       if (inboxRes) {
@@ -80,7 +89,15 @@ export const Inbox: React.FC = () => {
       if (convRes) {
         setConversations(convRes.conversations || [])
       }
-      if (stateRes?.eligible_pages) setEligiblePages(stateRes.eligible_pages)
+      if (stateRes?.eligible_pages) {
+        const pages = stateRes.eligible_pages
+        setEligiblePages(pages)
+        setPageFilter((prev) => {
+          if (prev) return prev
+          const bsn = pages.find((p) => p.brand === 'bsn')
+          return (bsn?.page_id || bsn?.id || prev) as string
+        })
+      }
     } finally {
       setLoading(false)
     }
@@ -197,6 +214,54 @@ export const Inbox: React.FC = () => {
     }
   }
 
+  const handleOpenConversation = async (conv: CareConversation) => {
+    setSelectedConv(conv)
+    setThreadLoading(true)
+    setDirectMsgText('')
+    try {
+      const res = await api.getConversationThread(conv.page_id, conv.psid)
+      if (res.ok) {
+        setThreadEvents(res.events || [])
+      }
+    } catch (e) {
+      console.error('Error fetching thread:', e)
+    } finally {
+      setThreadLoading(false)
+    }
+  }
+
+  const handleSendDirectMessage = async () => {
+    if (!selectedConv || !directMsgText.trim() || sendingDirectMsg) return
+    setSendingDirectMsg(true)
+    try {
+      const res = await api.sendDirectMessage(selectedConv.page_id, selectedConv.psid, directMsgText.trim())
+      if (res.ok) {
+        const newEv: CareEvent = {
+          id: Date.now(),
+          kind: 'echo',
+          platform: 'messenger',
+          page_id: selectedConv.page_id,
+          object_id: `msg_${Date.now()}`,
+          thread_id: selectedConv.psid,
+          from_id: selectedConv.page_id,
+          from_name: 'Nhân viên Fanpage',
+          body: directMsgText.trim(),
+          class: 'manual_reply',
+          created_ts: Date.now() / 1000,
+        }
+        setThreadEvents((prev) => [...prev, newEv])
+        setDirectMsgText('')
+        await loadData(platformFilter, pageFilter)
+      } else {
+        alert(res.error || 'Lỗi gửi tin nhắn')
+      }
+    } catch (err: any) {
+      alert(err.message || 'Lỗi gửi tin nhắn')
+    } finally {
+      setSendingDirectMsg(false)
+    }
+  }
+
   const pendingDrafts = drafts.filter((d) => d.status === 'pending')
 
   const filteredDrafts = pendingDrafts.filter((draft) => {
@@ -255,7 +320,7 @@ export const Inbox: React.FC = () => {
             }`}
           >
             <Bot className="w-4 h-4 text-blue-500" />
-            <span>Tin nhắn Messenger ({conversations.length})</span>
+            <span>Tin nhắn Messenger / IB ({conversations.length})</span>
           </button>
         </div>
       </div>
@@ -325,14 +390,43 @@ export const Inbox: React.FC = () => {
               </select>
 
               {can('poll_now') && (
+                <>
                 <button
                   type="button"
                   onClick={handlePollPage}
                   disabled={isPolling}
                   className="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 text-white hover:bg-emerald-500 disabled:opacity-50"
                 >
-                  {isPolling ? 'Đang kéo…' : pageFilter ? 'Kéo comment page này' : 'Kéo comment (vòng hiện tại)'}
+                  {isPolling ? 'Đang kéo…' : 'Kéo comment'}
                 </button>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (isPolling) return
+                    setIsPolling(true)
+                    setPollHint(null)
+                    try {
+                      const res = await api.pollNow(pageFilter || undefined, 'messenger')
+                      const r = res.result || {}
+                      const err = r.page_errors?.[0]?.error
+                      setPollHint(
+                        `Hộp thư IB: ${r.messages_ingested ?? 0} tin · ${r.drafts_created ?? 0} nháp` +
+                          (err ? ` · ${String(err).slice(0, 140)}` : ''),
+                      )
+                      setActiveSubTab('messenger')
+                      await loadData(platformFilter, pageFilter)
+                    } catch (err: any) {
+                      setPollHint(err.message || 'Lỗi kéo inbox Business')
+                    } finally {
+                      setIsPolling(false)
+                    }
+                  }}
+                  disabled={isPolling}
+                  className="px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-600 text-white hover:bg-blue-500 disabled:opacity-50"
+                >
+                  Kéo hộp thư IB (Business)
+                </button>
+                </>
               )}
             </div>
             {pollHint && <p className="text-xs text-slate-500">{pollHint}</p>}
@@ -567,6 +661,37 @@ export const Inbox: React.FC = () => {
       {/* SUB-TAB 2: MESSENGER CONVERSATIONS & TAKEOVER */}
       {activeSubTab === 'messenger' && (
         <div className="space-y-4">
+          <div className="flex flex-wrap items-center gap-2">
+            {can('poll_now') && (
+              <button
+                type="button"
+                onClick={async () => {
+                  if (isPolling) return
+                  setIsPolling(true)
+                  setPollHint(null)
+                  try {
+                    const res = await api.pollNow(pageFilter || undefined, 'messenger')
+                    const r = res.result || {}
+                    setPollHint(
+                      `Hộp thư Business: ${r.messages_ingested ?? 0} tin mới · ${r.drafts_created ?? 0} nháp` +
+                        (r.page_errors?.[0]?.error ? ` · ${String(r.page_errors[0].error).slice(0, 100)}` : ''),
+                    )
+                    await loadData(platformFilter, pageFilter)
+                  } catch (err: any) {
+                    setPollHint(err.message || 'Lỗi kéo inbox')
+                  } finally {
+                    setIsPolling(false)
+                    setTimeout(() => setPollHint(null), 8000)
+                  }
+                }}
+                disabled={isPolling}
+                className="px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-600 text-white hover:bg-blue-500 disabled:opacity-50"
+              >
+                {isPolling ? 'Đang kéo hộp thư…' : 'Kéo hộp thư Business'}
+              </button>
+            )}
+            {pollHint && <span className="text-xs text-slate-500">{pollHint}</span>}
+          </div>
           <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 text-xs text-blue-900 flex items-start space-x-3">
             <Bot className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
             <div>
@@ -601,12 +726,14 @@ export const Inbox: React.FC = () => {
 
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center space-x-3">
-                      <div className="w-11 h-11 rounded-full bg-blue-100 text-blue-800 font-bold text-sm flex items-center justify-center">
-                        <MessageCircle className="w-5 h-5 text-blue-600" />
+                      <div className="w-11 h-11 rounded-full bg-blue-600 text-white font-bold text-base flex items-center justify-center shadow-sm">
+                        {conv.customer_name ? conv.customer_name.trim().charAt(0).toUpperCase() : <MessageCircle className="w-5 h-5 text-white" />}
                       </div>
                       <div>
-                        <h3 className="font-bold text-slate-900 text-sm">PSID: {conv.psid.slice(0, 16)}...</h3>
-                        <p className="text-[11px] text-slate-400">Page ID: {conv.page_id}</p>
+                        <h3 className="font-bold text-slate-900 text-sm">
+                          {conv.customer_name || `Khách Messenger ${conv.psid.slice(-4)}`}
+                        </h3>
+                        <p className="text-[11px] text-slate-400">PSID: {conv.psid} · Page ID: {conv.page_id}</p>
                       </div>
                     </div>
 
@@ -620,6 +747,16 @@ export const Inbox: React.FC = () => {
                       </span>
                     )}
                   </div>
+
+                  {conv.last_body && (
+                    <div className="p-3 bg-slate-50 rounded-xl text-xs text-slate-800 leading-relaxed">
+                      <span className="text-[10px] font-bold uppercase text-slate-400 mr-2">Tin mới</span>
+                      {conv.last_class && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 mr-2">{conv.last_class}</span>
+                      )}
+                      “{conv.last_body}”
+                    </div>
+                  )}
 
                   <div className="p-3 bg-slate-50 rounded-xl text-xs text-slate-700 space-y-1">
                     <div className="flex items-center justify-between">
@@ -642,25 +779,27 @@ export const Inbox: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
-                    <div className="text-[11px] text-slate-500">
-                      {isTakeover && conv.takeover_until ? (
-                        <span>Hết hạn takeover: {formatTime(conv.takeover_until)}</span>
-                      ) : (
-                        <span>Tự động giải đáp 24/7</span>
+                  <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
+                    <button
+                      onClick={() => handleOpenConversation(conv)}
+                      className="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition-colors cursor-pointer"
+                    >
+                      <MessageCircle className="w-3.5 h-3.5" />
+                      <span>Xem chat & Trả lời</span>
+                    </button>
+
+                    <div className="flex items-center space-x-2">
+                      {isTakeover && (
+                        <button
+                          onClick={() => handleReleaseTakeover(conv.page_id, conv.psid)}
+                          disabled={isBusy}
+                          className="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-bold text-saoviet-700 bg-saoviet-50 hover:bg-saoviet-100 border border-saoviet-200 rounded-lg transition-colors cursor-pointer disabled:opacity-50"
+                        >
+                          <RotateCcw className={`w-3.5 h-3.5 ${isBusy ? 'animate-spin' : ''}`} />
+                          <span>Javis nhận lại</span>
+                        </button>
                       )}
                     </div>
-
-                    {isTakeover && (
-                      <button
-                        onClick={() => handleReleaseTakeover(conv.page_id, conv.psid)}
-                        disabled={isBusy}
-                        className="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-bold text-saoviet-700 bg-saoviet-50 hover:bg-saoviet-100 border border-saoviet-200 rounded-lg transition-colors cursor-pointer disabled:opacity-50"
-                      >
-                        <RotateCcw className={`w-3.5 h-3.5 ${isBusy ? 'animate-spin' : ''}`} />
-                        <span>Javis nhận lại</span>
-                      </button>
-                    )}
                   </div>
                 </div>
               )
@@ -669,8 +808,13 @@ export const Inbox: React.FC = () => {
             {conversations.length === 0 && (
               <div className="col-span-2 bg-white rounded-2xl border border-slate-200 p-12 text-center text-slate-400 text-xs">
                 <Bot className="w-10 h-10 mx-auto mb-3 text-slate-300" />
-                <p className="font-semibold text-slate-600">Chưa có cuộc trò chuyện Messenger nào</p>
-                <p className="text-slate-400 mt-1">Khi khách gửi tin nhắn vào Fanpage, dữ liệu sẽ hiển thị ở đây</p>
+                <p className="font-semibold text-slate-700 text-sm">Chưa kéo hộp thư Business</p>
+                <p className="text-slate-500 mt-2 max-w-md mx-auto leading-relaxed">
+                  Tab này là <b>tin nhắn IB</b> (Hiếu Phan, Anh Đức… trong Business Suite).
+                  Comment trên bài viết nằm tab <b>Bình luận</b> — không phải inbox.
+                  Chọn page BSN rồi bấm nút xanh dương <b>Kéo hộp thư IB (Business)</b>.
+                  Token Page phải có quyền Messenger, không chỉ đọc comment.
+                </p>
               </div>
             )}
           </div>
@@ -724,6 +868,122 @@ export const Inbox: React.FC = () => {
               >
                 {actionLoading === 'handoff' ? 'Đang tạo việc...' : 'Xác nhận tạo việc'}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Messenger Chat & Direct Reply */}
+      {selectedConv && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-2xl w-full h-[620px] shadow-2xl border border-slate-200 flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            {/* Header */}
+            <div className="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/80">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 rounded-full bg-blue-600 text-white font-bold text-base flex items-center justify-center shadow-sm">
+                  {selectedConv.customer_name ? selectedConv.customer_name.trim().charAt(0).toUpperCase() : <MessageCircle className="w-5 h-5 text-white" />}
+                </div>
+                <div>
+                  <div className="flex items-center space-x-2">
+                    <h3 className="text-base font-bold text-slate-900">
+                      {selectedConv.customer_name || `Khách Messenger ${selectedConv.psid.slice(-4)}`}
+                    </h3>
+                    {Boolean(selectedConv.takeover_until && selectedConv.takeover_until > Date.now() / 1000) ? (
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">
+                        Takeover nhân viên
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                        Javis quản lý
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-slate-500">
+                    PSID: {selectedConv.psid} · Page ID: {selectedConv.page_id}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setSelectedConv(null)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Chat Body */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50/50">
+              {threadLoading ? (
+                <div className="flex flex-col items-center justify-center h-full text-slate-400 text-xs">
+                  <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mb-2" />
+                  <span>Đang tải lịch sử tin nhắn...</span>
+                </div>
+              ) : threadEvents.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full text-slate-400 text-xs text-center">
+                  <Bot className="w-8 h-8 text-slate-300 mb-2" />
+                  <p className="font-semibold text-slate-600">Chưa có bản ghi tin nhắn chi tiết trong hệ thống</p>
+                  <p className="text-[11px] text-slate-400 mt-1 max-w-sm">
+                    Bấm "Kéo hộp thư IB (Business)" để đồng bộ toàn bộ tin nhắn từ Facebook hoặc nhập tin nhắn bên dưới để phản hồi trực tiếp cho khách.
+                  </p>
+                </div>
+              ) : (
+                threadEvents.map((ev) => {
+                  const isPage = ev.kind === 'echo' || ev.from_id === selectedConv.page_id || ev.from_name === 'Nhân viên Fanpage'
+                  return (
+                    <div
+                      key={ev.id || ev.object_id}
+                      className={`flex flex-col ${isPage ? 'items-end' : 'items-start'}`}
+                    >
+                      <div className="flex items-center space-x-1 mb-1 text-[10px] text-slate-400">
+                        <span>{isPage ? 'Trang (Nhân viên / Javis)' : (ev.from_name || selectedConv.customer_name || 'Khách')}</span>
+                        <span>·</span>
+                        <span>{formatTime(ev.created_ts)}</span>
+                      </div>
+                      <div
+                        className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-xs shadow-sm ${
+                          isPage
+                            ? 'bg-blue-600 text-white rounded-br-xs'
+                            : 'bg-white text-slate-800 border border-slate-200 rounded-bl-xs'
+                        }`}
+                      >
+                        <p className="whitespace-pre-wrap leading-relaxed">{ev.body}</p>
+                      </div>
+                    </div>
+                  )
+                })
+              )}
+            </div>
+
+            {/* Footer Input */}
+            <div className="p-3 border-t border-slate-200 bg-white space-y-2">
+              <div className="flex items-center space-x-2">
+                <input
+                  type="text"
+                  value={directMsgText}
+                  onChange={(e) => setDirectMsgText(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault()
+                      handleSendDirectMessage()
+                    }
+                  }}
+                  placeholder={`Nhắn tin cho ${selectedConv.customer_name || 'khách hàng'} (Enter để gửi)...`}
+                  className="flex-1 px-3.5 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <button
+                  type="button"
+                  onClick={handleSendDirectMessage}
+                  disabled={!directMsgText.trim() || sendingDirectMsg}
+                  className="flex items-center space-x-1.5 px-4 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-500 disabled:opacity-50 rounded-xl shadow-sm transition-all cursor-pointer"
+                >
+                  <Send className={`w-3.5 h-3.5 ${sendingDirectMsg ? 'animate-pulse' : ''}`} />
+                  <span>{sendingDirectMsg ? 'Đang gửi…' : 'Gửi Messenger'}</span>
+                </button>
+              </div>
+              <p className="text-[10px] text-slate-400">
+                Tin nhắn gửi trực tiếp qua Facebook Messenger Graph API · Tự động ghi nhận lịch sử vào Javis Care.
+              </p>
             </div>
           </div>
         </div>

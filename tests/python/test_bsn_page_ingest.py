@@ -80,7 +80,7 @@ async def test_poll_tick_only_bsn_page(monkeypatch, tmp_path):
     monkeypatch.setattr(fanpage_care.fanpage_care_graph, "call", fake_call)
 
     feat = fanpage_care.FanpageCareFeature(fanpage_care.FanpageCareDeps(vault_root=vault))
-    res = await feat.poll_tick(page_id="343562028848465", force_ingest=True)
+    res = await feat.poll_tick(page_id="343562028848465", force_ingest=True, channel="comments")
     assert res.get("reason") != "disabled"
     assert called == ["343562028848465"]
     assert res["events_ingested"] >= 1

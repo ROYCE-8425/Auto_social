@@ -56,7 +56,7 @@ export interface CareEvent {
   class?: string | null
   faq_intent?: string | null
   created_ts: number
-  ingested_ts: number
+  ingested_ts?: number
 }
 
 export interface CareDraft {
@@ -73,9 +73,13 @@ export interface CareDraft {
 export interface CareConversation {
   page_id: string
   psid: string
+  customer_name?: string
   last_user_ts?: number
   last_page_ts?: number
   takeover_until?: number
+  last_body?: string
+  last_class?: string
+  last_event_ts?: number
 }
 
 export interface CareCustomer {
@@ -102,6 +106,18 @@ export interface CareCustomerDetail {
   customer: CareCustomer
   identities: CareIdentity[]
   markdown: string
+  behavior?: {
+    stage?: string
+    message_count?: number
+    comment_count?: number
+    by_platform?: Record<string, number>
+    by_class?: Record<string, number>
+    last_intent?: string | null
+    last_body?: string
+    last_ts?: number
+    campus?: string
+    course_interest?: string
+  }
 }
 
 export interface KanbanTask {
@@ -220,10 +236,13 @@ export const api = {
 
   // Care State & Overview
   getCareState: () => request<CareState>('/fanpage-care/state'),
-  pollNow: (pageId?: string) =>
+  pollNow: (pageId?: string, channel?: 'comments' | 'messenger' | 'both') =>
     request<{ ok: boolean; result?: any }>('/fanpage-care/poll-now', {
       method: 'POST',
-      body: JSON.stringify(pageId ? { page_id: pageId } : {}),
+      body: JSON.stringify({
+        ...(pageId ? { page_id: pageId } : {}),
+        ...(channel ? { channel } : {}),
+      }),
     }),
 
   // Inbox: Comments & Drafts
@@ -269,8 +288,22 @@ export const api = {
     }),
 
   // Messenger Conversations
-  getConversations: () =>
-    request<{ ok: boolean; conversations: CareConversation[] }>('/fanpage-care/conversations'),
+  getConversations: (pageId?: string) => {
+    const qs = pageId ? `?page_id=${encodeURIComponent(pageId)}` : ''
+    return request<{ ok: boolean; conversations: CareConversation[] }>(`/fanpage-care/conversations${qs}`)
+  },
+  getConversationThread: (pageId: string, psid: string) =>
+    request<{ ok: boolean; page_id: string; psid: string; events: CareEvent[] }>(
+      `/fanpage-care/conversations/thread?page_id=${encodeURIComponent(pageId)}&psid=${encodeURIComponent(psid)}`
+    ),
+  sendDirectMessage: (pageId: string, psid: string, message: string) =>
+    request<{ ok: boolean; page_id?: string; psid?: string; message?: string; error?: string }>(
+      '/fanpage-care/conversations/send',
+      {
+        method: 'POST',
+        body: JSON.stringify({ page_id: pageId, psid, message }),
+      }
+    ),
   releaseTakeover: (pageId: string, psid: string) =>
     request<{ ok: boolean; page_id: string; psid: string; takeover_until: number }>(
       '/fanpage-care/conversations/release-takeover',

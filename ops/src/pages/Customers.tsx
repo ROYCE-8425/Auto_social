@@ -382,6 +382,25 @@ export const Customers: React.FC = () => {
                   </div>
                 </div>
 
+                {customerDetail?.behavior && (
+                  <div className="space-y-2 p-3 rounded-xl border border-emerald-100 bg-emerald-50/50">
+                    <span className="text-xs font-bold text-slate-900 block">Hành vi (Javis)</span>
+                    <p className="text-xs text-slate-700">
+                      Giai đoạn: <b>{customerDetail.behavior.stage}</b>
+                      {' · '}{customerDetail.behavior.message_count || 0} tin nhắn
+                      {' · '}{customerDetail.behavior.comment_count || 0} bình luận
+                    </p>
+                    {customerDetail.behavior.last_body && (
+                      <p className="text-xs text-slate-600">Mới nhất: “{customerDetail.behavior.last_body}”</p>
+                    )}
+                    {customerDetail.behavior.by_class && (
+                      <p className="text-[11px] text-slate-500">
+                        {Object.entries(customerDetail.behavior.by_class).map(([k, v]) => `${k}: ${v}`).join(' · ')}
+                      </p>
+                    )}
+                  </div>
+                )}
+
                 {/* Linked Identities */}
                 {customerDetail?.identities && customerDetail.identities.length > 0 && (
                   <div className="space-y-2">

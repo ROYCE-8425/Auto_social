@@ -89,7 +89,8 @@ BSN_PRODUCT_KEYWORDS = {
 BSN_LEAD_KEYWORDS = [
     "mua key", "mua game", "inbox mua", "ib mua", "muon mua", "order game", "lay game",
     "mua acc", "mua tai khoan", "lay acc", "muon lay game", "lay ban nay", "inbox em mua",
-    "ib em mua", "can mua", "cho em mua", "con key khong", "con game khong", "lay game nay"
+    "ib em mua", "can mua", "cho em mua", "con key khong", "con game khong", "lay game nay",
+    "check ib", "ib minh", "inbox minh", "ib em", "inbox em", "ib nhe", "inbox nhe",
 ]
 
 BSN_FAQ_BAO_HANH_KEYWORDS = [
@@ -112,6 +113,7 @@ BSN_FAQ_CAI_DAT_KEYWORDS = [
 ]
 
 BSN_FAQ_GIA_KEYWORDS = [
+    "gia ca", "gia sao", "bao nhieu tien", "bao nhieu k", "gia the nao", "uy tin",
     "gia bn", "gia bao nhieu", "bao nhieu shop", "nhiu tien", "gia sao", "nhieu tien",
     "gia the nao", "bao nhieu a", "bao nhieu vay", "bao gia", "gia sao shop"
 ]

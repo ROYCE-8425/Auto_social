@@ -256,11 +256,13 @@ class FanpageCareFeature:
         page_id: str | None = None,
         *,
         force_ingest: bool = False,
+        channel: str | None = None,
     ) -> dict[str, Any]:
-        """Một tick quét bình luận (single-flight).
+        """Một tick quét bình luận và/hoặc hộp thư Business (Messenger).
 
         page_id: chỉ quét đúng Trang (vd BSN). force_ingest: poll-now vẫn kéo
-        comment khi Care đang tắt — ghi event/nháp, không tự gửi Graph.
+        khi Care đang tắt — ghi event/nháp, không tự gửi Graph (trừ mode auto/full).
+        channel: comments | messenger | both (mặc định both).
         """
         if self._tick_running:
             return {"status": "skipped", "reason": "already_running"}
@@ -270,6 +272,7 @@ class FanpageCareFeature:
         res = {
             "status": "ok",
             "events_ingested": 0,
+            "messages_ingested": 0,
             "drafts_created": 0,
             "replies_sent": 0,
             "page_errors": [],
@@ -300,6 +303,11 @@ class FanpageCareFeature:
 
             if page_id:
                 batch_pages = active_pages
+            elif (channel or "both").strip().lower() == "messenger":
+                # Kéo IB: ưu tiên BSN, không xoay 50 page đào tạo
+                bsn = [p for p in active_pages if p.get("brand") == "bsn"]
+                others = [p for p in active_pages if p.get("brand") != "bsn"]
+                batch_pages = (bsn + others)[:15]
             else:
                 pages_per_tick = max(1, int(cfg.get("pages_per_tick", 10)))
                 total_active = len(active_pages)
@@ -313,68 +321,203 @@ class FanpageCareFeature:
             max_events = int(cfg.get("max_events_per_tick", 100))
             max_new_cust = int(cfg.get("max_new_customers_per_tick", 40))
             new_cust_count = 0
+            ch = (channel or "both").strip().lower()
+            if ch not in ("comments", "messenger", "both"):
+                ch = "both"
 
-            for p in batch_pages:
-                if res["events_ingested"] >= max_events:
-                    break
-
-                pid = p["page_id"]
-                page_name = p["name"]
-
-                async with sem:
-                    # Gọi fb_page_inbox_comments qua fanpage_care_graph.call
-                    call_res = await fanpage_care_graph.call(
-                        "fb_page_inbox_comments",
-                        {"page_id": pid, "posts_limit": 5, "comments_per_post": 25, "filter": "stream"},
-                        actor="care-worker",
-                        vault_root=str(self.vault_root),
-                    )
-
-                if str(call_res).startswith("ERROR:"):
-                    res["page_errors"].append({"page_id": pid, "name": page_name, "error": str(call_res)[:300]})
-                    continue
-
-                try:
-                    data = json.loads(call_res) if isinstance(call_res, str) else call_res
-                except Exception:
-                    continue
-
-                items = data.get("items", []) if isinstance(data, dict) else []
-                if not items:
-                    continue
-
-                for item in items:
+            if ch in ("comments", "both"):
+                for p in batch_pages:
                     if res["events_ingested"] >= max_events:
                         break
-
-                    cid = str(item.get("comment_id") or "").strip()
-                    if not cid:
+                    pid = p["page_id"]
+                    page_name = p["name"]
+                    async with sem:
+                        call_res = await fanpage_care_graph.call(
+                            "fb_page_inbox_comments",
+                            {"page_id": pid, "posts_limit": 5, "comments_per_post": 25, "filter": "stream"},
+                            actor="care-worker",
+                            vault_root=str(self.vault_root),
+                        )
+                    if str(call_res).startswith("ERROR:"):
+                        res["page_errors"].append({"page_id": pid, "name": page_name, "error": str(call_res)[:300]})
                         continue
+                    try:
+                        data = json.loads(call_res) if isinstance(call_res, str) else call_res
+                    except Exception:
+                        continue
+                    items = data.get("items", []) if isinstance(data, dict) else []
+                    for item in items:
+                        if res["events_ingested"] >= max_events:
+                            break
+                        cid = str(item.get("comment_id") or "").strip()
+                        if not cid:
+                            continue
+                        c_res = await self.process_inbound_comment(
+                            pid, cid, str(item.get("post_id") or ""), None,
+                            str(item.get("from_id") or "").strip(),
+                            str(item.get("from_name") or "Ẩn danh").strip(),
+                            str(item.get("message") or ""),
+                            item.get("created_time"),
+                            cfg=cfg, sem=sem,
+                        )
+                        if c_res.get("status") == "ok":
+                            res["events_ingested"] += 1
+                            if c_res.get("replied"):
+                                res["replies_sent"] += 1
+                            if c_res.get("draft_created"):
+                                res["drafts_created"] += 1
+                            if c_res.get("new_customer"):
+                                new_cust_count += 1
 
-                    from_id = str(item.get("from_id") or "").strip()
-                    from_name = str(item.get("from_name") or "Ẩn danh").strip()
-                    body = str(item.get("message") or "")
-                    post_id = str(item.get("post_id") or "")
-                    created_ts = item.get("created_time")
-
-                    c_res = await self.process_inbound_comment(
-                        pid, cid, post_id, None, from_id, from_name, body, created_ts,
-                        cfg=cfg, sem=sem
-                    )
-                    if c_res.get("status") == "ok":
-                        res["events_ingested"] += 1
-                        if c_res.get("replied"):
-                            res["replies_sent"] += 1
-                        if c_res.get("draft_created"):
-                            res["drafts_created"] += 1
-                        if c_res.get("new_customer"):
-                            new_cust_count += 1
+            if ch in ("messenger", "both"):
+                await self._poll_messenger_pages(
+                    batch_pages, cfg, res, sem=sem, force_ingest=force_ingest,
+                )
 
         finally:
             self._tick_running = False
 
         res["duration_ms"] = int((time.time() - t0) * 1000)
         return res
+
+    @staticmethod
+    def _graph_list(res: Any) -> list[dict[str, Any]]:
+        if res is None or str(res).startswith("ERROR:"):
+            return []
+        try:
+            data = json.loads(res) if isinstance(res, str) else res
+        except Exception:
+            return []
+        if not isinstance(data, dict):
+            return []
+        if data.get("error"):
+            return []
+        items = data.get("data") or data.get("items") or []
+        return [x for x in items if isinstance(x, dict)]
+
+    async def _poll_messenger_pages(
+        self,
+        batch_pages: list[dict[str, Any]],
+        cfg: dict[str, Any],
+        res: dict[str, Any],
+        *,
+        sem: asyncio.Semaphore,
+        force_ingest: bool,
+    ) -> None:
+        """Kéo hội thoại Business Inbox (conversations) rồi nuốt tin khách."""
+        max_conv = int(cfg.get("messenger_convs_per_page", 12))
+        max_msg = int(cfg.get("messenger_msgs_per_conv", 15))
+        for p in batch_pages:
+            pid = p["page_id"]
+            page_name = p["name"]
+            async with sem:
+                conv_res = await fanpage_care_graph.call(
+                    "fb_conversations",
+                    {"page_id": pid, "limit": max_conv},
+                    actor="care-worker",
+                    vault_root=str(self.vault_root),
+                )
+            if str(conv_res).startswith("ERROR:"):
+                res["page_errors"].append({
+                    "page_id": pid, "name": page_name, "channel": "messenger",
+                    "error": str(conv_res)[:300],
+                })
+                continue
+            convs = self._graph_list(conv_res)
+            for conv in convs:
+                conv_id = str(conv.get("id") or "").strip()
+                if not conv_id:
+                    continue
+
+                # 1. Trích xuất thông tin khách từ participants của cuộc trò chuyện
+                parts = (conv.get("participants") or {}).get("data") or []
+                cust_part = None
+                for pt in parts:
+                    if str(pt.get("id")) != str(pid):
+                        cust_part = pt
+                        break
+                cust_psid = str(cust_part.get("id") or "").strip() if cust_part else ""
+                cust_name = str(cust_part.get("name") or "").strip() if cust_part else ""
+                snippet = str(conv.get("snippet") or "").strip()
+                up_time_str = conv.get("updated_time")
+                up_ts = None
+                if up_time_str:
+                    try:
+                        up_ts = datetime.fromisoformat(up_time_str.replace("Z", "+00:00")).timestamp()
+                    except Exception:
+                        up_ts = time.time()
+
+                if cust_psid:
+                    store.ensure_conversation(
+                        page_id=pid,
+                        psid=cust_psid,
+                        customer_name=cust_name,
+                        last_ts=up_ts,
+                        snippet=snippet,
+                    )
+
+                async with sem:
+                    th_res = await fanpage_care_graph.call(
+                        "fb_conversation_thread",
+                        {"page_id": pid, "conversation_id": conv_id, "limit": max_msg},
+                        actor="care-worker",
+                        vault_root=str(self.vault_root),
+                    )
+                msgs = self._graph_list(th_res)
+                # Graph trả mới trước — đảo để xử lý cũ → mới
+                for raw in reversed(msgs):
+                    item = self._messenger_item_from_graph(pid, raw, default_name=cust_name)
+                    if not item:
+                        continue
+                    m_res = await self.process_inbound_message(
+                        pid, item, cfg=cfg, force_ingest=force_ingest,
+                    )
+                    if m_res.get("ingested"):
+                        res["messages_ingested"] = res.get("messages_ingested", 0) + 1
+                    if m_res.get("replied"):
+                        res["replies_sent"] += 1
+                    if m_res.get("draft_created"):
+                        res["drafts_created"] += 1
+
+    @staticmethod
+    def _messenger_item_from_graph(page_id: str, raw: dict[str, Any], default_name: str = "") -> dict[str, Any] | None:
+        """Đổi tin Graph /messages thành payload kiểu webhook messaging."""
+        mid = str(raw.get("id") or "").strip()
+        text = str(raw.get("message") or "").strip()
+        if not mid:
+            return None
+        if not text and raw.get("attachments"):
+            text = "[Hình ảnh / Tệp đính kèm]"
+
+        from_info = raw.get("from") or {}
+        from_id = str(from_info.get("id") or "").strip()
+        from_name = str(from_info.get("name") or "").strip() or default_name
+        to_blob = raw.get("to") or {}
+        to_list = to_blob.get("data") if isinstance(to_blob, dict) else []
+        to_id = ""
+        if isinstance(to_list, list) and to_list:
+            to_id = str((to_list[0] or {}).get("id") or "").strip()
+        is_echo = from_id == str(page_id)
+        ts = raw.get("created_time")
+        ts_ms = None
+        if isinstance(ts, (int, float)):
+            ts_ms = int(ts * 1000) if ts < 1e12 else int(ts)
+        elif isinstance(ts, str):
+            try:
+                dt = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+                ts_ms = int(dt.timestamp() * 1000)
+            except Exception:
+                ts_ms = int(time.time() * 1000)
+        return {
+            "sender": {"id": from_id, "name": from_name},
+            "recipient": {"id": to_id or ("" if is_echo else page_id)},
+            "timestamp": ts_ms,
+            "message": {
+                "mid": mid,
+                "text": text,
+                "is_echo": is_echo,
+            },
+        }
 
     async def process_inbound_comment(
         self,
@@ -712,12 +855,13 @@ class FanpageCareFeature:
         return out
 
     async def process_inbound_message(
-        self, pid: str, item: dict[str, Any], cfg: dict[str, Any] | None = None
+        self, pid: str, item: dict[str, Any], cfg: dict[str, Any] | None = None,
+        *, force_ingest: bool = False,
     ) -> dict[str, Any]:
-        """Xử lý tin nhắn và echo từ Messenger Webhook."""
+        """Xử lý tin nhắn và echo từ Messenger (webhook hoặc poll hộp thư Business)."""
         cfg = cfg or self.get_config()
-        out = {"replied": False, "draft_created": False, "takeover_activated": False}
-        if not cfg.get("enabled", False):
+        out = {"replied": False, "draft_created": False, "takeover_activated": False, "ingested": False}
+        if not cfg.get("enabled", False) and not force_ingest:
             return out
 
         sender_id = str(item.get("sender", {}).get("id", "")).strip()
@@ -735,16 +879,24 @@ class FanpageCareFeature:
         kill_switch = bool(cfg.get("kill_switch", False))
 
         # 1. Xử lý message_echoes
+        msg_ts = (timestamp / 1000.0) if timestamp else time.time()
         if is_echo:
             psid = recipient_id
             if metadata == "care-worker":
                 # Do chính Javis Care gửi qua fb_message_send
-                store.update_messaging_window(pid, psid, is_user=False)
+                store.update_messaging_window(pid, psid, is_user=False, page_ts=msg_ts)
             else:
                 # Do nhân viên trực tiếp chat trên Meta Business Suite / Messenger
                 # -> Kích hoạt Human Takeover (đóng băng thread 4 giờ)
                 takeover_hours = float(cfg.get("takeover_hours", 4.0))
-                until = store.set_human_takeover(pid, psid, duration_hours=takeover_hours)
+                takeover_until = msg_ts + (takeover_hours * 3600.0)
+                if takeover_until > time.time():
+                    until = store.set_human_takeover(pid, psid, duration_hours=(takeover_until - time.time()) / 3600.0)
+                    out["takeover_activated"] = True
+                    print(f"[fanpage_care] Human takeover activated on page {pid}, psid {psid} for {takeover_hours}h (until {until})", file=sys.stderr)
+                else:
+                    store.update_messaging_window(pid, psid, is_user=False, page_ts=msg_ts)
+
                 store.record_event({
                     "kind": "echo",
                     "platform": "messenger",
@@ -755,15 +907,16 @@ class FanpageCareFeature:
                     "from_name": "Nhân viên Fanpage",
                     "body": text,
                     "class": "human_echo",
-                    "created_ts": (timestamp / 1000.0) if timestamp else time.time(),
+                    "created_ts": msg_ts,
                 })
-                out["takeover_activated"] = True
-                print(f"[fanpage_care] Human takeover activated on page {pid}, psid {psid} for {takeover_hours}h (until {until})", file=sys.stderr)
             return out
 
         # 2. Tin nhắn từ khách hàng (inbound)
         psid = sender_id
-        store.update_messaging_window(pid, psid, is_user=True)
+        store.update_messaging_window(pid, psid, is_user=True, user_ts=msg_ts)
+
+        sender_name = str(item.get("sender", {}).get("name") or "").strip()
+        cust_display_name = sender_name if (sender_name and not sender_name.startswith("Khách Messenger")) else f"Khách Messenger {psid[-4:] if len(psid) >= 4 else psid}"
 
         ev_id, is_new = store.record_event({
             "kind": "message",
@@ -772,12 +925,13 @@ class FanpageCareFeature:
             "object_id": mid,
             "thread_id": psid,
             "from_id": psid,
-            "from_name": f"Khách Messenger {psid[-4:] if len(psid) >= 4 else psid}",
+            "from_name": cust_display_name,
             "body": text,
-            "created_ts": (timestamp / 1000.0) if timestamp else time.time(),
+            "created_ts": msg_ts,
         })
         if not is_new:
             return out
+        out["ingested"] = True
 
         # 3. Phân loại tin nhắn
         kit = _load_kit_for_page(self.vault_root, pid)
@@ -796,7 +950,7 @@ class FanpageCareFeature:
         # 4. Ghi nhận CRM
         try:
             cust, is_new_cust = store.get_or_create_customer(
-                name=f"Khách Messenger {psid[-4:] if len(psid) >= 4 else psid}",
+                name=cust_display_name,
                 phones=phones_list,
                 page_id=pid,
                 psid=psid,
@@ -842,7 +996,7 @@ class FanpageCareFeature:
         )
 
         reply_text = None
-        if ok and eff_m == "full":
+        if ok:
             if class_name == "faq":
                 reply_text = render_template(
                     cls_res.get("faq_intent") or "hoc_phi",
@@ -857,7 +1011,7 @@ class FanpageCareFeature:
                     course_hint=course_hints[0] if course_hints else None,
                     vault_root=self.vault_root,
                 )
-            elif class_name in ("ambiguous", "ky_thuat"):
+            elif class_name in ("ambiguous", "ky_thuat") and eff_m == "full":
                 from fanpage_care_ground import build_care_llm_prompt
                 sys_p, user_p = build_care_llm_prompt(
                     pid, kit, text, thread_comments=None, vault_root=self.vault_root
@@ -887,7 +1041,9 @@ class FanpageCareFeature:
                 store.create_draft(ev_id, pid, psid, "Cần hỗ trợ tư vấn", class_name)
                 out["draft_created"] = True
         else:
-            draft_content = render_template("hoc_phi", kit, vault_root=self.vault_root) or "Cần hỗ trợ tư vấn"
+            draft_content = render_template(
+                cls_res.get("faq_intent") or "hoc_phi", kit, vault_root=self.vault_root
+            ) or "Cần hỗ trợ tư vấn"
             store.create_draft(ev_id, pid, psid, draft_content, class_name)
             out["draft_created"] = True
 
@@ -1054,13 +1210,32 @@ class FanpageCareFeature:
             pid = d["page_id"]
             cid = d["target_id"]
             msg = d["proposed"]
-
-            res = await fanpage_care_graph.call(
-                "fb_page_reply",
-                {"comment_id": cid, "message": msg, "page_id": pid},
-                actor="user",
-                vault_root=str(self.vault_root),
+            ev = None
+            if d.get("event_id"):
+                try:
+                    ev = store.get_event(int(d["event_id"]))
+                except Exception:
+                    ev = None
+            is_msg = bool(
+                ev and (
+                    ev.get("kind") == "message"
+                    or str(ev.get("platform") or "") == "messenger"
+                )
             )
+            if is_msg:
+                res = await fanpage_care_graph.call(
+                    "fb_message_send",
+                    {"recipient_id": cid, "message": msg, "page_id": pid},
+                    actor="user",
+                    vault_root=str(self.vault_root),
+                )
+            else:
+                res = await fanpage_care_graph.call(
+                    "fb_page_reply",
+                    {"comment_id": cid, "message": msg, "page_id": pid},
+                    actor="user",
+                    vault_root=str(self.vault_root),
+                )
             if str(res).startswith("ERROR:"):
                 return {"ok": False, "error": str(res)}
 
@@ -1068,9 +1243,11 @@ class FanpageCareFeature:
             tz_vn = timezone(timedelta(hours=7))
             hour_key = datetime.now(tz_vn).strftime("%Y-%m-%dT%H")
             store.update_draft_status(draft_id, "sent")
-            store.record_action(d.get("event_id"), "reply", cid, "manual", "user")
+            store.record_action(d.get("event_id"), "send" if is_msg else "reply", cid, "manual", "user")
+            if is_msg:
+                store.update_messaging_window(pid, cid, is_user=False)
             store.increment_rate_count(pid, hour_key)
-            return {"ok": True, "status": "sent"}
+            return {"ok": True, "status": "sent", "channel": "messenger" if is_msg else "comment"}
 
         @router.post("/fanpage-care/drafts/{draft_id}/reject")
         async def care_draft_reject(draft_id: int):
@@ -1103,6 +1280,7 @@ class FanpageCareFeature:
                 "customer": cust,
                 "identities": store.get_identities_for_customer(crm_id),
                 "markdown": md_text,
+                "behavior": store.customer_behavior(crm_id),
             }
 
         @router.post("/fanpage-care/customers/merge")
@@ -1143,13 +1321,53 @@ class FanpageCareFeature:
         async def care_poll_now(payload: dict[str, Any] | None = Body(None)):
             data = payload or {}
             pid = str(data.get("page_id") or "").strip() or None
-            res = await self.poll_tick(page_id=pid, force_ingest=True)
+            ch = str(data.get("channel") or "both").strip().lower()
+            res = await self.poll_tick(page_id=pid, force_ingest=True, channel=ch)
             return {"ok": True, "result": res}
 
         @router.get("/fanpage-care/conversations")
-        async def care_conversations():
-            convs = store.get_recent_conversations()
+        async def care_conversations(page_id: Optional[str] = None):
+            convs = store.get_recent_conversations(page_id=page_id)
             return {"ok": True, "conversations": convs}
+
+        @router.get("/fanpage-care/conversations/thread")
+        async def care_conversation_thread(page_id: str, psid: str):
+            events = store.get_conversation_thread_events(page_id=page_id, psid=psid)
+            return {"ok": True, "page_id": page_id, "psid": psid, "events": events}
+
+        @router.post("/fanpage-care/conversations/send")
+        async def care_conversation_send(
+            page_id: str = Body(...),
+            psid: str = Body(...),
+            message: str = Body(...),
+        ):
+            msg = str(message or "").strip()
+            if not msg:
+                raise HTTPException(status_code=400, detail="empty_message")
+            res = await fanpage_care_graph.call(
+                "fb_message_send",
+                {"recipient_id": psid, "message": msg, "page_id": page_id},
+                actor="user",
+                vault_root=str(self.vault_root),
+            )
+            if str(res).startswith("ERROR:"):
+                return {"ok": False, "error": str(res)}
+
+            now = time.time()
+            store.record_event({
+                "kind": "echo",
+                "platform": "messenger",
+                "page_id": page_id,
+                "object_id": f"send_{psid}_{int(now)}",
+                "thread_id": psid,
+                "from_id": page_id,
+                "from_name": "Nhân viên Fanpage",
+                "body": msg,
+                "class": "manual_reply",
+                "created_ts": now,
+            })
+            store.update_messaging_window(page_id, psid, is_user=False, page_ts=now)
+            return {"ok": True, "page_id": page_id, "psid": psid, "message": msg}
 
         @router.post("/fanpage-care/conversations/release-takeover")
         async def care_release_takeover(

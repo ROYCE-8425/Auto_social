@@ -184,8 +184,9 @@ def _extract_fee_from_text(text: str, course_tokens: list[str], campus_needles: 
         if m:
             matched_fee = m.group(0).strip()
             # Bỏ qua nếu là số lượng thống kê (e.g. 12.000+, 12.000 game thủ, học viên, khách hàng)
-            after = line[m.end():m.end() + 25].lower()
-            if "+" in line[m.start():m.end() + 2] or any(w in after for w in ["game", "thu", "hoc", "vien", "khach", "nguoi", "luot"]):
+            after = _fold(line[m.end():m.end() + 40])
+            chunk = line[m.start():m.end() + 4]
+            if "+" in chunk or any(w in after for w in ["game", "thu", "hoc", "vien", "khach", "nguoi", "luot", "tin dung"]):
                 continue
             # Kiểm tra xem có phải hotline hoặc MST không (loại trừ)
             digits_only = re.sub(r"\D", "", matched_fee)

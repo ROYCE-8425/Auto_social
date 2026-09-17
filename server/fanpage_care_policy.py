@@ -107,7 +107,9 @@ def policy_allows(
     if act == "messenger_reply":
         if m == "full":
             return True, "allowed_messenger_reply"
-        return False, "messenger_reply_only_in_full_mode"
+        if m == "auto" and class_name in ("faq", "lead"):
+            return True, "allowed_messenger_faq_lead_auto"
+        return False, "messenger_reply_requires_auto_faq_or_full"
 
     if act == "suggest_draft":
         return True, "draft_always_allowed"
