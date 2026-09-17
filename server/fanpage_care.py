@@ -235,8 +235,11 @@ class FanpageCareFeature:
         while True:
             try:
                 await self.poll_tick()
-                cfg = self.get_config()
-                interval_sec = max(30, int(cfg.get("poll_interval_min", 2)) * 60)
+                poll_sec = int(cfg.get("poll_interval_sec") or 0)
+                if poll_sec > 0:
+                    interval_sec = max(15, poll_sec)
+                else:
+                    interval_sec = max(30, int(cfg.get("poll_interval_min", 1)) * 60)
                 await asyncio.sleep(interval_sec)
             except asyncio.CancelledError:
                 break
