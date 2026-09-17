@@ -21,10 +21,13 @@ def run_picker(cwd: Path) -> str:
     return res.stdout.strip()
 
 
-def test_picker_when_no_account_connected():
-    """Tất cả kit mẫu hiện tại đều để accountId CHƯA_NỐI -> trả NEXT=NONE chua-noi-tiktok."""
+def test_picker_uses_connected_bsn_tiktok():
+    """Kit BSN đã gắn accountId PostPeer @seotrum -> NEXT=1."""
     out = run_picker(ROOT)
-    assert "NEXT=NONE chua-noi-tiktok" in out, f"Expected NEXT=NONE chua-noi-tiktok, got: {out}"
+    assert "NEXT=1" in out, f"Expected NEXT=1, got: {out}"
+    assert "6aa3ba9df4c58f3c57921507" in out
+    assert "@seotrum" in out
+    assert "brand=bsn" in out
 
 
 def test_picker_with_connected_saoviet_kit():

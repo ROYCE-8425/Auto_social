@@ -10,4 +10,5 @@ tools:
   - postpeer_tiktok_creator
   - postpeer_post_get
   - postpeer_tiktok_post
+  - postpeer_tiktok_photos
 hooks: []

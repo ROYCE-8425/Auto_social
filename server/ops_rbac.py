@@ -269,6 +269,12 @@ def check_access_permission(user: Optional[dict], path: str, method: str, payloa
     # Landing `/` `/chao` công khai. Console chủ máy chuyển sang `/app`.
     if path in ("/", "/chao"):
         return True, None
+    if path.startswith("/tiktok-media"):
+        return True, None
+    if path == "/tiktok/status" and m == "GET":
+        return True, None
+    if path.startswith("/tiktok"):
+        return False, "Chỉ chủ máy mới có quyền thực hiện thao tác đăng hoặc cấu hình TikTok"
     if path in ("/app", "/index.html"):
         return False, "Chỉ chủ máy mới được truy cập console điều khiển"
 

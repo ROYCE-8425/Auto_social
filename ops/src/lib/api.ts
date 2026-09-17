@@ -431,5 +431,53 @@ export const api = {
 
   // System Audit Log (from /inbox)
   getAuditLog: () => request<{ items?: any[] }>('/inbox'),
+
+  // TikTok Channel (View-only for Ops Staff/Manager)
+  getTikTokStatus: () => request<TikTokStatusResponse>('/tiktok/status'),
+}
+
+export interface TikTokPostItem {
+  ts: number
+  datetime: string
+  kit: string
+  brand: string
+  accountId: string
+  username: string
+  postpeer_id: string
+  urls: string[]
+  caption: string
+  status: string
+  tiktok_url?: string
+  draft?: boolean
+  photos_count: number
+}
+
+export interface TikTokStatusResponse {
+  ok: boolean
+  connected: boolean
+  masked_key: string
+  accounts: Array<{
+    id: string
+    name: string
+    username?: string
+    platform: string
+    status?: string
+  }>
+  kits: Array<{
+    file: string
+    stem: string
+    name: string
+    enabled: boolean
+    account_id: string
+    username: string
+    brand: string
+  }>
+  loop: {
+    enabled: boolean
+    status: string
+    file: string
+  }
+  recent_posts: TikTokPostItem[]
+  role?: string
 }
 

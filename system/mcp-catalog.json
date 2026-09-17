@@ -1323,7 +1323,7 @@
       },
       "tool_meta": {
         "read": ["postpeer_accounts", "postpeer_tiktok_creator", "postpeer_post_get"],
-        "danger": ["postpeer_tiktok_post"]
+        "danger": ["postpeer_tiktok_post", "postpeer_tiktok_photos"]
       },
       "default_perm": "readonly",
       "risk": "Mức Toàn quyền cho phép Javis ĐĂNG VIDEO lên TikTok đã nối. Hành động thật, có thể công khai hoặc vào inbox TikTok (draft).\nGiữ Chỉ đọc thì chỉ liệt kê tài khoản.\nKey PostPeer = chìa mọi mạng đã nối trên tài khoản PostPeer - đừng đưa staff."

@@ -9,18 +9,19 @@ import { Tasks } from './pages/Tasks'
 import { Trends } from './pages/Trends'
 import { AuditLog } from './pages/AuditLog'
 import { UsersPage } from './pages/Users'
+import { TikTokPage } from './pages/TikTok'
 import { CareScopeProvider } from './lib/scope'
 
 export const App: React.FC = () => {
   const { user, isLoading } = useAuth()
   const [currentTab, setCurrentTab] = useState<string>('overview')
 
-  // Handle URL hash changes (e.g. #inbox, #customers)
+  // Handle URL hash changes (e.g. #inbox, #customers, #tiktok)
   useEffect(() => {
     const handleHash = () => {
       const raw = window.location.hash.replace('#', '')
       const tab = raw.split('?')[0]
-      if (['overview', 'inbox', 'customers', 'tasks', 'trends', 'audit', 'users'].includes(tab)) {
+      if (['overview', 'inbox', 'customers', 'tasks', 'trends', 'audit', 'users', 'tiktok'].includes(tab)) {
         setCurrentTab(tab)
       }
     }
@@ -59,6 +60,7 @@ export const App: React.FC = () => {
         {currentTab === 'customers' && <Customers />}
         {currentTab === 'tasks' && <Tasks />}
         {currentTab === 'trends' && <Trends />}
+        {currentTab === 'tiktok' && <TikTokPage />}
         {currentTab === 'audit' && <AuditLog />}
         {currentTab === 'users' && <UsersPage />}
       </Layout>

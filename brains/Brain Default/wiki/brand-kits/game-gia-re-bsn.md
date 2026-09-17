@@ -26,9 +26,9 @@ Gốc cho Fanpage Game Giá Rẻ BSN.
 - Caption: dài (album)
 
 ## Kênh TikTok
-- Bật: false
-- accountId: CHƯA_NỐI
-- username: @gamegiarebsn
+- Bật: true
+- accountId: 6aa3ba9df4c58f3c57921507
+- username: @seotrum
 - Tỷ lệ: 9:16
 - Caption: ngắn (8–18 dòng)
 - Hashtag: #GameGiaReBSN #SteamOffline #GameBanQuyen #KeyGameGiaRe #VietHoa

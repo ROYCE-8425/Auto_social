@@ -212,7 +212,7 @@ app.add_middleware(CORSMiddleware,
 
 # Đường dẫn KHÔNG cần đăng nhập. CHỈ các auth endpoint công khai (status/login/setup) -
 # KHÔNG để cả prefix /auth public vì /auth/disable, /auth/logout phải yêu cầu đăng nhập.
-_AUTH_PUBLIC_PREFIX = ("/static", "/health", "/ops/assets")
+_AUTH_PUBLIC_PREFIX = ("/static", "/health", "/ops/assets", "/tiktok-media")
 # /brand-logo: hiện trên màn đăng nhập (trước session). /tls-check: Caddy gọi (không đăng nhập được).
 _AUTH_PUBLIC_EXACT = ("/", "/chao", "/app", "/favicon.ico", "/auth/status", "/auth/login", "/auth/setup",
                       "/brand-logo", "/tls-check",
@@ -8070,6 +8070,194 @@ async def serve_ops_dashboard(full_path: str = ""):
         index_file.read_text(encoding="utf-8"),
         headers={"Cache-Control": "no-cache, no-store, must-revalidate"}
     )
+
+
+# ============================================================
+# TIKTOK STUDIO & MEDIA API
+# docs/dev/2026-09-17-gemini-tiktok-dang-that-ui.md
+# ============================================================
+import tiktok_service
+
+
+@app.get("/tiktok-media/{rel:path}")
+async def serve_tiktok_media(rel: str):
+    """Phục vụ ảnh 9:16 công khai cho PostPeer fetch qua HTTPS (trannhuy.online/tiktok-media/...).
+    Chống path-traversal: chỉ phục vụ trong attachments/dataset/_xuat-tiktok.
+    """
+    clean_rel = rel.replace("\\", "/").strip("/")
+    if not clean_rel or ".." in clean_rel:
+        return JSONResponse({"error": "Path traversal prohibited"}, status_code=404)
+    
+    brain = cfgmod.read_settings().get("fanpage_care", {}).get("brain", "Brain Default")
+    vault = _brain_root(brain)
+    base_dir = (Path(vault) / "attachments" / "dataset" / "_xuat-tiktok").resolve()
+    target = (base_dir / clean_rel).resolve()
+    
+    try:
+        target.relative_to(base_dir)
+    except ValueError:
+        return JSONResponse({"error": "Path traversal prohibited"}, status_code=404)
+        
+    if not target.is_file():
+        return JSONResponse({"error": "File not found"}, status_code=404)
+        
+    suffix = target.suffix.lower()
+    media_types = {
+        ".png": "image/png",
+        ".jpg": "image/jpeg",
+        ".jpeg": "image/jpeg",
+        ".webp": "image/webp",
+        ".gif": "image/gif",
+        ".mp4": "video/mp4",
+    }
+    media_type = media_types.get(suffix, "application/octet-stream")
+    return FileResponse(str(target), media_type=media_type)
+
+
+@app.get("/tiktok/status")
+async def tiktok_get_status(request: Request):
+    """Trạng thái TikTok: kết nối, masked key, tài khoản, kit, loop, 10 bài gần nhất."""
+    user = ops_rbac.get_current_ops_user(request)
+    role = user.get("role", "staff") if user else "guest"
+    brain = cfgmod.read_settings().get("fanpage_care", {}).get("brain", "Brain Default")
+    vault = _brain_root(brain)
+    status_data = tiktok_service.get_tiktok_status(vault_root=vault)
+    status_data["role"] = role
+    return status_data
+
+
+@app.post("/tiktok/post")
+async def tiktok_post_photos(request: Request):
+    """Đăng bộ ảnh 9:16 carousel lên TikTok thật qua PostPeer (Owner only).
+    Staff nhận 403 Forbidden.
+    """
+    user = ops_rbac.get_current_ops_user(request)
+    if not user or user.get("role") != "owner":
+        return JSONResponse({"error": "Chỉ chủ máy mới có quyền đăng TikTok", "role": user.get("role") if user else None}, status_code=403)
+        
+    try:
+        data = await request.json()
+    except Exception:
+        data = {}
+        
+    brand_kit = str(data.get("brand_kit") or "game-gia-re-bsn").strip()
+    account_id = data.get("account_id")
+    caption = data.get("caption")
+    product_title = data.get("product_title")
+    product_price = data.get("product_price")
+    images = data.get("images")
+    auto_add_music = bool(data.get("auto_add_music", True))
+    draft = bool(data.get("draft", False))
+    
+    brain = cfgmod.read_settings().get("fanpage_care", {}).get("brain", "Brain Default")
+    vault = _brain_root(brain)
+    
+    result = await asyncio.to_thread(
+        tiktok_service.post_photos_to_tiktok,
+        brand_kit=brand_kit,
+        account_id=account_id,
+        caption=caption,
+        product_title=product_title,
+        product_price=product_price,
+        images=images,
+        auto_add_music=auto_add_music,
+        draft=draft,
+        vault_root=vault
+    )
+    
+    status_code = 200 if result.get("ok") else 400
+    return JSONResponse(result, status_code=status_code)
+
+
+@app.post("/tiktok/upload")
+async def tiktok_upload_image(
+    request: Request,
+    file: UploadFile = File(...),
+    brand: str = Form("bsn"),
+    crop_9_16: bool = Form(True)
+):
+    """Tải ảnh lên thư mục dataset _xuat-tiktok/{brand}/ và tự động crop 9:16 nếu cần (Owner only)."""
+    user = ops_rbac.get_current_ops_user(request)
+    if not user or user.get("role") != "owner":
+        return JSONResponse({"error": "Chỉ chủ máy mới có quyền tải ảnh", "role": user.get("role") if user else None}, status_code=403)
+        
+    clean_brand = "bsn" if "bsn" in brand.lower() else ("saoviet" if "sao" in brand.lower() else "bsn")
+    brain = cfgmod.read_settings().get("fanpage_care", {}).get("brain", "Brain Default")
+    vault = _brain_root(brain)
+    target_dir = Path(vault) / "attachments" / "dataset" / "_xuat-tiktok" / clean_brand
+    target_dir.mkdir(parents=True, exist_ok=True)
+    
+    orig_name = Path(file.filename or "upload.png").name
+    safe_name = f"{int(time.time())}_{secrets.token_hex(3)}_{orig_name}"
+    save_path = target_dir / safe_name
+    
+    content = await file.read()
+    save_path.write_bytes(content)
+    
+    if crop_9_16:
+        try:
+            cropped_path = tiktok_service.crop_image_to_9_16(save_path)
+            if cropped_path != save_path and save_path.exists():
+                save_path.unlink()
+            save_path = cropped_path
+        except Exception:
+            pass
+        
+    rel_path = f"{clean_brand}/{save_path.name}"
+    public_url = f"{tiktok_service.PUBLIC_BASE_URL.rstrip('/')}/tiktok-media/{rel_path}"
+    
+    return {
+        "ok": True,
+        "filename": save_path.name,
+        "brand": clean_brand,
+        "rel_path": rel_path,
+        "public_url": public_url
+    }
+
+
+@app.post("/tiktok/loop-toggle")
+async def tiktok_loop_toggle(request: Request):
+    """Bật/tắt loop đăng TikTok tự động hàng ngày (Owner only)."""
+    user = ops_rbac.get_current_ops_user(request)
+    if not user or user.get("role") != "owner":
+        return JSONResponse({"error": "Chỉ chủ máy mới có quyền bật/tắt loop", "role": user.get("role") if user else None}, status_code=403)
+        
+    try:
+        data = await request.json()
+    except Exception:
+        data = {}
+    enabled = bool(data.get("enabled", False))
+    brain = cfgmod.read_settings().get("fanpage_care", {}).get("brain", "Brain Default")
+    vault = _brain_root(brain)
+    loop_info = tiktok_service.set_loop_status(enabled, vault_root=vault)
+    return {"ok": True, "loop": loop_info}
+
+
+@app.post("/tiktok/kit-account")
+async def tiktok_set_kit_account(request: Request):
+    """Cập nhật accountId PostPeer cho brand kit TikTok (Owner only)."""
+    user = ops_rbac.get_current_ops_user(request)
+    if not user or user.get("role") != "owner":
+        return JSONResponse({"error": "Chỉ chủ máy mới có quyền cấu hình kit", "role": user.get("role") if user else None}, status_code=403)
+        
+    try:
+        data = await request.json()
+    except Exception:
+        data = {}
+    brand_kit = str(data.get("brand_kit") or "").strip()
+    account_id = str(data.get("account_id") or "").strip()
+    account_name = str(data.get("account_name") or "").strip()
+    
+    if not brand_kit or not account_id:
+        return JSONResponse({"ok": False, "error": "brand_kit và account_id không được để trống"}, status_code=400)
+        
+    brain = cfgmod.read_settings().get("fanpage_care", {}).get("brain", "Brain Default")
+    vault = _brain_root(brain)
+    ok = tiktok_service.update_brand_kit_account(brand_kit, account_id, account_name, vault_root=vault)
+    if not ok:
+        return JSONResponse({"ok": False, "error": f"Không tìm thấy kit {brand_kit}"}, status_code=404)
+    return {"ok": True, "brand_kit": brand_kit, "account_id": account_id}
+
 
 
 

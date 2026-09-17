@@ -80,6 +80,13 @@ Hệ thống tự động điều phối bài viết theo **4 Góc Nội Dung (C
       save_under="attachments/dataset/_xuat",
       ai_render_brand=true
     )
+  * **Nếu `the.startswith("game-bsn")` (Game Giá Rẻ BSN — Đăng ĐÚNG 1 tựa game)**:
+    ```text
+    javis_generate_image(
+      prompt="Create a high-impact 1024x1024 square PC gaming action poster for game '<tua_game>' on Game Giá Rẻ BSN, Visual Style: Dark Fantasy / Cyberpunk Gaming Poster, showcasing atmospheric world and action of <tua_game>, color palette: #000000 deep black background with #2C7BE5 electric blue and #00D4FF neon cyan lighting, badge pills: 'STEAM BẢN QUYỀN' · '<gia_game>' · 'VIỆT HÓA 100%'. Safe zone 15-20% margin from borders. Vietnamese text to render: '<tua_game>' and 'GAME BẢN QUYỀN CHO NGƯỜI VIỆT'. All Vietnamese text must be rendered with full, correct Vietnamese diacritics. High resolution, sharp cinematic lighting, NO recruitment text, NO education words",
+      save_under="attachments/dataset/_xuat",
+      ai_render_brand=true
+    )
     ```
 
 - Lấy đường dẫn file AI trả về: `res["rel_path"]` (dạng `attachments/dataset/_xuat/cover_...png`).
@@ -162,6 +169,24 @@ Hệ thống tự động điều phối bài viết theo **4 Góc Nội Dung (C
      - `📞 Nhắn tin trực tiếp cho Fanpage hoặc liên hệ Hotline/Zalo để nhận lộ trình và ưu đãi học phí tốt nhất!`
      - `📌 Khai giảng lớp mới liên tục mỗi tuần, xếp ca học theo thời gian rảnh của bạn.`
    * **Chân trang CHAN_TRANG**.
+
+   #### E. Khung bài Game Giá Rẻ BSN (`the.startswith("game-bsn")` — Công thức Gaming AIDA)
+   * **Tiêu đề IN HOA + Icon Hook**:
+     - `🎮 <TÊN_GAME> — SIÊU PHẨM <THỂ_LOẠI> ĐÃ CÓ BẢN VIỆT HÓA 100% CHỈ <GIÁ_GAME>!`
+   * **Đoạn mở đầu (2-3 dòng)**: Kích thích cảm giác muốn chiến game cuối tuần, nhấn mạnh đồ họa và cốt truyện đỉnh cao.
+   * **Trải nghiệm Gameplay & Cốt truyện (8-12 dòng)**:
+     - 3 điểm nổi bật nhất của game (thế giới mở, chặt chém boss nghẹt thở, đồ họa, bối cảnh).
+     - Điểm cộng Việt Hóa: Tận hưởng trọn vẹn 100% cốt truyện không cần tra từ điển.
+   * **Bộ 5 Cam kết vàng BSN (đập tan mọi rào cản)**:
+     - `🛡️ Tải trực tiếp 100% từ launcher Steam chính hãng — nói không với file crack chứa mã độc hay virus phá máy.`
+     - `💾 Chơi offline vĩnh viễn, lưu file save game trên máy riêng, cập nhật bản vá đầy đủ.`
+     - `🇻🇳 Tặng kèm patch Việt Hóa chuẩn xịn, cài đặt siêu mượt.`
+     - `⚡ Chốt đơn tự động nhận tài khoản chỉ trong 1-5 phút. Có hỗ trợ Ultraview / Zalo 1-1 tận tình.`
+     - `🔒 Bảo hành trọn đời suốt quá trình chơi — cài lại Win hay đổi máy đều được hỗ trợ cấp lại ngay.`
+   * **Mức giá sinh viên & CTA chốt đơn**:
+     - `💰 Mức giá siêu êm: Chỉ <gia_game> (tiết kiệm hơn 90% so với giá Store).`
+     - `👉 Anh em nhắn tin ngay cho Fanpage hoặc liên hệ Zalo: 0877 104 996 để húp ngay acc và link tải game tốc độ cao nhé!`
+   * **Chân trang CHAN_TRANG**: Nối nguyên khối chân trang BSN (không có địa chỉ cơ sở).
 
    #### Quy chuẩn định dạng chân trang CHAN_TRANG (Áp dụng cho TẤT CẢ các góc bài):
    - Fanpage cơ sở TP.HCM (Bình Thạnh, Quận 12, Thủ Đức, Tân Bình, Quận 7, Bình Tân/Quận 6): Chỉ hiển thị DUY NHẤT 1 địa chỉ của đúng chi nhánh đó.

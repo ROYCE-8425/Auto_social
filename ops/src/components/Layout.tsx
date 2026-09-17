@@ -14,6 +14,7 @@ import {
   Menu,
   X,
   RefreshCw,
+  Video,
 } from 'lucide-react'
 import { useAuth } from '../lib/auth'
 import { api, CareState } from '../lib/api'
@@ -89,6 +90,7 @@ export const Layout: React.FC<LayoutProps> = ({ currentTab, onSelectTab, childre
     { id: 'customers', label: 'Khách hàng CRM', icon: Users, show: true },
     { id: 'tasks', label: 'Việc cần làm', icon: CheckSquare, show: true },
     { id: 'trends', label: 'Xu hướng & Chi phí', icon: TrendingUp, show: can('view_trends') },
+    { id: 'tiktok', label: 'Kênh TikTok', icon: Video, show: true },
     { id: 'audit', label: 'Nhật ký', icon: FileText, show: true },
     { id: 'users', label: 'Tài khoản nhân sự', icon: UserCog, show: role === 'owner' },
   ].filter((item) => item.show)

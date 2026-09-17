@@ -19,8 +19,8 @@ Bài phải bán được khóa học, nhưng đọc lên vẫn giống người
 - Không dùng Markdown: không `**`, không heading `#`.
 - Không dùng ký tự em dash. Chỉ dùng dấu `-`.
 - Không tự bịa học phí, số tiền quà tặng, cam kết pháp lý, số suất nếu brand kit hoặc brief không có.
-- Không tự bịa ngành hay khóa học không có trong dataset. Hệ thống Sao Việt CHỈ ĐÀO TẠO 5 KHÓA HỌC CHUẨN trong `wiki/courses/`: Tin học văn phòng & AI (`tin-hoc _ai`), Thiết kế đồ họa (`do-hoa`), Kế toán thực hành (`ke-toan`), Bản vẽ kỹ thuật (`ve-ky-thuat`), Tin học & Lập trình trẻ em (`tre-em`). TUYỆT ĐỐI CẤM viết về khóa học Kinh doanh online, Bán hàng online.
-- Không trộn nhiều ngành trong một bài. Tin học văn phòng thì không lôi AutoCAD/Kế toán vào thân bài, trừ khi brief yêu cầu.
+- Không tự bịa ngành, khóa học hay sản phẩm không có trong dataset. Hệ thống Sao Việt ĐÀO TẠO 5 KHÓA HỌC CHUẨN trong `wiki/courses/`: Tin học văn phòng & AI (`tin-hoc_ai`), Thiết kế đồ họa (`do-hoa`), Kế toán thực hành (`ke-toan`), Bản vẽ kỹ thuật (`ve-ky-thuat`), Tin học & Lập trình trẻ em (`tre-em`), và Fanpage Game Giá Rẻ BSN CUNG CẤP SẢN PHẨM GAME STEAM BẢN QUYỀN trong `wiki/courses/game-bsn.md` (10 tựa game hot). TUYỆT ĐỐI CẤM viết về khóa học Kinh doanh online, Bán hàng online.
+- Không trộn nhiều ngành trong một bài. Tin học văn phòng thì không lôi AutoCAD/Kế toán vào thân bài, Fanpage Game BSN thì tuyệt đối cấm mang văn mẫu khóa học/tuyển sinh vào bài viết.
 - Phải có nhịp thị giác Facebook bằng emoji dẫn mắt vừa đủ. Không viết một bài toàn chữ trơn với gạch đầu dòng `-` từ đầu tới cuối.
 
 ## 2. Cấm văn mẫu AI
@@ -241,7 +241,22 @@ Hệ thống xoay tua 4 Content Pillars, tuyệt đối không đăng lặp lạ
   * Khối Cam kết đào tạo: 4-5 dòng bắt đầu bằng `📌`.
   * Khối Quyền lợi & Ưu đãi: 3-4 dòng bắt đầu bằng `🎁`.
   * CTA tuyển sinh: `👉 Muốn học nhanh để dùng được ngay trong công việc?` + `📞 Nhắn tin Fanpage hoặc gọi Hotline/Zalo...` + `📌 Nhận học viên mới mỗi tuần...`.
-  * Chân trang `CHAN_TRANG`.
+### Trụ cột 5: `brand_bsn` (Game Giá Rẻ BSN — Game Bản Quyền & Steam Offline)
+- **Mục tiêu**: Bán tài khoản Steam Offline & game bản quyền, đánh trúng tâm lý game thủ thích trải nghiệm game bom tấn với chi phí sinh viên, an toàn không virus, có sẵn patch Việt Hóa.
+- **Quy tắc cốt tử**: Đăng **ĐÚNG 1 TỰA GAME** từ dataset mỗi bài. TUYỆT ĐỐI CẤM từ ngữ đào tạo (Excel, AutoCAD, Kế toán, tuyển sinh, 13 cơ sở).
+- **Cấu trúc bài viết Gaming AIDA**:
+  * *Tiêu đề / Hook*: IN HOA kèm emoji gaming (`🎮`) + Tên game + Thể loại + Tình trạng Việt Hóa + Giá sốc chỉ từ 28k-45k.
+  * *Trải nghiệm Gameplay*: 3-5 dòng cuốn hút về bối cảnh, chặt chém boss, đồ họa unreal, cốt truyện tiếng Việt.
+  * *Bộ 5 Cam kết vàng BSN (đập tan rào cản)*:
+    - `🛡️ Tải trực tiếp 100% từ launcher Steam chính hãng — an toàn tuyệt đối không virus/mã độc.`
+    - `💾 Chơi offline vĩnh viễn, lưu file save game trên máy riêng, cập nhật bản vá đầy đủ.`
+    - `🇻🇳 Tặng kèm patch Việt Hóa chuẩn xịn, cài đặt siêu mượt.`
+    - `⚡ Chốt đơn tự động nhận tài khoản chỉ trong 1-5 phút. Có hỗ trợ Ultraview / Zalo 1-1 tận tình.`
+    - `🔒 Bảo hành trọn đời suốt quá trình chơi — cài lại Win hay đổi máy đều được hỗ trợ cấp lại ngay.`
+  * *Mức giá & CTA chốt đơn*:
+    - `💰 Giá hạt dẻ sinh viên: Chỉ <gia_game> (tiết kiệm hơn 90% so với giá Store).`
+    - `👉 Anh em nhắn tin ngay cho Fanpage hoặc liên hệ Zalo: 0877 104 996 để húp ngay acc và link tải game tốc độ cao nhé!`
+  * *Chân trang BSN*: Nối nguyên khối chân trang BSN sạch (không có địa chỉ chi nhánh).
 
 ## 6. Nhịp thị giác bắt buộc cho Facebook (Highlight theo đúng chuyên môn & góc bài)
 
@@ -253,6 +268,7 @@ Caption BẮT BUỘC phải có highlight icon dẫn mắt theo từng khối c�
 - **Thiết kế đồ họa**: `🎨 🖌️ 🖼️ ✂️ ✨ 📸`
 - **Tin học văn phòng & AI**: `💻 🤖 ⚡ 🧠 ⏱️ 🚀 📈`
 - **Lập trình & Tin học trẻ em**: `🧩 💡 👩‍💻 👨‍💻 🎮 🚀`
+- **Game Giá Rẻ BSN (Gaming)**: `🎮 ⚔️ 🛡️ 💾 ⚡ 💰 🇻🇳 🔥 🕹️`
 - **Dẫn dắt chung**: `🔵 📍 📌 👉 ✅ ❌ 💡 🎁 📞 🌐`
 
 ### Phân vai emoji linh hoạt theo từng góc bài:

@@ -29,6 +29,7 @@ def test_catalog_postpeer_entry():
     assert any(f["key"] == "postpeer_key" for f in pp["auth"]["fields"])
     assert pp["default_perm"] == "readonly"
     assert "postpeer_tiktok_post" in pp["tool_meta"]["danger"]
+    assert "postpeer_tiktok_photos" in pp["tool_meta"]["danger"]
     assert "postpeer_accounts" in pp["tool_meta"]["read"]
     assert "postpeer_tiktok_creator" in pp["tool_meta"]["read"]
     assert "postpeer_post_get" in pp["tool_meta"]["read"]
@@ -57,7 +58,7 @@ def test_plugin_registration():
     ctx = MockContext()
     plug.register(ctx)
 
-    assert len(ctx.tools) == 4
+    assert len(ctx.tools) == 5
     tool_map = {t["name"]: t for t in ctx.tools}
     assert "postpeer_accounts" in tool_map
     assert tool_map["postpeer_accounts"]["min_mode"] == "readonly"
@@ -70,6 +71,8 @@ def test_plugin_registration():
 
     assert "postpeer_tiktok_post" in tool_map
     assert tool_map["postpeer_tiktok_post"]["min_mode"] == "full"
+    assert "postpeer_tiktok_photos" in tool_map
+    assert tool_map["postpeer_tiktok_photos"]["min_mode"] == "full"
 
     # Test check_fn when no token configured
     plug._token = lambda: None

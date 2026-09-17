@@ -295,6 +295,88 @@ async def _handle_tiktok_post(args: dict[str, Any], ctx: Any) -> str:
     }, ensure_ascii=False)
 
 
+async def _handle_tiktok_photos(args: dict[str, Any], ctx: Any) -> str:
+    """Đăng carousel ảnh 9:16 + nhạc auto (autoAddMusic) — na ná album Fanpage."""
+    token = _token()
+    if not token:
+        return "ERROR: " + (_check() or "chưa kết nối")
+    args = args or {}
+    account_id = str(args.get("account_id") or "").strip()
+    caption = str(args.get("caption") or "").strip()
+    raw = args.get("images") or args.get("photos") or []
+    if isinstance(raw, str):
+        images = [x.strip() for x in re.split(r"[\s,]+", raw) if x.strip()]
+    elif isinstance(raw, list):
+        images = [str(x).strip() for x in raw if str(x).strip()]
+    else:
+        images = []
+    if not account_id:
+        return "ERROR: thiếu 'account_id'."
+    if len(images) < 1:
+        return "ERROR: thiếu 'images' (1–10 URL https ảnh 9:16)."
+    if len(images) > 10:
+        images = images[:10]
+    bad = [u for u in images if not u.startswith("http://") and not u.startswith("https://")]
+    if bad:
+        return "ERROR: mỗi ảnh phải là URL https công khai. File trong vault chưa public thì chưa đăng được."
+    if not caption:
+        return "ERROR: thiếu caption."
+
+    creator_res = await _get_creator_info(token, account_id)
+    privacy_opts: list[str] = []
+    if isinstance(creator_res, dict) and not creator_res.get("__error"):
+        opts = creator_res.get("privacyLevelOptions") or creator_res.get("privacy_level_options")
+        if isinstance(opts, list):
+            privacy_opts = [str(x) for x in opts]
+    user_privacy = str(args.get("privacy_level") or "").strip()
+    is_draft = bool(args.get("draft", False))
+    if user_privacy and user_privacy in privacy_opts:
+        privacy_level = user_privacy
+    elif "PUBLIC_TO_EVERYONE" in privacy_opts:
+        privacy_level = "PUBLIC_TO_EVERYONE"
+    elif privacy_opts:
+        privacy_level = privacy_opts[0]
+        is_draft = True
+    else:
+        privacy_level = user_privacy or "PUBLIC_TO_EVERYONE"
+
+    auto_music = args.get("auto_add_music")
+    if auto_music is None:
+        auto_music = True
+
+    payload = {
+        "content": caption,
+        "platforms": [{
+            "platform": "tiktok",
+            "accountId": account_id,
+            "platformSpecificData": {
+                "privacyLevel": privacy_level,
+                "disableComment": bool(args.get("disable_comment", False)),
+                "disableDuet": bool(args.get("disable_duet", True)),
+                "disableStitch": bool(args.get("disable_stitch", True)),
+                "draft": is_draft,
+                "autoAddMusic": bool(auto_music),
+                "isAigc": True,
+            },
+        }],
+        "mediaItems": [{"type": "image", "url": u} for u in images],
+        "publishNow": True,
+    }
+    res = await _post_media(token, payload)
+    if isinstance(res, dict) and res.get("__error"):
+        return "ERROR: " + res["__error"]
+    return json.dumps({
+        "ok": True,
+        "postpeer_id": str(res.get("id") or res.get("postId") or ""),
+        "tiktok_url": str(res.get("postUrl") or res.get("url") or ""),
+        "status": str(res.get("status") or "published"),
+        "draft": is_draft,
+        "auto_add_music": bool(auto_music),
+        "images": len(images),
+        "credit_note": "Trừ credit PostPeer (ảnh/carousel)",
+    }, ensure_ascii=False)
+
+
 def register(ctx: Any) -> None:
     ctx.register_tool(
         name="postpeer_accounts",
@@ -364,5 +446,31 @@ def register(ctx: Any) -> None:
                 "disable_stitch": {"type": "boolean", "description": "Tắt tính năng Stitch"},
             },
             "required": ["account_id", "video", "caption"],
+        },
+    )
+    ctx.register_tool(
+        name="postpeer_tiktok_photos",
+        min_mode="full",
+        check_fn=_check,
+        handler=_handle_tiktok_photos,
+        description=(
+            "Đăng carousel ảnh dọc 9:16 lên TikTok (na ná album Fanpage). "
+            "images = URL https công khai. auto_add_music=true để TikTok gắn nhạc gợi ý (không chọn được 1 bài trend cụ thể qua API). "
+            "Ảnh AI: javis_generate_image aspect_ratio=portrait rồi đưa URL public. Tốn credit PostPeer."
+        ),
+        schema={
+            "type": "object",
+            "properties": {
+                "account_id": {"type": "string"},
+                "images": {"description": "Danh sách URL https ảnh 9:16 (1–10)"},
+                "caption": {"type": "string"},
+                "auto_add_music": {"type": "boolean", "description": "Mặc định true — TikTok tự gắn nhạc"},
+                "privacy_level": {"type": "string"},
+                "draft": {"type": "boolean"},
+                "disable_comment": {"type": "boolean"},
+                "disable_duet": {"type": "boolean"},
+                "disable_stitch": {"type": "boolean"},
+            },
+            "required": ["account_id", "images", "caption"],
         },
     )
