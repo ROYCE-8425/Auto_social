@@ -120,3 +120,28 @@ def test_server_agents_and_workflows_api():
     wf_slugs = [w["slug"] for w in wfs]
     assert "dang-bai-that-facebook" in wf_slugs
     assert "dang-tiktok-carousel" in wf_slugs
+
+
+def test_tasks_tiktok_chua_dang_blocks_false_complete():
+    """Kiểm tra Tasks._tiktok_chua_dang chặn không cho task đánh Hoàn thành nếu chưa đăng thật."""
+    import sys
+    sys.path.insert(0, str(ROOT / "server"))
+    from tasks import TasksFeature
+    
+    task = {"title": "Soạn bài và đăng carousel lên kênh TikTok BSN", "route": "wf:dang-tiktok-carousel"}
+    
+    # 1. Bị thiếu API key hoặc chưa kết nối
+    res_no_key = "Không đăng được vì PostPeer trong môi trường này chưa được kết nối: server trả lỗi thật Chưa kết nối PostPeer hoặc thiếu API key"
+    err = TasksFeature._tiktok_chua_dang(task, res_no_key)
+    assert "Chưa kết nối PostPeer" in err
+    assert "Không đánh Hoàn thành" in err
+    
+    # 2. Bị mock post_id
+    res_mock = "TIKTOK_POST_OK post_id=12345678 link=https://tiktok.com/@seotrum/video/12345678"
+    err_mock = TasksFeature._tiktok_chua_dang(task, res_mock)
+    assert "post_id giả lập" in err_mock
+    
+    # 3. Thành công thật
+    res_ok = "TIKTOK_POST_OK post_id=67890abcdef123 link=https://www.tiktok.com/@seotrum/video/7391823719283 | BSN"
+    err_ok = TasksFeature._tiktok_chua_dang(task, res_ok)
+    assert err_ok == ""

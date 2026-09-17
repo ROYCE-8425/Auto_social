@@ -439,7 +439,11 @@ class TasksFeature:
                 if fb_err:
                     error = fb_err
                 else:
-                    result = self._compact_fb_result(task, result or "")
+                    tt_err = self._tiktok_chua_dang(task, result or "")
+                    if tt_err:
+                        error = tt_err
+                    else:
+                        result = self._compact_fb_result(task, result or "")
             if error:
                 final_task = self.store.block(
                     tid,
@@ -869,6 +873,26 @@ CẤM [[NEEDS_INPUT]] vì 'không có tool / Royce chưa MCP'. CẤM địa ch�
         if any(h in tl for h in ("bạn có muốn", "ban co muon", "vui lòng xem xét", "xác nhận nếu", "bản nháp caption")):
             return "Worker dừng ở bản nháp/hỏi thay vì đăng thật. Cấm hỏi trên Kanban. Bắt buộc gọi fb_page_album lấy post_id."
         return "Chưa đăng Facebook (không có post_id). Không đánh Hoàn thành."
+
+    @staticmethod
+    def _tiktok_chua_dang(task: dict, result: str) -> str:
+        """Kiểm tra xem task đăng TikTok đã thật sự có post_id/kết quả từ PostPeer chưa."""
+        route = str((task or {}).get("route") or "")
+        title_intent = (str((task or {}).get("title") or "") + " " + str((task or {}).get("intent") or "")).lower()
+        if route != "wf:dang-tiktok-carousel" and "tiktok" not in title_intent:
+            return ""
+        t = result or ""
+        tl = t.lower()
+        if any(w in tl for w in ("chưa kết nối postpeer", "thiếu api key", "chưa có connection", "connected=false", "không kết nối được")):
+            return "Chưa kết nối PostPeer hoặc thiếu API key trên server. Cần cấu hình PostPeer API key trong /app#/mcp hoặc scripts/connect_postpeer.py trước khi đăng thật. Không đánh Hoàn thành."
+        if any(w in tl for w in ("không đăng được", "thất bại", "error", "chưa đăng")):
+            if not ("tiktok_post_ok" in tl or "postpeer_id" in tl or "posturl" in tl or re.search(r"post_id[\s:=]+\w+", tl)):
+                return f"Chưa đăng được lên TikTok: {t[:200]}. Không đánh Hoàn thành."
+        if "tiktok_post_ok" in tl or "postpeer_id" in tl or "posturl" in tl or "tiktok.com" in tl:
+            if any(dummy in t for dummy in ("87654321", "12345678", "0000000", "1111111", "9999999")):
+                return "Phát hiện post_id giả lập / mock do AI tự bịa. Bắt buộc gọi PostPeer API thật."
+            return ""
+        return "Chưa đăng lên TikTok (không có post_id thật từ PostPeer). Không đánh Hoàn thành."
 
     @staticmethod
     def _compact_fb_result(task: dict, result: str) -> str:
