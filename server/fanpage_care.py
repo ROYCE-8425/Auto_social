@@ -664,8 +664,10 @@ class FanpageCareFeature:
                         out["draft_created"] = True
                 else:
                     refuse_err = llm_res.get("error") or "Không đủ dữ liệu chắc chắn để trả lời"
+                    fallback_key = "ambiguous" if (kit and kit.get("brand") == "bsn") else "hoc_phi"
                     draft_content = (
                         llm_res.get("reply")
+                        or render_template(fallback_key, kit, vault_root=self.vault_root)
                         or render_template("hoc_phi", kit, vault_root=self.vault_root)
                         or "Cần tư vấn hỗ trợ"
                     )

@@ -262,17 +262,21 @@ def render_template(
     if not tpl:
         return None
 
-    page_name = clean_kit.get("name") or "Trung tâm"
+    brand = str(clean_kit.get("brand") or "").strip().lower()
+    page_name = clean_kit.get("name") or ("Game Giá Rẻ BSN" if brand == "bsn" else "Trung tâm")
     hotline = clean_kit.get("hotline") or ""
     addr = address_short(clean_kit)
-    course_or_nganh = course_hint or "Tin học"
+    course_or_nganh = course_hint or ("Game" if brand == "bsn" else "Tin học")
 
-    # Với intent hoc_phi: kiểm tra xem có bảng giá trong file không
-    if key == "hoc_phi":
+    # Với intent hoc_phi/gia_game: kiểm tra xem có bảng giá trong file không
+    if key in ("hoc_phi", "gia_game"):
         fee = get_course_fee(course_hint, clean_kit, vault_root=vault_root)
         if fee:
             # Có số trong file: quote đúng số
-            tpl = f"Dạ học phí {course_or_nganh} tại cơ sở {page_name} là {fee}. Anh/chị inbox hoặc liên hệ Hotline/Zalo {hotline} để nhận lịch học chi tiết nhé ạ."
+            if brand == "bsn":
+                tpl = f"Dạ giá {course_or_nganh} tại {page_name} là {fee}. Bạn inbox shop hoặc liên hệ Hotline/Zalo {hotline} để nhận link tải và hỗ trợ kích hoạt ngay nhé ạ."
+            else:
+                tpl = f"Dạ học phí {course_or_nganh} tại cơ sở {page_name} là {fee}. Anh/chị inbox hoặc liên hệ Hotline/Zalo {hotline} để nhận lịch học chi tiết nhé ạ."
             return _one_line(tpl)
         # Chưa có số trong file: giữ nguyên template hotline mặc định (CẤM BỊA SỐ)
 

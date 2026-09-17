@@ -114,3 +114,12 @@ Game Giá Rẻ BSN - Game Bản Quyen Cho Người Việt
 - Hashtag thêm: #gameoffline #gamegiarebsn #steamoffline #gameviethoa
 - TikTok accountId:
 - TikTok username: @gamegiarebsn
+
+## Care templates
+- dia_chi: "Dạ shop bán online qua website https://gamegiarebsn.com và hỗ trợ cài đặt từ xa qua Ultraview/Anydesk. Bạn cần hỗ trợ game gì cứ inbox hoặc liên hệ Hotline/Zalo {hotline} nhé ạ."
+- hoc_phi: "Dạ giá game bên shop cực kỳ ưu đãi và bảo hành trọn đời, bạn check inbox shop gửi chi tiết link tải và cách kích hoạt ngay nhé ạ. Hotline/Zalo: {hotline}."
+- gia_game: "Dạ giá game bên shop cực kỳ ưu đãi và bảo hành trọn đời, bạn check inbox shop gửi chi tiết link tải và cách kích hoạt ngay nhé ạ. Hotline/Zalo: {hotline}."
+- zalo: "Dạ bạn kết bạn Zalo {hotline} hoặc inbox trực tiếp để shop gửi link tải và hỗ trợ kích hoạt game nhanh nhất nhé ạ."
+- khen: "Dạ cảm ơn bạn đã luôn ủng hộ Game Giá Rẻ BSN! Chúc bạn chơi game thật vui vẻ nhé ạ."
+- lead_thanks: "Dạ shop đã ghi nhận thông tin, đội ngũ CSKH {hotline} sẽ liên hệ hỗ trợ bạn kích hoạt game ngay nhé ạ."
+- ambiguous: "Dạ shop đã gửi tin nhắn / hỗ trợ qua inbox rồi ạ, bạn check inbox hoặc liên hệ Hotline/Zalo {hotline} nhé ạ."

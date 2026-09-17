@@ -141,3 +141,17 @@ def test_render_template_hoc_phi_with_fee():
         assert reply is not None
         assert "3.500.000đ" in reply
         assert "0935 195 118" in reply
+
+
+def test_render_template_bsn_brand():
+    kit = {
+        "brand": "bsn",
+        "name": "Game Giá Rẻ BSN",
+        "hotline": "0877 104 996",
+        "md": "## Care templates\n- ambiguous: \"Dạ shop đã gửi tin nhắn / hỗ trợ qua inbox rồi ạ, bạn check inbox hoặc liên hệ Hotline/Zalo {hotline} nhé ạ.\"",
+    }
+    reply = render_template("ambiguous", kit)
+    assert reply is not None
+    assert "0877 104 996" in reply
+    assert "inbox" in reply.lower()
+
