@@ -12,9 +12,9 @@ Gốc cho Fanpage Game Giá Rẻ BSN.
 - Màu phụ: #00D4FF
 - Màu nền: #000000
 - Font: Roboto, Inter, Montserrat
-- Logo chính: attachments/dataset/chung/Logo-wed-bsn.png
-- Logo trắng: attachments/dataset/chung/Logo-wed-bsn.png
-- Icon: attachments/dataset/chung/logog-game-gia-re-bsn-512x512.png
+- Logo chính: attachments/dataset/game-bsn/Logo-wed-bsn.png
+- Logo trắng: attachments/dataset/game-bsn/Logo-wed-bsn.png
+- Icon: attachments/dataset/game-bsn/logog-game-gia-re-bsn-512x512.png
 - Phong cách hình ảnh: Gaming, Cyberpunk, Dark Modern, sắc nét, tôn vinh poster và screenshot in-game
 - Tone of voice: Hào hứng, thân thiện, gần gũi cộng đồng game thủ, uy tín, phản hồi nhanh chóng
 - Điều không được làm: bóp méo logo, dùng văn mẫu đào tạo hay tin học văn phòng, đăng ảnh nhòe vỡ

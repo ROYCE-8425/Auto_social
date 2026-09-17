@@ -29,7 +29,7 @@ from config import STATE_DIR
 import fanpage_care_crm as crm
 import fanpage_care_graph
 import fanpage_care_store as store
-from brand_kit import detect_brand_from_kit
+from brand_kit import detect_brand_from_kit, parse_brand_kit_channels
 from fanpage_care_classify import classify_comment
 from fanpage_care_ground import address_short, get_course_fee, render_template, sanitize_kit
 from fanpage_care_policy import effective_mode, policy_allows
@@ -49,7 +49,7 @@ class FanpageCareDeps:
 
 
 def _load_kit_for_page(vault_root: str | Path, page_id: str) -> dict[str, Any] | None:
-    """Tải brand kit có Page ID khớp từ wiki/brand-kits/*.md."""
+    """Tải brand kit có Page ID khớp (khối Kênh Facebook hoặc Page ID cũ)."""
     d = Path(vault_root) / "wiki" / "brand-kits"
     if not d.is_dir():
         return None
@@ -58,51 +58,54 @@ def _load_kit_for_page(vault_root: str | Path, page_id: str) -> dict[str, Any] |
         if p.name.startswith("_"):
             continue
         try:
-            md = p.read_text(encoding="utf-8")
+            parsed = parse_brand_kit_channels(p)
         except OSError:
             continue
-        # Trích xuất Page ID
-        m = re.search(r"(?:Page ID|page_id|ID Fanpage|ID Trang):\s*([0-9]+)", md, re.I)
-        if m and m.group(1).strip() == pid:
-            m_name = re.search(r"(?:Tên Fanpage|Tên Trang):\s*([^\n]+)", md, re.I)
-            name = m_name.group(1).strip() if m_name else p.stem
-            m_addr = re.search(r"(?:Cơ sở / địa chỉ|Địa chỉ):\s*([^\n]+)", md, re.I)
-            addr = m_addr.group(1).strip() if m_addr else ""
-            m_hotline = re.search(r"(?:Hotline / Zalo|Hotline riêng|Hotline):\s*([^\n]+)", md, re.I)
-            hotline = m_hotline.group(1).strip() if m_hotline else ""
-            return {
-                "file": p.name,
-                "name": name,
-                "address": addr,
-                "hotline": hotline,
-                "md": md,
-            }
+        if (parsed.facebook.ids.get("page_id") or "").strip() != pid:
+            continue
+        md = parsed.raw_content
+        m_addr = re.search(r"(?:Cơ sở / địa chỉ|Địa chỉ):\s*([^\n]+)", md, re.I)
+        addr = m_addr.group(1).strip() if m_addr else ""
+        m_hotline = re.search(r"(?:Hotline / Zalo|Hotline riêng|Hotline):\s*([^\n]+)", md, re.I)
+        hotline = m_hotline.group(1).strip() if m_hotline else ""
+        return {
+            "file": p.name,
+            "name": parsed.name or p.stem,
+            "address": addr,
+            "hotline": hotline,
+            "md": md,
+            "brand": parsed.brand,
+        }
     return None
 
 
 def list_eligible_pages(vault_root: str | Path) -> list[dict[str, Any]]:
-    """Liệt kê các Trang có trong brand kit của vault."""
+    """Trang Facebook có kit và kênh Facebook bật."""
     d = Path(vault_root) / "wiki" / "brand-kits"
     if not d.is_dir():
         return []
     out = []
+    seen: set[str] = set()
     for p in sorted(d.glob("*.md")):
         if p.name.startswith("_"):
             continue
         try:
-            md = p.read_text(encoding="utf-8")
+            parsed = parse_brand_kit_channels(p)
         except OSError:
             continue
-        m = re.search(r"(?:Page ID|page_id|ID Fanpage|ID Trang):\s*([0-9]+)", md, re.I)
-        if m:
-            pid = m.group(1).strip()
-            m_name = re.search(r"(?:Tên Fanpage|Tên Trang):\s*([^\n]+)", md, re.I)
-            name = m_name.group(1).strip() if m_name else p.stem
-            out.append({
-                "page_id": pid,
-                "name": name,
-                "kit_file": p.name,
-            })
+        if not parsed.facebook.enabled:
+            continue
+        pid = (parsed.facebook.ids.get("page_id") or "").strip()
+        if not pid or pid in seen:
+            continue
+        seen.add(pid)
+        out.append({
+            "page_id": pid,
+            "id": pid,
+            "name": parsed.name or p.stem,
+            "kit_file": p.name,
+            "brand": parsed.brand,
+        })
     return out
 
 
@@ -242,41 +245,63 @@ class FanpageCareFeature:
             except Exception as e:
                 print(f"[fanpage_care] Gửi digest inbox lỗi: {e}", file=sys.stderr)
 
-    async def poll_tick(self) -> dict[str, Any]:
-        """Thực hiện một tick quét bình luận (Single-Flight)."""
+    async def poll_tick(
+        self,
+        page_id: str | None = None,
+        *,
+        force_ingest: bool = False,
+    ) -> dict[str, Any]:
+        """Một tick quét bình luận (single-flight).
+
+        page_id: chỉ quét đúng Trang (vd BSN). force_ingest: poll-now vẫn kéo
+        comment khi Care đang tắt — ghi event/nháp, không tự gửi Graph.
+        """
         if self._tick_running:
             return {"status": "skipped", "reason": "already_running"}
 
         self._tick_running = True
         t0 = time.time()
-        res = {"status": "ok", "events_ingested": 0, "drafts_created": 0, "replies_sent": 0}
+        res = {
+            "status": "ok",
+            "events_ingested": 0,
+            "drafts_created": 0,
+            "replies_sent": 0,
+            "page_errors": [],
+        }
 
         try:
             cfg = self.get_config()
-            if not cfg.get("enabled", False):
+            if not cfg.get("enabled", False) and not force_ingest:
                 return {"status": "skipped", "reason": "disabled"}
 
             eligible = list_eligible_pages(self.vault_root)
             if not eligible:
                 return {"status": "ok", "reason": "no_eligible_pages"}
 
-            # Filter out pages.{id}.enabled == False
             pages_cfg = cfg.get("pages", {})
             active_pages = [
                 p for p in eligible
                 if pages_cfg.get(p["page_id"], {}).get("enabled", True) is not False
             ]
+            if page_id:
+                want = str(page_id).strip()
+                active_pages = [p for p in active_pages if p["page_id"] == want]
+                if not active_pages:
+                    return {"status": "ok", "reason": "page_not_in_kits", "page_id": want}
+
             if not active_pages:
                 return {"status": "ok", "reason": "all_pages_disabled"}
 
-            # Round-robin selection of pages
-            pages_per_tick = max(1, int(cfg.get("pages_per_tick", 10)))
-            total_active = len(active_pages)
-            start_idx = self._round_robin_idx % total_active
-            batch_pages = []
-            for i in range(min(pages_per_tick, total_active)):
-                batch_pages.append(active_pages[(start_idx + i) % total_active])
-            self._round_robin_idx = (start_idx + len(batch_pages)) % total_active
+            if page_id:
+                batch_pages = active_pages
+            else:
+                pages_per_tick = max(1, int(cfg.get("pages_per_tick", 10)))
+                total_active = len(active_pages)
+                start_idx = self._round_robin_idx % total_active
+                batch_pages = []
+                for i in range(min(pages_per_tick, total_active)):
+                    batch_pages.append(active_pages[(start_idx + i) % total_active])
+                self._round_robin_idx = (start_idx + len(batch_pages)) % total_active
 
             sem = asyncio.Semaphore(2)
             max_events = int(cfg.get("max_events_per_tick", 100))
@@ -300,6 +325,7 @@ class FanpageCareFeature:
                     )
 
                 if str(call_res).startswith("ERROR:"):
+                    res["page_errors"].append({"page_id": pid, "name": page_name, "error": str(call_res)[:300]})
                     continue
 
                 try:
@@ -1106,8 +1132,10 @@ class FanpageCareFeature:
             return {"ok": True, "task_id": tid}
 
         @router.post("/fanpage-care/poll-now")
-        async def care_poll_now():
-            res = await self.poll_tick()
+        async def care_poll_now(payload: dict[str, Any] | None = Body(None)):
+            data = payload or {}
+            pid = str(data.get("page_id") or "").strip() or None
+            res = await self.poll_tick(page_id=pid, force_ingest=True)
             return {"ok": True, "result": res}
 
         @router.get("/fanpage-care/conversations")

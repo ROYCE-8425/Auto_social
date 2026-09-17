@@ -35,7 +35,7 @@ export interface CareState {
   ok: boolean
   config: CareConfig
   stats: CareStats
-  eligible_pages?: Array<{ id: string; name: string }>
+  eligible_pages?: Array<{ page_id: string; id?: string; name: string; kit_file?: string; brand?: string }>
   connection_perm?: 'readonly' | 'full'
   facebook_connected?: boolean
   facebook_label?: string
@@ -220,7 +220,11 @@ export const api = {
 
   // Care State & Overview
   getCareState: () => request<CareState>('/fanpage-care/state'),
-  pollNow: () => request<{ ok: boolean; result?: any }>('/fanpage-care/poll-now', { method: 'POST' }),
+  pollNow: (pageId?: string) =>
+    request<{ ok: boolean; result?: any }>('/fanpage-care/poll-now', {
+      method: 'POST',
+      body: JSON.stringify(pageId ? { page_id: pageId } : {}),
+    }),
 
   // Inbox: Comments & Drafts
   getInbox: (params?: { page_id?: string; class_name?: string; platform?: string; limit?: number; offset?: number }) => {

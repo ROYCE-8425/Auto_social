@@ -12,12 +12,18 @@ import {
   AlertCircle,
   MessageCircle,
 } from 'lucide-react'
-import { api, CareConversation, CareDraft, CareEvent } from '../lib/api'
+import { api, CareConversation, CareDraft, CareEvent, CareState } from '../lib/api'
+import { useAuth } from '../lib/auth'
 import { formatTime, timeAgo } from '../lib/utils'
 
 export const Inbox: React.FC = () => {
   const [activeSubTab, setActiveSubTab] = useState<'comments' | 'messenger'>('comments')
+  const { can } = useAuth()
   const [platformFilter, setPlatformFilter] = useState<'all' | 'facebook' | 'tiktok'>('all')
+  const [pageFilter, setPageFilter] = useState<string>('')
+  const [eligiblePages, setEligiblePages] = useState<NonNullable<CareState['eligible_pages']>>([])
+  const [isPolling, setIsPolling] = useState(false)
+  const [pollHint, setPollHint] = useState<string | null>(null)
   const [events, setEvents] = useState<CareEvent[]>([])
   const [drafts, setDrafts] = useState<CareDraft[]>([])
   const [conversations, setConversations] = useState<CareConversation[]>([])
@@ -56,14 +62,16 @@ export const Inbox: React.FC = () => {
     )
   }
 
-  const loadData = async (filter = platformFilter) => {
+  const loadData = async (filter = platformFilter, pageId = pageFilter) => {
     try {
-      const [inboxRes, convRes] = await Promise.all([
+      const [inboxRes, convRes, stateRes] = await Promise.all([
         api.getInbox({
-          limit: 50,
+          limit: 80,
           platform: filter === 'all' ? undefined : filter,
+          page_id: pageId || undefined,
         }).catch(() => null),
         api.getConversations().catch(() => null),
+        api.getCareState().catch(() => null),
       ])
       if (inboxRes) {
         setEvents(inboxRes.events || [])
@@ -72,16 +80,40 @@ export const Inbox: React.FC = () => {
       if (convRes) {
         setConversations(convRes.conversations || [])
       }
+      if (stateRes?.eligible_pages) setEligiblePages(stateRes.eligible_pages)
     } finally {
       setLoading(false)
     }
   }
 
   useEffect(() => {
-    loadData(platformFilter)
-    const interval = setInterval(() => loadData(platformFilter), 15000)
+    loadData(platformFilter, pageFilter)
+    const interval = setInterval(() => loadData(platformFilter, pageFilter), 15000)
     return () => clearInterval(interval)
-  }, [platformFilter])
+  }, [platformFilter, pageFilter])
+
+  const handlePollPage = async () => {
+    if (!can('poll_now') || isPolling) return
+    setIsPolling(true)
+    setPollHint(null)
+    try {
+      const res = await api.pollNow(pageFilter || undefined)
+      const r = res.result || {}
+      const err = (r.page_errors && r.page_errors[0]?.error) || r.reason
+      setPollHint(
+        r.status === 'skipped'
+          ? `Bỏ qua: ${r.reason || 'disabled'}`
+          : `Đã quét ${r.events_ingested ?? 0} comment mới · ${r.drafts_created ?? 0} nháp` +
+            (err ? ` · ${String(err).slice(0, 120)}` : ''),
+      )
+      await loadData(platformFilter, pageFilter)
+    } catch (err: any) {
+      setPollHint(err.message || 'Lỗi quét')
+    } finally {
+      setIsPolling(false)
+      setTimeout(() => setPollHint(null), 8000)
+    }
+  }
 
   const handleSendDraft = async (draft: CareDraft) => {
     setActionLoading(draft.id)
@@ -278,7 +310,32 @@ export const Inbox: React.FC = () => {
                   </button>
                 ))}
               </div>
+
+              <select
+                value={pageFilter}
+                onChange={(e) => setPageFilter(e.target.value)}
+                className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-50 border border-slate-200 text-slate-700 max-w-[220px]"
+              >
+                <option value="">Mọi Fanpage</option>
+                {eligiblePages.map((p) => (
+                  <option key={p.page_id || p.id} value={p.page_id || p.id}>
+                    {p.name} {p.brand === 'bsn' ? '(BSN)' : ''}
+                  </option>
+                ))}
+              </select>
+
+              {can('poll_now') && (
+                <button
+                  type="button"
+                  onClick={handlePollPage}
+                  disabled={isPolling}
+                  className="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 text-white hover:bg-emerald-500 disabled:opacity-50"
+                >
+                  {isPolling ? 'Đang kéo…' : pageFilter ? 'Kéo comment page này' : 'Kéo comment (vòng hiện tại)'}
+                </button>
+              )}
             </div>
+            {pollHint && <p className="text-xs text-slate-500">{pollHint}</p>}
 
             <div className="relative w-full md:w-72">
               <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
