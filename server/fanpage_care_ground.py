@@ -183,6 +183,10 @@ def _extract_fee_from_text(text: str, course_tokens: list[str], campus_needles: 
         m = fee_re.search(line)
         if m:
             matched_fee = m.group(0).strip()
+            # Bỏ qua nếu là số lượng thống kê (e.g. 12.000+, 12.000 game thủ, học viên, khách hàng)
+            after = line[m.end():m.end() + 25].lower()
+            if "+" in line[m.start():m.end() + 2] or any(w in after for w in ["game", "thu", "hoc", "vien", "khach", "nguoi", "luot"]):
+                continue
             # Kiểm tra xem có phải hotline hoặc MST không (loại trừ)
             digits_only = re.sub(r"\D", "", matched_fee)
             if len(digits_only) in (10, 11) and digits_only.startswith(("0", "84")):
@@ -268,8 +272,9 @@ def render_template(
     addr = address_short(clean_kit)
     course_or_nganh = course_hint or ("Game" if brand == "bsn" else "Tin học")
 
-    # Với intent hoc_phi/gia_game: kiểm tra xem có bảng giá trong file không
-    if key in ("hoc_phi", "gia_game"):
+    # Với intent hoc_phi/gia_game: nếu kit KHÔNG có template riêng -> mới quote tự động từ get_course_fee
+    kit_override = parse_templates_markdown(str(clean_kit.get("md") or "")) if clean_kit.get("md") else {}
+    if key in ("hoc_phi", "gia_game") and key not in kit_override:
         fee = get_course_fee(course_hint, clean_kit, vault_root=vault_root)
         if fee:
             # Có số trong file: quote đúng số

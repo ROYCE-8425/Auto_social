@@ -188,18 +188,24 @@ class FanpageCareFeature:
             self._digest_task.cancel()
 
     async def _poll_loop(self) -> None:
-        """Vòng lặp định kỳ cho Poller (mặc định 5 phút/lần)."""
+        """Vòng lặp định kỳ cho Poller (quét ngay khi khởi động, sau đó lặp định kỳ)."""
+        # Đợi 5 giây cho hệ thống hoàn tất khởi động rồi quét ngay đợt đầu tiên
+        try:
+            await asyncio.sleep(5)
+        except asyncio.CancelledError:
+            return
+
         while True:
             try:
-                cfg = self.get_config()
-                interval_sec = max(60, int(cfg.get("poll_interval_min", 5)) * 60)
-                await asyncio.sleep(interval_sec)
                 await self.poll_tick()
+                cfg = self.get_config()
+                interval_sec = max(30, int(cfg.get("poll_interval_min", 2)) * 60)
+                await asyncio.sleep(interval_sec)
             except asyncio.CancelledError:
                 break
             except Exception as e:
                 print(f"[fanpage_care] Lỗi poll loop: {e}", file=sys.stderr)
-                await asyncio.sleep(60)
+                await asyncio.sleep(30)
 
     async def _digest_loop(self) -> None:
         """Vòng lặp kiểm tra gửi Daily Digest lúc 20:00 VN."""
