@@ -117,9 +117,14 @@ Game Giá Rẻ BSN - Game Bản Quyen Cho Người Việt
 
 ## Care templates
 - dia_chi: "Dạ shop bán online qua website https://gamegiarebsn.com và hỗ trợ cài đặt từ xa qua Ultraview/Anydesk. Bạn cần hỗ trợ game gì cứ inbox hoặc liên hệ Hotline/Zalo {hotline} nhé ạ."
-- hoc_phi: "Dạ giá game bên shop cực kỳ ưu đãi và bảo hành 3 tháng, bạn check inbox shop gửi chi tiết link tải và cách kích hoạt ngay nhé ạ. Hotline/Zalo: {hotline}."
-- gia_game: "Dạ giá game bên shop cực kỳ ưu đãi và bảo hành 3 tháng, bạn check inbox shop gửi chi tiết link tải và cách kích hoạt ngay nhé ạ. Hotline/Zalo: {hotline}."
+- hoc_phi: "Dạ giá game bên shop cực kỳ ưu đãi chỉ từ 28k - 45k và bảo hành 3 tháng, bạn check inbox shop gửi chi tiết link tải và cách kích hoạt ngay nhé ạ. Hotline/Zalo: {hotline}."
+- gia_game: "Dạ giá game bên shop cực kỳ ưu đãi chỉ từ 28k - 45k và bảo hành 3 tháng, bạn check inbox shop gửi chi tiết link tải và cách kích hoạt ngay nhé ạ. Hotline/Zalo: {hotline}."
 - zalo: "Dạ bạn kết bạn Zalo {hotline} hoặc inbox trực tiếp để shop gửi link tải và hỗ trợ kích hoạt game nhanh nhất nhé ạ."
 - khen: "Dạ cảm ơn bạn đã luôn ủng hộ Game Giá Rẻ BSN! Chúc bạn chơi game thật vui vẻ nhé ạ."
 - lead_thanks: "Dạ shop đã ghi nhận thông tin, đội ngũ CSKH {hotline} sẽ liên hệ hỗ trợ bạn kích hoạt game ngay nhé ạ."
 - ambiguous: "Dạ shop đã gửi tin nhắn / hỗ trợ qua inbox rồi ạ, bạn check inbox hoặc liên hệ Hotline/Zalo {hotline} nhé ạ."
+- chao_hoi: "Dạ Game Giá Rẻ BSN xin chào bạn ạ! Bạn đang quan tâm tựa game nào hay cần shop hỗ trợ tải / cài đặt game cứ nhắn tên game shop kiểm tra và báo giá siêu ưu đãi ngay nhé ạ. Hotline/Zalo: {hotline}."
+- bao_hanh: "Dạ tài khoản game bên shop được bảo hành 3 tháng suốt quá trình chơi, hỗ trợ cấp lại nếu cài lại win hoặc nâng cấp máy tính bạn nhé. Hotline/Zalo: {hotline}."
+- key_steam: "Dạ game tải trực tiếp từ launcher Steam chính hãng, chơi vĩnh viễn không giới hạn thời gian và an toàn 100% không virus bạn nhé. Hotline/Zalo: {hotline}."
+- viet_hoa: "Dạ shop tặng kèm và hỗ trợ cài đặt patch Việt Hóa miễn phí 100% để bạn trải nghiệm trọn vẹn cốt truyện tiếng Việt nhé ạ. Hotline/Zalo: {hotline}."
+- cai_dat: "Dạ shop có video và hướng dẫn cài đặt cực kỳ đơn giản trong 1-5 phút, shop hỗ trợ cài từ xa qua Ultraview/Anydesk nếu bạn cần nhé ạ. Hotline/Zalo: {hotline}."

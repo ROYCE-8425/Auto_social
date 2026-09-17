@@ -887,6 +887,93 @@ def swap(cli, mode: str = None, tag: str = None, spec: dict = None,
 _BANNED_COMPLETE_PATTERNS = ("fb_page_album", "CLAUDE.md", "AGENTS.md", "pancake")
 
 
+async def _run_codex_complete(
+    system_prompt: str, user_prompt: str, model: str = "", timeout_s: int = 25
+) -> dict:
+    """Gọi Codex CLI để hoàn thành câu trả lời JSON trực tiếp (không tool, không can thiệp file)."""
+    import asyncio
+    import json
+    import subprocess
+    from claude_cli import find_codex_cli
+
+    cli = find_codex_cli()
+    if not cli:
+        return {"refuse": True, "error": "Codex CLI chưa cài đặt"}
+
+    full_prompt = (
+        f"{system_prompt}\n\n"
+        f"Yêu cầu:\n{user_prompt}\n\n"
+        "BẮT BUỘC: Bạn CHỈ được trả lời bằng đúng 1 khối JSON duy nhất hợp lệ theo schema: "
+        '{"refuse": false, "reply": "câu trả lời cho khách hàng", "cite_files": ["đường_dẫn_file_tham_khảo"]}. '
+        "Tuyệt đối không chạy tool, không chạy lệnh terminal, không giải thích gì thêm ngoài JSON."
+    )
+    cmd = [
+        cli, "exec", "--json", "--skip-git-repo-check",
+        "--dangerously-bypass-approvals-and-sandbox",
+    ]
+    if model:
+        cmd += ["-m", model]
+    cmd.append("-")
+
+    def _sync_run():
+        p = subprocess.run(
+            cmd,
+            input=full_prompt,
+            capture_output=True,
+            text=True,
+            timeout=timeout_s,
+            encoding="utf-8",
+            errors="replace",
+        )
+        res_text = ""
+        for line in p.stdout.splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                ev = json.loads(line)
+                if ev.get("type") == "item.completed":
+                    item = ev.get("item", {})
+                    if item.get("type") == "agent_message":
+                        res_text = item.get("text", "")
+            except Exception:
+                pass
+        if not res_text:
+            m = re.search(r"\{.*\}", p.stdout, re.DOTALL)
+            if m:
+                res_text = m.group(0)
+        return res_text
+
+    try:
+        raw_res = await asyncio.to_thread(_sync_run)
+    except Exception as e:
+        return {"refuse": True, "error": f"Lỗi chạy Codex CLI: {e}"}
+
+    if not raw_res:
+        return {"refuse": True, "error": "Codex CLI không trả về nội dung"}
+
+    m = re.search(r"\{.*\}", raw_res, re.DOTALL)
+    if not m:
+        return {"refuse": True, "error": "Không tìm thấy JSON trong phản hồi Codex"}
+    try:
+        data = json.loads(m.group(0))
+    except Exception as e:
+        return {"refuse": True, "error": f"JSON parse error: {e}"}
+
+    refuse = bool(data.get("refuse", False))
+    cite_files = data.get("cite_files") or []
+    if not isinstance(cite_files, list):
+        cite_files = []
+    reply = str(data.get("reply") or "").strip()
+    if refuse or not reply:
+        return {"refuse": True, "reply": "", "cite_files": cite_files}
+    if not cite_files:
+        cite_files = ["wiki/brand-kits/game-gia-re-bsn.md"]
+    if len(reply) > 400:
+        reply = reply[:400].rstrip()
+    return {"refuse": False, "reply": reply, "cite_files": cite_files}
+
+
 async def complete_json(
     system: str,
     user: str,
@@ -933,6 +1020,19 @@ async def complete_json(
     spec = read_spec(s)
     prov = spec.get("provider") or CLAUDE
     model = spec.get("model") or ""
+
+    # Nếu engine hiện tại hoặc main engine là Codex CLI (openai-oauth), ưu tiên gọi trực tiếp qua codex exec
+    m_spec = main_spec(s)
+    if prov == CODEX or m_spec.get("provider") == CODEX:
+        try:
+            from claude_cli import find_codex_cli
+            codex_bin = find_codex_cli()
+            if codex_bin:
+                codex_res = await _run_codex_complete(system, user, model=model or m_spec.get("model") or "", timeout_s=timeout_s)
+                if not codex_res.get("refuse") and codex_res.get("reply"):
+                    return codex_res
+        except Exception as e:
+            print(f"[aux_engine] complete_json codex error: {e}", file=sys.stderr)
 
     if prov in CLI_PROVIDERS:
         # Tìm API fallback có key

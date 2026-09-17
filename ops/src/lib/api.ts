@@ -471,6 +471,21 @@ export const api = {
 
   // TikTok Channel (View-only for Ops Staff/Manager)
   getTikTokStatus: () => request<TikTokStatusResponse>('/tiktok/status'),
+
+  // Q&A ca làm việc Javis Ops (Internal staff shift assistant)
+  askOpsQA: (data: { message: string; scope?: any }) =>
+    request<OpsQAResponse>('/ops/qa', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+}
+
+export interface OpsQAResponse {
+  ok: boolean
+  reply: string
+  citations?: string[]
+  used_stats?: boolean
+  error?: string
 }
 
 export interface TikTokPostItem {

@@ -271,9 +271,9 @@ async def _auth_guard(request: Request, call_next):
         if path in ("/ops/auth/login", "/ops/auth/logout") or path.startswith("/ops/assets"):
             return await call_next(request)
         # Trang UI frontend (/ops, /ops/inbox, /ops/customers, etc.): cho phép tải HTML5 shell
-        if not path.startswith(("/ops/me", "/ops/users")):
+        if not path.startswith(("/ops/me", "/ops/users", "/ops/qa")):
             return await call_next(request)
-        # Endpoint API /ops/me hoặc /ops/users: kiểm tra phiên đăng nhập & RBAC
+        # Endpoint API /ops/me, /ops/users hoặc /ops/qa: kiểm tra phiên đăng nhập & RBAC
         if not ops_user:
             return JSONResponse({"error": "unauthorized", "auth_required": True}, status_code=401)
         allowed, reason = ops_rbac.check_access_permission(ops_user, path, request.method)
@@ -8049,6 +8049,29 @@ async def ops_delete_user(user_id: str, request: Request):
     if not ok:
         return JSONResponse({"ok": False, "error": "Không tìm thấy tài khoản để xoá"}, status_code=404)
     return {"ok": True}
+
+
+@app.post("/ops/qa")
+async def ops_qa_chat(request: Request):
+    """Trợ lý Hỏi đáp Ca làm việc trên /ops (Staff, Manager, Owner)."""
+    user = ops_rbac.get_current_ops_user(request)
+    if not user:
+        return JSONResponse({"error": "unauthorized", "auth_required": True}, status_code=401)
+
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+
+    msg = str(body.get("message") or "").strip()
+    if not msg:
+        return JSONResponse({"ok": False, "error": "Vui lòng nhập câu hỏi"}, status_code=400)
+
+    scope = body.get("scope")
+    import ops_qa
+    vault_root = Path(__file__).parent.parent / "brains" / "Brain Default"
+    res = await ops_qa.answer_ops_qa(message=msg, scope=scope, user=user, vault_root=vault_root)
+    return res
 
 
 @app.api_route("/ops/{full_path:path}", methods=["GET", "HEAD"])

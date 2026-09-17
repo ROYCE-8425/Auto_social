@@ -128,6 +128,15 @@ SAOVIET_TT_LEAD_KEYWORDS = [
     "inbox em", "tu van em", "nhan tin bio", "qua bio", "link o dau", "bio o dau"
 ]
 
+GREETING_KEYWORDS = [
+    "chao shop", "chao ban", "hi shop", "hello shop", "alo shop",
+    "chao ad", "hi ad", "hello ad", "alo ad", "shop oi", "ad oi", "admin oi",
+    "xin chao", "chao", "hello", "hi", "alo", "tu van giup", "tu van em voi",
+    "tu van cho em", "tu van cho minh", "tu van giup em", "tu van giup minh",
+    "co ai truc khong", "co ai o day khong", "co ai khong", "cho minh hoi",
+    "cho em hoi", "em can hoi", "minh can hoi", "hoi chut", "ban oi"
+]
+
 
 def detect_bsn_hints(text_folded: str) -> list[str]:
     """Nhận diện thể loại / sản phẩm game BSN được nhắc đến."""
@@ -333,6 +342,11 @@ def classify_comment(
         if wants_zalo:
             return _res("faq", "zalo", 0.9, ["bsn_faq:zalo"])
 
+        # 2g2. Chào hỏi / Mở đầu tư vấn
+        words = set(folded.split())
+        if words.intersection({"hi", "hello", "alo", "chao"}) or any(k in folded for k in GREETING_KEYWORDS):
+            return _res("faq", "chao_hoi", 0.9, ["bsn_faq:chao_hoi"])
+
         # 2h. Khen
         is_q = is_question_text(raw_text, folded)
         if not is_q and (any(k in folded for k in PRAISE_KEYWORDS) or any(em in raw_text for em in PRAISE_EMOJIS)):
@@ -385,6 +399,11 @@ def classify_comment(
         if "hoc online" in folded or "lop online" in folded or "dao tao online" in folded:
             return _res("faq", "online", 0.9, ["saoviet_tt:faq:online"])
 
+        # 3g2. Chào hỏi
+        words = set(folded.split())
+        if words.intersection({"hi", "hello", "alo", "chao"}) or any(k in folded for k in GREETING_KEYWORDS):
+            return _res("faq", "chao_hoi", 0.9, ["saoviet_tt:faq:chao_hoi"])
+
         # 3h. Khen
         is_q = is_question_text(raw_text, folded)
         if not is_q and (any(k in folded for k in PRAISE_KEYWORDS) or any(em in raw_text for em in PRAISE_EMOJIS)):
@@ -435,6 +454,11 @@ def classify_comment(
     # 4g. FAQ khai_giang chung
     if "khai giang" in folded:
         return _res("faq", "khai_giang", 0.9, ["faq:khai_giang"])
+
+    # 4g2. Chào hỏi / Tư vấn ban đầu
+    words = set(folded.split())
+    if words.intersection({"hi", "hello", "alo", "chao"}) or any(k in folded for k in GREETING_KEYWORDS):
+        return _res("faq", "chao_hoi", 0.9, ["faq:chao_hoi"])
 
     # 4h. Khen
     is_q = is_question_text(raw_text, folded)

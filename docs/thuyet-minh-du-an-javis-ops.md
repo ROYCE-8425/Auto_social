@@ -114,6 +114,7 @@ Phù hợp SME: một VPS 2 vCPU / 4 GB là mức tối thiểu đã khảo sát
 - Care: kéo comment, kéo IB, nháp, gửi tay, takeover khi người trả lời.  
 - Phạm vi: tất cả / theo nhóm brand / một page.  
 - `/ops`: tổng quan, hộp thư, CRM, việc, xu hướng, TikTok (xem), nhân sự.  
+- Trợ lý ca trực **Hỏi Javis** trên `/ops`: bubble hỏi đáp ca làm việc (nháp chờ, hotline/cơ sở theo kit, khách hàng che SĐT, takeover) — *AI giúp nhân viên hỏi ca, khách vẫn do người; tuyệt đối không gửi Graph từ chat và không mở terminal/buồng lái*.  
 - Landing công khai; buồng lái `/app`.  
 - Plugin TikTok PostPeer; thư mục xuất 9:16.  
 - Skill/loop/agent Facebook; skill TikTok (video) — agent/workflow carousel đang bổ sung.
@@ -174,7 +175,7 @@ Javis Ops giải bài **vận hành social của SME**: AI làm việc nền, ng
 3. Demo luồng comment → nháp → gửi  
 4. Tách IB ≠ comment  
 5. Đa brand (kit)  
-6. Phân quyền  
+6. Phân quyền & Trợ lý ca làm việc (Hỏi Javis): *AI giúp nhân viên hỏi ca. Khách vẫn do người — hoặc Care khi chủ bật.* Nhân viên không cầm buồng lái; cấm gửi Graph từ chat.  
 7. Tự host + MIT  
 8. Kiến trúc 1 slide  
 9. Rủi ro / công tắc an toàn  

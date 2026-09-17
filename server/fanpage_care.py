@@ -541,6 +541,18 @@ class FanpageCareFeature:
         if isinstance(to_list, list) and to_list:
             to_id = str((to_list[0] or {}).get("id") or "").strip()
         is_echo = from_id == str(page_id)
+        metadata = ""
+        if is_echo:
+            try:
+                with store.get_connection() as conn:
+                    row = conn.execute(
+                        "SELECT id FROM events WHERE page_id = ? AND (object_id = ? OR (kind = 'echo' AND class = 'auto_reply' AND body = ?))",
+                        (str(page_id), mid, text),
+                    ).fetchone()
+                    if row:
+                        metadata = "care-worker"
+            except Exception:
+                pass
         ts = raw.get("created_time")
         ts_ms = None
         if isinstance(ts, (int, float)):
@@ -559,6 +571,7 @@ class FanpageCareFeature:
                 "mid": mid,
                 "text": text,
                 "is_echo": is_echo,
+                "metadata": metadata,
             },
         }
 
@@ -855,8 +868,18 @@ class FanpageCareFeature:
                 async with self._llm_lock:
                     llm_res = await aux_engine.complete_json(sys_p, user_p, timeout_s=20)
 
+                reply_text = None
                 if not llm_res.get("refuse") and llm_res.get("reply"):
                     reply_text = llm_res["reply"]
+                elif eff_m == "full":
+                    # Khi LLM từ chối hoặc không khả dụng ở mode full -> tự động dùng template để không bỏ rơi khách
+                    fallback_key = "ambiguous" if (kit and kit.get("brand") == "bsn") else "hoc_phi"
+                    reply_text = (
+                        render_template(fallback_key, kit, vault_root=self.vault_root)
+                        or render_template("hoc_phi", kit, vault_root=self.vault_root)
+                    )
+
+                if reply_text:
                     send_res = await _call_graph(
                         "fb_page_reply",
                         {"comment_id": cid, "message": reply_text, "page_id": pid},
@@ -873,11 +896,8 @@ class FanpageCareFeature:
                         out["draft_created"] = True
                 else:
                     refuse_err = llm_res.get("error") or "Không đủ dữ liệu chắc chắn để trả lời"
-                    fallback_key = "ambiguous" if (kit and kit.get("brand") == "bsn") else "hoc_phi"
                     draft_content = (
-                        llm_res.get("reply")
-                        or render_template(fallback_key, kit, vault_root=self.vault_root)
-                        or render_template("hoc_phi", kit, vault_root=self.vault_root)
+                        render_template("hoc_phi", kit, vault_root=self.vault_root)
                         or "Cần tư vấn hỗ trợ"
                     )
                     store.create_draft(ev_id, pid, cid, draft_content, class_name)
@@ -947,11 +967,12 @@ class FanpageCareFeature:
                 store.update_messaging_window(pid, psid, is_user=False, page_ts=msg_ts)
             else:
                 # Do nhân viên trực tiếp chat trên Meta Business Suite / Messenger
-                # -> Kích hoạt Human Takeover (đóng băng thread 4 giờ)
-                takeover_hours = float(cfg.get("takeover_hours", 4.0))
-                takeover_until = msg_ts + (takeover_hours * 3600.0)
-                if takeover_until > time.time():
-                    until = store.set_human_takeover(pid, psid, duration_hours=(takeover_until - time.time()) / 3600.0)
+                # Chỉ kích hoạt takeover nếu echo thực sự gần đây (trong vòng 5 phút)
+                # Tránh tình trạng quét lịch sử tin nhắn cũ trong thread kích hoạt takeover hàng loạt
+                is_recent_echo = (time.time() - msg_ts) < 300.0
+                takeover_hours = float(cfg.get("takeover_hours", 1.0))
+                if is_recent_echo:
+                    until = store.set_human_takeover(pid, psid, duration_hours=takeover_hours)
                     out["takeover_activated"] = True
                     print(f"[fanpage_care] Human takeover activated on page {pid}, psid {psid} for {takeover_hours}h (until {until})", file=sys.stderr)
                 else:
@@ -1039,8 +1060,15 @@ class FanpageCareFeature:
 
         # 5. Kiểm tra Human Takeover
         if store.is_under_takeover(pid, psid):
-            print(f"[fanpage_care] PSID {psid} đang trong thời gian nhân viên takeover -> bỏ qua auto-reply.", file=sys.stderr)
-            return out
+            win = store.get_messaging_window(pid, psid)
+            last_page_ts = float(win.get("last_page_ts") or 0.0) if win else 0.0
+            # Nếu nhân viên đã không nhắn gì > 15 phút mà khách nhắn mới, tự động giải phóng takeover để Javis phục vụ
+            if last_page_ts and (time.time() - last_page_ts < 900.0):
+                print(f"[fanpage_care] PSID {psid} đang có nhân viên trực tiếp chat ({int(time.time() - last_page_ts)}s trước) -> bỏ qua auto-reply.", file=sys.stderr)
+                return out
+            else:
+                store.release_human_takeover(pid, psid)
+                print(f"[fanpage_care] PSID {psid}: Nhân viên không hoạt động > 15m -> tự động giải phóng takeover để Javis hỗ trợ.", file=sys.stderr)
 
         # 6. Kiểm tra Cửa sổ 24 giờ
         if not store.is_in_24h_window(pid, psid):
@@ -1088,6 +1116,15 @@ class FanpageCareFeature:
                     llm_res = await aux_engine.complete_json(sys_p, user_p, timeout_s=20)
                 if not llm_res.get("refuse") and llm_res.get("reply"):
                     reply_text = llm_res["reply"]
+
+            # Fallback nếu reply_text chưa có nhưng ở mode auto / full:
+            if not reply_text and eff_m in ("auto", "full"):
+                fallback_key = "chao_hoi" if class_name in ("faq", "ambiguous") else "ambiguous"
+                reply_text = (
+                    render_template(fallback_key, kit, vault_root=self.vault_root)
+                    or render_template("chao_hoi", kit, vault_root=self.vault_root)
+                    or render_template("hoc_phi", kit, vault_root=self.vault_root)
+                )
 
             if reply_text:
                 send_res = await fanpage_care_graph.call(
@@ -1341,14 +1378,14 @@ class FanpageCareFeature:
                 res = await fanpage_care_graph.call(
                     "fb_message_send",
                     {"recipient_id": cid, "message": msg, "page_id": pid},
-                    actor="user",
+                    actor="care-worker",
                     vault_root=str(self.vault_root),
                 )
             else:
                 res = await fanpage_care_graph.call(
                     "fb_page_reply",
                     {"comment_id": cid, "message": msg, "page_id": pid},
-                    actor="user",
+                    actor="care-worker",
                     vault_root=str(self.vault_root),
                 )
             if str(res).startswith("ERROR:"):

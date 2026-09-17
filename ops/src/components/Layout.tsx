@@ -20,6 +20,7 @@ import { useAuth } from '../lib/auth'
 import { api, CareState } from '../lib/api'
 import { useCareScope } from '../lib/scope'
 import { ScopeBar } from './ScopeBar'
+import { OpsChatBubble } from './OpsChatBubble'
 
 interface LayoutProps {
   currentTab: string
@@ -330,6 +331,9 @@ export const Layout: React.FC<LayoutProps> = ({ currentTab, onSelectTab, childre
           )
         })}
       </nav>
+
+      {/* Trợ lý Hỏi đáp Ca làm việc Javis Ops */}
+      <OpsChatBubble />
     </div>
   )
 }

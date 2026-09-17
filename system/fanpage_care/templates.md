@@ -11,3 +11,5 @@ Kit có thể ghi đè từng mục bằng khối `## Care templates` trong bran
 - zalo: "Dạ anh/chị kết bạn Zalo số {hotline} để em tư vấn lộ trình và gửi tài liệu chi tiết nhé ạ."
 - lead_thanks: "Dạ em nhận thông tin rồi, CSKH {hotline} sẽ liên hệ tư vấn lộ trình {course_or_nganh} ạ."
 - khen: "Dạ cảm ơn mình đã theo dõi {page_name} ạ."
+- chao_hoi: "Dạ {page_name} xin chào anh/chị ạ! Anh/chị đang quan tâm đến nội dung hay cần hỗ trợ gì cứ nhắn tin hoặc liên hệ Hotline/Zalo {hotline} để được tư vấn nhanh nhất nhé ạ."
+- ambiguous: "Dạ {page_name} đã ghi nhận thông tin và sẵn sàng hỗ trợ anh/chị ạ. Anh/chị inbox hoặc liên hệ Hotline/Zalo {hotline} để được tư vấn chi tiết nhé ạ."
