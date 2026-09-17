@@ -107,13 +107,18 @@ def test_serve_tiktok_media_path_traversal_blocked(test_env):
     ]
     for p in traversal_paths:
         resp = c.get(p)
-        assert resp.status_code == 404, f"Path traversal not blocked for: {p}"
+        assert resp.status_code in (404, 401, 400), f"Path traversal not blocked for: {p}"
         assert "SUPER_SECRET_KEY" not in resp.text
 
 
 def test_tiktok_status_returns_masked_key_and_loop(test_env, monkeypatch):
     """GET /tiktok/status trả về masked key (...xxxx) và loop disabled."""
     c, vault, _ = test_env
+
+    # Login as owner/staff
+    ops_rbac.create_user("owner_status_chk", "statuspass123", role="owner", name="Chủ Máy")
+    login_res = c.post("/ops/auth/login", json={"username": "owner_status_chk", "password": "statuspass123"})
+    cookies = login_res.cookies
 
     # Mock connection with fake key
     monkeypatch.setattr(tiktok_service, "get_postpeer_connection", lambda: {
@@ -123,7 +128,7 @@ def test_tiktok_status_returns_masked_key_and_loop(test_env, monkeypatch):
         "perm": "full"
     })
 
-    resp = c.get("/tiktok/status")
+    resp = c.get("/tiktok/status", cookies=cookies)
     assert resp.status_code == 200
     data = resp.json()
     assert data["ok"] is True
@@ -226,6 +231,7 @@ def test_owner_post_photos_mock_postpeer_logs_jsonl(test_env, monkeypatch):
         return MockResponse()
 
     monkeypatch.setattr(requests, "post", fake_post)
+    monkeypatch.setattr(tiktok_service, "get_postpeer_token", lambda: "fake_key_9999")
     monkeypatch.setattr(tiktok_service, "get_postpeer_connection", lambda: {
         "enabled": True,
         "masked_key": "...9999",

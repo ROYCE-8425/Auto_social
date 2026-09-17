@@ -8079,7 +8079,7 @@ async def serve_ops_dashboard(full_path: str = ""):
 import tiktok_service
 
 
-@app.get("/tiktok-media/{rel:path}")
+@app.api_route("/tiktok-media/{rel:path}", methods=["GET", "HEAD"])
 async def serve_tiktok_media(rel: str):
     """Phục vụ ảnh 9:16 công khai cho PostPeer fetch qua HTTPS (trannhuy.online/tiktok-media/...).
     Chống path-traversal: chỉ phục vụ trong attachments/dataset/_xuat-tiktok.
