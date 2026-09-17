@@ -13,8 +13,21 @@ import {
   Sparkles,
   ShieldCheck,
   Moon,
+  Gamepad2,
+  GraduationCap,
+  Layers,
+  Settings2,
+  Sliders,
+  Check,
+  Save,
+  Info,
+  Power,
+  ToggleLeft,
+  ToggleRight,
 } from 'lucide-react'
-import { api, CareDraft, CareEvent, CareState } from '../lib/api'
+import { api, CareDraft, CareEvent, CareState, CareFeatures, CarePageSettings, CareStats } from '../lib/api'
+import { useAuth } from '../lib/auth'
+import { useCareScope } from '../lib/scope'
 import { formatTime, timeAgo } from '../lib/utils'
 
 interface OverviewProps {
@@ -22,10 +35,30 @@ interface OverviewProps {
 }
 
 export const Overview: React.FC<OverviewProps> = ({ onNavigate }) => {
+  const { user, role, can } = useAuth()
+  const { scope, scopeBrand, scopePageId, eligiblePages, activeBrand, scopeLabel } = useCareScope()
+
   const [careState, setCareState] = useState<CareState | null>(null)
+  const [scopedStats, setScopedStats] = useState<CareStats | null>(null)
   const [events, setEvents] = useState<CareEvent[]>([])
   const [drafts, setDrafts] = useState<CareDraft[]>([])
   const [loading, setLoading] = useState<boolean>(true)
+
+  // Local settings editor state
+  const [cfgEnabled, setCfgEnabled] = useState<boolean>(true)
+  const [cfgMode, setCfgMode] = useState<string>('suggest')
+  const [cfgFeatures, setCfgFeatures] = useState<CareFeatures>({
+    poll_comments: true,
+    poll_messenger: true,
+    auto_reply_comments: false,
+    auto_reply_messenger: false,
+    hide_spam: false,
+  })
+  const [pageOverrides, setPageOverrides] = useState<Record<string, CarePageSettings>>({})
+  const [isSavingCfg, setIsSavingCfg] = useState<boolean>(false)
+  const [saveCfgMsg, setSaveCfgMsg] = useState<{ text: string; ok: boolean } | null>(null)
+
+  const isEditor = role === 'owner' || role === 'manager' || can('configure_care')
 
   const renderPlatformChip = (platform?: string) => {
     const p = (platform || 'facebook').toLowerCase()
@@ -50,34 +83,59 @@ export const Overview: React.FC<OverviewProps> = ({ onNavigate }) => {
     )
   }
 
-  useEffect(() => {
-    let mounted = true
-    const load = async () => {
-      try {
-        const [stateRes, inboxRes] = await Promise.all([
-          api.getCareState().catch(() => null),
-          api.getInbox({ limit: 20 }).catch(() => null),
-        ])
-        if (mounted) {
-          if (stateRes) setCareState(stateRes)
-          if (inboxRes) {
-            setEvents(inboxRes.events || [])
-            setDrafts(inboxRes.drafts || [])
+  // Load data according to active scope
+  const loadScopedData = async () => {
+    try {
+      const [stateRes, inboxRes, statsRes] = await Promise.all([
+        api.getCareState().catch(() => null),
+        api.getInbox({
+          limit: 20,
+          brand: scopeBrand || undefined,
+          page_id: scopePageId || undefined,
+        }).catch(() => null),
+        api.getCareStats({
+          brand: scopeBrand || undefined,
+          page_id: scopePageId || undefined,
+        }).catch(() => null),
+      ])
+
+      if (stateRes) {
+        setCareState(stateRes)
+        if (stateRes.config) {
+          setCfgEnabled(Boolean(stateRes.config.enabled))
+          setCfgMode(stateRes.config.mode || 'suggest')
+          if (stateRes.config.features) {
+            setCfgFeatures((prev) => ({ ...prev, ...stateRes.config!.features }))
+          }
+          if (stateRes.config.pages) {
+            setPageOverrides(stateRes.config.pages)
           }
         }
-      } finally {
-        if (mounted) setLoading(false)
       }
-    }
-    load()
-    const t = setInterval(load, 20000)
-    return () => {
-      mounted = false
-      clearInterval(t)
-    }
-  }, [])
 
-  const stats = careState?.stats || {
+      if (inboxRes) {
+        setEvents(inboxRes.events || [])
+        setDrafts(inboxRes.drafts || [])
+        if (inboxRes.stats) {
+          setScopedStats(inboxRes.stats)
+        }
+      }
+
+      if (statsRes?.stats) {
+        setScopedStats(statsRes.stats)
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    loadScopedData()
+    const t = setInterval(loadScopedData, 20000)
+    return () => clearInterval(t)
+  }, [scope, scopeBrand, scopePageId])
+
+  const stats = scopedStats || careState?.stats || {
     total_events: 0,
     events_24h: 0,
     leads_24h: 0,
@@ -89,6 +147,106 @@ export const Overview: React.FC<OverviewProps> = ({ onNavigate }) => {
   }
 
   const pendingDrafts = drafts.filter((d) => d.status === 'pending')
+
+  // Save Care settings
+  const handleSaveSettings = async (
+    overrideCfg?: {
+      enabled?: boolean
+      mode?: string
+      features?: Partial<CareFeatures>
+      pages?: Record<string, Partial<CarePageSettings>>
+    }
+  ) => {
+    if (!isEditor || isSavingCfg) return
+    setIsSavingCfg(true)
+    setSaveCfgMsg(null)
+
+    const payload = {
+      enabled: overrideCfg?.enabled !== undefined ? overrideCfg.enabled : cfgEnabled,
+      mode: overrideCfg?.mode !== undefined ? overrideCfg.mode : cfgMode,
+      features: overrideCfg?.features || cfgFeatures,
+      pages: overrideCfg?.pages || pageOverrides,
+    }
+
+    try {
+      const res = await api.saveCareSettings(payload)
+      if (res.ok) {
+        setSaveCfgMsg({ text: 'Đã lưu cấu hình Care thành công!', ok: true })
+        if (res.config) {
+          setCfgEnabled(Boolean(res.config.enabled))
+          setCfgMode(res.config.mode || 'suggest')
+          if (res.config.features) setCfgFeatures((prev) => ({ ...prev, ...res.config!.features }))
+          if (res.config.pages) setPageOverrides(res.config.pages)
+        }
+        await loadScopedData()
+      } else {
+        setSaveCfgMsg({ text: res.error || 'Lỗi lưu cấu hình', ok: false })
+      }
+    } catch (err: any) {
+      setSaveCfgMsg({ text: err.message || 'Lỗi lưu cấu hình', ok: false })
+    } finally {
+      setIsSavingCfg(false)
+      setTimeout(() => setSaveCfgMsg(null), 4000)
+    }
+  }
+
+  // Update a single page override
+  const handlePageOverrideChange = (pageId: string, patch: Partial<CarePageSettings>) => {
+    setPageOverrides((prev) => {
+      const current = prev[pageId] || {}
+      const updated = {
+        ...current,
+        ...patch,
+        features: {
+          ...(current.features || {}),
+          ...(patch.features || {}),
+        },
+      }
+      return { ...prev, [pageId]: updated }
+    })
+  }
+
+  // Banner text computation
+  const getBannerInfo = () => {
+    const isCareActive = cfgEnabled
+
+    if (activeBrand === 'bsn') {
+      return {
+        badge: 'Nhóm Game Bản Quyền BSN',
+        badgeIcon: Gamepad2,
+        badgeColor: 'text-purple-400',
+        title: scope === 'page' ? scopeLabel : 'Game Giá Rẻ BSN',
+        desc: isCareActive
+          ? 'Javis đang lắng nghe tương tác fanpage và chuẩn bị câu trả lời tư vấn game bản quyền BSN.'
+          : 'Javis Care hiện đang tạm tắt. Bật công tắc Care tổng bên dưới để bắt đầu lắng nghe tương tác.',
+      }
+    }
+
+    if (activeBrand === 'saoviet') {
+      return {
+        badge: 'Đào Tạo Tin Học Sao Việt',
+        badgeIcon: GraduationCap,
+        badgeColor: 'text-saoviet-400',
+        title: scope === 'page' ? scopeLabel : 'Trung Tâm Vận Hành Sao Việt',
+        desc: isCareActive
+          ? 'Javis đang lắng nghe tương tác fanpage và chuẩn bị câu trả lời theo giáo trình Sao Việt.'
+          : 'Javis Care hiện đang tạm tắt. Bật công tắc Care tổng bên dưới để bắt đầu lắng nghe tương tác.',
+      }
+    }
+
+    return {
+      badge: 'Toàn Bộ Hệ Thống Fanpage',
+      badgeIcon: Layers,
+      badgeColor: 'text-slate-300',
+      title: 'Tất cả Fanpage đã kết nối',
+      desc: isCareActive
+        ? 'Javis đang lắng nghe tương tác trên các fanpage đã kết nối.'
+        : 'Javis Care hiện đang tạm tắt. Bật công tắc Care tổng bên dưới để bắt đầu lắng nghe tương tác.',
+    }
+  }
+
+  const banner = getBannerInfo()
+  const BannerIcon = banner.badgeIcon
 
   const statCards = [
     {
@@ -138,22 +296,22 @@ export const Overview: React.FC<OverviewProps> = ({ onNavigate }) => {
 
   return (
     <div className="space-y-6">
-      {/* Top Banner: Status + Quick Handoff Notice */}
+      {/* Top Banner: Dynamic Brand / Page Aware */}
       <div className="bg-gradient-to-r from-slate-900 to-slate-800 text-white rounded-2xl p-6 shadow-md relative overflow-hidden">
         <div className="absolute right-0 top-0 w-80 h-full bg-gradient-to-l from-saoviet-600/20 to-transparent pointer-events-none" />
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <div className="flex items-center space-x-2 text-saoviet-400 text-xs font-semibold uppercase tracking-wider mb-1">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Hệ thống trợ lý Javis Care</span>
+            <div className={`flex items-center space-x-2 text-xs font-semibold uppercase tracking-wider mb-1 ${banner.badgeColor}`}>
+              <BannerIcon className="w-3.5 h-3.5" />
+              <span>{banner.badge}</span>
+              <span className="text-slate-500 font-normal">|</span>
+              <span className="text-slate-300 font-normal capitalize">Phạm vi: {scopeLabel}</span>
             </div>
             <h1 className="text-xl sm:text-2xl font-bold tracking-tight">
-              {careState?.facebook_label ? `Fanpage: ${careState.facebook_label}` : 'Trung Tâm Vận Hành Sao Việt'}
+              {banner.title}
             </h1>
             <p className="text-xs sm:text-sm text-slate-300 mt-1 max-w-2xl">
-              {careState?.config?.enabled
-                ? `Javis đang lắng nghe tương tác fanpage và chuẩn bị câu trả lời theo giáo trình Sao Việt.`
-                : `Javis Care hiện đang tạm tắt. Vui lòng liên hệ Quản lý nếu cần bật tính năng tự động.`}
+              {banner.desc}
             </p>
           </div>
 
@@ -325,73 +483,387 @@ export const Overview: React.FC<OverviewProps> = ({ onNavigate }) => {
           </div>
         </div>
 
-        {/* Right: Quick Info & Health Status (1 col) */}
+        {/* Right: Quick Info, Care Settings & Health Status (1 col) */}
         <div className="space-y-6">
-          {/* Fanpage Connection Health Card */}
-          <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
-            <h3 className="font-bold text-slate-900 text-sm flex items-center space-x-2 mb-3">
-              <Activity className="w-4 h-4 text-saoviet-500" />
-              <span>Trạng thái kết nối</span>
-            </h3>
+          {/* Global Care Configuration Card */}
+          <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center space-x-2">
+                <Sliders className="w-4 h-4 text-saoviet-600" />
+                <h3 className="font-bold text-slate-900 text-sm">Cài đặt & Công tắc Care</h3>
+              </div>
+              <span
+                className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                  cfgEnabled
+                    ? 'bg-emerald-100 text-emerald-800'
+                    : 'bg-slate-100 text-slate-600'
+                }`}
+              >
+                {cfgEnabled ? 'Đang bật' : 'Đang tắt'}
+              </span>
+            </div>
 
-            <div className="space-y-3 text-xs">
-              <div className="flex items-center justify-between py-2 border-b border-slate-100">
-                <span className="text-slate-500">Fanpage Facebook</span>
-                <span className="font-semibold text-slate-800">
-                  {careState?.facebook_label || (careState?.facebook_connected ? 'Đã liên kết' : 'Chưa liên kết')}
+            {/* Master Care Switch */}
+            <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100">
+              <div>
+                <span className="font-bold text-xs text-slate-900 block">Care tổng (Master)</span>
+                <span className="text-[11px] text-slate-500 block">
+                  Bật/tắt toàn bộ dịch vụ quét & phản hồi Javis
                 </span>
               </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  disabled={!isEditor || isSavingCfg}
+                  checked={cfgEnabled}
+                  onChange={(e) => setCfgEnabled(e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600 disabled:opacity-50"></div>
+              </label>
+            </div>
 
-              <div className="flex items-center justify-between py-2 border-b border-slate-100">
-                <span className="text-slate-500">Quyền hạn</span>
-                <span className={`font-semibold ${careState?.connection_perm === 'full' ? 'text-emerald-700' : 'text-slate-600'}`}>
-                  {careState?.connection_perm === 'full' ? 'Toàn quyền (Đọc & Gửi)' : 'Chỉ đọc (Read-only)'}
-                </span>
+            {/* Care Mode Selector */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-slate-700 block">
+                Chế độ vận hành (Toàn cục)
+              </label>
+              <select
+                disabled={!isEditor || isSavingCfg}
+                value={cfgMode}
+                onChange={(e) => setCfgMode(e.target.value)}
+                className="w-full text-xs font-medium p-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-saoviet-500 disabled:opacity-60"
+              >
+                <option value="suggest">Chỉ nháp (Tạo nháp chờ duyệt - Mặc định an toàn)</option>
+                <option value="semi">Bán tự động (FAQ tự gửi, case mới tạo nháp)</option>
+                <option value="full">Tự động hoàn toàn (Javis tự trả lời tất cả)</option>
+              </select>
+            </div>
+
+            {/* Feature Toggles */}
+            <div className="space-y-2 pt-1 border-t border-slate-100">
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+                Công tắc từng chức năng
+              </span>
+
+              {/* 1. Poll Comments */}
+              <div className="flex items-center justify-between py-1.5">
+                <div>
+                  <span className="text-xs font-semibold text-slate-800 block">Kéo bình luận</span>
+                  <span className="text-[10px] text-slate-400">Tự động quét comment từ bài viết</span>
+                </div>
+                <input
+                  type="checkbox"
+                  disabled={!isEditor || isSavingCfg}
+                  checked={cfgFeatures.poll_comments}
+                  onChange={(e) =>
+                    setCfgFeatures((prev) => ({ ...prev, poll_comments: e.target.checked }))
+                  }
+                  className="rounded text-saoviet-600 focus:ring-saoviet-500 h-4 w-4 border-slate-300 cursor-pointer disabled:opacity-50"
+                />
               </div>
 
-              <div className="flex items-center justify-between py-2 border-b border-slate-100">
-                <span className="text-slate-500">Chế độ hoạt động</span>
-                <span className="font-semibold text-saoviet-700 capitalize">
-                  {careState?.config?.mode === 'full' ? 'Tự động trả lời' : careState?.config?.mode === 'semi' ? 'Bán tự động' : 'Tạo nháp (Gợi ý)'}
-                </span>
+              {/* 2. Poll Messenger */}
+              <div className="flex items-center justify-between py-1.5">
+                <div>
+                  <span className="text-xs font-semibold text-slate-800 block">Kéo hộp thư IB</span>
+                  <span className="text-[10px] text-slate-400">Quét tin nhắn Messenger Business</span>
+                </div>
+                <input
+                  type="checkbox"
+                  disabled={!isEditor || isSavingCfg}
+                  checked={cfgFeatures.poll_messenger}
+                  onChange={(e) =>
+                    setCfgFeatures((prev) => ({ ...prev, poll_messenger: e.target.checked }))
+                  }
+                  className="rounded text-saoviet-600 focus:ring-saoviet-500 h-4 w-4 border-slate-300 cursor-pointer disabled:opacity-50"
+                />
               </div>
 
-              <div className="flex items-center justify-between py-2 border-b border-slate-100">
-                <span className="text-slate-500">Giờ im lặng</span>
-                <span className="font-medium text-slate-700 flex items-center space-x-1">
-                  {careState?.is_quiet ? (
-                    <>
-                      <Moon className="w-3.5 h-3.5 text-amber-500" />
-                      <span className="text-amber-700 font-semibold">Đang yên tĩnh</span>
-                    </>
-                  ) : (
-                    <span>{careState?.config?.quiet_hours ? `${careState.config.quiet_hours} (Bình thường)` : 'Bình thường'}</span>
-                  )}
-                </span>
+              {/* 3. Auto Reply Comments */}
+              <div className="flex items-center justify-between py-1.5">
+                <div>
+                  <div className="flex items-center space-x-1.5">
+                    <span className="text-xs font-semibold text-slate-800">Tự trả lời bình luận</span>
+                    {cfgFeatures.auto_reply_comments && (
+                      <span className="text-[9px] px-1 py-0.2 rounded bg-amber-50 text-amber-700 font-bold border border-amber-200">
+                        {cfgMode === 'suggest' ? 'Chỉ nháp' : 'Tự rep'}
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-[10px] text-slate-400">Mặc định tắt · Cần mode Tự động</span>
+                </div>
+                <input
+                  type="checkbox"
+                  disabled={!isEditor || isSavingCfg}
+                  checked={cfgFeatures.auto_reply_comments}
+                  onChange={(e) =>
+                    setCfgFeatures((prev) => ({ ...prev, auto_reply_comments: e.target.checked }))
+                  }
+                  className="rounded text-saoviet-600 focus:ring-saoviet-500 h-4 w-4 border-slate-300 cursor-pointer disabled:opacity-50"
+                />
               </div>
 
-              <div className="flex items-center justify-between py-2">
-                <span className="text-slate-500">Hàng rào an toàn</span>
-                <span className="font-semibold text-emerald-700 flex items-center space-x-1">
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>Đang bảo vệ</span>
-                </span>
+              {/* 4. Auto Reply Messenger */}
+              <div className="flex items-center justify-between py-1.5">
+                <div>
+                  <div className="flex items-center space-x-1.5">
+                    <span className="text-xs font-semibold text-slate-800">Tự trả lời IB</span>
+                    {cfgFeatures.auto_reply_messenger && (
+                      <span className="text-[9px] px-1 py-0.2 rounded bg-amber-50 text-amber-700 font-bold border border-amber-200">
+                        {cfgMode === 'suggest' ? 'Chỉ nháp' : 'Tự rep'}
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-[10px] text-slate-400">Mặc định tắt · Cần mode Tự động</span>
+                </div>
+                <input
+                  type="checkbox"
+                  disabled={!isEditor || isSavingCfg}
+                  checked={cfgFeatures.auto_reply_messenger}
+                  onChange={(e) =>
+                    setCfgFeatures((prev) => ({ ...prev, auto_reply_messenger: e.target.checked }))
+                  }
+                  className="rounded text-saoviet-600 focus:ring-saoviet-500 h-4 w-4 border-slate-300 cursor-pointer disabled:opacity-50"
+                />
+              </div>
+
+              {/* 5. Hide Spam */}
+              <div className="flex items-center justify-between py-1.5">
+                <div>
+                  <span className="text-xs font-semibold text-slate-800 block">Ẩn spam / quảng cáo</span>
+                  <span className="text-[10px] text-slate-400">Tự động ẩn bình luận rác hoặc chửi bậy</span>
+                </div>
+                <input
+                  type="checkbox"
+                  disabled={!isEditor || isSavingCfg}
+                  checked={cfgFeatures.hide_spam}
+                  onChange={(e) =>
+                    setCfgFeatures((prev) => ({ ...prev, hide_spam: e.target.checked }))
+                  }
+                  className="rounded text-saoviet-600 focus:ring-saoviet-500 h-4 w-4 border-slate-300 cursor-pointer disabled:opacity-50"
+                />
               </div>
             </div>
+
+            {/* Mode Suggest Protection Alert */}
+            {cfgMode === 'suggest' && (cfgFeatures.auto_reply_comments || cfgFeatures.auto_reply_messenger) && (
+              <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-[11px] leading-relaxed flex items-start space-x-2">
+                <Info className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                <span>
+                  <b>Chế độ đang là 'Chỉ nháp':</b> Dù bật công tắc tự trả lời, bot sẽ <b>không gửi tin ra Facebook</b> mà chỉ tạo nháp. Để bot thực sự gửi tin tự động, hãy đổi chế độ sang <b>Bán tự động</b> hoặc <b>Tự động hoàn toàn</b>.
+                </span>
+              </div>
+            )}
+
+            {/* Save Buttons & Feedback */}
+            {isEditor && (
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={() => handleSaveSettings()}
+                  disabled={isSavingCfg}
+                  className="w-full flex items-center justify-center space-x-2 px-4 py-2 rounded-xl bg-saoviet-500 hover:bg-saoviet-600 text-white font-bold text-xs shadow-sm transition-all cursor-pointer disabled:opacity-50"
+                >
+                  <Save className="w-3.5 h-3.5" />
+                  <span>{isSavingCfg ? 'Đang lưu...' : 'Lưu cài đặt toàn cục'}</span>
+                </button>
+              </div>
+            )}
+
+            {saveCfgMsg && (
+              <div
+                className={`p-2 rounded-lg text-xs font-semibold text-center ${
+                  saveCfgMsg.ok
+                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                    : 'bg-red-50 text-red-700 border border-red-200'
+                }`}
+              >
+                {saveCfgMsg.text}
+              </div>
+            )}
+
+            {!isEditor && (
+              <p className="text-[11px] text-slate-400 italic text-center">
+                * Chỉ Quản lý hoặc Chủ máy mới có quyền thay đổi cấu hình Care.
+              </p>
+            )}
           </div>
 
-          {/* Guidelines Box */}
-          <div className="bg-saoviet-50/80 rounded-2xl border border-saoviet-200/80 p-5">
-            <div className="flex items-center space-x-2 text-saoviet-800 font-bold text-xs mb-2">
+          {/* Guidelines Box - Brand Adaptive */}
+          <div className="bg-slate-100/90 rounded-2xl border border-slate-200 p-5">
+            <div className="flex items-center space-x-2 text-slate-800 font-bold text-xs mb-2">
               <Calendar className="w-4 h-4 text-saoviet-600" />
-              <span>Quy trình CSKH Sao Việt</span>
+              <span>
+                {activeBrand === 'bsn' ? 'Quy trình CSKH Game BSN' : 'Quy trình CSKH Sao Việt'}
+              </span>
             </div>
-            <ul className="text-xs text-slate-700 space-y-2 list-disc list-inside">
-              <li>Kiểm tra nháp Javis tạo trước khi nhấn <b>Gửi phản hồi</b>.</li>
-              <li>Nếu khách hỏi phức tạp, nhấn <b>Tạo việc giao người</b> để đưa vào bảng việc.</li>
-              <li>Khi nhắn tay Messenger, Javis tự lùi lại 4 giờ để nhân viên tư vấn liền mạch.</li>
+            <ul className="text-xs text-slate-600 space-y-2 list-disc list-inside">
+              {activeBrand === 'bsn' ? (
+                <>
+                  <li>Kiểm tra nháp tư vấn game và giá bán trước khi bấm <b>Gửi phản hồi</b>.</li>
+                  <li>Yêu cầu phức tạp hoặc cần nạp tài khoản: nhấn <b>Tạo việc giao người</b>.</li>
+                  <li>Khi nhân viên nhắn tay trong Business Suite, Javis tự lùi lại 4 giờ.</li>
+                </>
+              ) : (
+                <>
+                  <li>Kiểm tra nháp Javis tạo trước khi nhấn <b>Gửi phản hồi</b>.</li>
+                  <li>Nếu khách hỏi phức tạp, nhấn <b>Tạo việc giao người</b> để đưa vào bảng việc.</li>
+                  <li>Khi nhắn tay Messenger, Javis tự lùi lại 4 giờ để nhân viên tư vấn liền mạch.</li>
+                </>
+              )}
             </ul>
           </div>
+        </div>
+      </div>
+
+      {/* Per-Page Care Configuration Overrides Table */}
+      <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+          <div>
+            <div className="flex items-center space-x-2">
+              <Settings2 className="w-4 h-4 text-saoviet-600" />
+              <h2 className="font-bold text-slate-900 text-base">
+                Cấu hình chi tiết theo từng Fanpage
+              </h2>
+            </div>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Ghi đè bật/tắt Care, chế độ hoặc quyền tự trả lời cho riêng từng trang mà không ảnh hưởng page khác.
+            </p>
+          </div>
+
+          {isEditor && (
+            <button
+              type="button"
+              onClick={() => handleSaveSettings()}
+              disabled={isSavingCfg}
+              className="flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-sm transition-all cursor-pointer disabled:opacity-50 self-start sm:self-auto"
+            >
+              <Save className="w-3.5 h-3.5" />
+              <span>{isSavingCfg ? 'Đang lưu...' : 'Lưu thay đổi từng page'}</span>
+            </button>
+          )}
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr className="border-b border-slate-200 bg-slate-50/70 text-slate-600 font-bold text-[11px] uppercase tracking-wider">
+                <th className="py-2.5 px-3">Fanpage</th>
+                <th className="py-2.5 px-3 text-center">Bật Care</th>
+                <th className="py-2.5 px-3">Chế độ vận hành</th>
+                <th className="py-2.5 px-3 text-center">Tự rep Comment</th>
+                <th className="py-2.5 px-3 text-center">Tự rep IB</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {eligiblePages.map((p) => {
+                const pid = String(p.page_id || p.id || '')
+                if (!pid) return null
+                const override = pageOverrides[pid] || {}
+                const isPageCareOn = override.enabled !== undefined ? override.enabled : true
+                const pageMode = override.mode || ''
+                const autoCommentOn = override.features?.auto_reply_comments !== undefined
+                  ? override.features.auto_reply_comments
+                  : false
+                const autoMsgOn = override.features?.auto_reply_messenger !== undefined
+                  ? override.features.auto_reply_messenger
+                  : false
+
+                return (
+                  <tr key={pid} className="hover:bg-slate-50/80 transition-colors">
+                    <td className="py-3 px-3">
+                      <div className="flex items-center space-x-2">
+                        <span
+                          className={`text-[10px] font-bold px-1.5 py-0.2 rounded border ${
+                            p.brand === 'bsn'
+                              ? 'bg-purple-50 text-purple-700 border-purple-200'
+                              : 'bg-saoviet-50 text-saoviet-700 border-saoviet-200'
+                          }`}
+                        >
+                          {p.brand === 'bsn' ? 'BSN' : 'Sao Việt'}
+                        </span>
+                        <div>
+                          <span className="font-bold text-slate-900 block">{p.name}</span>
+                          <span className="text-[10px] text-slate-400 font-mono">ID: {pid}</span>
+                        </div>
+                      </div>
+                    </td>
+
+                    <td className="py-3 px-3 text-center">
+                      <input
+                        type="checkbox"
+                        disabled={!isEditor || isSavingCfg}
+                        checked={isPageCareOn}
+                        onChange={(e) =>
+                          handlePageOverrideChange(pid, { enabled: e.target.checked })
+                        }
+                        className="rounded text-saoviet-600 focus:ring-saoviet-500 h-4 w-4 border-slate-300 cursor-pointer disabled:opacity-50"
+                      />
+                    </td>
+
+                    <td className="py-3 px-3">
+                      <select
+                        disabled={!isEditor || isSavingCfg}
+                        value={pageMode}
+                        onChange={(e) =>
+                          handlePageOverrideChange(pid, { mode: e.target.value })
+                        }
+                        className="text-xs p-1.5 rounded-lg border border-slate-200 bg-white text-slate-800 focus:outline-none focus:ring-1 focus:ring-saoviet-500 disabled:opacity-50"
+                      >
+                        <option value="">Theo toàn cục ({cfgMode === 'suggest' ? 'Chỉ nháp' : cfgMode === 'semi' ? 'Bán tự động' : 'Tự động'})</option>
+                        <option value="suggest">Chỉ nháp (Gợi ý)</option>
+                        <option value="semi">Bán tự động</option>
+                        <option value="full">Hoàn toàn tự động</option>
+                      </select>
+                    </td>
+
+                    <td className="py-3 px-3 text-center">
+                      <input
+                        type="checkbox"
+                        disabled={!isEditor || isSavingCfg}
+                        checked={autoCommentOn}
+                        onChange={(e) =>
+                          handlePageOverrideChange(pid, {
+                            features: {
+                              ...(override.features || {}),
+                              auto_reply_comments: e.target.checked,
+                            },
+                          })
+                        }
+                        className="rounded text-saoviet-600 focus:ring-saoviet-500 h-4 w-4 border-slate-300 cursor-pointer disabled:opacity-50"
+                      />
+                    </td>
+
+                    <td className="py-3 px-3 text-center">
+                      <input
+                        type="checkbox"
+                        disabled={!isEditor || isSavingCfg}
+                        checked={autoMsgOn}
+                        onChange={(e) =>
+                          handlePageOverrideChange(pid, {
+                            features: {
+                              ...(override.features || {}),
+                              auto_reply_messenger: e.target.checked,
+                            },
+                          })
+                        }
+                        className="rounded text-saoviet-600 focus:ring-saoviet-500 h-4 w-4 border-slate-300 cursor-pointer disabled:opacity-50"
+                      />
+                    </td>
+                  </tr>
+                )
+              })}
+
+              {eligiblePages.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="py-6 text-center text-slate-400">
+                    Chưa có fanpage nào được kết nối trong hệ thống.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

@@ -137,7 +137,15 @@ async def test_poller_auto_mode(setup_env, monkeypatch):
     monkeypatch.setattr(
         config,
         "read_settings",
-        lambda: {"fanpage_care": {"enabled": True, "mode": "auto", "kill_switch": False, "quiet_hours": "00-00"}},
+        lambda: {
+            "fanpage_care": {
+                "enabled": True,
+                "mode": "auto",
+                "kill_switch": False,
+                "quiet_hours": "00-00",
+                "features": {"auto_reply_comments": True},
+            }
+        },
     )
 
     fake_items = [

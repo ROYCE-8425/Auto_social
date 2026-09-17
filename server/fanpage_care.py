@@ -109,6 +109,43 @@ def list_eligible_pages(vault_root: str | Path) -> list[dict[str, Any]]:
     return out
 
 
+def pages_in_scope(cfg: dict[str, Any], eligible: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Lọc danh sách eligible pages theo phạm vi cài đặt (scope)."""
+    scope = str(cfg.get("scope") or "all").strip().lower()
+    if scope == "brand":
+        brand = str(cfg.get("scope_brand") or "").strip().lower()
+        if brand:
+            return [p for p in eligible if str(p.get("brand") or "").strip().lower() == brand]
+    elif scope == "page":
+        target_pid = str(cfg.get("scope_page_id") or "").strip()
+        if target_pid:
+            return [p for p in eligible if str(p.get("page_id") or p.get("id") or "").strip() == target_pid]
+    return list(eligible)
+
+
+def feat_on(cfg: dict[str, Any], page_id: str, feat_name: str, default: bool = False) -> bool:
+    """Kiểm tra cờ tính năng: ưu tiên ghi đè từng page -> toàn cục -> default."""
+    pages = cfg.get("pages") or {}
+    page_cfg = pages.get(str(page_id)) or {}
+    page_feats = page_cfg.get("features") or {}
+    if feat_name in page_feats:
+        return bool(page_feats[feat_name])
+    global_feats = cfg.get("features") or {}
+    if feat_name in global_feats:
+        return bool(global_feats[feat_name])
+    return default
+
+
+def _deep_merge_dict(base: dict, patch: dict) -> dict:
+    """Gộp patch đệ quy vào base (giữ nguyên các key khác trong pages, features)."""
+    for k, v in (patch or {}).items():
+        if isinstance(v, dict) and isinstance(base.get(k), dict):
+            _deep_merge_dict(base[k], v)
+        else:
+            base[k] = v
+    return base
+
+
 def facebook_pages_status() -> dict[str, Any]:
     """Fail-closed: chưa nối -> connected=False, perm=readonly.
     Đọc mcp_store.list_connections() theo connector_id == 'facebook-pages'.
@@ -167,7 +204,7 @@ class FanpageCareFeature:
     def save_config(self, patch: dict[str, Any]) -> dict[str, Any]:
         s = config.read_settings()
         care = s.setdefault("fanpage_care", {})
-        care.update(patch)
+        _deep_merge_dict(care, patch)
         if self.deps.update_settings:
             self.deps.update_settings(s)
         else:
@@ -288,15 +325,17 @@ class FanpageCareFeature:
                 return {"status": "ok", "reason": "no_eligible_pages"}
 
             pages_cfg = cfg.get("pages", {})
-            active_pages = [
-                p for p in eligible
-                if pages_cfg.get(p["page_id"], {}).get("enabled", True) is not False
-            ]
             if page_id:
                 want = str(page_id).strip()
-                active_pages = [p for p in active_pages if p["page_id"] == want]
+                active_pages = [p for p in eligible if p["page_id"] == want]
                 if not active_pages:
                     return {"status": "ok", "reason": "page_not_in_kits", "page_id": want}
+            else:
+                scoped_eligible = pages_in_scope(cfg, eligible)
+                active_pages = [
+                    p for p in scoped_eligible
+                    if pages_cfg.get(p["page_id"], {}).get("enabled", True) is not False
+                ]
 
             if not active_pages:
                 return {"status": "ok", "reason": "all_pages_disabled"}
@@ -327,9 +366,11 @@ class FanpageCareFeature:
 
             if ch in ("comments", "both"):
                 for p in batch_pages:
+                    pid = p["page_id"]
+                    if not feat_on(cfg, pid, "poll_comments", True):
+                        continue
                     if res["events_ingested"] >= max_events:
                         break
-                    pid = p["page_id"]
                     page_name = p["name"]
                     async with sem:
                         call_res = await fanpage_care_graph.call(
@@ -409,6 +450,8 @@ class FanpageCareFeature:
         max_msg = int(cfg.get("messenger_msgs_per_conv", 15))
         for p in batch_pages:
             pid = p["page_id"]
+            if not feat_on(cfg, pid, "poll_messenger", True):
+                continue
             page_name = p["name"]
             async with sem:
                 conv_res = await fanpage_care_graph.call(
@@ -636,6 +679,9 @@ class FanpageCareFeature:
                 return await fanpage_care_graph.call(*args, **kwargs)
 
         # 5. Đánh giá policy và xử lý action
+        # Cờ tự trả lời bình luận: PHẢI bật auto_reply_comments VÀ mode != suggest mới gửi Graph
+        auto_reply_comments_on = feat_on(cfg, pid, "auto_reply_comments", False) and (eff_m != "suggest")
+
         # Xử lý FAQ
         if class_name == "faq":
             reply_text = render_template(
@@ -652,6 +698,10 @@ class FanpageCareFeature:
                 rate_exceeded=rate_exceeded,
                 kill_switch=kill_switch,
             )
+            if not auto_reply_comments_on:
+                ok = False
+                why = "auto_reply_comments_disabled_or_suggest"
+
             if ok and reply_text:
                 send_res = await _call_graph(
                     "fb_page_reply",
@@ -687,6 +737,10 @@ class FanpageCareFeature:
                 rate_exceeded=rate_exceeded,
                 kill_switch=kill_switch,
             )
+            if not auto_reply_comments_on:
+                ok = False
+                why = "auto_reply_comments_disabled_or_suggest"
+
             if ok and reply_text:
                 send_res = await _call_graph(
                     "fb_page_reply",
@@ -762,7 +816,7 @@ class FanpageCareFeature:
                 is_quiet=is_quiet,
                 rate_exceeded=rate_exceeded,
                 kill_switch=kill_switch,
-                hide_spam=bool(cfg.get("hide_spam", False)),
+                hide_spam=feat_on(cfg, pid, "hide_spam", False),
                 hide_spam_in_auto=bool(cfg.get("hide_spam_in_auto", False)),
             )
             if ok:
@@ -786,6 +840,9 @@ class FanpageCareFeature:
                 rate_exceeded=rate_exceeded,
                 kill_switch=kill_switch,
             )
+            if not auto_reply_comments_on:
+                ok = False
+                why = "auto_reply_comments_disabled_or_suggest"
             if ok:
                 from fanpage_care_ground import build_care_llm_prompt
                 sys_p, user_p = build_care_llm_prompt(
@@ -986,6 +1043,7 @@ class FanpageCareFeature:
             return out
 
         # 7. Đánh giá policy và phản hồi
+        auto_reply_msg_on = feat_on(cfg, pid, "auto_reply_messenger", False) and (eff_m != "suggest")
         ok, why = policy_allows(
             "messenger_reply",
             mode=eff_m,
@@ -994,6 +1052,9 @@ class FanpageCareFeature:
             rate_exceeded=False,
             kill_switch=kill_switch,
         )
+        if not auto_reply_msg_on:
+            ok = False
+            why = "auto_reply_messenger_disabled_or_suggest"
 
         reply_text = None
         if ok:
@@ -1157,7 +1218,9 @@ class FanpageCareFeature:
         async def care_state():
             cfg = self.get_config()
             eligible = list_eligible_pages(self.vault_root)
-            st = store.get_stats()
+            scoped_pages = pages_in_scope(cfg, eligible)
+            scoped_pids = [str(p["page_id"]) for p in scoped_pages] if cfg.get("scope") in ("brand", "page") else None
+            st = store.get_stats(page_ids=scoped_pids)
             fb_st = facebook_pages_status()
             return {
                 "ok": True,
@@ -1176,29 +1239,56 @@ class FanpageCareFeature:
             cfg = self.save_config(payload)
             return {"ok": True, "config": cfg}
 
+        @router.get("/fanpage-care/stats")
+        async def care_stats_endpoint(
+            page_id: str | None = None,
+            brand: str | None = None,
+        ):
+            target_pids = None
+            if page_id:
+                target_pids = [str(page_id).strip()]
+            elif brand:
+                b = str(brand).strip().lower()
+                eligible = list_eligible_pages(self.vault_root)
+                target_pids = [str(p["page_id"]) for p in eligible if str(p.get("brand") or "").strip().lower() == b]
+
+            return {
+                "ok": True,
+                "stats": store.get_stats(page_ids=target_pids),
+            }
+
         @router.get("/fanpage-care/inbox")
         async def care_inbox(
             page_id: str | None = None,
+            brand: str | None = None,
             class_name: str | None = None,
             platform: str | None = None,
             kind: str | None = None,
             limit: int = 50,
             offset: int = 0,
         ):
+            target_pids = None
+            if page_id:
+                target_pids = [str(page_id).strip()]
+            elif brand:
+                b = str(brand).strip().lower()
+                eligible = list_eligible_pages(self.vault_root)
+                target_pids = [str(p["page_id"]) for p in eligible if str(p.get("brand") or "").strip().lower() == b]
+
             events = store.list_events(
-                page_id=page_id,
+                page_ids=target_pids,
                 class_name=class_name,
                 platform=platform,
                 kind=kind,
                 limit=limit,
                 offset=offset,
             )
-            drafts = store.list_drafts(page_id=page_id, status="pending", kind=kind, limit=limit)
+            drafts = store.list_drafts(page_ids=target_pids, status="pending", kind=kind, limit=limit)
             return {
                 "ok": True,
                 "events": events,
                 "drafts": drafts,
-                "stats": store.get_stats(),
+                "stats": store.get_stats(page_ids=target_pids),
             }
 
         @router.post("/fanpage-care/drafts/{draft_id}/send")
@@ -1333,8 +1423,20 @@ class FanpageCareFeature:
             return {"ok": True, "result": res}
 
         @router.get("/fanpage-care/conversations")
-        async def care_conversations(page_id: Optional[str] = None):
-            convs = store.get_recent_conversations(page_id=page_id)
+        async def care_conversations(page_id: Optional[str] = None, brand: Optional[str] = None):
+            pid = str(page_id or "").strip() or None
+            br = str(brand or "").strip().lower() or None
+            eligible = self._eligible_pages()
+            target_pids: list[str] | None = None
+            if pid:
+                target_pids = [pid]
+            elif br:
+                target_pids = [
+                    str(p.get("page_id") or p.get("id"))
+                    for p in eligible
+                    if str(p.get("brand") or "").strip().lower() == br
+                ]
+            convs = store.get_recent_conversations(page_id=pid, page_ids=target_pids if not pid and target_pids is not None else None)
             return {"ok": True, "conversations": convs}
 
         @router.get("/fanpage-care/conversations/thread")

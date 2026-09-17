@@ -9,6 +9,7 @@ import { Tasks } from './pages/Tasks'
 import { Trends } from './pages/Trends'
 import { AuditLog } from './pages/AuditLog'
 import { UsersPage } from './pages/Users'
+import { CareScopeProvider } from './lib/scope'
 
 export const App: React.FC = () => {
   const { user, isLoading } = useAuth()
@@ -50,14 +51,16 @@ export const App: React.FC = () => {
   }
 
   return (
-    <Layout currentTab={currentTab} onSelectTab={handleSelectTab}>
-      {currentTab === 'overview' && <Overview onNavigate={handleSelectTab} />}
-      {currentTab === 'inbox' && <Inbox />}
-      {currentTab === 'customers' && <Customers />}
-      {currentTab === 'tasks' && <Tasks />}
-      {currentTab === 'trends' && <Trends />}
-      {currentTab === 'audit' && <AuditLog />}
-      {currentTab === 'users' && <UsersPage />}
-    </Layout>
+    <CareScopeProvider>
+      <Layout currentTab={currentTab} onSelectTab={handleSelectTab}>
+        {currentTab === 'overview' && <Overview onNavigate={handleSelectTab} />}
+        {currentTab === 'inbox' && <Inbox />}
+        {currentTab === 'customers' && <Customers />}
+        {currentTab === 'tasks' && <Tasks />}
+        {currentTab === 'trends' && <Trends />}
+        {currentTab === 'audit' && <AuditLog />}
+        {currentTab === 'users' && <UsersPage />}
+      </Layout>
+    </CareScopeProvider>
   )
 }

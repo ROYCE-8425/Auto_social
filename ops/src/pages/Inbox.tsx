@@ -17,11 +17,13 @@ import {
 } from 'lucide-react'
 import { api, CareConversation, CareDraft, CareEvent, CareState } from '../lib/api'
 import { useAuth } from '../lib/auth'
+import { useCareScope } from '../lib/scope'
 import { formatTime, timeAgo } from '../lib/utils'
 
 export const Inbox: React.FC = () => {
   const [activeSubTab, setActiveSubTab] = useState<'comments' | 'messenger'>('comments')
   const { can } = useAuth()
+  const { scope, scopeBrand, scopePageId, eligiblePages: globalPages } = useCareScope()
   const [platformFilter, setPlatformFilter] = useState<'all' | 'facebook' | 'tiktok'>('all')
   const [pageFilter, setPageFilter] = useState<string>('')
   const [eligiblePages, setEligiblePages] = useState<NonNullable<CareState['eligible_pages']>>([])
@@ -36,6 +38,15 @@ export const Inbox: React.FC = () => {
   const [actionLoading, setActionLoading] = useState<string | number | null>(null)
   const [actionMsg, setActionMsg] = useState<{ id: string | number; msg: string; type: 'success' | 'error' } | null>(null)
 
+  // Sync pageFilter when Scope changes from the global ScopeBar
+  useEffect(() => {
+    if (scope === 'page' && scopePageId) {
+      setPageFilter(scopePageId)
+    } else if (scope === 'all' || scope === 'brand') {
+      setPageFilter('')
+    }
+  }, [scope, scopePageId])
+
   // Chat conversation modal state
   const [selectedConv, setSelectedConv] = useState<CareConversation | null>(null)
   const [threadEvents, setThreadEvents] = useState<CareEvent[]>([])
@@ -48,6 +59,11 @@ export const Inbox: React.FC = () => {
   const [handoffTitle, setHandoffTitle] = useState<string>('')
   const [handoffIntent, setHandoffIntent] = useState<string>('')
   const [handoffCommentId, setHandoffCommentId] = useState<string>('')
+
+  const getPageInfo = (pid?: string) => {
+    const pages = eligiblePages.length ? eligiblePages : globalPages
+    return pages.find((p) => (p.page_id || p.id) === pid)
+  }
 
   const renderPlatformChip = (platform?: string) => {
     const p = (platform || 'facebook').toLowerCase()
@@ -74,13 +90,20 @@ export const Inbox: React.FC = () => {
 
   const loadData = async (filter = platformFilter, pageId = pageFilter) => {
     try {
+      const effectivePageId = pageId || (scope === 'page' ? scopePageId : undefined)
+      const effectiveBrand = (!effectivePageId && scope === 'brand') ? scopeBrand : undefined
+
       const [inboxRes, convRes, stateRes] = await Promise.all([
         api.getInbox({
           limit: 80,
           platform: filter === 'all' ? undefined : filter,
-          page_id: pageId || undefined,
+          page_id: effectivePageId || undefined,
+          brand: effectiveBrand || undefined,
         }).catch(() => null),
-        api.getConversations(pageId || undefined).catch(() => null),
+        api.getConversations({
+          page_id: effectivePageId || undefined,
+          brand: effectiveBrand || undefined,
+        }).catch(() => null),
         api.getCareState().catch(() => null),
       ])
       if (inboxRes) {
@@ -91,13 +114,7 @@ export const Inbox: React.FC = () => {
         setConversations(convRes.conversations || [])
       }
       if (stateRes?.eligible_pages) {
-        const pages = stateRes.eligible_pages
-        setEligiblePages(pages)
-        setPageFilter((prev) => {
-          if (prev) return prev
-          const bsn = pages.find((p) => p.brand === 'bsn')
-          return (bsn?.page_id || bsn?.id || prev) as string
-        })
+        setEligiblePages(stateRes.eligible_pages)
       }
     } finally {
       setLoading(false)
@@ -108,14 +125,15 @@ export const Inbox: React.FC = () => {
     loadData(platformFilter, pageFilter)
     const interval = setInterval(() => loadData(platformFilter, pageFilter), 15000)
     return () => clearInterval(interval)
-  }, [platformFilter, pageFilter])
+  }, [platformFilter, pageFilter, scope, scopeBrand, scopePageId])
 
   const handlePollPage = async () => {
     if (!can('poll_now') || isPolling) return
     setIsPolling(true)
     setPollHint(null)
     try {
-      const res = await api.pollNow(pageFilter || undefined)
+      const effectivePageId = pageFilter || (scope === 'page' ? scopePageId : undefined)
+      const res = await api.pollNow(effectivePageId || undefined)
       const r = res.result || {}
       const err = (r.page_errors && r.page_errors[0]?.error) || r.reason
       setPollHint(
@@ -419,7 +437,8 @@ export const Inbox: React.FC = () => {
                     setIsPolling(true)
                     setPollHint(null)
                     try {
-                      const res = await api.pollNow(pageFilter || undefined, 'messenger')
+                      const effectivePageId = pageFilter || (scope === 'page' ? scopePageId : undefined)
+                      const res = await api.pollNow(effectivePageId || undefined, 'messenger')
                       const r = res.result || {}
                       const err = r.page_errors?.[0]?.error
                       setPollHint(
@@ -465,6 +484,7 @@ export const Inbox: React.FC = () => {
                 const msg = actionMsg?.id === draft.id ? actionMsg : null
                 const customerName = draft.from_name || ev?.from_name || 'Khách hàng'
                 const commentText = draft.source_body || ev?.body
+                const pageInfo = getPageInfo(draft.page_id)
 
                 return (
                   <div
@@ -497,8 +517,20 @@ export const Inbox: React.FC = () => {
                                 Phân loại: {draft.class}
                               </span>
                             )}
-                            <span className="text-[10px] px-2 py-0.5 rounded-md bg-slate-100 text-slate-600">
-                              Page ID: {draft.page_id}
+                            <span className="text-[10px] px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 font-medium flex items-center space-x-1">
+                              <span className="text-slate-400">Trang:</span>
+                              <span className="font-semibold text-slate-800">{pageInfo?.name || draft.page_id}</span>
+                              {pageInfo?.brand && (
+                                <span
+                                  className={`text-[9px] px-1 py-0.2 rounded font-bold ${
+                                    pageInfo.brand === 'bsn'
+                                      ? 'bg-purple-100 text-purple-700'
+                                      : 'bg-saoviet-100 text-saoviet-700'
+                                  }`}
+                                >
+                                  {pageInfo.brand === 'bsn' ? 'BSN' : 'Sao Việt'}
+                                </span>
+                              )}
                             </span>
                           </div>
                           <p className="text-xs text-slate-500 mt-0.5">
@@ -627,6 +659,14 @@ export const Inbox: React.FC = () => {
                               {item.faq_intent}
                             </span>
                           )}
+                          {(() => {
+                            const p = getPageInfo(item.page_id)
+                            return p?.name ? (
+                              <span className="text-[10px] px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 font-medium">
+                                {p.name} {p.brand === 'bsn' ? '(BSN)' : ''}
+                              </span>
+                            ) : null
+                          })()}
                         </div>
                         <p className="text-xs text-slate-500 mt-0.5">
                           {formatTime(item.created_ts)} • ID: {item.object_id}
@@ -750,7 +790,26 @@ export const Inbox: React.FC = () => {
                         <h3 className="font-bold text-slate-900 text-sm">
                           {conv.customer_name || `Khách Messenger ${conv.psid.slice(-4)}`}
                         </h3>
-                        <p className="text-[11px] text-slate-400">PSID: {conv.psid} · Page ID: {conv.page_id}</p>
+                        {(() => {
+                          const p = getPageInfo(conv.page_id)
+                          return (
+                            <div className="flex items-center space-x-1.5 text-[11px] text-slate-500 mt-0.5">
+                              <span>Trang: <strong className="text-slate-700">{p?.name || conv.page_id}</strong></span>
+                              {p?.brand && (
+                                <span
+                                  className={`text-[9px] px-1 py-0.2 rounded font-bold ${
+                                    p.brand === 'bsn'
+                                      ? 'bg-purple-100 text-purple-700'
+                                      : 'bg-saoviet-100 text-saoviet-700'
+                                  }`}
+                                >
+                                  {p.brand === 'bsn' ? 'BSN' : 'Sao Việt'}
+                                </span>
+                              )}
+                              <span>· PSID: {conv.psid.slice(-6)}</span>
+                            </div>
+                          )
+                        })()}
                       </div>
                     </div>
 
@@ -957,9 +1016,26 @@ export const Inbox: React.FC = () => {
                       </span>
                     )}
                   </div>
-                  <p className="text-[11px] text-slate-500">
-                    PSID: {selectedConv.psid} · Page ID: {selectedConv.page_id}
-                  </p>
+                  {(() => {
+                    const p = getPageInfo(selectedConv.page_id)
+                    return (
+                      <div className="flex items-center space-x-1.5 text-[11px] text-slate-500">
+                        <span>Trang: <strong className="text-slate-700">{p?.name || selectedConv.page_id}</strong></span>
+                        {p?.brand && (
+                          <span
+                            className={`text-[9px] px-1 py-0.2 rounded font-bold ${
+                              p.brand === 'bsn'
+                                ? 'bg-purple-100 text-purple-700'
+                                : 'bg-saoviet-100 text-saoviet-700'
+                            }`}
+                          >
+                            {p.brand === 'bsn' ? 'BSN' : 'Sao Việt'}
+                          </span>
+                        )}
+                        <span>· PSID: {selectedConv.psid}</span>
+                      </div>
+                    )
+                  })()}
                 </div>
               </div>
 

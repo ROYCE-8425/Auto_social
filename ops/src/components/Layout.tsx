@@ -17,6 +17,8 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../lib/auth'
 import { api, CareState } from '../lib/api'
+import { useCareScope } from '../lib/scope'
+import { ScopeBar } from './ScopeBar'
 
 interface LayoutProps {
   currentTab: string
@@ -26,6 +28,7 @@ interface LayoutProps {
 
 export const Layout: React.FC<LayoutProps> = ({ currentTab, onSelectTab, children }) => {
   const { user, role, logout, can } = useAuth()
+  const { scopePageId } = useCareScope()
   const [careState, setCareState] = useState<CareState | null>(null)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isPolling, setIsPolling] = useState(false)
@@ -51,7 +54,7 @@ export const Layout: React.FC<LayoutProps> = ({ currentTab, onSelectTab, childre
     setIsPolling(true)
     setPollMsg(null)
     try {
-      const res = await api.pollNow()
+      const res = await api.pollNow(scopePageId || undefined)
       setPollMsg(res.result?.status ? `Quét: ${res.result.status}` : 'Đã quét xong')
       setTimeout(() => setPollMsg(null), 4000)
     } catch (err: any) {
@@ -276,6 +279,9 @@ export const Layout: React.FC<LayoutProps> = ({ currentTab, onSelectTab, childre
           </div>
         )}
       </header>
+
+      {/* Global Scope Bar across all /ops pages */}
+      <ScopeBar />
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">

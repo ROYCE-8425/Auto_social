@@ -264,6 +264,7 @@ async def test_inbound_message_full_mode_reply(monkeypatch):
             "mode": "full",
             "brain": "Brain Default",
             "quiet_hours": "00-00",  # tắt quiet hours cho test
+            "features": {"auto_reply_messenger": True},
             "pages": {pid: {"mode": "full"}},
         }
     }

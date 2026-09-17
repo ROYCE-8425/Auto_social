@@ -22,9 +22,32 @@ export interface CareStats {
   total_customers: number
 }
 
+export interface CareFeatures {
+  poll_comments?: boolean
+  poll_messenger?: boolean
+  auto_reply_comments?: boolean
+  auto_reply_messenger?: boolean
+  hide_spam?: boolean
+  crm?: boolean
+  drafts?: boolean
+  [key: string]: boolean | undefined
+}
+
+export interface CarePageSettings {
+  enabled?: boolean
+  mode?: 'suggest' | 'semi' | 'auto' | 'full' | string
+  brand?: string
+  features?: Partial<CareFeatures>
+}
+
 export interface CareConfig {
   enabled?: boolean
-  mode?: 'suggest' | 'semi' | 'full'
+  mode?: 'suggest' | 'semi' | 'auto' | 'full' | string
+  scope?: 'all' | 'brand' | 'page'
+  scope_brand?: 'bsn' | 'saoviet' | string
+  scope_page_id?: string
+  features?: CareFeatures
+  pages?: Record<string, CarePageSettings>
   kill_switch?: boolean
   quiet_hours?: string
   poll_interval_min?: number
@@ -244,6 +267,18 @@ export const api = {
 
   // Care State & Overview
   getCareState: () => request<CareState>('/fanpage-care/state'),
+  saveCareSettings: (patch: Partial<CareConfig>) =>
+    request<{ ok: boolean; config?: CareConfig; error?: string }>('/fanpage-care/settings', {
+      method: 'POST',
+      body: JSON.stringify(patch),
+    }),
+  getCareStats: (params?: { page_id?: string; brand?: string }) => {
+    const query = new URLSearchParams()
+    if (params?.page_id) query.set('page_id', params.page_id)
+    if (params?.brand) query.set('brand', params.brand)
+    const qs = query.toString()
+    return request<{ ok: boolean; stats: CareStats }>(`/fanpage-care/stats${qs ? `?${qs}` : ''}`)
+  },
   pollNow: (pageId?: string, channel?: 'comments' | 'messenger' | 'both') =>
     request<{ ok: boolean; result?: any }>('/fanpage-care/poll-now', {
       method: 'POST',
@@ -256,6 +291,7 @@ export const api = {
   // Inbox: Comments & Drafts
   getInbox: (params?: {
     page_id?: string
+    brand?: string
     class_name?: string
     platform?: string
     kind?: 'comment' | 'message'
@@ -264,6 +300,7 @@ export const api = {
   }) => {
     const query = new URLSearchParams()
     if (params?.page_id) query.set('page_id', params.page_id)
+    if (params?.brand) query.set('brand', params.brand)
     if (params?.class_name) query.set('class_name', params.class_name)
     if (params?.platform) query.set('platform', params.platform)
     if (params?.kind) query.set('kind', params.kind)
@@ -304,8 +341,16 @@ export const api = {
     }),
 
   // Messenger Conversations
-  getConversations: (pageId?: string) => {
-    const qs = pageId ? `?page_id=${encodeURIComponent(pageId)}` : ''
+  getConversations: (params?: string | { page_id?: string; brand?: string }) => {
+    let qs = ''
+    if (typeof params === 'string') {
+      qs = params ? `?page_id=${encodeURIComponent(params)}` : ''
+    } else if (params) {
+      const sp = new URLSearchParams()
+      if (params.page_id) sp.set('page_id', params.page_id)
+      if (params.brand) sp.set('brand', params.brand)
+      qs = sp.toString() ? `?${sp.toString()}` : ''
+    }
     return request<{ ok: boolean; conversations: CareConversation[] }>(`/fanpage-care/conversations${qs}`)
   },
   getConversationThread: (pageId: string, psid: string) =>

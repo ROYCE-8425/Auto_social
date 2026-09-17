@@ -505,14 +505,23 @@ def list_drafts(
     kind: str | None = None,
     db_path: Path | str | None = None,
     limit: int = 50,
+    page_ids: list[str] | None = None,
 ) -> list[dict[str, Any]]:
-    """Liệt kê danh sách draft. Hỗ trợ lọc theo channel kind ('comment' hoặc 'message')."""
+    """Liệt kê danh sách draft. Hỗ trợ lọc theo channel kind ('comment' hoặc 'message') và page_ids."""
     init_db(db_path)
     conds = ["d.status = ?"]
     params: list[Any] = [status]
     if page_id:
         conds.append("d.page_id = ?")
         params.append(str(page_id))
+    elif page_ids is not None:
+        pids = [str(p).strip() for p in page_ids if str(p).strip()]
+        if pids:
+            placeholders = ",".join("?" * len(pids))
+            conds.append(f"d.page_id IN ({placeholders})")
+            params.extend(pids)
+        else:
+            conds.append("1 = 0")
     if kind:
         k = str(kind).strip().lower()
         if k == "comment":
@@ -722,6 +731,7 @@ def list_events(
     limit: int = 50,
     offset: int = 0,
     db_path: Path | str | None = None,
+    page_ids: list[str] | None = None,
 ) -> list[dict[str, Any]]:
     """Truy vấn danh sách sự kiện từ bảng events."""
     init_db(db_path)
@@ -730,6 +740,14 @@ def list_events(
     if page_id:
         conds.append("page_id = ?")
         params.append(str(page_id))
+    elif page_ids is not None:
+        pids = [str(p).strip() for p in page_ids if str(p).strip()]
+        if pids:
+            placeholders = ",".join("?" * len(pids))
+            conds.append(f"page_id IN ({placeholders})")
+            params.extend(pids)
+        else:
+            conds.append("1 = 0")
     if class_name:
         conds.append("class = ?")
         params.append(str(class_name))
@@ -869,31 +887,100 @@ def get_identities_for_customer(
         return [dict(r) for r in rows]
 
 
-def get_stats(db_path: Path | str | None = None) -> dict[str, Any]:
-    """Lấy số liệu tổng quan nhanh cho dashboard."""
+def get_stats(
+    page_ids: list[str] | None = None, db_path: Path | str | None = None
+) -> dict[str, Any]:
+    """Lấy số liệu tổng quan nhanh cho dashboard. Hỗ trợ lọc theo page_ids."""
     init_db(db_path)
     now = time.time()
     day_ago = now - 86400.0
 
+    p_filter = ""
+    p_params: list[Any] = []
+    if page_ids is not None:
+        pids = [str(p).strip() for p in page_ids if str(p).strip()]
+        if pids:
+            placeholders = ",".join("?" * len(pids))
+            p_filter = f" AND page_id IN ({placeholders})"
+            p_params = pids
+        else:
+            return {
+                "total_events": 0,
+                "events_24h": 0,
+                "leads_24h": 0,
+                "human_needed_24h": 0,
+                "replies_24h": 0,
+                "spam_hidden_24h": 0,
+                "pending_drafts": 0,
+                "pending_comment_drafts": 0,
+                "pending_message_drafts": 0,
+                "total_customers": 0,
+            }
+
     with get_connection(db_path) as conn:
-        total_ev = conn.execute("SELECT COUNT(*) FROM events").fetchone()[0]
-        ev_24h = conn.execute("SELECT COUNT(*) FROM events WHERE ingested_ts >= ?", (day_ago,)).fetchone()[0]
-        leads_24h = conn.execute("SELECT COUNT(*) FROM events WHERE ingested_ts >= ? AND class = 'lead'", (day_ago,)).fetchone()[0]
-        human_24h = conn.execute("SELECT COUNT(*) FROM events WHERE ingested_ts >= ? AND class IN ('ambiguous', 'ky_thuat')", (day_ago,)).fetchone()[0]
-        replies_24h = conn.execute("SELECT COUNT(*) FROM actions WHERE action = 'reply' AND ts >= ?", (day_ago,)).fetchone()[0]
-        spam_hidden_24h = conn.execute("SELECT COUNT(*) FROM actions WHERE action = 'hide' AND ts >= ?", (day_ago,)).fetchone()[0]
-        pending_dr = conn.execute("SELECT COUNT(*) FROM drafts WHERE status = 'pending'").fetchone()[0]
-        pending_cmt_dr = conn.execute("""
+        ev_where = f"WHERE 1=1{p_filter}"
+        total_ev = conn.execute(f"SELECT COUNT(*) FROM events {ev_where}", p_params).fetchone()[0]
+        ev_24h = conn.execute(
+            f"SELECT COUNT(*) FROM events WHERE ingested_ts >= ?{p_filter}",
+            [day_ago] + p_params,
+        ).fetchone()[0]
+        leads_24h = conn.execute(
+            f"SELECT COUNT(*) FROM events WHERE ingested_ts >= ? AND class = 'lead'{p_filter}",
+            [day_ago] + p_params,
+        ).fetchone()[0]
+        human_24h = conn.execute(
+            f"SELECT COUNT(*) FROM events WHERE ingested_ts >= ? AND class IN ('ambiguous', 'ky_thuat'){p_filter}",
+            [day_ago] + p_params,
+        ).fetchone()[0]
+
+        if p_filter:
+            act_p_filter = f" AND e.page_id IN ({','.join('?' * len(p_params))})"
+            replies_24h = conn.execute(
+                f"SELECT COUNT(*) FROM actions a JOIN events e ON a.event_id = e.id WHERE a.action = 'reply' AND a.ts >= ?{act_p_filter}",
+                [day_ago] + p_params,
+            ).fetchone()[0]
+            spam_hidden_24h = conn.execute(
+                f"SELECT COUNT(*) FROM actions a JOIN events e ON a.event_id = e.id WHERE a.action = 'hide' AND a.ts >= ?{act_p_filter}",
+                [day_ago] + p_params,
+            ).fetchone()[0]
+        else:
+            replies_24h = conn.execute(
+                "SELECT COUNT(*) FROM actions WHERE action = 'reply' AND ts >= ?",
+                (day_ago,),
+            ).fetchone()[0]
+            spam_hidden_24h = conn.execute(
+                "SELECT COUNT(*) FROM actions WHERE action = 'hide' AND ts >= ?",
+                (day_ago,),
+            ).fetchone()[0]
+
+        dr_where = f"WHERE d.status = 'pending'{p_filter.replace('page_id', 'd.page_id')}"
+        pending_dr = conn.execute(
+            f"SELECT COUNT(*) FROM drafts d {dr_where}", p_params
+        ).fetchone()[0]
+        pending_cmt_dr = conn.execute(
+            f"""
             SELECT COUNT(*) FROM drafts d
             LEFT JOIN events e ON d.event_id = e.id
-            WHERE d.status = 'pending' AND (e.kind = 'comment' OR (e.kind IS NULL AND d.target_id LIKE '%_%'))
-        """).fetchone()[0]
-        pending_msg_dr = conn.execute("""
+            {dr_where} AND (e.kind = 'comment' OR (e.kind IS NULL AND d.target_id LIKE '%_%'))
+            """,
+            p_params,
+        ).fetchone()[0]
+        pending_msg_dr = conn.execute(
+            f"""
             SELECT COUNT(*) FROM drafts d
             LEFT JOIN events e ON d.event_id = e.id
-            WHERE d.status = 'pending' AND (e.kind = 'message' OR e.platform = 'messenger' OR (e.kind IS NULL AND d.target_id NOT LIKE '%_%'))
-        """).fetchone()[0]
-        total_cust = conn.execute("SELECT COUNT(*) FROM customers").fetchone()[0]
+            {dr_where} AND (e.kind = 'message' OR e.platform = 'messenger' OR (e.kind IS NULL AND d.target_id NOT LIKE '%_%'))
+            """,
+            p_params,
+        ).fetchone()[0]
+
+        if p_filter:
+            total_cust = conn.execute(
+                f"SELECT COUNT(DISTINCT crm_id) FROM identities WHERE page_id IN ({','.join('?' * len(p_params))})",
+                p_params,
+            ).fetchone()[0]
+        else:
+            total_cust = conn.execute("SELECT COUNT(*) FROM customers").fetchone()[0]
 
         return {
             "total_events": total_ev,
@@ -1011,6 +1098,7 @@ def is_under_takeover(page_id: str, psid: str, db_path: Path | str | None = None
 
 def get_recent_conversations(
     page_id: str | None = None,
+    page_ids: list[str] | None = None,
     limit: int = 50,
     db_path: Path | str | None = None,
 ) -> list[dict[str, Any]]:
@@ -1023,6 +1111,16 @@ def get_recent_conversations(
                 "WHERE page_id = ? "
                 "ORDER BY COALESCE(last_user_ts,0) DESC, COALESCE(last_page_ts,0) DESC LIMIT ?",
                 (str(page_id), int(limit)),
+            ).fetchall()
+        elif page_ids is not None:
+            if not page_ids:
+                return []
+            p_holders = ",".join("?" for _ in page_ids)
+            rows = conn.execute(
+                f"SELECT page_id, psid, last_user_ts, last_page_ts, takeover_until FROM messaging_windows "
+                f"WHERE page_id IN ({p_holders}) "
+                f"ORDER BY COALESCE(last_user_ts,0) DESC, COALESCE(last_page_ts,0) DESC LIMIT ?",
+                (*[str(x) for x in page_ids], int(limit)),
             ).fetchall()
         else:
             rows = conn.execute(
