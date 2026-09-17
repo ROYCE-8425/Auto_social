@@ -1425,7 +1425,7 @@ class FanpageCareFeature:
         async def care_conversations(page_id: Optional[str] = None, brand: Optional[str] = None):
             pid = str(page_id or "").strip() or None
             br = str(brand or "").strip().lower() or None
-            eligible = self._eligible_pages()
+            eligible = self.eligible_pages()
             target_pids: list[str] | None = None
             if pid:
                 target_pids = [pid]
