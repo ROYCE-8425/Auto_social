@@ -463,44 +463,14 @@ export const Inbox: React.FC = () => {
               </select>
 
               {can('poll_now') && (
-                <>
                 <button
                   type="button"
                   onClick={handlePollPage}
                   disabled={isPolling}
-                  className="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 text-white hover:bg-emerald-500 disabled:opacity-50"
+                  className="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 text-white hover:bg-emerald-500 disabled:opacity-50 whitespace-nowrap flex-shrink-0"
                 >
                   {isPolling ? 'Đang kéo…' : 'Kéo comment'}
                 </button>
-                <button
-                  type="button"
-                  onClick={async () => {
-                    if (isPolling) return
-                    setIsPolling(true)
-                    setPollHint(null)
-                    try {
-                      const effectivePageId = pageFilter || (scope === 'page' ? scopePageId : undefined)
-                      const res = await api.pollNow(effectivePageId || undefined, 'messenger')
-                      const r = res.result || {}
-                      const err = r.page_errors?.[0]?.error
-                      setPollHint(
-                        `Hộp thư IB: ${r.messages_ingested ?? 0} tin · ${r.drafts_created ?? 0} nháp` +
-                          (err ? ` · ${String(err).slice(0, 140)}` : ''),
-                      )
-                      setActiveSubTab('messenger')
-                      await loadData(platformFilter, pageFilter)
-                    } catch (err: any) {
-                      setPollHint(err.message || 'Lỗi kéo inbox Business')
-                    } finally {
-                      setIsPolling(false)
-                    }
-                  }}
-                  disabled={isPolling}
-                  className="px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-600 text-white hover:bg-blue-500 disabled:opacity-50"
-                >
-                  Kéo hộp thư IB (Business)
-                </button>
-                </>
               )}
             </div>
             {pollHint && <p className="text-xs text-slate-500">{pollHint}</p>}
@@ -784,7 +754,7 @@ export const Inbox: React.FC = () => {
                   }
                 }}
                 disabled={isPolling}
-                className="px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-600 text-white hover:bg-blue-500 disabled:opacity-50"
+                className="px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-600 text-white hover:bg-blue-500 disabled:opacity-50 whitespace-nowrap flex-shrink-0"
               >
                 {isPolling ? 'Đang kéo hộp thư…' : 'Kéo hộp thư IB'}
               </button>

@@ -9,12 +9,14 @@ from __future__ import annotations
 
 from typing import Any
 
-MODE_RANK = {"suggest": 0, "auto": 1, "full": 2}
+MODE_RANK = {"suggest": 0, "semi": 1, "auto": 1, "full": 2}
 
 
 def effective_mode(global_mode: str, page_mode: str | None = None) -> str:
     """Xác định mode hiệu lực: lấy mode chặt hơn (rank thấp hơn)."""
     gm = str(global_mode or "suggest").lower().strip()
+    if gm == "semi":
+        gm = "auto"
     if gm not in MODE_RANK:
         gm = "suggest"
 
@@ -22,6 +24,8 @@ def effective_mode(global_mode: str, page_mode: str | None = None) -> str:
         return gm
 
     pm = str(page_mode).lower().strip()
+    if pm == "semi":
+        pm = "auto"
     if pm not in MODE_RANK:
         return gm
 
