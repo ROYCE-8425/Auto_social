@@ -65,8 +65,9 @@ Gốc cho Fanpage Game Giá Rẻ BSN.
 - Web: https://gamegiarebsn.com
 - Fanpage: https://www.facebook.com/343562028848465
 
-## Địa chỉ cửa hàng / Điểm hỗ trợ
-- Địa chỉ: Ngã tư Lý Thường Kiệt – Tô Hiến Thành, Phường 14, Quận 10, TP.HCM
+## Dịch vụ hỗ trợ khách hàng
+- Hình thức: Online toàn quốc 24/7 — Hỗ trợ kỹ thuật qua Ultraview & Zalo
+- Thời gian phục vụ: 8:00 – 23:00 hàng ngày
 
 ## USP chuẩn từ Fanpage thực tế
 - Tải trực tiếp 100% từ launcher Steam chính hãng, an toàn tuyệt đối không virus hay mã độc
@@ -93,8 +94,7 @@ Gốc cho Fanpage Game Giá Rẻ BSN.
 - Dùng ký tự em dash
 
 ## Chân trang caption (bắt buộc - mỗi dòng một thông tin, cấm dấu |)
-Game Giá Rẻ BSN - Game Bản Quyền Cho Người Việt
-📍 Địa chỉ: Ngã tư Lý Thường Kiệt – Tô Hiến Thành, Phường 14, Quận 10, TP.HCM
+Game Giá Rẻ BSN - Game Bản Quyen Cho Người Việt
 📞 Hotline / Zalo: 0877 104 996
 📧 Email: gamegiarebsn@gmail.com
 🌐 Website: https://gamegiarebsn.com
@@ -105,14 +105,12 @@ Game Giá Rẻ BSN - Game Bản Quyền Cho Người Việt
 - slug: game-gia-re-bsn
 - Page ID: 343562028848465
 - Page test: false
-- Cơ sở / địa chỉ: Ngã tư Lý Thường Kiệt – Tô Hiến Thành, Phường 14, Quận 10, TP.HCM
 - Hotline / Zalo: 0877 104 996
 - Email Fanpage: gamegiarebsn@gmail.com
 - Web Fanpage: https://gamegiarebsn.com
 - Link Fanpage: https://www.facebook.com/343562028848465
 - Khoá thế mạnh: Steam Offline, Game Việt Hóa, Game PC Giá Rẻ
-- Góc địa phương: Quận 10, TP.HCM
-- Thẻ khoá học: game-bsn, all
+- Thẻ khoá học: game-bsn
 - Hashtag thêm: #gameoffline #gamegiarebsn #steamoffline #gameviethoa
 - TikTok accountId:
 - TikTok username: @gamegiarebsn

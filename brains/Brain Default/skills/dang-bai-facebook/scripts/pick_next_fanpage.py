@@ -39,6 +39,118 @@ ANGLE_LABELS = {
     "tuyen_sinh": "Tuyển sinh & Khai giảng khóa kèm 1-1",
 }
 
+BSN_ANGLE_LABELS = {
+    "meo_thuc_chien": "Mẹo chơi, Cấu hình & Hướng dẫn cài đặt / Việt Hóa",
+    "tinh_huong": "Trải nghiệm Gameplay & Cốt truyện kịch tính",
+    "tai_lieu": "Tặng Patch Việt Hóa & Hỗ trợ Ultraview 1-1",
+    "tuyen_sinh": "Siêu phẩm Game Hot & Ưu đãi giá sinh viên (chỉ từ 28k-45k)",
+}
+
+BSN_GAMES = [
+    {
+        "title": "The Blood of Dawnwalker",
+        "slug": "the-blood-of-dawnwalker",
+        "genre": "Hành Động Dark Fantasy",
+        "highlights": "Thế giới mở u tối, chặt chém boss nghẹt thở, đồ họa đỉnh cao, sẵn bản Việt Hóa",
+        "price": "45.000 ₫",
+        "folder": "attachments/dataset/game-bsn/the-blood-of-dawnwalker/",
+        "viethoa": True,
+    },
+    {
+        "title": "STAR WARS: Zero Company",
+        "slug": "star-wars-zero-company",
+        "genre": "Chiến Thuật / Sci-Fi",
+        "highlights": "Đánh theo lượt, chỉ huy biệt đội tinh nhuệ vũ trụ Star Wars nghẹt thở",
+        "price": "28.000 ₫",
+        "folder": "attachments/dataset/game-bsn/star-wars-zero-company/",
+        "viethoa": False,
+    },
+    {
+        "title": "Halloween: The Game",
+        "slug": "halloween-the-game",
+        "genre": "Kinh Dị Sinh Tồn",
+        "highlights": "Lẩn trốn kẻ sát nhân tâm thần đêm Halloween, âm thanh rợn người",
+        "price": "28.000 ₫",
+        "folder": "attachments/dataset/game-bsn/halloween-the-game/",
+        "viethoa": False,
+    },
+    {
+        "title": "Bus Simulator 27",
+        "slug": "bus-simulator-27",
+        "genre": "Mô Phỏng Lái Xe",
+        "highlights": "Đồ họa siêu thực, bản đồ thành phố mở rộng, hệ thống vật lý chân thực",
+        "price": "35.000 ₫",
+        "folder": "attachments/dataset/game-bsn/bus-simulator-27/",
+        "viethoa": False,
+    },
+    {
+        "title": "1666 Amsterdam",
+        "slug": "1666-amsterdam",
+        "genre": "Phiêu Lưu / Lịch Sử",
+        "highlights": "Khám phá thành phố Amsterdam thế kỷ 17, giải đố hành động kỳ bí",
+        "price": "35.000 ₫",
+        "folder": "attachments/dataset/game-bsn/1666-amsterdam/",
+        "viethoa": False,
+    },
+    {
+        "title": "Crimson Moon",
+        "slug": "crimson-moon",
+        "genre": "Nhập Vai Hành Động",
+        "highlights": "Phong cách gothic ma mị kiểu Bloodborne, săn quái vật khổng lồ",
+        "price": "45.000 ₫",
+        "folder": "attachments/dataset/game-bsn/crimson-moon/",
+        "viethoa": False,
+    },
+    {
+        "title": "Mandate Order",
+        "slug": "mandate-order",
+        "genre": "Chiến Thuật Quân Sự",
+        "highlights": "Dàn trận thời gian thực quy mô lớn, chiến thuật sâu sắc",
+        "price": "35.000 ₫",
+        "folder": "attachments/dataset/game-bsn/mandate-order/",
+        "viethoa": False,
+    },
+    {
+        "title": "Resonance: A Plague Tale Legacy",
+        "slug": "resonance-a-plague-tale-legacy",
+        "genre": "Phiêu Lưu Điện Ảnh",
+        "highlights": "Cốt truyện giàu cảm xúc thời đại dịch hạch, giải đố và lén lút đỉnh cao",
+        "price": "45.000 ₫",
+        "folder": "attachments/dataset/game-bsn/resonance-a-plague-tale-legacy/",
+        "viethoa": False,
+    },
+    {
+        "title": "Tomb Raider",
+        "slug": "tomb-raider",
+        "genre": "Hành Động Khảo Cổ",
+        "highlights": "Tượng đài Lara Croft thám hiểm hầm mộ cổ, leo trèo giải đố sinh tồn",
+        "price": "35.000 ₫",
+        "folder": "attachments/dataset/game-bsn/tomb-raider/",
+        "viethoa": False,
+    },
+    {
+        "title": "Feed and Grow: Fish",
+        "slug": "feed-and-grow-fishw",
+        "genre": "Sinh Tồn Đại Dương",
+        "highlights": "Cá lớn nuốt cá bé vui nhộn, xả stress cuối tuần cực đã",
+        "price": "28.000 ₫",
+        "folder": "attachments/dataset/game-bsn/feed-and-grow-fishw/",
+        "viethoa": False,
+    },
+]
+
+
+def pick_bsn_game(st: dict) -> dict:
+    """Xoay tua tuần tự đúng 1 tựa game trong 10 game hot của BSN dataset."""
+    last_slug = st.get("bsn_last_game") or ""
+    slugs = [g["slug"] for g in BSN_GAMES]
+    idx = 0
+    if last_slug and last_slug in slugs:
+        idx = (slugs.index(last_slug) + 1) % len(BSN_GAMES)
+    chosen = BSN_GAMES[idx]
+    st["bsn_last_game"] = chosen["slug"]
+    return chosen
+
 
 def pick_next_angle(last_angle: str = "") -> str:
     """Xoay tua tuần tự 4 góc nội dung: meo_thuc_chien -> tinh_huong -> tai_lieu -> tuyen_sinh -> ..."""
@@ -268,6 +380,7 @@ def load_state(today):
                 except Exception:
                     pass
             st["last_angle"] = raw.get("last_angle", "")
+            st["bsn_last_game"] = raw.get("bsn_last_game", "")
             if raw.get("date") == today:
                 st["ok"] = list(raw.get("ok") or [])
                 st["skip"] = list(raw.get("skip") or [])
@@ -429,8 +542,17 @@ def get_page_branches(row, tag=None):
     """
     page_name = row.get("name") or row.get("slug") or ""
     norm_name = remove_accents(page_name)
+    tag_clean = remove_accents(str(tag or ""))
 
-    # 0. Nếu Page có địa chỉ riêng khai trong kit (như Game Giá Rẻ BSN) và không phải hệ thống Sao Việt
+    # 0. Nếu Page là Game Giá Rẻ BSN / brand bsn: TUYỆT ĐỐI KHÔNG DÙNG ĐỊA CHỈ SAO VIỆT
+    if any(k in norm_name for k in ["game", "bsn"]) or "game" in tag_clean or "bsn" in tag_clean:
+        if row.get("address"):
+            addr = row["address"].strip()
+            if addr and "he thong 13 chi nhanh" not in remove_accents(addr) and not any(k in norm_name for k in ["sao viet", "royce"]):
+                return [b.strip() for b in addr.split("|") if b.strip()]
+        return []
+
+    # 0b. Nếu Page có địa chỉ riêng khai trong kit và không phải hệ thống Sao Việt
     if row.get("address"):
         addr = row["address"].strip()
         if addr and "HE THONG 13 CHI NHANH" not in remove_accents(addr) and not any(k in norm_name for k in ["sao viet", "royce"]):
@@ -471,7 +593,8 @@ def print_chan_trang(row, tag=None):
     print(row["name"])
     branches = get_page_branches(row, tag)
     for b in branches:
-        print(b)
+        if b and b.strip():
+            print(b.strip())
     if row.get("hotline"):
         hl = row["hotline"].strip()
         if not hl.startswith("📞") and not hl.startswith("☎"):
@@ -496,6 +619,70 @@ def print_chan_trang(row, tag=None):
         else:
             print(wb)
     print("HET_CHAN_TRANG")
+
+
+def print_next_output(row, tag, angle, st):
+    is_bsn = (tag == "game-bsn" or row.get("slug") == "game-gia-re-bsn")
+    chosen_game = None
+    if is_bsn:
+        chosen_game = pick_bsn_game(st)
+        save_state(st)
+        folder = chosen_game["folder"]
+        angle_label = BSN_ANGLE_LABELS.get(angle, ANGLE_LABELS.get(angle, angle))
+        effective_tag = f"game-bsn/{chosen_game['slug']}"
+    else:
+        folder = f"attachments/dataset/{tag}/"
+        angle_label = ANGLE_LABELS.get(angle, angle)
+        effective_tag = tag
+
+    print("NEXT=1")
+    print("page_id=" + row["page_id"])
+    print("ten=" + row["name"])
+    print("slug=" + row["slug"])
+    print("kit=" + row["file"])
+    print("kit_path=wiki/brand-kits/" + row["file"])
+    print("course_path=wiki/courses/" + ("game-bsn" if is_bsn else tag) + ".md")
+    print("skill_path=skills/dang-bai-facebook/SKILL.md")
+    print("the=" + effective_tag)
+    print("angle=" + angle)
+    print("angle_label=" + angle_label)
+    if chosen_game:
+        print("tua_game=" + chosen_game["title"])
+        print("slug_game=" + chosen_game["slug"])
+        print("gia_game=" + chosen_game["price"])
+        print("the_loai_game=" + chosen_game["genre"])
+        print("viet_hoa=" + ("true" if chosen_game["viethoa"] else "false"))
+        print("highlights_game=" + chosen_game["highlights"])
+    print("hotline=" + (row["hotline"] or ""))
+    print("email=" + (row["email"] or ""))
+    print("web=" + (row["web"] or ""))
+    branches = get_page_branches(row, tag)
+    print("dia_chi=" + (" | ".join(branches) if branches else ""))
+    print("folder=" + folder)
+    if chosen_game:
+        print(f"luat_anh=album 6-8 anh game {chosen_game['title']}: photos[0]=cover AI moi theo style game, photos[1..]=anh screenshot that dung folder {folder}; chi fb_page_photo khi khong du anh")
+    else:
+        print("luat_anh=album 5-8 anh neu du dataset: photos[0]=cover AI moi, photos[1..]=anh that dung folder; chi fb_page_photo khi khong du anh")
+    print("doc_he_thong=Đọc skills/dang-bai-facebook/SKILL.md, wiki/brand-kits/" + row["file"] + ", wiki/courses/" + ("game-bsn" if is_bsn else tag) + ".md")
+    print("logo=" + (row.get("logo") or ""))
+    print("logo_white=" + (row.get("logo_white") or ""))
+    print("mau_chinh=" + (row.get("color_pri") or ""))
+    print("mau_phu=" + (row.get("color_sec") or ""))
+    print("font=" + (row.get("fonts") or ""))
+    print("giong=" + (row.get("voice") or ""))
+    print("bo_cuc=" + (row.get("layout") or ""))
+    print("phong_cach_anh=" + (row.get("image_style") or ""))
+    print("cam=" + (row.get("donts") or ""))
+    print("KIT_VISUAL")
+    print("Dung dung logo file: " + (row.get("logo") or ""))
+    print("Mau poster: " + (row.get("color_pri") or "") + " + " + (row.get("color_sec") or ""))
+    print("Font: " + (row.get("fonts") or ""))
+    print("Giong caption: " + (row.get("voice") or ""))
+    print("Bo cuc: " + (row.get("layout") or ""))
+    print("Phong cach anh: " + (row.get("image_style") or ""))
+    print("Cam: " + (row.get("donts") or ""))
+    print("HET_KIT_VISUAL")
+    print_chan_trang(row, tag)
 
 
 def main(argv):
@@ -584,47 +771,7 @@ def main(argv):
         st["pending_angle"][row["page_id"]] = angle
         st["last_angle"] = angle
         save_state(st)
-        print("NEXT=1")
-        print("page_id=" + row["page_id"])
-        print("ten=" + row["name"])
-        print("slug=" + row["slug"])
-        print("kit=" + row["file"])
-        print("kit_path=wiki/brand-kits/" + row["file"])
-        print("course_path=wiki/courses/" + tag + ".md")
-        print("skill_path=skills/dang-bai-facebook/SKILL.md")
-        print("the=" + tag)
-        print("angle=" + angle)
-        print("angle_label=" + ANGLE_LABELS.get(angle, angle))
-        print("hotline=" + (row["hotline"] or ""))
-        print("email=" + (row["email"] or ""))
-        print("web=" + (row["web"] or ""))
-        branches = get_page_branches(row, tag)
-        print("dia_chi=" + " | ".join(branches))
-        print("folder=attachments/dataset/" + tag + "/")
-        print(
-            "luat_anh=album 5-8 anh neu du dataset: photos[0]=cover AI moi, photos[1..]=anh that dung folder; chi fb_page_photo khi khong du anh")
-        print("doc_he_thong=Đọc skills/dang-bai-facebook/SKILL.md, wiki/brand-kits/" + row["file"] + ", wiki/courses/" + tag + ".md")
-        print("logo=" + (row.get("logo") or ""))
-        print("logo_white=" + (row.get("logo_white") or ""))
-        print("mau_chinh=" + (row.get("color_pri") or ""))
-        print("mau_phu=" + (row.get("color_sec") or ""))
-        print("font=" + (row.get("fonts") or ""))
-        print("giong=" + (row.get("voice") or ""))
-        print("bo_cuc=" + (row.get("layout") or ""))
-        print("phong_cach_anh=" + (row.get("image_style") or ""))
-        print("cam=" + (row.get("donts") or ""))
-        print("KIT_VISUAL")
-        print("Dung dung logo file: " + (row.get("logo") or ""))
-        print("Mau poster: " + (row.get("color_pri") or "") +
-              " + " + (row.get("color_sec") or ""))
-        print("Font: " + (row.get("fonts") or ""))
-        print("Giong caption: " + (row.get("voice") or ""))
-        print("Bo cuc: " + (row.get("layout") or ""))
-        print("Phong cach anh: " + (row.get("image_style") or ""))
-        print("Cam: " + (row.get("donts") or ""))
-        print("HET_KIT_VISUAL")
-        print_chan_trang(row, tag)
-        return 0
+        return print_next_output(row, tag, angle, st)
 
     connected_only = "--all-pages" not in argv
     no_verify = "--no-verify" in argv
@@ -805,47 +952,7 @@ def main(argv):
     st["pending_angle"][row["page_id"]] = angle
     st["last_angle"] = angle
     save_state(st)
-    print("NEXT=1")
-    print("page_id=" + row["page_id"])
-    print("ten=" + row["name"])
-    print("slug=" + row["slug"])
-    print("kit=" + row["file"])
-    print("kit_path=wiki/brand-kits/" + row["file"])
-    print("course_path=wiki/courses/" + tag + ".md")
-    print("skill_path=skills/dang-bai-facebook/SKILL.md")
-    print("the=" + tag)
-    print("angle=" + angle)
-    print("angle_label=" + ANGLE_LABELS.get(angle, angle))
-    print("hotline=" + (row["hotline"] or ""))
-    print("email=" + (row["email"] or ""))
-    print("web=" + (row["web"] or ""))
-    branches = get_page_branches(row, tag)
-    print("dia_chi=" + " | ".join(branches))
-    print("folder=attachments/dataset/" + tag + "/")
-    print(
-        "luat_anh=album 5-8 anh neu du dataset: photos[0]=cover AI moi, photos[1..]=anh that dung folder; chi fb_page_photo khi khong du anh")
-    print("doc_he_thong=Đọc skills/dang-bai-facebook/SKILL.md, wiki/brand-kits/" + row["file"] + ", wiki/courses/" + tag + ".md")
-    print("logo=" + (row.get("logo") or ""))
-    print("logo_white=" + (row.get("logo_white") or ""))
-    print("mau_chinh=" + (row.get("color_pri") or ""))
-    print("mau_phu=" + (row.get("color_sec") or ""))
-    print("font=" + (row.get("fonts") or ""))
-    print("giong=" + (row.get("voice") or ""))
-    print("bo_cuc=" + (row.get("layout") or ""))
-    print("phong_cach_anh=" + (row.get("image_style") or ""))
-    print("cam=" + (row.get("donts") or ""))
-    print("KIT_VISUAL")
-    print("Dung dung logo file: " + (row.get("logo") or ""))
-    print("Mau poster: " + (row.get("color_pri") or "") +
-          " + " + (row.get("color_sec") or ""))
-    print("Font: " + (row.get("fonts") or ""))
-    print("Giong caption: " + (row.get("voice") or ""))
-    print("Bo cuc: " + (row.get("layout") or ""))
-    print("Phong cach anh: " + (row.get("image_style") or ""))
-    print("Cam: " + (row.get("donts") or ""))
-    print("HET_KIT_VISUAL")
-    print_chan_trang(row, tag)
-    return 0
+    return print_next_output(row, tag, angle, st)
 
 
 if __name__ == "__main__":

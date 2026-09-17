@@ -917,6 +917,12 @@ COURSE_SPECS = {
         "forbidden": ["autocad", "cad", "vekythuat", "ve-ky-thuat", "solidworks", "ketoan", "ke-toan", "ke_toan", "misa", "tax"],
         "display": "Tin học & Lập trình Trẻ em",
     },
+    "game-bsn": {
+        "folder": "game-bsn",
+        "aliases": ["game", "bsn", "game-bsn", "game-gia-re", "steam", "offline", "gamegiarebsn"],
+        "forbidden": ["autocad", "cad", "vekythuat", "ve-ky-thuat", "solidworks", "ketoan", "ke-toan", "ke_toan", "misa", "tax", "tinhoc", "tin-hoc", "vanphong", "office", "word", "excel", "tuyensinh", "tuyen-sinh", "khaigiang", "khai-giang", "chungkhoan"],
+        "display": "Game Giá Rẻ BSN (Kho Game Steam Offline & Bản Quyền)",
+    },
 }
 
 
@@ -945,7 +951,16 @@ def _auto_prepare_album(course, cover_ref, cctx):
     Bảo đảm 100% đúng khóa học qua Strict Asset Guard."""
     from pathlib import Path
     import random
+    import re
     roots = _media_roots(cctx)
+    course_str = str(course or "").strip()
+    sub_game = ""
+    if "/" in course_str or "\\" in course_str:
+        parts = [p.strip() for p in re.split(r"[/\\]+", course_str) if p.strip()]
+        course = parts[0]
+        if len(parts) > 1:
+            sub_game = parts[1]
+
     ckey, spec = _detect_course(course)
 
     cover_path = None
@@ -988,6 +1003,23 @@ def _auto_prepare_album(course, cover_ref, cctx):
 
     if not dataset_dir or not dataset_dir.is_dir():
         return None, f"ERROR: Không tìm thấy thư mục dataset cho khóa học '{course}'."
+
+    # Hỗ trợ tựa game con riêng biệt (Single Game Subfolder):
+    # Đảm bảo toàn bộ 5-7 ảnh screenshot trong album đều thuộc về ĐÚNG 1 tựa game
+    if sub_game:
+        cand_sub = dataset_dir / sub_game
+        if cand_sub.is_dir():
+            dataset_dir = cand_sub
+        else:
+            clean_sub = sub_game.lower().replace("-", "").replace("_", "")
+            for sdir in dataset_dir.iterdir():
+                if sdir.is_dir() and clean_sub in sdir.name.lower().replace("-", "").replace("_", ""):
+                    dataset_dir = sdir
+                    break
+    elif ckey == "game-bsn":
+        game_subdirs = [sd for sd in dataset_dir.iterdir() if sd.is_dir() and not sd.name.startswith(("_", "."))]
+        if game_subdirs:
+            dataset_dir = random.choice(game_subdirs)
 
     # Lọc pool ảnh từ folder dataset: loại trừ copy, trùng, và đặc biệt loại trừ forbidden keywords!
     pool = []
