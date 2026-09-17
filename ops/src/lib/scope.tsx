@@ -96,7 +96,7 @@ export const CareScopeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const scopeLabel: string = (() => {
     if (scope === 'brand') {
-      return scopeBrand === 'bsn' ? 'Nhóm Game BSN' : 'Nhóm Sao Việt'
+      return scopeBrand === 'bsn' ? 'Nhóm Game BSN' : 'Nhóm đào tạo'
     }
     if (scope === 'page' && scopePageId) {
       const p = eligiblePages.find((x) => (x.page_id || x.id) === scopePageId)

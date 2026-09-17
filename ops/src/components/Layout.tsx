@@ -85,7 +85,11 @@ export const Layout: React.FC<LayoutProps> = ({ currentTab, onSelectTab, childre
       label: 'Hộp thư & Nháp',
       icon: Inbox,
       show: true,
-      badge: careState?.stats?.pending_drafts || 0,
+      badge:
+        (careState?.stats?.pending_comment_drafts ?? 0) +
+          (careState?.stats?.pending_message_drafts ?? 0) ||
+        careState?.stats?.pending_drafts ||
+        0,
     },
     { id: 'customers', label: 'Khách hàng CRM', icon: Users, show: true },
     { id: 'tasks', label: 'Việc cần làm', icon: CheckSquare, show: true },
@@ -104,11 +108,11 @@ export const Layout: React.FC<LayoutProps> = ({ currentTab, onSelectTab, childre
             {/* Logo & Title */}
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-saoviet-600 to-saoviet-400 flex items-center justify-center text-white font-black text-xl shadow-md shadow-saoviet-200">
-                SV
+                JO
               </div>
               <div>
                 <div className="flex items-center space-x-2">
-                  <span className="font-extrabold text-slate-900 text-lg tracking-tight">SAO VIỆT</span>
+                  <span className="font-extrabold text-slate-900 text-lg tracking-tight">JAVIS</span>
                   <span className="text-xs font-semibold px-2 py-0.5 rounded bg-saoviet-100 text-saoviet-800 uppercase tracking-wider">
                     OPS
                   </span>

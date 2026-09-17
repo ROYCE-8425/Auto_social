@@ -35,7 +35,7 @@ def test_ops_page_served(client):
     c, _ = client
     resp = c.get("/ops")
     assert resp.status_code == 200
-    assert "Sao Việt Ops" in resp.text or "<div id=\"root\">" in resp.text
+    assert "Javis Ops" in resp.text or "<div id=\"root\">" in resp.text
 
 
 def test_ops_login_and_logout(client):
@@ -68,7 +68,7 @@ def test_ops_login_and_logout(client):
     # Staff được xem landing `/`; cấm buồng lái `/app`
     res_landing = c.get("/")
     assert res_landing.status_code == 200
-    assert "Sao Việt Ops" in res_landing.text
+    assert "Javis Ops" in res_landing.text
     res_console = c.get("/app")
     assert res_console.status_code == 403
     assert "Chỉ chủ máy mới được truy cập console điều khiển" in res_console.text

@@ -15,7 +15,7 @@ def client():
 def test_root_is_landing(client):
     r = client.get("/")
     assert r.status_code == 200
-    assert "Sao Việt Ops" in r.text
+    assert "Javis Ops" in r.text
     assert "Não AI phía sau" in r.text
     assert "/ops" in r.text
     assert "/app" in r.text
@@ -24,7 +24,7 @@ def test_root_is_landing(client):
 def test_chao_same_landing(client):
     r = client.get("/chao")
     assert r.status_code == 200
-    assert "Sao Việt Ops" in r.text
+    assert "Javis Ops" in r.text
 
 
 def test_app_is_javis_console(client):

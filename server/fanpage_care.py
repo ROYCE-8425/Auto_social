@@ -1092,8 +1092,21 @@ class FanpageCareFeature:
                     policy_context={"action": "messenger_reply", "mode": eff_m, "class_name": class_name},
                 )
                 if not str(send_res).startswith("ERROR:"):
+                    now = time.time()
+                    store.record_event({
+                        "kind": "echo",
+                        "platform": "messenger",
+                        "page_id": pid,
+                        "object_id": f"auto_reply_{psid}_{int(now)}",
+                        "thread_id": psid,
+                        "from_id": pid,
+                        "from_name": "Javis AI",
+                        "body": reply_text,
+                        "class": "auto_reply",
+                        "created_ts": now,
+                    })
                     store.record_action(ev_id, "send", psid, eff_m, "care-worker")
-                    store.update_messaging_window(pid, psid, is_user=False)
+                    store.update_messaging_window(pid, psid, is_user=False, page_ts=now)
                     out["replied"] = True
                 else:
                     store.create_draft(ev_id, pid, psid, reply_text, class_name)
@@ -1341,7 +1354,20 @@ class FanpageCareFeature:
             store.update_draft_status(draft_id, "sent")
             store.record_action(d.get("event_id"), "send" if is_msg else "reply", cid, "manual", "user")
             if is_msg:
-                store.update_messaging_window(pid, cid, is_user=False)
+                now = time.time()
+                store.record_event({
+                    "kind": "echo",
+                    "platform": "messenger",
+                    "page_id": pid,
+                    "object_id": f"send_draft_{cid}_{int(now)}",
+                    "thread_id": cid,
+                    "from_id": pid,
+                    "from_name": "Nhân viên Fanpage",
+                    "body": msg,
+                    "class": "manual_reply",
+                    "created_ts": now,
+                })
+                store.update_messaging_window(pid, cid, is_user=False, page_ts=now)
             store.increment_rate_count(pid, hour_key)
             return {"ok": True, "status": "sent", "channel": "messenger" if is_msg else "comment"}
 

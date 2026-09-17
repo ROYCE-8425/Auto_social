@@ -39,10 +39,10 @@ export const App: React.FC = () => {
     return (
       <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center space-y-4">
         <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-saoviet-600 to-saoviet-400 flex items-center justify-center text-white font-black text-2xl animate-pulse shadow-xl shadow-saoviet-500/20">
-          SV
+          JO
         </div>
         <p className="text-xs text-slate-400 font-semibold tracking-wider uppercase">
-          Đang nạp dữ liệu Sao Việt Ops...
+          Đang nạp Javis Ops...
         </p>
       </div>
     )

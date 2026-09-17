@@ -59,12 +59,7 @@ export const Trends: React.FC = () => {
           branchCounts[b] = (branchCounts[b] || 0) + 1
         })
         const branches = Object.entries(branchCounts).map(([name, value]) => ({ name, value }))
-        setBranchData(branches.length ? branches : [
-          { name: 'Cơ sở Quận 10', value: 12 },
-          { name: 'Cơ sở Thủ Đức', value: 8 },
-          { name: 'Cơ sở Gò Vấp', value: 5 },
-          { name: 'Chưa gắn cơ sở', value: 3 },
-        ])
+        setBranchData(branches)
 
         // 2. Group comments/messages by intent or classification
         const events = inboxRes?.events || []
@@ -74,23 +69,21 @@ export const Trends: React.FC = () => {
           intentCounts[it] = (intentCounts[it] || 0) + 1
         })
         const intents = Object.entries(intentCounts).map(([name, value]) => ({ name, value }))
-        setIntentData(intents.length ? intents : [
-          { name: 'Hỏi học phí', value: 24 },
-          { name: 'Lịch khai giảng', value: 16 },
-          { name: 'Tư vấn lộ trình', value: 12 },
-          { name: 'Đăng ký học thử', value: 8 },
-        ])
+        setIntentData(intents)
 
-        // 3. Activity trends
-        const days = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ Nhật']
-        setDailyActivity(
-          days.map((d) => ({
-            day: d,
-            comments: Math.floor(18 + Math.random() * 25),
-            leads: Math.floor(4 + Math.random() * 10),
-            replied: Math.floor(15 + Math.random() * 20),
-          }))
-        )
+        const dayNames = ['Chủ Nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7']
+        const buckets: Record<string, { comments: number; leads: number; replied: number }> = {}
+        dayNames.forEach((d) => { buckets[d] = { comments: 0, leads: 0, replied: 0 } })
+        events.forEach((e: any) => {
+          const ts = Number(e.created_ts) || 0
+          if (!ts) return
+          const label = dayNames[new Date(ts * 1000).getDay()]
+          const b = buckets[label]
+          if (e.kind === 'comment') b.comments += 1
+          if (e.kind === 'message') b.comments += 1
+          if (e.class === 'lead') b.leads += 1
+        })
+        setDailyActivity(dayNames.map((d) => ({ day: d, ...buckets[d] })))
       } finally {
         setLoading(false)
       }
@@ -116,7 +109,7 @@ export const Trends: React.FC = () => {
   const costUsd = usage?.kpi?.cost_est ?? usage?.cost_usd ?? 0
   const convRate = stats?.events_24h && stats.events_24h > 0
     ? ((stats.leads_24h / stats.events_24h) * 100).toFixed(1)
-    : '28.5'
+    : '0'
 
   return (
     <div className="space-y-6">
@@ -125,7 +118,7 @@ export const Trends: React.FC = () => {
         <div>
           <h1 className="text-xl font-bold text-slate-900 tracking-tight">Xu Hướng & Báo Cáo Vận Hành</h1>
           <p className="text-xs text-slate-500 mt-0.5">
-            Tổng hợp dữ liệu tương tác khách hàng, phân bổ theo cơ sở và thống kê tài nguyên Javis.
+            Số thật từ Care: comment, IB, lead, token. Không vẽ số giả.
           </p>
         </div>
 

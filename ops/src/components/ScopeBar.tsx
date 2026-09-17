@@ -65,7 +65,7 @@ export const ScopeBar: React.FC = () => {
             </span>
           </button>
 
-          {/* Nhóm Sao Việt */}
+          {/* Nhóm đào tạo */}
           <button
             type="button"
             onClick={() => setScope('brand', 'saoviet')}
@@ -77,7 +77,7 @@ export const ScopeBar: React.FC = () => {
           >
             <GraduationCap className="w-3.5 h-3.5" />
             {isSaoViet && <Check className="w-3 h-3 text-white" />}
-            <span>Nhóm Sao Việt</span>
+            <span>Nhóm đào tạo</span>
             <span
               className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
                 isSaoViet ? 'bg-saoviet-700 text-white' : 'bg-saoviet-100 text-saoviet-800'
@@ -108,7 +108,7 @@ export const ScopeBar: React.FC = () => {
               </option>
               {eligiblePages.map((p) => {
                 const pid = p.page_id || p.id
-                const brandLabel = p.brand === 'bsn' ? '[BSN]' : '[Sao Việt]'
+                const brandLabel = p.brand === 'bsn' ? '[BSN]' : '[Đào tạo]'
                 return (
                   <option key={pid} value={pid} className="text-slate-900 bg-white">
                     {brandLabel} {p.name}

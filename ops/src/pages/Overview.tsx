@@ -275,12 +275,12 @@ export const Overview: React.FC<OverviewProps> = ({ onNavigate }) => {
 
     if (activeBrand === 'saoviet') {
       return {
-        badge: 'Đào Tạo Tin Học Sao Việt',
+        badge: 'Thương hiệu đào tạo',
         badgeIcon: GraduationCap,
         badgeColor: 'text-saoviet-400',
-        title: scope === 'page' ? scopeLabel : 'Trung Tâm Vận Hành Sao Việt',
+        title: scope === 'page' ? scopeLabel : 'Trung tâm vận hành đa thương hiệu',
         desc: isCareActive
-          ? 'Javis đang lắng nghe tương tác fanpage và chuẩn bị câu trả lời theo giáo trình Sao Việt.'
+          ? 'Javis đang lắng nghe fanpage và soạn nháp theo brand kit của từng thương hiệu.'
           : 'Javis Care hiện đang tạm tắt. Bật công tắc Care tổng bên dưới để bắt đầu lắng nghe tương tác.',
       }
     }
@@ -901,7 +901,7 @@ export const Overview: React.FC<OverviewProps> = ({ onNavigate }) => {
             <div className="flex items-center space-x-2 text-slate-800 font-bold text-xs mb-2">
               <Calendar className="w-4 h-4 text-saoviet-600" />
               <span>
-                {activeBrand === 'bsn' ? 'Quy trình CSKH Game BSN' : 'Quy trình CSKH Sao Việt'}
+                {activeBrand === 'bsn' ? 'Quy trình CSKH Game BSN' : 'Quy trình CSKH (đào tạo)'}
               </span>
             </div>
             <ul className="text-xs text-slate-600 space-y-2 list-disc list-inside">
@@ -986,7 +986,7 @@ export const Overview: React.FC<OverviewProps> = ({ onNavigate }) => {
                               : 'bg-saoviet-50 text-saoviet-700 border-saoviet-200'
                           }`}
                         >
-                          {p.brand === 'bsn' ? 'BSN' : 'Sao Việt'}
+                          {p.brand === 'bsn' ? 'BSN' : 'Đào tạo'}
                         </span>
                         <div>
                           <span className="font-bold text-slate-900 block">{p.name}</span>

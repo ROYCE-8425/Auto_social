@@ -111,6 +111,16 @@ export interface CareConversation {
   last_body?: string
   last_class?: string
   last_event_ts?: number
+  last_kind?: string
+  last_sender?: 'customer' | 'page' | string
+  is_unreplied?: boolean
+  waiting_since?: number
+  latest_activity_ts?: number
+  pending_draft?: {
+    id: number
+    proposed: string
+    created_ts?: number
+  } | null
 }
 
 export interface CareCustomer {

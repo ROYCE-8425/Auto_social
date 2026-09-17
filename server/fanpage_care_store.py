@@ -1102,14 +1102,14 @@ def get_recent_conversations(
     limit: int = 50,
     db_path: Path | str | None = None,
 ) -> list[dict[str, Any]]:
-    """Danh sách các cuộc hội thoại Messenger gần đây kèm tên khách và trạng thái takeover."""
+    """Danh sách các cuộc hội thoại Messenger gần đây kèm tên khách, trạng thái chưa phản hồi/đã phản hồi, và tin nhắn mới nhất."""
     init_db(db_path)
     with get_connection(db_path) as conn:
         if page_id:
             rows = conn.execute(
                 "SELECT page_id, psid, last_user_ts, last_page_ts, takeover_until FROM messaging_windows "
                 "WHERE page_id = ? "
-                "ORDER BY COALESCE(last_user_ts,0) DESC, COALESCE(last_page_ts,0) DESC LIMIT ?",
+                "ORDER BY MAX(COALESCE(last_user_ts,0), COALESCE(last_page_ts,0)) DESC LIMIT ?",
                 (str(page_id), int(limit)),
             ).fetchall()
         elif page_ids is not None:
@@ -1119,13 +1119,13 @@ def get_recent_conversations(
             rows = conn.execute(
                 f"SELECT page_id, psid, last_user_ts, last_page_ts, takeover_until FROM messaging_windows "
                 f"WHERE page_id IN ({p_holders}) "
-                f"ORDER BY COALESCE(last_user_ts,0) DESC, COALESCE(last_page_ts,0) DESC LIMIT ?",
+                f"ORDER BY MAX(COALESCE(last_user_ts,0), COALESCE(last_page_ts,0)) DESC LIMIT ?",
                 (*[str(x) for x in page_ids], int(limit)),
             ).fetchall()
         else:
             rows = conn.execute(
                 "SELECT page_id, psid, last_user_ts, last_page_ts, takeover_until FROM messaging_windows "
-                "ORDER BY COALESCE(last_user_ts,0) DESC, COALESCE(last_page_ts,0) DESC LIMIT ?",
+                "ORDER BY MAX(COALESCE(last_user_ts,0), COALESCE(last_page_ts,0)) DESC LIMIT ?",
                 (int(limit),),
             ).fetchall()
 
@@ -1136,7 +1136,7 @@ def get_recent_conversations(
             sid = d["psid"]
 
             last = conn.execute(
-                "SELECT body, class, created_ts, from_name FROM events "
+                "SELECT body, class, created_ts, from_name, from_id, kind FROM events "
                 "WHERE page_id = ? AND (from_id = ? OR thread_id = ?) AND kind IN ('message','echo') "
                 "ORDER BY created_ts DESC LIMIT 1",
                 (pid, sid, sid),
@@ -1144,7 +1144,51 @@ def get_recent_conversations(
             if last:
                 d["last_body"] = last["body"]
                 d["last_class"] = last["class"]
-                d["last_event_ts"] = last["created_ts"]
+                d["last_event_ts"] = float(last["created_ts"] or 0)
+                d["last_kind"] = last["kind"]
+                d["last_from_id"] = last["from_id"]
+                d["last_from_name"] = last["from_name"]
+            else:
+                d["last_event_ts"] = 0.0
+
+            u_ts = float(d.get("last_user_ts") or 0)
+            p_ts = float(d.get("last_page_ts") or 0)
+            ev_ts = float(d.get("last_event_ts") or 0)
+
+            # Xác định ai là người nhắn tin cuối cùng
+            if d.get("last_kind") == "echo" or (last and str(last["from_id"]) == str(pid)):
+                d["last_sender"] = "page"
+            elif d.get("last_kind") == "message" or (last and str(last["from_id"]) == str(sid)):
+                d["last_sender"] = "customer"
+            else:
+                d["last_sender"] = "customer" if u_ts > p_ts else "page"
+
+            # Phân biệt Chưa phản hồi vs Đã chăm sóc/phản hồi
+            # Chưa phản hồi: Khách đã gửi tin nhắn nhưng Page/Javis chưa gửi tin phản hồi sau đó
+            if d["last_sender"] == "customer" or (u_ts > p_ts and u_ts > 0):
+                d["is_unreplied"] = True
+                d["waiting_since"] = u_ts or ev_ts
+            else:
+                d["is_unreplied"] = False
+                d["waiting_since"] = 0.0
+
+            d["latest_activity_ts"] = max(u_ts, p_ts, ev_ts)
+
+            # Lấy bản nháp Javis gợi ý đang chờ duyệt nếu có
+            draft_row = conn.execute(
+                "SELECT id, proposed, status, created_ts FROM drafts "
+                "WHERE page_id = ? AND target_id = ? AND status = 'pending' "
+                "ORDER BY id DESC LIMIT 1",
+                (pid, sid),
+            ).fetchone()
+            if draft_row:
+                d["pending_draft"] = {
+                    "id": draft_row["id"],
+                    "proposed": draft_row["proposed"],
+                    "created_ts": draft_row["created_ts"],
+                }
+            else:
+                d["pending_draft"] = None
 
             # Lấy tên khách hàng
             name_row = conn.execute(
@@ -1171,6 +1215,9 @@ def get_recent_conversations(
                 d["customer_name"] = f"Khách Messenger {sid[-4:] if len(sid) >= 4 else sid}"
 
             out.append(d)
+
+        # Sắp xếp tuyệt đối: Tin nhắn mới nhất (khách gửi HOẶC page/Javis rep) luôn luôn lên đầu danh sách
+        out.sort(key=lambda x: float(x.get("latest_activity_ts") or 0), reverse=True)
         return out
 
 

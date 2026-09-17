@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import {
   MessageSquare,
   Send,
@@ -39,10 +39,12 @@ export const Inbox: React.FC = () => {
   const [stats, setStats] = useState<CareStats | null>(null)
   const [conversations, setConversations] = useState<CareConversation[]>([])
   const [filterView, setFilterView] = useState<'pending' | 'events'>('pending')
+  const [messengerStatusFilter, setMessengerStatusFilter] = useState<'all' | 'unreplied' | 'replied' | 'takeover'>('all')
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [loading, setLoading] = useState<boolean>(true)
   const [actionLoading, setActionLoading] = useState<string | number | null>(null)
   const [actionMsg, setActionMsg] = useState<{ id: string | number; msg: string; type: 'success' | 'error' } | null>(null)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
 
   // Sync activeSubTab when URL hash changes (e.g. from Overview links)
   useEffect(() => {
@@ -193,12 +195,61 @@ export const Inbox: React.FC = () => {
     }
   }
 
-  const handleSendDraft = async (draft: CareDraft) => {
+  const formatWaitDuration = (sinceTs?: number) => {
+    if (!sinceTs) return 'vừa xong'
+    const diffSec = Math.max(0, Math.floor(Date.now() / 1000 - sinceTs))
+    if (diffSec < 60) return `${diffSec} giây`
+    if (diffSec < 3600) return `${Math.floor(diffSec / 60)} phút`
+    if (diffSec < 86400) return `${Math.floor(diffSec / 3600)} giờ`
+    return `${Math.floor(diffSec / 86400)} ngày`
+  }
+
+  const handleSendDraft = async (draft: { id: number; proposed?: string; target_id?: string; from_id?: string }) => {
     setActionLoading(draft.id)
     try {
       const res = await api.sendDraft(draft.id)
       if (res.ok) {
         setActionMsg({ id: draft.id, msg: 'Đã gửi phản hồi ra Facebook thành công!', type: 'success' })
+        const nowSec = Date.now() / 1000
+        // Optimistically update conversations
+        setConversations((prev) =>
+          prev.map((conv) => {
+            if (
+              conv.psid === draft.target_id ||
+              conv.psid === draft.from_id ||
+              (conv.pending_draft && conv.pending_draft.id === draft.id)
+            ) {
+              return {
+                ...conv,
+                is_unreplied: false,
+                last_sender: 'page',
+                last_page_ts: nowSec,
+                latest_activity_ts: nowSec,
+                pending_draft: null,
+              }
+            }
+            return conv
+          })
+        )
+        // Optimistically remove pending draft
+        setDrafts((prev) => prev.filter((d) => d.id !== draft.id))
+        // If chat modal is open, append echo event
+        if (selectedConv && (selectedConv.psid === draft.target_id || selectedConv.psid === draft.from_id)) {
+          const newEv: CareEvent = {
+            id: Date.now(),
+            kind: 'echo',
+            platform: 'messenger',
+            page_id: selectedConv.page_id,
+            object_id: `msg_${Date.now()}`,
+            thread_id: selectedConv.psid,
+            from_id: selectedConv.page_id,
+            from_name: 'Javis AI (Bot)',
+            body: draft.proposed || '',
+            class: 'auto_reply',
+            created_ts: nowSec,
+          }
+          setThreadEvents((prev) => [...prev, newEv])
+        }
       } else {
         setActionMsg({ id: draft.id, msg: res.error || 'Lỗi gửi phản hồi', type: 'error' })
       }
@@ -211,11 +262,20 @@ export const Inbox: React.FC = () => {
     }
   }
 
-  const handleRejectDraft = async (draft: CareDraft) => {
+  const handleRejectDraft = async (draft: { id: number }) => {
     setActionLoading(draft.id)
     try {
       await api.rejectDraft(draft.id)
       setActionMsg({ id: draft.id, msg: 'Đã bỏ qua nháp này', type: 'success' })
+      setDrafts((prev) => prev.filter((d) => d.id !== draft.id))
+      setConversations((prev) =>
+        prev.map((conv) => {
+          if (conv.pending_draft && conv.pending_draft.id === draft.id) {
+            return { ...conv, pending_draft: null }
+          }
+          return conv
+        })
+      )
       loadData()
     } catch (err: any) {
       setActionMsg({ id: draft.id, msg: err.message || 'Lỗi bỏ qua', type: 'error' })
@@ -294,9 +354,11 @@ export const Inbox: React.FC = () => {
   const handleSendDirectMessage = async () => {
     if (!selectedConv || !directMsgText.trim() || sendingDirectMsg) return
     setSendingDirectMsg(true)
+    const textToSend = directMsgText.trim()
     try {
-      const res = await api.sendDirectMessage(selectedConv.page_id, selectedConv.psid, directMsgText.trim())
+      const res = await api.sendDirectMessage(selectedConv.page_id, selectedConv.psid, textToSend)
       if (res.ok) {
+        const nowSec = Date.now() / 1000
         const newEv: CareEvent = {
           id: Date.now(),
           kind: 'echo',
@@ -306,12 +368,28 @@ export const Inbox: React.FC = () => {
           thread_id: selectedConv.psid,
           from_id: selectedConv.page_id,
           from_name: 'Nhân viên Fanpage',
-          body: directMsgText.trim(),
+          body: textToSend,
           class: 'manual_reply',
-          created_ts: Date.now() / 1000,
+          created_ts: nowSec,
         }
         setThreadEvents((prev) => [...prev, newEv])
         setDirectMsgText('')
+        // Optimistically update conversation
+        setConversations((prev) =>
+          prev.map((conv) => {
+            if (conv.page_id === selectedConv.page_id && conv.psid === selectedConv.psid) {
+              return {
+                ...conv,
+                is_unreplied: false,
+                last_sender: 'page',
+                last_page_ts: nowSec,
+                latest_activity_ts: nowSec,
+                pending_draft: null,
+              }
+            }
+            return conv
+          })
+        )
         await loadData(platformFilter, pageFilter)
       } else {
         alert(res.error || 'Lỗi gửi tin nhắn')
@@ -322,6 +400,13 @@ export const Inbox: React.FC = () => {
       setSendingDirectMsg(false)
     }
   }
+
+  // Auto-scroll chat modal to bottom
+  useEffect(() => {
+    if (selectedConv && messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' })
+    }
+  }, [threadEvents, selectedConv])
 
   // Strict separation: no heuristics, driven 100% by API kind and activeSubTab
   const pendingDrafts = drafts.filter((d) => d.status === 'pending')
@@ -351,6 +436,41 @@ export const Inbox: React.FC = () => {
       e.body?.toLowerCase().includes(q) ||
       e.object_id?.includes(q) ||
       e.class?.toLowerCase().includes(q)
+    )
+  })
+
+  // Messenger conversations sorting (latest activity always first)
+  const sortedConversations = [...conversations].sort((a, b) => {
+    const tsA = a.latest_activity_ts || Math.max(a.last_user_ts || 0, a.last_page_ts || 0)
+    const tsB = b.latest_activity_ts || Math.max(b.last_user_ts || 0, b.last_page_ts || 0)
+    return tsB - tsA
+  })
+
+  const unrepliedConvsCount = conversations.filter(
+    (c) => c.is_unreplied || c.last_sender === 'customer' || ((c.last_user_ts || 0) > (c.last_page_ts || 0))
+  ).length
+  const repliedConvsCount = conversations.filter(
+    (c) => !c.is_unreplied && ((c.last_page_ts || 0) >= (c.last_user_ts || 0))
+  ).length
+  const takeoverConvsCount = conversations.filter(
+    (c) => Boolean(c.takeover_until && c.takeover_until > Date.now() / 1000)
+  ).length
+
+  const filteredConversations = sortedConversations.filter((conv) => {
+    const isTakeover = Boolean(conv.takeover_until && conv.takeover_until > Date.now() / 1000)
+    const isUnreplied =
+      conv.is_unreplied || conv.last_sender === 'customer' || ((conv.last_user_ts || 0) > (conv.last_page_ts || 0))
+
+    if (messengerStatusFilter === 'unreplied' && !isUnreplied) return false
+    if (messengerStatusFilter === 'replied' && isUnreplied) return false
+    if (messengerStatusFilter === 'takeover' && !isTakeover) return false
+
+    if (!searchQuery.trim()) return true
+    const q = searchQuery.toLowerCase()
+    return (
+      (conv.customer_name || '').toLowerCase().includes(q) ||
+      conv.psid.includes(q) ||
+      (conv.last_body || '').toLowerCase().includes(q)
     )
   })
 
@@ -393,7 +513,9 @@ export const Inbox: React.FC = () => {
             }`}
           >
             <Bot className="w-4 h-4 text-blue-500" />
-            <span>Tin nhắn IB ({conversations.length}{(stats?.pending_message_drafts || messengerDrafts.length) > 0 ? ` · ${stats?.pending_message_drafts ?? messengerDrafts.length} gợi ý` : ''})</span>
+            <span>
+              Tin nhắn IB ({stats?.pending_message_drafts ?? messengerDrafts.length} chờ)
+            </span>
           </button>
         </div>
       </div>
@@ -540,7 +662,7 @@ export const Inbox: React.FC = () => {
                                       : 'bg-saoviet-100 text-saoviet-700'
                                   }`}
                                 >
-                                  {pageInfo.brand === 'bsn' ? 'BSN' : 'Sao Việt'}
+                                  {pageInfo.brand === 'bsn' ? 'BSN' : 'Đào tạo'}
                                 </span>
                               )}
                             </span>
@@ -730,57 +852,123 @@ export const Inbox: React.FC = () => {
       {/* SUB-TAB 2: MESSENGER CONVERSATIONS & TAKEOVER */}
       {activeSubTab === 'messenger' && (
         <div className="space-y-4">
-          <div className="flex flex-wrap items-center gap-2">
-            {can('poll_now') && (
+          {/* Top Action Bar & Status Filter */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-3.5 rounded-2xl border border-slate-200 shadow-2xs">
+            <div className="flex flex-wrap items-center gap-1.5">
               <button
                 type="button"
-                onClick={async () => {
-                  if (isPolling) return
-                  setIsPolling(true)
-                  setPollHint(null)
-                  try {
-                    const res = await api.pollNow(pageFilter || undefined, 'messenger')
-                    const r = res.result || {}
-                    setPollHint(
-                      `Hộp thư IB: ${r.messages_ingested ?? 0} tin mới · ${r.drafts_created ?? 0} nháp` +
-                        (r.page_errors?.[0]?.error ? ` · ${String(r.page_errors[0].error).slice(0, 100)}` : ''),
-                    )
-                    await loadData(platformFilter, pageFilter)
-                  } catch (err: any) {
-                    setPollHint(err.message || 'Lỗi kéo inbox')
-                  } finally {
-                    setIsPolling(false)
-                    setTimeout(() => setPollHint(null), 8000)
-                  }
-                }}
-                disabled={isPolling}
-                className="px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-600 text-white hover:bg-blue-500 disabled:opacity-50 whitespace-nowrap flex-shrink-0"
+                onClick={() => setMessengerStatusFilter('all')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  messengerStatusFilter === 'all'
+                    ? 'bg-slate-900 text-white shadow-xs'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`}
               >
-                {isPolling ? 'Đang kéo hộp thư…' : 'Kéo hộp thư IB'}
+                Tất cả ({conversations.length})
               </button>
-            )}
-            {pollHint && <span className="text-xs text-slate-500">{pollHint}</span>}
+
+              <button
+                type="button"
+                onClick={() => setMessengerStatusFilter('unreplied')}
+                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  messengerStatusFilter === 'unreplied'
+                    ? 'bg-red-600 text-white shadow-sm ring-2 ring-red-200'
+                    : 'bg-red-50 text-red-700 border border-red-200 hover:bg-red-100'
+                }`}
+              >
+                <span className={`w-2 h-2 rounded-full bg-red-500 ${unrepliedConvsCount > 0 ? 'animate-ping' : ''}`} />
+                <span>⚡ Cần phản hồi ({unrepliedConvsCount})</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setMessengerStatusFilter('replied')}
+                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  messengerStatusFilter === 'replied'
+                    ? 'bg-emerald-700 text-white shadow-xs'
+                    : 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
+                }`}
+              >
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>✓ Đã chăm sóc ({repliedConvsCount})</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setMessengerStatusFilter('takeover')}
+                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  messengerStatusFilter === 'takeover'
+                    ? 'bg-amber-600 text-white shadow-xs'
+                    : 'bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100'
+                }`}
+              >
+                <span>👤 Nhân viên trực ({takeoverConvsCount})</span>
+              </button>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              {can('poll_now') && (
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (isPolling) return
+                    setIsPolling(true)
+                    setPollHint(null)
+                    try {
+                      const res = await api.pollNow(pageFilter || undefined, 'messenger')
+                      const r = res.result || {}
+                      setPollHint(
+                        `Hộp thư IB: ${r.messages_ingested ?? 0} tin mới · ${r.drafts_created ?? 0} nháp` +
+                          (r.page_errors?.[0]?.error ? ` · ${String(r.page_errors[0].error).slice(0, 100)}` : ''),
+                      )
+                      await loadData(platformFilter, pageFilter)
+                    } catch (err: any) {
+                      setPollHint(err.message || 'Lỗi kéo inbox')
+                    } finally {
+                      setIsPolling(false)
+                      setTimeout(() => setPollHint(null), 8000)
+                    }
+                  }}
+                  disabled={isPolling}
+                  className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-blue-600 text-white hover:bg-blue-500 disabled:opacity-50 whitespace-nowrap flex-shrink-0 shadow-2xs transition-all cursor-pointer"
+                >
+                  {isPolling ? 'Đang kéo tin…' : 'Kéo hộp thư IB'}
+                </button>
+              )}
+              {pollHint && <span className="text-xs text-slate-500 max-w-xs truncate">{pollHint}</span>}
+            </div>
           </div>
-          <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 text-xs text-blue-900 flex items-start space-x-3">
-            <Bot className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-            <div>
-              <span className="font-bold block mb-0.5">Cơ chế nhường quyền tự động (Takeover 4 giờ):</span>
-              Khi nhân viên mở Meta Business Suite hoặc điện thoại để nhắn tin trực tiếp với khách, Javis sẽ tự động tạm lùi lại trong 4 tiếng để tránh trả lời trùng lặp. Khi tư vấn xong, nhân viên có thể bấm nút <b>"Javis nhận lại"</b> để kích hoạt trả lời tự động trở lại ngay lập tức.
+
+          <div className="bg-blue-50/70 border border-blue-200/80 rounded-2xl p-3.5 text-xs text-blue-900 flex items-start space-x-2.5">
+            <Bot className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
+            <div className="leading-relaxed">
+              <span className="font-bold">Quy tắc sắp xếp thông minh:</span> Cuộc trò chuyện có tin nhắn mới nhất luôn được đưa lên đầu. Tin nhắn khách gửi chưa được rep sẽ gắn nhãn <b>🔴 CHƯA PHẢN HỒI</b> kèm đếm thời gian chờ. Ngay khi Javis hoặc nhân viên phản hồi, trạng thái tự chuyển thành <b>✓ ĐÃ CHĂM SÓC</b>.
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {conversations.map((conv) => {
+            {filteredConversations.map((conv) => {
               const key = `${conv.page_id}_${conv.psid}`
               const isTakeover = Boolean(conv.takeover_until && conv.takeover_until > Date.now() / 1000)
               const in24hWindow = Boolean(conv.last_user_ts && (Date.now() / 1000 - conv.last_user_ts) < 86400)
+              const isUnreplied =
+                conv.is_unreplied ||
+                conv.last_sender === 'customer' ||
+                ((conv.last_user_ts || 0) > (conv.last_page_ts || 0))
               const isBusy = actionLoading === key
               const msg = actionMsg?.id === key ? actionMsg : null
+              const draftForConv =
+                messengerDrafts.find((d) => d.target_id === conv.psid || d.from_id === conv.psid) ||
+                conv.pending_draft
 
               return (
                 <div
                   key={key}
-                  className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm flex flex-col justify-between space-y-4"
+                  className={`rounded-2xl p-5 shadow-sm flex flex-col justify-between space-y-4 transition-all ${
+                    isUnreplied
+                      ? 'border-2 border-amber-400 bg-gradient-to-b from-amber-50/50 via-white to-white shadow-md shadow-amber-200/30 ring-1 ring-amber-300/40 hover:border-amber-500 hover:shadow-lg'
+                      : 'border border-slate-200 bg-white/95 hover:border-slate-300'
+                  }`}
                 >
                   {msg && (
                     <div
@@ -793,23 +981,39 @@ export const Inbox: React.FC = () => {
                     </div>
                   )}
 
+                  {/* Top Card Bar: Customer Info + Status Badge */}
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center space-x-3">
-                      <div className="w-11 h-11 rounded-full bg-blue-600 text-white font-bold text-base flex items-center justify-center shadow-sm">
-                        {conv.customer_name ? conv.customer_name.trim().charAt(0).toUpperCase() : <MessageCircle className="w-5 h-5 text-white" />}
+                      <div
+                        className={`w-11 h-11 rounded-full font-bold text-base flex items-center justify-center shadow-sm flex-shrink-0 ${
+                          isUnreplied
+                            ? 'bg-gradient-to-tr from-amber-500 to-red-500 text-white ring-2 ring-amber-300'
+                            : 'bg-blue-600 text-white'
+                        }`}
+                      >
+                        {conv.customer_name ? (
+                          conv.customer_name.trim().charAt(0).toUpperCase()
+                        ) : (
+                          <MessageCircle className="w-5 h-5 text-white" />
+                        )}
                       </div>
                       <div>
-                        <h3 className="font-bold text-slate-900 text-sm">
-                          {conv.customer_name || `Khách Messenger ${conv.psid.slice(-4)}`}
-                        </h3>
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-bold text-slate-900 text-sm">
+                            {conv.customer_name || `Khách Messenger ${conv.psid.slice(-4)}`}
+                          </h3>
+                        </div>
+
                         {(() => {
                           const p = getPageInfo(conv.page_id)
                           return (
                             <div className="flex items-center space-x-1.5 text-[11px] text-slate-500 mt-0.5">
-                              <span>Trang: <strong className="text-slate-700">{p?.name || conv.page_id}</strong></span>
+                              <span>
+                                Trang: <strong className="text-slate-700">{p?.name || conv.page_id}</strong>
+                              </span>
                               {p?.brand && (
                                 <span
-                                  className={`text-[9px] px-1 py-0.2 rounded font-bold ${
+                                  className={`text-[9px] px-1.5 py-0.2 rounded font-bold ${
                                     p.brand === 'bsn'
                                       ? 'bg-purple-100 text-purple-700'
                                       : 'bg-saoviet-100 text-saoviet-700'
@@ -825,97 +1029,125 @@ export const Inbox: React.FC = () => {
                       </div>
                     </div>
 
-                    {isTakeover ? (
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">
-                        Nhân viên đang trực
-                      </span>
-                    ) : (
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
-                        Javis quản lý
-                      </span>
-                    )}
+                    <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                      {isUnreplied ? (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-100 text-red-700 border border-red-200 text-xs font-bold tracking-tight animate-pulse">
+                          <span className="w-2 h-2 rounded-full bg-red-600 animate-ping" />
+                          <span>CHƯA PHẢN HỒI</span>
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-semibold">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>ĐÃ CHĂM SÓC</span>
+                        </span>
+                      )}
+
+                      {isTakeover ? (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">
+                          Nhân viên trực (4h)
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
+                          Javis Bot trực
+                        </span>
+                      )}
+                    </div>
                   </div>
 
-                  {conv.last_body && (
-                    <div className="p-3 bg-slate-50 rounded-xl text-xs text-slate-800 leading-relaxed">
-                      <span className="text-[10px] font-bold uppercase text-slate-400 mr-2">Tin mới</span>
-                      {conv.last_class && (
-                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 mr-2">{conv.last_class}</span>
-                      )}
-                      “{conv.last_body}”
+                  {/* Message Preview */}
+                  {isUnreplied ? (
+                    <div className="p-3.5 bg-amber-50/80 border border-amber-200/90 rounded-xl text-xs text-amber-950 leading-relaxed shadow-2xs">
+                      <div className="flex items-center justify-between mb-1.5 text-[11px] font-bold text-amber-800">
+                        <span className="flex items-center gap-1 text-red-600 font-extrabold">
+                          🔴 Tin nhắn khách chờ:
+                        </span>
+                        <span className="text-amber-700 font-semibold bg-amber-100/80 px-2 py-0.5 rounded-full">
+                          ⏱️ Chờ {formatWaitDuration(conv.waiting_since || conv.last_user_ts)}
+                        </span>
+                      </div>
+                      <p className="font-semibold text-slate-900 text-xs mt-1">
+                        “{conv.last_body || 'Khách vừa gửi tin nhắn mới'}”
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="p-3 bg-slate-50 border border-slate-100 rounded-xl text-xs text-slate-700 leading-relaxed">
+                      <div className="flex items-center justify-between mb-1 text-[10px] font-medium text-slate-500">
+                        <span>
+                          {conv.last_sender === 'page' ? '✓ Trang đã phản hồi:' : 'Nội dung gần nhất:'}
+                        </span>
+                        <span>{conv.latest_activity_ts ? formatTime(conv.latest_activity_ts) : ''}</span>
+                      </div>
+                      <p className="text-slate-700 italic">
+                        “{conv.last_body || 'Cuộc trò chuyện đã được phản hồi đầy đủ'}”
+                      </p>
                     </div>
                   )}
 
-                  <div className="p-3 bg-slate-50 rounded-xl text-xs text-slate-700 space-y-1">
-                    <div className="flex items-center justify-between">
-                      <span className="text-slate-500">Khách nhắn lần cuối:</span>
-                      <span className="font-semibold text-slate-800">
+                  {/* Metadata Row */}
+                  <div className="p-2.5 bg-slate-50/80 rounded-xl text-[11px] text-slate-600 grid grid-cols-2 gap-2 border border-slate-100">
+                    <div>
+                      <span className="text-slate-400 block text-[10px]">Khách nhắn lần cuối:</span>
+                      <strong className="text-slate-800">
                         {conv.last_user_ts ? formatTime(conv.last_user_ts) : 'Chưa có'}
-                      </span>
+                      </strong>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-slate-500">Trang gửi lần cuối:</span>
-                      <span className="font-semibold text-slate-800">
-                        {conv.last_page_ts ? formatTime(conv.last_page_ts) : 'Chưa có'}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-slate-500">Cửa sổ phản hồi:</span>
-                      <span className={`font-semibold ${in24hWindow ? 'text-emerald-700' : 'text-slate-500'}`}>
-                        {in24hWindow ? 'Trong 24 giờ' : 'Hết 24 giờ'}
-                      </span>
+                    <div>
+                      <span className="text-slate-400 block text-[10px]">Trang gửi lần cuối:</span>
+                      <strong className="text-slate-800">
+                        {conv.last_page_ts ? formatTime(conv.last_page_ts) : 'Chưa phản hồi'}
+                      </strong>
                     </div>
                   </div>
 
                   {/* Javis suggested reply for this conversation if any */}
-                  {(() => {
-                    const draftForConv = messengerDrafts.find(
-                      (d) => d.target_id === conv.psid || d.from_id === conv.psid
-                    )
-                    if (!draftForConv) return null
-                    const isBusyDraft = actionLoading === draftForConv.id
-                    return (
-                      <div className="p-3.5 bg-gradient-to-r from-blue-50/80 to-indigo-50/80 border border-blue-200/90 rounded-xl space-y-2">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-1.5 text-xs font-bold text-blue-900">
-                            <Sparkles className="w-4 h-4 text-blue-600 animate-pulse" />
-                            <span>Gợi ý phản hồi từ Javis</span>
-                          </div>
-                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">
-                            Chờ duyệt
-                          </span>
+                  {draftForConv && (
+                    <div className="p-3.5 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/90 rounded-xl space-y-2 shadow-2xs">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-1.5 text-xs font-bold text-blue-900">
+                          <Sparkles className="w-4 h-4 text-blue-600 animate-pulse" />
+                          <span>Gợi ý phản hồi từ Javis (AI Draft)</span>
                         </div>
-                        <p className="text-xs text-slate-800 italic leading-relaxed">
-                          "{draftForConv.proposed}"
-                        </p>
-                        <div className="flex items-center justify-end space-x-2 pt-1.5 border-t border-blue-200/60">
-                          <button
-                            onClick={() => handleRejectDraft(draftForConv)}
-                            disabled={isBusyDraft}
-                            className="px-2.5 py-1 text-[11px] font-medium text-slate-500 hover:text-red-600 rounded-lg transition-colors cursor-pointer disabled:opacity-50"
-                          >
-                            Bỏ qua
-                          </button>
-                          <button
-                            onClick={() => handleSendDraft(draftForConv)}
-                            disabled={isBusyDraft}
-                            className="flex items-center space-x-1 px-3 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-2xs transition-all cursor-pointer disabled:opacity-50"
-                          >
-                            <Send className="w-3 h-3" />
-                            <span>{isBusyDraft ? 'Đang gửi…' : 'Duyệt & Gửi tin nhắn'}</span>
-                          </button>
-                        </div>
+                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">
+                          Chờ duyệt
+                        </span>
                       </div>
-                    )
-                  })()}
+                      <p className="text-xs text-slate-800 italic leading-relaxed">
+                        "{draftForConv.proposed}"
+                      </p>
+                      <div className="flex items-center justify-end space-x-2 pt-1.5 border-t border-blue-200/60">
+                        <button
+                          onClick={() => handleRejectDraft(draftForConv)}
+                          disabled={actionLoading === draftForConv.id}
+                          className="px-2.5 py-1 text-[11px] font-medium text-slate-500 hover:text-red-600 rounded-lg transition-colors cursor-pointer disabled:opacity-50"
+                        >
+                          Bỏ qua
+                        </button>
+                        <button
+                          onClick={() => handleSendDraft(draftForConv)}
+                          disabled={actionLoading === draftForConv.id}
+                          className="flex items-center space-x-1 px-3 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-2xs transition-all cursor-pointer disabled:opacity-50"
+                        >
+                          <Send className="w-3 h-3" />
+                          <span>
+                            {actionLoading === draftForConv.id ? 'Đang gửi…' : 'Duyệt & Gửi tin nhắn'}
+                          </span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
 
+                  {/* Actions Footer */}
                   <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
                     <button
                       onClick={() => handleOpenConversation(conv)}
-                      className="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition-colors cursor-pointer"
+                      className={`flex items-center space-x-1.5 px-3.5 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                        isUnreplied
+                          ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-sm shadow-blue-200'
+                          : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                      }`}
                     >
                       <MessageCircle className="w-3.5 h-3.5" />
-                      <span>Xem chat & Trả lời</span>
+                      <span>{isUnreplied ? 'Trả lời ngay' : 'Xem lại chat'}</span>
                     </button>
 
                     <div className="flex items-center space-x-2">
@@ -935,14 +1167,16 @@ export const Inbox: React.FC = () => {
               )
             })}
 
-            {conversations.length === 0 && (
+            {filteredConversations.length === 0 && (
               <div className="col-span-2 bg-white rounded-2xl border border-slate-200 p-12 text-center text-slate-400 text-xs">
                 <Bot className="w-10 h-10 mx-auto mb-3 text-slate-300" />
-                <p className="font-semibold text-slate-700 text-sm">Chưa có tin nhắn hộp thư. Bấm Kéo hộp thư IB.</p>
+                <p className="font-semibold text-slate-700 text-sm">
+                  {messengerStatusFilter === 'unreplied'
+                    ? 'Tuyệt vời! Không có tin nhắn nào đang chờ phản hồi.'
+                    : 'Chưa có tin nhắn hộp thư phù hợp bộ lọc.'}
+                </p>
                 <p className="text-slate-500 mt-2 max-w-md mx-auto leading-relaxed">
-                  Tab này là <b>tin nhắn IB</b> qua Facebook Messenger / Business Suite.
-                  Bình luận dưới bài viết nằm ở tab <b>Bình luận bài viết</b> — hoàn toàn riêng biệt.
-                  Bấm nút <b>Kéo hộp thư IB</b> ở trên để đồng bộ tin nhắn mới nhất từ Meta.
+                  Bấm nút <b>Kéo hộp thư IB</b> ở trên để đồng bộ tin nhắn mới nhất từ Meta Graph API.
                 </p>
               </div>
             )}
@@ -1040,7 +1274,7 @@ export const Inbox: React.FC = () => {
                                 : 'bg-saoviet-100 text-saoviet-700'
                             }`}
                           >
-                            {p.brand === 'bsn' ? 'BSN' : 'Sao Việt'}
+                            {p.brand === 'bsn' ? 'BSN' : 'Đào tạo'}
                           </span>
                         )}
                         <span>· PSID: {selectedConv.psid}</span>
@@ -1099,6 +1333,7 @@ export const Inbox: React.FC = () => {
                   )
                 })
               )}
+              <div ref={messagesEndRef} />
             </div>
 
             {/* Suggested Draft Banner inside Modal */}

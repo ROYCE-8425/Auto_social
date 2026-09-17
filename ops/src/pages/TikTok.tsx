@@ -50,13 +50,13 @@ export const TikTokPage: React.FC = () => {
           </div>
           <div>
             <h1 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-              Kênh TikTok Carousel
+              Kênh TikTok
               <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
-                View-Only
+                Chỉ xem
               </span>
             </h1>
             <p className="text-sm text-slate-500">
-              Giám sát 10 bài đăng carousel 9:16 gần nhất và trạng thái vòng lặp tự động.
+              Xem acc, lịch sử đăng. Đăng thử và dán key chỉ trên Buồng lái /app.
             </p>
           </div>
         </div>
@@ -74,15 +74,14 @@ export const TikTokPage: React.FC = () => {
       </div>
 
       {/* Security notice for staff */}
+      {role !== 'owner' && (
       <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-start gap-3">
         <ShieldAlert className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-        <div className="text-xs sm:text-sm text-amber-800">
-          <p className="font-semibold mb-0.5">Phân quyền vận hành: Nhân viên & Quản lý</p>
-          <p>
-            Nhân viên chỉ có quyền <strong>xem trạng thái và nhật ký bài đăng</strong>. Chức năng đăng bài thật, tải ảnh lên kho dataset và thay đổi mã khóa PostPeer API chỉ được mở cho <strong>Chủ máy</strong> tại Buồng lái chính <code className="bg-amber-100/80 px-1 py-0.5 rounded font-mono">/app</code>. Mọi yêu cầu đăng bài trực tiếp từ tài khoản Staff sẽ bị máy chủ từ chối (403 Forbidden).
-          </p>
-        </div>
+        <p className="text-sm text-amber-800">
+          Nhân viên chỉ xem. Đăng bài và dán key PostPeer: chủ máy mở <strong>Buồng lái /app</strong> → TikTok.
+        </p>
       </div>
+      )}
 
       {error && (
         <div className="bg-rose-50 border border-rose-200 rounded-2xl p-4 flex items-center gap-3 text-rose-700 text-sm">
@@ -103,29 +102,29 @@ export const TikTokPage: React.FC = () => {
               {data?.connected ? (
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
                   <CheckCircle2 className="w-3.5 h-3.5" />
-                  Đã kết nối
+                  Đã lưu key
                 </span>
               ) : (
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200">
                   <AlertCircle className="w-3.5 h-3.5" />
-                  Chưa nối
+                  Chưa dán key
                 </span>
               )}
             </div>
             <div className="text-lg font-bold text-slate-900">
-              {data?.accounts && data.accounts.length > 0 ? (
-                data.accounts.map((a) => a.username || a.name).join(', ')
-              ) : (
-                '@seotrum'
-              )}
+              {data?.accounts && data.accounts.length > 0
+                ? data.accounts.map((a) => a.username || a.name).filter(Boolean).join(', ')
+                : data?.kits?.find((k) => k.username)?.username || 'Chưa có acc TikTok'}
             </div>
             <p className="text-xs text-slate-500 mt-1">
-              Khóa API: <span className="font-mono">{data?.masked_key || 'Chưa cấu hình'}</span>
+              {data?.connected
+                ? `Key trên máy chủ: ${data.masked_key}`
+                : 'Chủ máy dán key PostPeer trong /app → Kết nối.'}
             </p>
           </div>
           <div className="pt-4 border-t border-slate-100 mt-4 text-xs text-slate-500 flex items-center justify-between">
-            <span>Tài khoản tích hợp:</span>
-            <span className="font-semibold text-slate-700">{data?.accounts?.length || 0} nick</span>
+            <span>Acc TikTok từ API:</span>
+            <span className="font-semibold text-slate-700">{data?.accounts?.length || 0}</span>
           </div>
         </div>
 
@@ -147,17 +146,15 @@ export const TikTokPage: React.FC = () => {
                 </span>
               )}
             </div>
-            <div className="text-lg font-bold text-slate-900">
-              dang-video-tiktok-hang-ngay
-            </div>
+            <div className="text-lg font-bold text-slate-900">Đăng 1 carousel / ngày</div>
             <p className="text-xs text-slate-500 mt-1">
-              Trạng thái: {data?.loop?.status || 'Đang tắt (an toàn)'}
+              {data?.loop?.enabled ? 'Loop đang bật' : 'Loop tắt — bật trên /app khi đã đăng thử ổn'}
             </p>
           </div>
           <div className="pt-4 border-t border-slate-100 mt-4 text-xs text-slate-500 flex items-center justify-between">
-            <span>Tự chèn nhạc:</span>
+            <span>Nhạc:</span>
             <span className="font-semibold text-emerald-600 flex items-center gap-1">
-              <Music className="w-3.5 h-3.5" /> Bật (autoAddMusic)
+              <Music className="w-3.5 h-3.5" /> TikTok tự gắn
             </span>
           </div>
         </div>
@@ -200,9 +197,7 @@ export const TikTokPage: React.FC = () => {
             <h2 className="text-base font-bold text-slate-900">
               Nhật ký 10 bài đăng TikTok gần nhất
             </h2>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Dữ liệu được lưu trong tệp JSONL của máy chủ (<code className="font-mono">tiktok-posts.jsonl</code>)
-            </p>
+            <p className="text-xs text-slate-500 mt-0.5">Bài đã gửi qua PostPeer (carousel 9:16)</p>
           </div>
           <span className="text-xs font-semibold text-slate-500 bg-slate-100 px-3 py-1 rounded-full">
             {data?.recent_posts?.length || 0} bài gần đây
@@ -214,7 +209,7 @@ export const TikTokPage: React.FC = () => {
             <ImageIcon className="w-12 h-12 mx-auto mb-3 text-slate-300 stroke-1" />
             <p className="text-sm font-medium text-slate-600">Chưa có bài đăng nào được ghi nhận</p>
             <p className="text-xs text-slate-400 mt-1">
-              Chủ máy có thể bấm nút [Đăng thử] trong Buồng lái /app để đăng carousel đầu tiên.
+              Chưa đăng lần nào. Chủ máy: /app → TikTok → Đăng thử.
             </p>
           </div>
         ) : (

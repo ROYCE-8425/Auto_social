@@ -135,7 +135,7 @@ export const Customers: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
         <div>
-          <h1 className="text-xl font-bold text-slate-900 tracking-tight">Khách Hàng (Sao Việt CRM)</h1>
+          <h1 className="text-xl font-bold text-slate-900 tracking-tight">Khách hàng CRM</h1>
           <p className="text-xs text-slate-500 mt-0.5">
             Danh sách khách hàng tiềm năng đã để lại SĐT hoặc tương tác với Fanpage.
           </p>

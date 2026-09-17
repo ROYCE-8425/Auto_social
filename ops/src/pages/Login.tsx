@@ -36,10 +36,10 @@ export const Login: React.FC = () => {
         {/* Brand logo */}
         <div className="text-center">
           <div className="inline-flex w-16 h-16 rounded-2xl bg-gradient-to-tr from-saoviet-600 to-saoviet-400 items-center justify-center text-white font-black text-3xl shadow-xl shadow-saoviet-500/20 mb-4">
-            SV
+            JO
           </div>
           <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-            SAO VIỆT OPS
+            JAVIS OPS
           </h2>
           <p className="mt-2 text-sm text-slate-400">
             Hệ thống Vận hành CSKH & Quản lý Fanpage
@@ -108,7 +108,7 @@ export const Login: React.FC = () => {
 
             <div className="mt-6 pt-5 border-t border-slate-700/60 flex items-center justify-center space-x-2 text-xs text-slate-400">
               <ShieldCheck className="w-4 h-4 text-saoviet-400" />
-              <span>Phân quyền bảo mật RBAC Sao Việt</span>
+              <span>Phân quyền RBAC — nhân viên / quản lý / chủ máy</span>
             </div>
           </div>
         </div>
