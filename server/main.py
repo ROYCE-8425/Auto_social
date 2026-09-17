@@ -282,7 +282,7 @@ async def _auth_guard(request: Request, call_next):
         return await call_next(request)
 
     # 3. RBAC Policy check cho người dùng ops_session trên mọi API khác (/fanpage-care/*, /kanban, /usage/*, etc.)
-    if ops_user and ops_user.get("role") in ("staff", "manager"):
+    if ops_user:
         payload = None
         if path == "/fanpage-care/settings" and request.method.upper() == "POST":
             try:
