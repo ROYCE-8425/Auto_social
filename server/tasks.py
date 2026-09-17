@@ -932,6 +932,8 @@ CẤM [[NEEDS_INPUT]] vì 'không có tool / Royce chưa MCP'. CẤM địa ch�
             course = "ve-ky-thuat"
         elif "tre-em" in combined_text or "scratch" in combined_text or "trẻ em" in combined_text or "nhí" in combined_text:
             course = "tre-em"
+        elif "game-bsn" in combined_text or "game" in combined_text or "bsn" in combined_text or "steam" in combined_text:
+            course = "game-bsn"
         else:
             m_c = re.search(r'(?:course|khóa học|ngành)["\s:=]+([^\n\|,]+)', t, re.I)
             if m_c:

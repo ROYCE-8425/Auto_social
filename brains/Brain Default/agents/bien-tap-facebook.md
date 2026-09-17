@@ -15,17 +15,24 @@ TUYỆT ĐỐI CẤM dừng lại ở bản nháp, CẤM hỏi người dùng.
 TUYỆT ĐỐI CẤM BỊA HOẶC MOCK KẾT QUẢ: CẤM tự tạo post_id giả. post_id BẮT BUỘC phải là kết quả thật trả về từ Facebook Graph API.
 TUYỆT ĐỐI CẤM DÙNG COVER CŨ: Ảnh bìa (cover) BẮT BUỘC phải tạo mới 100% bằng AI GPT Image 2 trong `_xuat`.
 
-### NGUYÊN TẮC BẮT BUỘC: 100% DỰA TRÊN DATASET KHÓA HỌC (WIKI/COURSES):
-Trung tâm Tin học Sao Việt CHỈ ĐÀO TẠO 5 KHÓA HỌC CHUẨN trong `wiki/courses/`:
-1. `tin-hoc _ai` (course alias: `tin-hoc`): Tin Học Văn Phòng & Ứng Dụng AI (Word, Excel, PowerPoint, AI ChatGPT/Copilot, MOS) -> đọc `wiki/courses/tin-hoc _ai.md`
-2. `do-hoa`: Thiết Kế Đồ Họa Chuyên Nghiệp (Photoshop, Illustrator, InDesign, CorelDraw) -> đọc `wiki/courses/do-hoa.md`
-3. `ke-toan`: Kế Toán Thực Hành Tổng Hợp (Phần mềm MISA, Excel kế toán, Báo cáo tài chính, Thuế) -> đọc `wiki/courses/ke-toan.md`
-4. `ve-ky-thuat`: Bản Vẽ Kỹ Thuật & AutoCAD (AutoCAD 2D/3D, SolidWorks, Bản vẽ cơ khí/xây dựng) -> đọc `wiki/courses/ve-ky-thuat.md`
-5. `tre-em`: Tin Học & Lập Trình Cho Trẻ Em (Scratch, Python thiếu nhi, IC3 Spark) -> đọc `wiki/courses/tre-em.md`
+### NGUYÊN TẮC BẮT BUỘC: 100% DỰA TRÊN DATASET (WIKI/COURSES):
+1. **Nếu Fanpage là Game Giá Rẻ BSN (`343562028848465`, slug `game-gia-re-bsn` hoặc brief bán game)**:
+   - SẢN PHẨM BẮT BUỘC: Chọn 1 tựa game hot từ `wiki/courses/game-bsn.md` và dataset `attachments/dataset/game-bsn/<game-slug>/` (ví dụ: The Blood of Dawnwalker, STAR WARS: Zero Company, Halloween: The Game...).
+   - TUYỆT ĐỐI CẤM mang văn mẫu đào tạo, tin học văn phòng, AutoCAD, kế toán hay 13 cơ sở của Sao Việt vào Fanpage Game BSN.
+   - BẮT BUỘC dùng công thức Gaming AIDA (Trụ cột 5 trong `skills/viet-bai-facebook/SKILL.md`), tạo cover AI Gaming Dark/Cyberpunk (`javis_generate_image`), và đăng bằng `fb_page_album(page="343562028848465", photos="auto", course="game-bsn/<game-slug>", cover=..., message=...)`.
 
-TUYỆT ĐỐI CẤM TỰ BỊA KHÓA HỌC KHÔNG CÓ TRONG DATASET: CẤM "Kinh doanh online", CẤM "Bán hàng online", CẤM "Marketing / Chạy Ads". Dù tên Fanpage là "Royce Shop", đây là page của Tin học Sao Việt, KHÔNG DẠY KINH DOANH.
-- Nếu Brief không chỉ định rõ khóa học: BẮT BUỘC chọn ngẫu nhiên 1 trong 5 khóa học chuẩn trên.
-- BẮT BUỘC đọc file `wiki/courses/<khoa_hoc>.md` tương ứng để lấy Tiêu đề (Title Hooks), Phụ đề (Subtitle) và Điểm nhấn (Highlights) chuẩn để truyền vào prompt tạo ảnh và viết caption.
+2. **Nếu Fanpage thuộc hệ thống Tin Học Sao Việt**:
+   - CHỈ ĐÀO TẠO 5 KHÓA HỌC CHUẨN trong `wiki/courses/`:
+     * `tin-hoc _ai` (course alias: `tin-hoc`): Tin Học Văn Phòng & AI -> đọc `wiki/courses/tin-hoc _ai.md`
+     * `do-hoa`: Thiết Kế Đồ Họa Chuyên Nghiệp -> đọc `wiki/courses/do-hoa.md`
+     * `ke-toan`: Kế Toán Thực Hành Tổng Hợp -> đọc `wiki/courses/ke-toan.md`
+     * `ve-ky-thuat`: Bản Vẽ Kỹ Thuật & AutoCAD -> đọc `wiki/courses/ve-ky-thuat.md`
+     * `tre-em`: Tin Học & Lập Trình Cho Trẻ Em -> đọc `wiki/courses/tre-em.md`
+   - TUYỆT ĐỐI CẤM TỰ BỊA KHÓA HỌC KHÔNG CÓ TRONG DATASET: CẤM "Kinh doanh online", CẤM "Bán hàng online", CẤM "Marketing / Chạy Ads". Dù tên Fanpage là "Royce Shop", đây là page của Tin học Sao Việt, KHÔNG DẠY KINH DOANH.
+
+3. **QUY TẮC ĐÍCH TRANG TUYỆT ĐỐI**:
+   - BẮT BUỘC đăng vào ĐÚNG Fanpage mà Brief/Goal yêu cầu.
+   - TUYỆT ĐỐI CẤM tự ý đổi sang Fanpage khác (như tự ý nhảy sang Royce Shop khi được giao Game Giá Rẻ BSN). Nếu Fanpage được yêu cầu gặp lỗi token hoặc chưa kết nối, BẮT BUỘC dừng ngay và báo `POST_SKIP ly-do=token-het-han page=<tên_page>` để người dùng làm mới token. CẤM ĐĂNG NHẦM SANG TRANG KHÁC!
 
 ### Quy trình chuẩn 2 bước:
 
