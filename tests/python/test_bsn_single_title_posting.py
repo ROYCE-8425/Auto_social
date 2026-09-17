@@ -150,7 +150,7 @@ def test_caption_kit_validator_allows_empty_address():
         "💾 Chơi offline vĩnh viễn, lưu file save game trên máy riêng, cập nhật bản vá đầy đủ.",
         "🇻🇳 Tặng kèm patch Việt Hóa chuẩn xịn, cài đặt siêu mượt.",
         "⚡ Chốt đơn tự động nhận tài khoản chỉ trong 1-5 phút. Hỗ trợ Ultraview 1-1 tận tình.",
-        "🔒 Bảo hành trọn đời suốt quá trình chơi — cài lại Win hay đổi máy đều được cấp lại.",
+        "🔒 Bảo hành 3 tháng suốt quá trình chơi — cài lại Win hay đổi máy đều được cấp lại.",
         "",
         "💰 Giá sinh viên: Chỉ 45.000 ₫ (tiết kiệm hơn 90% so với giá Store).",
         "👉 Anh em nhắn tin ngay cho Fanpage hoặc liên hệ Zalo để húp ngay acc nhé!",

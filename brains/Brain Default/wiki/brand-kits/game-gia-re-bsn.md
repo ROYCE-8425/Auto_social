@@ -39,7 +39,7 @@ Gốc cho Fanpage Game Giá Rẻ BSN.
 ## Pháp nhân & Giới thiệu
 - Tên thương hiệu: Game Giá Rẻ BSN
 - Slogan: Game Bản Quyền Cho Người Việt
-- Giới thiệu: GamegiareBSN là shop chuyên cung cấp tài khoản Steam Offline, Key game và dịch vụ game bản quyền uy tín hàng đầu cho cộng đồng game thủ Việt Nam. Với hơn 12.000+ khách hàng tin dùng, BSN cam kết mang đến trải nghiệm game chất lượng cao, miễn phí patch Việt Hóa, bảo hành trọn đời và giá thành siêu tiết kiệm cho học sinh, sinh viên.
+- Giới thiệu: GamegiareBSN là shop chuyên cung cấp tài khoản Steam Offline, Key game và dịch vụ game bản quyền uy tín hàng đầu cho cộng đồng game thủ Việt Nam. Với hơn 12.000+ khách hàng tin dùng, BSN cam kết mang đến trải nghiệm game chất lượng cao, miễn phí patch Việt Hóa, bảo hành 3 tháng và giá thành siêu tiết kiệm cho học sinh, sinh viên.
 
 ## Danh mục Dịch vụ & Sản phẩm
 - Tài khoản Steam Offline (Chơi vĩnh viễn, không giới hạn thời gian, tải trực tiếp từ launcher Steam chính hãng)
@@ -71,8 +71,8 @@ Gốc cho Fanpage Game Giá Rẻ BSN.
 
 ## USP chuẩn từ Fanpage thực tế
 - Tải trực tiếp 100% từ launcher Steam chính hãng, an toàn tuyệt đối không virus hay mã độc
-- Miễn phí cài đặt patch Việt Hóa trọn đời, hỗ trợ Ultraview / Zalo 1-1 tận tình
-- Bảo hành trọn đời suốt quá trình chơi, hỗ trợ cấp lại nếu cài lại win hoặc nâng cấp máy tính
+- Miễn phí cài đặt patch Việt Hóa, hỗ trợ Ultraview / Zalo 1-1 tận tình
+- Bảo hành 3 tháng suốt quá trình chơi, hỗ trợ cấp lại nếu cài lại win hoặc nâng cấp máy tính
 - Mức giá sinh viên siêu hạt dẻ chỉ từ 28k - 45k (chỉ bằng một ly trà sữa)
 - Chốt đơn tự động nhận tài khoản siêu tốc trong 1-5 phút
 
@@ -117,8 +117,8 @@ Game Giá Rẻ BSN - Game Bản Quyen Cho Người Việt
 
 ## Care templates
 - dia_chi: "Dạ shop bán online qua website https://gamegiarebsn.com và hỗ trợ cài đặt từ xa qua Ultraview/Anydesk. Bạn cần hỗ trợ game gì cứ inbox hoặc liên hệ Hotline/Zalo {hotline} nhé ạ."
-- hoc_phi: "Dạ giá game bên shop cực kỳ ưu đãi và bảo hành trọn đời, bạn check inbox shop gửi chi tiết link tải và cách kích hoạt ngay nhé ạ. Hotline/Zalo: {hotline}."
-- gia_game: "Dạ giá game bên shop cực kỳ ưu đãi và bảo hành trọn đời, bạn check inbox shop gửi chi tiết link tải và cách kích hoạt ngay nhé ạ. Hotline/Zalo: {hotline}."
+- hoc_phi: "Dạ giá game bên shop cực kỳ ưu đãi và bảo hành 3 tháng, bạn check inbox shop gửi chi tiết link tải và cách kích hoạt ngay nhé ạ. Hotline/Zalo: {hotline}."
+- gia_game: "Dạ giá game bên shop cực kỳ ưu đãi và bảo hành 3 tháng, bạn check inbox shop gửi chi tiết link tải và cách kích hoạt ngay nhé ạ. Hotline/Zalo: {hotline}."
 - zalo: "Dạ bạn kết bạn Zalo {hotline} hoặc inbox trực tiếp để shop gửi link tải và hỗ trợ kích hoạt game nhanh nhất nhé ạ."
 - khen: "Dạ cảm ơn bạn đã luôn ủng hộ Game Giá Rẻ BSN! Chúc bạn chơi game thật vui vẻ nhé ạ."
 - lead_thanks: "Dạ shop đã ghi nhận thông tin, đội ngũ CSKH {hotline} sẽ liên hệ hỗ trợ bạn kích hoạt game ngay nhé ạ."

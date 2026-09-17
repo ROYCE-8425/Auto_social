@@ -504,7 +504,7 @@ def post_photos_to_tiktok(
             final_caption = (
                 f"🔥 {prod.upper()}{price} CỰC CHÁY TẠI {brand_name.upper()}! 🔥\n\n"
                 f"🎮 Tải trực tiếp Steam chính hãng, chơi mượt mà không lo giật lag.\n"
-                f"✨ Miễn phí cài đặt patch Việt Hóa 100%, bảo hành trọn đời.\n"
+                f"✨ Miễn phí cài đặt patch Việt Hóa 100%, bảo hành 3 tháng.\n"
                 f"⚡ Giá chỉ từ 28k - 45k cho anh em sinh viên trải nghiệm thả ga.\n\n"
                 f"👉 Nhắn tin ngay cho shop hoặc liên hệ Hotline/Zalo: 0877 104 996 để nhận tài khoản liền tay!\n\n"
                 f"{hashtags}"

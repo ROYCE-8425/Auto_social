@@ -182,7 +182,7 @@ Hệ thống tự động điều phối bài viết theo **4 Góc Nội Dung (C
      - `💾 Chơi offline vĩnh viễn, lưu file save game trên máy riêng, cập nhật bản vá đầy đủ.`
      - `🇻🇳 Tặng kèm patch Việt Hóa chuẩn xịn, cài đặt siêu mượt.`
      - `⚡ Chốt đơn tự động nhận tài khoản chỉ trong 1-5 phút. Có hỗ trợ Ultraview / Zalo 1-1 tận tình.`
-     - `🔒 Bảo hành trọn đời suốt quá trình chơi — cài lại Win hay đổi máy đều được hỗ trợ cấp lại ngay.`
+     - `🔒 Bảo hành 3 tháng suốt quá trình chơi — hỗ trợ cấp lại ngay nếu lỗi.`
    * **Mức giá sinh viên & CTA chốt đơn**:
      - `💰 Mức giá siêu êm: Chỉ <gia_game> (tiết kiệm hơn 90% so với giá Store).`
      - `👉 Anh em nhắn tin ngay cho Fanpage hoặc liên hệ Zalo: 0877 104 996 để húp ngay acc và link tải game tốc độ cao nhé!`

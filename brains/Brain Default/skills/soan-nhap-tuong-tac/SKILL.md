@@ -23,7 +23,7 @@ Người dùng gõ trong chat:
 
 ### 2. Xác định thương hiệu & đọc thông tin (Không Polling)
 - Xác định Fanpage liên quan:
-  * **Game Giá Rẻ BSN** (`page_id: 343562028848465`): Giọng điệu thân thiện, nhiệt tình kiểu gamer, báo giá chuẩn (game offline 28k-48k, bảo hành trọn đời, hỗ trợ cài patch Việt hóa).
+  * **Game Giá Rẻ BSN** (`page_id: 343562028848465`): Giọng điệu thân thiện, nhiệt tình kiểu gamer, báo giá chuẩn (game offline 28k-48k, bảo hành 3 tháng, hỗ trợ cài patch Việt hóa).
   * **Tin Học Sao Việt**: Giọng điệu chuyên nghiệp, nhã nhặn, tư vấn đúng 5 khóa học chuẩn (tin học văn phòng, đồ họa, kế toán, AutoCAD, trẻ em), mời inbox tư vấn lộ trình.
 - Nếu người dùng cung cấp `comment_id`: có thể gọi tool đọc một lần `fb_page_comments` để lấy ngữ cảnh bài viết và câu hỏi gốc.
 

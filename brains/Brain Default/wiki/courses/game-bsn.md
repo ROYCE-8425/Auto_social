@@ -31,7 +31,7 @@ updated: 2026-09-17
   - GIÁ CHỈ TỪ 28K
   - STEAM CHÍNH HÃNG 100%
   - VIỆT HÓA MIỄN PHÍ
-  - BẢO HÀNH TRỌN ĐỜI
+  - BẢO HÀNH 3 THÁNG
 - **Visual Styles phù hợp:** Neon Tech, Gaming Cyberpunk, Dark Fantasy, 3D Isometric Game Station, High-Impact Action Poster.
 
 ---

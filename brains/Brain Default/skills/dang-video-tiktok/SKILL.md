@@ -28,7 +28,7 @@ Chạy script `pick_next_tiktok.py`:
 - Đọc thông tin từ **khối Kênh TikTok** trong Brand Kit (hashtag, username, disable_duet, caption_mode).
 - **Phân biệt thương hiệu**:
   * **Sao Việt**: Mẹo tin học, thủ thuật Excel/Word/AI, khoá học thực chiến. Hashtag: `#TinhocSaoViet #HocExcel...`.
-  * **Game Giá Rẻ BSN**: Giới thiệu game Steam, cốt truyện, tính năng bản quyền, bảo hành trọn đời. Hashtag: `#GameGiaRe #SteamGame...`. **TUYỆT ĐỐI CẤM** dùng mẫu caption tin học / khoá học cho BSN.
+  * **Game Giá Rẻ BSN**: Giới thiệu game Steam, cốt truyện, tính năng bản quyền, bảo hành 3 tháng. Hashtag: `#GameGiaRe #SteamGame...`. **TUYỆT ĐỐI CẤM** dùng mẫu caption tin học / khoá học cho BSN.
 - **Dòng 1 (Hook giật tít)**: Câu mở đầu in hoa nổi bật, đánh đúng nỗi đau hoặc tính năng đặc sắc trong video (ví dụ: `BẬT TÍNH NĂNG NÀY TRONG EXCEL ĐỂ TIẾT KIỆM 2 TIẾNG MỖI NGÀY! 🔥`).
 - **Dòng 2–6 (Nội dung cốt lõi)**: 3 điểm lợi ích hoặc 3 bước thực hiện ngắn gọn, dùng gạch đầu dòng:
   * Bước 1 / Điểm 1: ...
