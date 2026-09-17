@@ -171,3 +171,8 @@ ops/node_modules/
 server/ops_users.json
 server/ops_sessions.json
 tmp-video-review/
+
+# Credentials & SQLite
+**/page_tokens.json
+page_tokens.json
+*.sqlite3*

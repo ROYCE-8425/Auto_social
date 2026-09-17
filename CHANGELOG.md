@@ -4,6 +4,17 @@ Lịch sử phiên bản Javis OS. Bản mới nhất ở trên cùng. Xem ngay 
 
 Định dạng: mỗi phiên bản là một khối `## [x.y.z] - ngày`, bên dưới nhóm thay đổi theo `### Thêm mới / Sửa lỗi / Cải thiện / Bảo mật`.
 
+## [1.0.0-ops] - 2026-09-17
+### Thêm mới (Lớp vận hành Javis Ops cho SME)
+- **Kiến trúc 3 cửa độc lập:**
+  - Cửa công chúng (`/`): Landing page giới thiệu giải pháp vận hành mạng xã hội.
+  - Cửa vận hành (`/ops`): Giao diện tách biệt dành cho CSKH (Staff) và Quản lý (Manager) duyệt nháp bình luận/tin nhắn, CRM, Kanban việc làm.
+  - Cửa chủ máy (`/app`): Buồng lái kỹ thuật Javis OS (Agent, Workflow, MCP, Loop). Phân quyền máy chủ chặn 403 tuyệt đối với Staff.
+- **Fanpage Care tự động:** Ingest bình luận & tin nhắn Messenger định kỳ, phân loại ý định rules-first, trích xuất SĐT, tạo hàng đợi duyệt nháp an toàn. Cơ chế takeover 4 giờ bảo vệ khi người thật can thiệp.
+- **Phân quyền RBAC:** Phân cấp vai trò Staff, Manager, Owner với middleware máy chủ thực thi nghiêm ngặt.
+- **Xuất bản TikTok PostPeer (BYO Key):** Hỗ trợ xuất bản video 9:16 và ảnh carousel với tuỳ chọn tự thêm nhạc nền bản quyền (`autoAddMusic`), phục vụ qua endpoint `/tiktok-media`.
+- **CRM đa thương hiệu:** Quản lý danh sách khách hàng tiềm năng, che SĐT bảo vệ dữ liệu, hỗ trợ nhiều Brand Kit Markdown linh hoạt cho SME.
+
 ## [0.55.13] - 2026-09-02
 ### Sửa lỗi
 - **Chat bằng model Ollama chạy trên máy nhà đã hoạt động.** Trước đây gõ gì cũng nhận lại "There's an issue with the selected model", vì Javis lặng lẽ đưa lượt chat cho Claude Code kèm tên model của Ollama. Nay lượt chat đi đúng Ollama, đủ tool và MCP như mọi bộ não khác.

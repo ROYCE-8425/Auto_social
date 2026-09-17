@@ -1,8 +1,8 @@
 <div align="center">
 
-# 🧠 Javis OS
+# 🚀 Javis Ops
 
-**AI agentic đổi được bộ não + Second Brain - chạy trên model nào bạn muốn (Claude Code, ChatGPT/Codex, Antigravity CLI, OpenRouter, OpenAI, Gemini, Anthropic API, Groq, Ollama), có giọng nói, đồ thị tri thức, và tự thông minh dần lên.**
+**Lớp vận hành mạng xã hội cho SME, tự host, mã nguồn mở. Đứng trên [Javis OS](https://github.com/blogminhquy/javis-os) (MIT).**
 
 ***Tiếng Việt** · [English](README.en.md)*
 
@@ -10,54 +10,50 @@
 
 ---
 
-## Javis là gì?
+## 🎯 Đây là gì
+Não AI (Javis) chạy nền. Nhân viên dùng `/ops`. Chủ máy dùng `/app`.
 
-Javis OS **không phải** một chatbot. Nó là một **AI agentic tự host** chạy trên máy/VPS của bạn: đọc/ghi file, gọi công cụ (MCP), chạy skill, giao việc chạy nền, tự đặt lịch - rồi gói tất cả vào một **dashboard đẹp, điều khiển bằng giọng nói**, kèm một **Second Brain** (bộ nhớ + wiki) tích luỹ tri thức theo thời gian.
+## 🚪 Ba cửa
 
-**Bộ não thì bạn chọn, và đổi lúc nào cũng được.** Mười đường dùng được ngay: **Claude Code**, **ChatGPT/Codex** và **Antigravity CLI** (dùng chính gói subscription bạn đang trả, không cần mua API riêng), **Gemini CLI · OpenRouter · OpenAI API · Google Gemini · Anthropic API · Groq · Ollama Cloud** (chỉ cần API key).
-
-> ⚠️ **Đọc trước khi cho gói subscription chạy việc nền.** Anthropic chỉ tính gói Claude Pro/Max cho việc dùng **cá nhân, thông thường** của Claude Code. Chạy nền liên tục (loop, nhắc hẹn, việc Kanban, chatbot), chạy trên VPS, hoặc nhiều người dùng chung một tài khoản đều nằm ngoài phạm vi đó, và đã có người **bị khoá tài khoản** vì lý do này. Javis không tự đọc token đăng nhập của bạn (đường đó đã gỡ ở 0.26.17) - nó chạy qua đúng binary `claude`, nhưng như vậy vẫn không làm việc chạy nền 24/7 trở thành hợp lệ. Muốn yên tâm: ở trang **Models**, đặt Claude Code chạy bằng **API key**, hoặc trỏ **model việc nền** sang một provider khác. Xem `server/claude_auth.py`.
-
-> Triết lý: **năng lực nằm ở Javis, không nằm ở model.** Mọi bộ não đều được cấp cùng bộ đồ nghề qua trung tâm kết nối (MCP Hub) chung - MCP đã đấu, tool đọc/ghi brain, skill, việc Kanban, agent/workflow/loop/nhắc hẹn. Khác biệt duy nhất: hai engine CLI chạy thêm được **lệnh máy**. Đổi từ Claude sang Gemini không làm Javis mất chức năng nào ngoài chuyện đó.
-
-Bạn đấu các **kết nối** của riêng mình vào (bán hàng/POS, quảng cáo, lịch, email, Zalo, ghi chú…) → Javis tự phát hiện và **báo cáo kinh doanh + cuộc sống** bằng số liệu thật, nói chuyện như người.
-
-### Vì sao Javis khác biệt
-
-| | Chatbot thường | **Javis OS** |
+| URL | Ai sử dụng | Công việc |
 |---|---|---|
-| Bộ não | Khoá cứng 1 model, API gọi rời từng câu | **Đổi được**: 11 nhà cung cấp, cái nào cũng đủ tool, MCP, skill, session - kể cả model chạy ngay trên máy bạn qua Ollama |
-| Trí nhớ | Quên sau mỗi phiên | **Second Brain sống** - nhớ bạn, dày lên qua từng hội thoại |
-| Dữ liệu | Bịa hoặc không có | **Số liệu thật** từ kết nối bạn đấu vào (POS, Ads, Lịch, Zalo…) |
-| Tự cải thiện | Không | **Vòng lặp tự chạy nền** + hàng đợi việc do AI tự vận hành |
-| Giao diện | Khung chat | Dashboard + đồ thị tri thức + **giọng nói rảnh tay** + Telegram |
-| Triển khai | Khoá vào 1 nhà cung cấp | **Tự host**: Hostinger 1-click / Docker / VPS bất kỳ |
+| `/` | Công chúng, khách truy cập | Trang giới thiệu (Landing Page) |
+| `/ops` | Nhân viên CSKH, Quản lý | Hộp thư duyệt nháp, CRM khách hàng, bảng việc, TikTok (xem) |
+| `/app` | Chủ máy (Owner) | Buồng lái kỹ thuật: Console, MCP, loop, agent, đăng thử TikTok |
 
-> 💡 **Triết lý:** Javis *biên dịch một lần* tri thức từ ghi chú thô → Wiki, rồi *duy trì* nó sống cùng mỗi nguồn mới. Tri thức **tích luỹ**, không tái phát hiện mỗi lần.
+## ⚡ Tính năng lớp Ops (chỉ liệt kê tính năng ĐÃ CÓ)
+- **Đăng Fanpage Graph:** Tự động đăng bài theo tỷ lệ chuẩn, album nhiều ảnh, phân giải brand kit, hỗ trợ token từng Page.
+- **Fanpage Care tự động:** Kéo bình luận và tin nhắn Messenger 24/7, phân loại ý định rules-first (học phí/giá cả, lộ trình/tư vấn, khuyến mãi...), trích xuất SĐT, quản lý hàng đợi nháp, lưu trữ CRM.
+- **Phạm vi lọc Care linh hoạt:** Áp dụng cho tất cả Page, lọc theo Brand cụ thể hoặc chỉ 1 Page duy nhất.
+- **Bộ công tắc vận hành:** Bật/tắt kéo comment, kéo tin nhắn Messenger, tự động trả lời comment, tự động gửi Messenger (mặc định ở chế độ nháp để con người duyệt).
+- **Phân quyền RBAC chặt chẽ:** 3 vai trò `staff` / `manager` / `owner`; nhân viên `staff` bị máy chủ chặn 403 tuyệt đối khi cố vào buồng lái `/app`.
+- **Xuất bản TikTok (PostPeer BYO Key):** Đăng video dọc 9:16 và bộ ảnh carousel, tự động gắn nhạc nền gợi ý (`autoAddMusic`), phục vụ media an toàn qua `/tiktok-media`.
+- **Hệ thống Brand Kit Markdown:** Quản lý tài sản thương hiệu bằng file Markdown độc lập, chạy được đa thương hiệu, không khóa cứng vào một ngành hàng hay shop cụ thể.
+
+## 🚫 Không phải
+- **Không phải** SaaS thu phí khóa vendor (Vendor lock-in).
+- **Không phải** giải pháp thay thế Facebook Graph API bằng PostPeer (chỉ dùng PostPeer làm cầu nối BYO key cho TikTok).
+- **Không phải** chatbot full-brain mở thả nổi ra ngoài cho khách tự do chat với AI.
+
+## ⏱️ Nhanh
+Triển khai bằng Docker hoặc VPS như Javis OS gốc.
+- Giao diện Landing: `http://<ip>:7777/`
+- Giao diện Vận hành: `http://<ip>:7777/ops`
+- Buồng lái Chủ máy: `http://<ip>:7777/app`
+*(Ví dụ triển khai demo: `https://trannhuy.online`)*
+
+## 🔒 Bảo mật
+- Tuyệt đối **không** commit `page_tokens.json`, `POSTPEER_API_KEY`, `.env`, `settings.json` vào git.
+- Các script tích hợp (như `scripts/connect_postpeer.py`) đọc cấu hình trực tiếp từ biến môi trường hoặc vault an toàn.
+- Xem chi tiết tại [SECURITY.md](SECURITY.md).
+
+## 📜 Ghi công & Bản quyền (Attribution)
+Javis OS © Nguyễn Minh Quý (blogminhquy), MIT License.  
+Lớp vận hành Javis Ops © 2026 contributors of Auto_social / Javis Ops, MIT License.  
+Xem chi tiết tại [NOTICE.md](NOTICE.md) và [LICENSE](LICENSE).
 
 ---
 
-## ✨ Tính năng nổi bật
-
-- 🎙️ **Trò chuyện bằng giọng nói rảnh tay** - nói, Javis nghe và trả lời bằng giọng. Chọn được nhà cung cấp giọng đọc: Edge TTS (miễn phí, mặc định), OpenAI hoặc ElevenLabs.
-- 🌌 **Đồ thị tri thức** - bộ não của bạn hiện ra thành mạng note nối nhau qua `[[wikilink]]`, bằng canvas nhẹ và chạy được ngoại tuyến.
-- 💬 **Phiên hội thoại** - lưu / mở lại / **tìm kiếm toàn văn** mọi cuộc trò chuyện cũ; phiên dài được nén tóm tắt thay vì cắt cụt trí nhớ.
-- 🗂️ **Quản lý tệp tin** - duyệt, **sửa file `.md`/`.txt` trực tiếp** trong trình duyệt, tìm file theo tên hoặc theo nội dung, tải lên/về.
-- 🧩 **Skills** - gom nhóm, tìm kiếm, **bật/tắt từng skill**, thêm/sửa/xoá, nhập/xuất gói; Javis tự xếp skill mới vào đúng nhóm.
-- 🧰 **Plugins** - thả một thư mục Python vào là có thêm **tool/hook native** cho MỌI engine, không phải sửa lõi.
-- 🤖 **Agents & Workflows** - tạo trợ lý chuyên biệt (có bộ nhớ riêng) + chuỗi tự động nhiều bước, có bước kiểm chứng.
-- ♻️ **Việc định kỳ & nhắc hẹn** - nhiều vòng lặp chạy nền song song, mỗi vòng làm đúng một việc bạn mô tả rồi tự kiểm chứng; kèm nhắc hẹn theo giờ cố định hoặc cron.
-- 🗃️ **Việc (Kanban)** - giao một "goal" bằng lời, AI tự đặc tả, chọn worker, chạy nền và chỉ gọi bạn khi có ngoại lệ.
-- 🧠 **Tự học** - sau mỗi hội thoại Javis tự rút ký ức, đúc tri thức Wiki và kỹ năng; mỗi lần học là một commit git nên **hoàn tác được một chạm**.
-- 🔌 **Kho kết nối đa tài khoản** - Pancake POS, Zalo, Meta/Google/TikTok Ads, Google Workspace, Slack, Webcake, Substack… nhiều tài khoản cùng một dịch vụ, mỗi tài khoản một mức quyền riêng, Javis **chặn cứng** thao tác vượt quyền.
-- 📱 **Telegram & Zalo** - hỏi Javis qua Telegram; đọc, tìm lịch sử và gửi tin Zalo bằng MCP chuẩn của `zalo-agent-cli`.
-- 🎨 **Tạo ảnh** bằng chính gói ChatGPT đã đăng nhập, không cần API key riêng.
-- 📊 **Mức dùng** - Javis tự đo token vào/ra và chi phí theo ngày, theo nhà cung cấp, tách rõ phần bạn gõ tay với phần Javis tự chạy nền.
-- ⇅ **Sao lưu brain lên GitHub** - đồng bộ 2 chiều mọi brain lên một repo riêng tư, dùng chung giữa máy nhà và VPS.
-- 🔄 **Đa engine, đổi không mất chức năng** - Claude Code, ChatGPT (Codex), OpenRouter, OpenAI API, Google Gemini, Anthropic API, Groq. Đổi trong **Models** một cú bấm; bộ não nào cũng gọi được MCP Javis, tool file brain và skill.
-- 🔐 **An toàn khi lên VPS** - tự bắt buộc đăng nhập khi chạy public, chống chiếm tài khoản, rate-limit, chặn CSRF, mã hoá khoá bí mật trong cấu hình.
-
----
 
 ## 🚀 Cài đặt
 

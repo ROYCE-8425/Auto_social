@@ -1,8 +1,8 @@
 <div align="center">
 
-# 🧠 Javis OS
+# 🚀 Javis Ops
 
-**A model-agnostic agentic AI layer + Second Brain - swap the brain (Claude Code, ChatGPT/Codex, Antigravity CLI, OpenRouter, OpenAI, Gemini, Anthropic API, Groq, Ollama) without losing tools: voice, a knowledge graph, MCP-driven business reporting, and a self-improvement loop.**
+**Self-hosted, open-source social media operations layer for SMEs. Built on [Javis OS](https://github.com/blogminhquy/javis-os) (MIT).**
 
 *[Tiếng Việt](README.md) · **English***
 
@@ -10,57 +10,50 @@
 
 ---
 
-## What is Javis?
+## 🎯 What is this?
+AI brain (Javis) runs in the background. Staff use `/ops`. The machine owner uses `/app`.
 
-Javis OS is **not** a chatbot. It is a **self-hosted agentic AI** running on your own machine or VPS: it reads and writes files, calls tools (MCP), runs skills, queues background work, schedules itself - all wrapped in a **voice-controlled dashboard** with a **Second Brain** (memory + wiki) that accumulates knowledge over time.
+## 🚪 Three Portals
 
-**You pick the brain, and you can change it whenever you like.** Ten paths work today: **Claude Code**, **ChatGPT/Codex** and **Antigravity CLI** (these run on the subscription you already pay for - no separate API purchase), plus **Gemini CLI · OpenRouter · OpenAI API · Google Gemini · Anthropic API · Groq · Ollama Cloud** (an API key is all they need).
-
-> ⚠️ **Read this before letting a subscription run background work.** Anthropic scopes Claude Pro/Max to **ordinary personal use** of Claude Code. Continuous background execution (loops, reminders, Kanban jobs, chatbots), running on a VPS, or several people sharing one account all fall outside that scope, and accounts **have been suspended** over it. Javis does not read your login token (that path was removed in 0.26.17) - it runs the `claude` binary itself, but that does not make round-the-clock background use legitimate either. If you want to be safe: on the **Models** page set Claude Code to run on an **API key**, or point the **background-work model** at a different provider. See `server/claude_auth.py`.
-
-> ⚠️ **Gemini CLI no longer covers personal tiers.** Google cut personal Code Assist off on 18 June 2026. The CLI returns `IneligibleTierError` / `UNSUPPORTED_CLIENT` on the free tier, Google AI Pro and Ultra alike; only an enterprise Code Assist licence or an API key still works. That is a server-side block on Google's end, not a misconfiguration. For Gemini models on a personal Google plan, use **Antigravity CLI** instead - same model line-up as the Antigravity IDE, including non-Google models.
-
-> The philosophy: **capability lives in Javis, not in the model.** Every brain gets the same toolbox through one shared connection hub (MCP Hub) - wired-up MCP servers, brain read/write tools, skills, Kanban jobs, agents, workflows, loops and reminders. The only real difference: the CLI engines can also run **shell commands**, fetch a URL, search the web and spawn sub-agents. Switching from Claude to Gemini costs you nothing beyond that.
-
-You wire in **your own connections** (POS/sales, ads, calendar, email, Zalo, notes…) → Javis discovers them and **reports on your business and your life** with real numbers, in plain speech.
-
-### What makes Javis different
-
-| | An ordinary chatbot | **Javis OS** |
+| URL | Target Audience | Primary Responsibility |
 |---|---|---|
-| Brain | Hard-wired to one model, one stateless API call per message | **Swappable**: 11 providers, each with the full set of tools, MCP, skills and sessions - including models running on your own machine through Ollama |
-| Memory | Forgets after every session | **A living Second Brain** - remembers you, thickens with every conversation |
-| Data | Made up, or absent | **Real numbers** from the connections you wire in (POS, Ads, Calendar, Zalo…) |
-| Self-improvement | None | **Background loops** + an AI-run work queue |
-| Interface | A chat box | Dashboard + knowledge graph + **hands-free voice** + Telegram |
-| Deployment | Locked to one vendor | **Self-hosted**: Hostinger one-click / Docker / any VPS |
+| `/` | General Public, Visitors | Public Landing Page |
+| `/ops` | CS Support Staff, Managers | Draft review inbox, Customer CRM, Task board, TikTok (view) |
+| `/app` | Machine Owner | Technical Cockpit: Console, MCP, loops, agents, TikTok test publish |
 
-> 💡 **Philosophy:** Javis *compiles* knowledge once, from raw notes into a Wiki, then *maintains* it alive against every new source. Knowledge **accumulates** instead of being rediscovered each time.
+## ⚡ Ops Layer Capabilities (Currently Available)
+- **Facebook Fanpage Graph Publishing:** Standard aspect ratios, multi-photo albums, brand kit resolution, per-page token isolation.
+- **Automated Fanpage Care:** 24/7 comment & Messenger ingestion, rules-first intent classification (pricing, consultations, promotions), phone number extraction, draft queue, CRM recording.
+- **Flexible Care Scopes:** Filter by all pages, by a specific brand kit, or isolated to a single page.
+- **Operational Toggles:** Toggles for comment ingestion, Messenger ingestion, auto comment replies, and auto Messenger replies (defaults to draft mode for human review).
+- **Strict Multi-Tier RBAC:** `staff` / `manager` / `owner` roles; staff members are strictly hard-blocked with HTTP 403 when trying to access the `/app` cockpit.
+- **TikTok Publishing (PostPeer BYO Key):** 9:16 vertical videos and photo carousels, automatic background music selection (`autoAddMusic`), served via secure `/tiktok-media` endpoints.
+- **Markdown Brand Kit System:** Brand identity and product knowledge managed in portable Markdown files, supporting multi-brand operations without vendor lock-in or single-shop hardcoding.
+
+## 🚫 What this is NOT
+- **NOT** a vendor lock-in SaaS subscription.
+- **NOT** a replacement for Facebook Graph API via PostPeer (PostPeer is only used as an optional BYO key bridge for TikTok).
+- **NOT** an unrestricted, raw AI chatbot exposed directly to end-user public chat.
+
+## ⏱️ Quick Start
+Deploy using Docker or VPS identical to upstream Javis OS:
+- Public Landing: `http://<ip>:7777/`
+- Operations Portal: `http://<ip>:7777/ops`
+- Owner Cockpit: `http://<ip>:7777/app`
+*(Live demo reference: `https://trannhuy.online`)*
+
+## 🔒 Security
+- **Never** commit `page_tokens.json`, `POSTPEER_API_KEY`, `.env`, or secrets inside `settings.json` into version control.
+- Integration scripts (such as `scripts/connect_postpeer.py`) read securely from environment variables or protected vault storage.
+- Detailed disclosure guidelines available in [SECURITY.md](SECURITY.md).
+
+## 📜 Attribution & License
+Javis OS © Nguyễn Minh Quý (blogminhquy), MIT License.  
+Javis Ops operational layer © 2026 contributors of Auto_social / Javis Ops, MIT License.  
+See [NOTICE.md](NOTICE.md) and [LICENSE](LICENSE) for details.
 
 ---
 
-## ✨ Highlights
-
-- 🎙️ **Hands-free voice** - speak, and Javis listens and answers out loud. Pick your voice provider: Edge TTS (free, default), OpenAI or ElevenLabs.
-- 🌌 **Knowledge graph** - your brain rendered as a network of notes joined by `[[wikilink]]`, on a light canvas that works offline.
-- 💬 **Conversation sessions** - save, reopen and **full-text search** every past conversation; long sessions are compacted into summaries instead of having their memory truncated.
-- 🗂️ **File manager** - browse, **edit `.md`/`.txt` right in the browser**, search files by name or by content, upload and download.
-- 🧩 **Skills** - group, search, **toggle individually**, add/edit/delete, import/export as packages; Javis files new skills into the right group by itself.
-- 🧰 **Plugins** - drop in a Python folder and every engine gains a **native tool or hook**, with no core changes.
-- 🤖 **Agents & workflows** - build specialist assistants (each with its own memory) plus multi-step automation chains with verification steps.
-- ♻️ **Recurring jobs & reminders** - several background loops in parallel, each doing exactly the one job you described and then checking its own work; plus reminders on a fixed time or a cron expression.
-- 🗃️ **Work (Kanban)** - hand over a goal in plain words; the AI writes the spec, picks a worker, runs it in the background and only calls you on exceptions.
-- 🧠 **Self-learning** - after each conversation Javis distils memories, wiki knowledge and skills; every learning pass is a git commit, so it is **one-tap undoable**.
-- 🔌 **Multi-account connection store** - Pancake POS, Zalo, Meta/Google/TikTok Ads, Google Workspace, Slack, Webcake, Substack… several accounts per service, each with its own permission level, and Javis **hard-blocks** anything above that level.
-- 📱 **Telegram & Zalo** - ask Javis over Telegram; read, search history and send Zalo messages through the standard `zalo-agent-cli` MCP.
-- 🎨 **Image generation** on the ChatGPT plan you are already signed in to - no separate API key.
-- 📊 **Usage** - Javis measures its own tokens in/out and cost per day and per provider, separating what you typed from what it ran on its own.
-- ⇅ **Back the brain up to GitHub** - two-way sync of every brain to a private repo, shared between your home machine and a VPS.
-- 🔄 **Multi-engine, no feature loss on a switch** - Claude Code, ChatGPT (Codex), Antigravity CLI, Gemini CLI, OpenRouter, OpenAI API, Google Gemini, Anthropic API, Groq, Ollama. Change it in **Models** with one click; every brain reaches the Javis MCP hub, the brain file tools and the skills.
-- 🌐 **Multilingual** - reply language, interface language and locale are three separate settings. Vietnamese and English ship today; adding a language is a data change, not a code change (see [docs/dev/them-mot-ngon-ngu.md](docs/dev/them-mot-ngon-ngu.md)).
-- 🔐 **Safe on a VPS** - login is forced automatically when running publicly, plus account-takeover protection, rate limiting, CSRF blocking and encrypted secrets in the config.
-
----
 
 ## 🚀 Installation
 

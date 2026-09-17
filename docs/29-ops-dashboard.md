@@ -1,14 +1,14 @@
-# Bảng Điều Khiển Vận Hành CSKH (Sao Việt Ops — `/ops`)
+# Bảng Điều Khiển Vận Hành CSKH (Javis Ops — `/ops`)
 
-Phân hệ giao diện độc lập dành riêng cho **Nhân viên CSKH (Staff)** và **Quản lý (Manager)** của Sao Việt. Giữ nguyên buồng lái console máy chủ (`/`) cho **Chủ máy (Owner)**.
+Phân hệ giao diện độc lập dành riêng cho **Nhân viên CSKH (Staff)** và **Quản lý (Manager)** doanh nghiệp. Giữ nguyên buồng lái console máy chủ (`/app` hoặc `/`) cho **Chủ máy (Owner)**.
 
 ---
 
 ## 1. Triết lý thiết kế & Cách ly Buồng lái
 
-- **Javis là bộ não ẩn:** Chạy ngầm 24/7, tự động ingest bình luận Fanpage, phân loại ý định, trích xuất SĐT/cơ sở, và chuẩn bị câu trả lời nháp theo cẩm nang tuyển sinh Sao Việt.
-- **Console chủ máy (`/`):** Vẫn là buồng lái kỹ thuật của chủ máy (Terminal, MCP catalog, Chat trực tiếp, Cài đặt model). Nhân viên và Quản lý **bị chặn 403 tuyệt đối**, không thể mở console này.
-- **Giao diện `/ops`:** Ứng dụng Single-Page App (React 18, Vite, Tailwind CSS, icon Lucide, font Be Vietnam Pro, màu cam Sao Việt `#f97316`), gọi các REST API sẵn có của Javis mà không sửa đổi bộ não, poller hay engine.
+- **Javis là bộ não ẩn:** Chạy ngầm 24/7, tự động ingest bình luận Fanpage, phân loại ý định, trích xuất SĐT/nhu cầu, và chuẩn bị câu trả lời nháp theo cẩm nang sản phẩm / dịch vụ của thương hiệu (Brand Kit).
+- **Console chủ máy (`/app`):** Vẫn là buồng lái kỹ thuật của chủ máy (Terminal, MCP catalog, Chat trực tiếp, Cài đặt model). Nhân viên và Quản lý **bị chặn 403 tuyệt đối**, không thể mở console này.
+- **Giao diện `/ops`:** Ứng dụng Single-Page App (React 18, Vite, Tailwind CSS, icon Lucide, font Be Vietnam Pro, màu cam chủ đạo `#f97316`), gọi các REST API sẵn có của Javis mà không sửa đổi bộ não, poller hay engine.
 
 ---
 
@@ -44,7 +44,7 @@ Hệ thống sử dụng module phân quyền mỏng `server/ops_rbac.py` kết 
 
 ### M2: Hộp thư & Duyệt câu trả lời (Inbox)
 - **Tab 1: Bình luận Fanpage:**
-  * Thẻ bình luận thể hiện tên tác giả, nội dung câu hỏi, SĐT bóc tách, cơ sở, phân loại ý định (Học phí, Lịch học, Lộ trình...).
+  * Thẻ bình luận thể hiện tên tác giả, nội dung câu hỏi, SĐT bóc tách, nhu cầu/thương hiệu, phân loại ý định (Giá cả, Tư vấn, Đặt hàng, Khuyến mãi...).
   * Khung câu trả lời nháp do Javis soạn: Cho phép **Chỉnh sửa nội dung** trước khi gửi.
   * 3 nút thao tác: **Gửi phản hồi**, **Bỏ qua**, **Tạo việc giao người**.
 - **Tab 2: Tin nhắn Messenger:**
@@ -63,7 +63,7 @@ Hệ thống sử dụng module phân quyền mỏng `server/ops_rbac.py` kết 
 - Tự động tiếp nhận công việc khi nhân viên bấm "Tạo việc giao người" ở Hộp thư, hoặc nhân viên có thể bấm "Tạo việc mới".
 
 ### M5: Xu hướng & Chi phí (Trends — Quản lý & Chủ máy)
-- Biểu đồ phân bổ khách hàng theo cơ sở (TP.HCM, Hà Nội, Đà Nẵng...).
+- Biểu đồ phân bổ khách hàng theo thương hiệu / chi nhánh (TP.HCM, Hà Nội, Đà Nẵng...).
 - Biểu đồ phân bổ các câu hỏi thường gặp nhất (FAQ).
 - Biểu đồ tương tác 7 ngày gần nhất.
 - Báo cáo tài nguyên: Tổng token đã sử dụng và ước tính chi phí AI.
@@ -72,7 +72,7 @@ Hệ thống sử dụng module phân quyền mỏng `server/ops_rbac.py` kết 
 - Dòng thời gian ghi nhận chi tiết mọi hoạt động gửi tin nhắn, duyệt nháp, quét fanpage.
 
 ### M7: Quản lý tài khoản (Users — Chỉ Chủ máy)
-- Chủ máy đăng nhập bằng tài khoản admin chính có thể tạo thêm tài khoản Nhân viên (Staff) hoặc Quản lý (Manager) cho từng cơ sở.
+- Chủ máy đăng nhập bằng tài khoản admin chính có thể tạo thêm tài khoản Nhân viên (Staff) hoặc Quản lý (Manager) cho từng bộ phận / chi nhánh.
 
 ---
 
