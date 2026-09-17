@@ -15,13 +15,18 @@ import {
   ExternalLink,
   Sparkles,
 } from 'lucide-react'
-import { api, CareConversation, CareDraft, CareEvent, CareState } from '../lib/api'
+import { api, CareConversation, CareDraft, CareEvent, CareState, CareStats } from '../lib/api'
 import { useAuth } from '../lib/auth'
 import { useCareScope } from '../lib/scope'
 import { formatTime, timeAgo } from '../lib/utils'
 
 export const Inbox: React.FC = () => {
-  const [activeSubTab, setActiveSubTab] = useState<'comments' | 'messenger'>('comments')
+  const [activeSubTab, setActiveSubTab] = useState<'comments' | 'messenger'>(() => {
+    if (typeof window !== 'undefined' && window.location.hash.includes('tab=messenger')) {
+      return 'messenger'
+    }
+    return 'comments'
+  })
   const { can } = useAuth()
   const { scope, scopeBrand, scopePageId, eligiblePages: globalPages } = useCareScope()
   const [platformFilter, setPlatformFilter] = useState<'all' | 'facebook' | 'tiktok'>('all')
@@ -31,12 +36,26 @@ export const Inbox: React.FC = () => {
   const [pollHint, setPollHint] = useState<string | null>(null)
   const [events, setEvents] = useState<CareEvent[]>([])
   const [drafts, setDrafts] = useState<CareDraft[]>([])
+  const [stats, setStats] = useState<CareStats | null>(null)
   const [conversations, setConversations] = useState<CareConversation[]>([])
   const [filterView, setFilterView] = useState<'pending' | 'events'>('pending')
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [loading, setLoading] = useState<boolean>(true)
   const [actionLoading, setActionLoading] = useState<string | number | null>(null)
   const [actionMsg, setActionMsg] = useState<{ id: string | number; msg: string; type: 'success' | 'error' } | null>(null)
+
+  // Sync activeSubTab when URL hash changes (e.g. from Overview links)
+  useEffect(() => {
+    const handleHash = () => {
+      if (window.location.hash.includes('tab=messenger')) {
+        setActiveSubTab('messenger')
+      } else if (window.location.hash.includes('tab=comments')) {
+        setActiveSubTab('comments')
+      }
+    }
+    window.addEventListener('hashchange', handleHash)
+    return () => window.removeEventListener('hashchange', handleHash)
+  }, [])
 
   // Sync pageFilter when Scope changes from the global ScopeBar
   useEffect(() => {
@@ -88,33 +107,56 @@ export const Inbox: React.FC = () => {
     )
   }
 
-  const loadData = async (filter = platformFilter, pageId = pageFilter) => {
+  const loadData = async (filter = platformFilter, pageId = pageFilter, subTab = activeSubTab) => {
     try {
       const effectivePageId = pageId || (scope === 'page' ? scopePageId : undefined)
       const effectiveBrand = (!effectivePageId && scope === 'brand') ? scopeBrand : undefined
 
-      const [inboxRes, convRes, stateRes] = await Promise.all([
-        api.getInbox({
-          limit: 80,
-          platform: filter === 'all' ? undefined : filter,
-          page_id: effectivePageId || undefined,
-          brand: effectiveBrand || undefined,
-        }).catch(() => null),
-        api.getConversations({
-          page_id: effectivePageId || undefined,
-          brand: effectiveBrand || undefined,
-        }).catch(() => null),
-        api.getCareState().catch(() => null),
-      ])
-      if (inboxRes) {
-        setEvents(inboxRes.events || [])
-        setDrafts(inboxRes.drafts || [])
-      }
-      if (convRes) {
-        setConversations(convRes.conversations || [])
-      }
-      if (stateRes?.eligible_pages) {
-        setEligiblePages(stateRes.eligible_pages)
+      if (subTab === 'comments') {
+        const [inboxRes, stateRes] = await Promise.all([
+          api.getInbox({
+            limit: 80,
+            kind: 'comment',
+            platform: filter === 'all' ? undefined : filter,
+            page_id: effectivePageId || undefined,
+            brand: effectiveBrand || undefined,
+          }).catch(() => null),
+          api.getCareState().catch(() => null),
+        ])
+        if (inboxRes) {
+          setEvents(inboxRes.events || [])
+          setDrafts(inboxRes.drafts || [])
+          if (inboxRes.stats) setStats(inboxRes.stats)
+        }
+        if (stateRes?.eligible_pages) {
+          setEligiblePages(stateRes.eligible_pages)
+        }
+      } else {
+        const [inboxRes, convRes, stateRes] = await Promise.all([
+          api.getInbox({
+            limit: 80,
+            kind: 'message',
+            platform: filter === 'all' ? undefined : filter,
+            page_id: effectivePageId || undefined,
+            brand: effectiveBrand || undefined,
+          }).catch(() => null),
+          api.getConversations({
+            page_id: effectivePageId || undefined,
+            brand: effectiveBrand || undefined,
+          }).catch(() => null),
+          api.getCareState().catch(() => null),
+        ])
+        if (inboxRes) {
+          setEvents(inboxRes.events || [])
+          setDrafts(inboxRes.drafts || [])
+          if (inboxRes.stats) setStats(inboxRes.stats)
+        }
+        if (convRes) {
+          setConversations(convRes.conversations || [])
+        }
+        if (stateRes?.eligible_pages) {
+          setEligiblePages(stateRes.eligible_pages)
+        }
       }
     } finally {
       setLoading(false)
@@ -122,10 +164,10 @@ export const Inbox: React.FC = () => {
   }
 
   useEffect(() => {
-    loadData(platformFilter, pageFilter)
-    const interval = setInterval(() => loadData(platformFilter, pageFilter), 15000)
+    loadData(platformFilter, pageFilter, activeSubTab)
+    const interval = setInterval(() => loadData(platformFilter, pageFilter, activeSubTab), 15000)
     return () => clearInterval(interval)
-  }, [platformFilter, pageFilter, scope, scopeBrand, scopePageId])
+  }, [platformFilter, pageFilter, scope, scopeBrand, scopePageId, activeSubTab])
 
   const handlePollPage = async () => {
     if (!can('poll_now') || isPolling) return
@@ -281,19 +323,13 @@ export const Inbox: React.FC = () => {
     }
   }
 
-  // Helper to distinguish comments from messenger
-  const isCommentDraft = (d: CareDraft) => {
-    if (d.event_kind === 'comment') return true
-    if (d.event_kind === 'message') return false
-    if (conversations.some((c) => c.psid === d.target_id)) return false
-    return d.target_id.includes('_') || (d.target_id.length <= 16 && !d.target_id.startsWith('2838'))
-  }
+  // Strict separation: no heuristics, driven 100% by API kind and activeSubTab
+  const pendingDrafts = drafts.filter((d) => d.status === 'pending')
+  const commentDrafts = activeSubTab === 'comments' ? pendingDrafts : []
+  const messengerDrafts = activeSubTab === 'messenger' ? pendingDrafts : []
 
-  const commentDrafts = drafts.filter((d) => d.status === 'pending' && isCommentDraft(d))
-  const messengerDrafts = drafts.filter((d) => d.status === 'pending' && !isCommentDraft(d))
-
-  const commentEvents = events.filter((e) => e.kind === 'comment')
-  const messengerEvents = events.filter((e) => e.kind === 'message' || e.kind === 'echo')
+  const commentEvents = activeSubTab === 'comments' ? events : []
+  const messengerEvents = activeSubTab === 'messenger' ? events : []
 
   const filteredCommentDrafts = commentDrafts.filter((draft) => {
     if (!searchQuery.trim()) return true
@@ -332,7 +368,10 @@ export const Inbox: React.FC = () => {
         {/* Tab switcher */}
         <div className="flex bg-slate-200/80 p-1 rounded-xl w-fit">
           <button
-            onClick={() => setActiveSubTab('comments')}
+            onClick={() => {
+              setActiveSubTab('comments')
+              window.location.hash = 'inbox?tab=comments'
+            }}
             className={`flex items-center space-x-2 px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
               activeSubTab === 'comments'
                 ? 'bg-white text-slate-900 shadow-sm'
@@ -340,10 +379,13 @@ export const Inbox: React.FC = () => {
             }`}
           >
             <MessageSquare className="w-4 h-4 text-saoviet-500" />
-            <span>Bình luận bài viết ({commentDrafts.length} chờ duyệt)</span>
+            <span>Bình luận bài viết ({stats?.pending_comment_drafts ?? (activeSubTab === 'comments' ? commentDrafts.length : 0)} chờ duyệt)</span>
           </button>
           <button
-            onClick={() => setActiveSubTab('messenger')}
+            onClick={() => {
+              setActiveSubTab('messenger')
+              window.location.hash = 'inbox?tab=messenger'
+            }}
             className={`flex items-center space-x-2 px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
               activeSubTab === 'messenger'
                 ? 'bg-white text-slate-900 shadow-sm'
@@ -351,7 +393,7 @@ export const Inbox: React.FC = () => {
             }`}
           >
             <Bot className="w-4 h-4 text-blue-500" />
-            <span>Tin nhắn Messenger / IB ({conversations.length}{messengerDrafts.length > 0 ? ` · ${messengerDrafts.length} gợi ý` : ''})</span>
+            <span>Tin nhắn IB ({conversations.length}{(stats?.pending_message_drafts || messengerDrafts.length) > 0 ? ` · ${stats?.pending_message_drafts ?? messengerDrafts.length} gợi ý` : ''})</span>
           </button>
         </div>
       </div>
@@ -511,7 +553,7 @@ export const Inbox: React.FC = () => {
                         <div>
                           <div className="flex flex-wrap items-center gap-2">
                             <span className="font-bold text-sm text-slate-900">{customerName}</span>
-                            {renderPlatformChip(draft.event_platform || ev?.platform || 'facebook')}
+                            {renderPlatformChip((draft.event_platform === 'tiktok' || ev?.platform === 'tiktok') ? 'tiktok' : 'facebook')}
                             {draft.class && (
                               <span className="text-[11px] px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 font-medium border border-blue-100">
                                 Phân loại: {draft.class}
@@ -614,7 +656,7 @@ export const Inbox: React.FC = () => {
                     </>
                   ) : (
                     <>
-                      <p className="font-semibold text-slate-600 text-sm">Không có nháp bình luận nào đang chờ duyệt</p>
+                      <p className="font-semibold text-slate-600 text-sm">Chưa có comment trên bài.</p>
                       <p className="text-slate-400 mt-1">Khi có bình luận bài viết mới cần phản hồi, Javis sẽ chuẩn bị nháp tại đây</p>
                     </>
                   )}
@@ -704,7 +746,7 @@ export const Inbox: React.FC = () => {
                     </>
                   ) : (
                     <>
-                      <p className="font-semibold text-slate-600">Không có sự kiện bình luận nào phù hợp</p>
+                      <p className="font-semibold text-slate-600">Chưa có comment trên bài.</p>
                       <p className="text-slate-400 mt-1">Các bình luận và tương tác mới sẽ xuất hiện tại đây</p>
                     </>
                   )}
@@ -730,7 +772,7 @@ export const Inbox: React.FC = () => {
                     const res = await api.pollNow(pageFilter || undefined, 'messenger')
                     const r = res.result || {}
                     setPollHint(
-                      `Hộp thư Business: ${r.messages_ingested ?? 0} tin mới · ${r.drafts_created ?? 0} nháp` +
+                      `Hộp thư IB: ${r.messages_ingested ?? 0} tin mới · ${r.drafts_created ?? 0} nháp` +
                         (r.page_errors?.[0]?.error ? ` · ${String(r.page_errors[0].error).slice(0, 100)}` : ''),
                     )
                     await loadData(platformFilter, pageFilter)
@@ -744,7 +786,7 @@ export const Inbox: React.FC = () => {
                 disabled={isPolling}
                 className="px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-600 text-white hover:bg-blue-500 disabled:opacity-50"
               >
-                {isPolling ? 'Đang kéo hộp thư…' : 'Kéo hộp thư Business'}
+                {isPolling ? 'Đang kéo hộp thư…' : 'Kéo hộp thư IB'}
               </button>
             )}
             {pollHint && <span className="text-xs text-slate-500">{pollHint}</span>}
@@ -926,12 +968,11 @@ export const Inbox: React.FC = () => {
             {conversations.length === 0 && (
               <div className="col-span-2 bg-white rounded-2xl border border-slate-200 p-12 text-center text-slate-400 text-xs">
                 <Bot className="w-10 h-10 mx-auto mb-3 text-slate-300" />
-                <p className="font-semibold text-slate-700 text-sm">Chưa kéo hộp thư Business</p>
+                <p className="font-semibold text-slate-700 text-sm">Chưa có tin nhắn hộp thư. Bấm Kéo hộp thư IB.</p>
                 <p className="text-slate-500 mt-2 max-w-md mx-auto leading-relaxed">
-                  Tab này là <b>tin nhắn IB</b> (Hiếu Phan, Anh Đức… trong Business Suite).
-                  Comment trên bài viết nằm tab <b>Bình luận</b> — không phải inbox.
-                  Chọn page BSN rồi bấm nút xanh dương <b>Kéo hộp thư IB (Business)</b>.
-                  Token Page phải có quyền Messenger, không chỉ đọc comment.
+                  Tab này là <b>tin nhắn IB</b> qua Facebook Messenger / Business Suite.
+                  Bình luận dưới bài viết nằm ở tab <b>Bình luận bài viết</b> — hoàn toàn riêng biệt.
+                  Bấm nút <b>Kéo hộp thư IB</b> ở trên để đồng bộ tin nhắn mới nhất từ Meta.
                 </p>
               </div>
             )}

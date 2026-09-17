@@ -525,15 +525,15 @@ def list_drafts(
     if kind:
         k = str(kind).strip().lower()
         if k == "comment":
-            conds.append("(e.kind = 'comment' OR (e.kind IS NULL AND d.target_id LIKE '%_%'))")
+            conds.append("e.kind = 'comment'")
         elif k in ("message", "messenger"):
-            conds.append("(e.kind = 'message' OR e.platform = 'messenger' OR (e.kind IS NULL AND d.target_id NOT LIKE '%_%'))")
+            conds.append("(e.kind IN ('message', 'echo') OR e.platform = 'messenger')")
     where = f"WHERE {' AND '.join(conds)}"
     sql = f"""
         SELECT 
             d.*,
-            COALESCE(e.kind, CASE WHEN d.target_id NOT LIKE '%_%' AND length(d.target_id) > 14 THEN 'message' ELSE 'comment' END) as event_kind,
-            COALESCE(e.platform, CASE WHEN d.target_id NOT LIKE '%_%' AND length(d.target_id) > 14 THEN 'messenger' ELSE 'facebook' END) as event_platform,
+            e.kind as event_kind,
+            COALESCE(e.platform, 'facebook') as event_platform,
             e.from_name as from_name,
             e.from_id as from_id,
             e.body as source_body,
@@ -960,16 +960,16 @@ def get_stats(
         pending_cmt_dr = conn.execute(
             f"""
             SELECT COUNT(*) FROM drafts d
-            LEFT JOIN events e ON d.event_id = e.id
-            {dr_where} AND (e.kind = 'comment' OR (e.kind IS NULL AND d.target_id LIKE '%_%'))
+            JOIN events e ON d.event_id = e.id
+            {dr_where} AND e.kind = 'comment'
             """,
             p_params,
         ).fetchone()[0]
         pending_msg_dr = conn.execute(
             f"""
             SELECT COUNT(*) FROM drafts d
-            LEFT JOIN events e ON d.event_id = e.id
-            {dr_where} AND (e.kind = 'message' OR e.platform = 'messenger' OR (e.kind IS NULL AND d.target_id NOT LIKE '%_%'))
+            JOIN events e ON d.event_id = e.id
+            {dr_where} AND (e.kind IN ('message', 'echo') OR e.platform = 'messenger')
             """,
             p_params,
         ).fetchone()[0]

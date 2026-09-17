@@ -252,3 +252,55 @@ async def test_auto_reply_safety(monkeypatch):
         )
         assert res3.get("replied") is False
         assert res3.get("draft_created") is True
+
+
+def test_separation_comment_vs_messenger_drafts():
+    """Verify strict kind separation: comment drafts must never leak into messenger, and vice versa."""
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp_dir:
+        db_path = Path(tmp_dir) / "test_separation.sqlite3"
+        store.init_db(db_path)
+        now = time.time()
+
+        # 1. Event: comment on Facebook post
+        ev_cmt_id, _ = store.record_event({
+            "kind": "comment", "platform": "facebook", "page_id": "P_TEST",
+            "object_id": "post1_cmt123", "body": "Khoa hoc nay hoc phi the nao?",
+            "class": "lead", "from_name": "Tran Nhu Y", "from_id": "user_cmt_1",
+            "created_ts": now, "ingested_ts": now,
+        }, db_path=db_path)
+
+        # 2. Event: message on Messenger (pure numeric PSID like 283849182391823)
+        ev_msg_id, _ = store.record_event({
+            "kind": "message", "platform": "messenger", "page_id": "P_TEST",
+            "object_id": "283849182391823", "body": "Shop con ban acc wukong khong?",
+            "class": "lead", "from_name": "Quoc Khanh", "from_id": "283849182391823",
+            "created_ts": now, "ingested_ts": now,
+        }, db_path=db_path)
+
+        # 3. Create drafts for each
+        dr_cmt_id = store.create_draft(ev_cmt_id, "P_TEST", "post1_cmt123", "Chao ban, hoc phi la 1tr2", "lead", db_path=db_path)
+        dr_msg_id = store.create_draft(ev_msg_id, "P_TEST", "283849182391823", "Chao Quoc Khanh, shop con acc nha", "lead", db_path=db_path)
+
+        # 4. Create an orphaned draft (no event_id) - e.g. from a test script
+        dr_orphan_id = store.create_draft(None, "P_TEST", "some_random_id_123", "Orphaned draft", "lead", db_path=db_path)
+
+        # Query kind=comment
+        cmt_drafts = store.list_drafts(page_ids=["P_TEST"], status="pending", kind="comment", db_path=db_path)
+        assert len(cmt_drafts) == 1
+        assert cmt_drafts[0]["id"] == dr_cmt_id
+        assert cmt_drafts[0]["event_kind"] == "comment"
+        assert cmt_drafts[0]["from_name"] == "Tran Nhu Y"
+
+        # Query kind=message
+        msg_drafts = store.list_drafts(page_ids=["P_TEST"], status="pending", kind="message", db_path=db_path)
+        assert len(msg_drafts) == 1
+        assert msg_drafts[0]["id"] == dr_msg_id
+        assert msg_drafts[0]["event_kind"] == "message"
+        assert msg_drafts[0]["from_name"] == "Quoc Khanh"
+
+        # Query stats
+        stats = store.get_stats(page_ids=["P_TEST"], db_path=db_path)
+        assert stats["pending_comment_drafts"] == 1
+        assert stats["pending_message_drafts"] == 1
+        assert stats["pending_drafts"] == 3  # total includes orphaned
+

@@ -1309,15 +1309,14 @@ class FanpageCareFeature:
                 except Exception:
                     ev = None
             is_msg = bool(
-                d.get("event_kind") == "message"
+                d.get("event_kind") in ("message", "echo")
                 or (
                     ev
                     and (
-                        ev.get("kind") == "message"
+                        ev.get("kind") in ("message", "echo")
                         or str(ev.get("platform") or "") == "messenger"
                     )
                 )
-                or (not d.get("event_id") and "_" not in cid and len(cid) > 14)
             )
             if is_msg:
                 res = await fanpage_care_graph.call(

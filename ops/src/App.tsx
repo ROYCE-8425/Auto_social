@@ -18,9 +18,10 @@ export const App: React.FC = () => {
   // Handle URL hash changes (e.g. #inbox, #customers)
   useEffect(() => {
     const handleHash = () => {
-      const hash = window.location.hash.replace('#', '')
-      if (['overview', 'inbox', 'customers', 'tasks', 'trends', 'audit', 'users'].includes(hash)) {
-        setCurrentTab(hash)
+      const raw = window.location.hash.replace('#', '')
+      const tab = raw.split('?')[0]
+      if (['overview', 'inbox', 'customers', 'tasks', 'trends', 'audit', 'users'].includes(tab)) {
+        setCurrentTab(tab)
       }
     }
     handleHash()

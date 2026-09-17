@@ -24,6 +24,7 @@ import {
   Power,
   ToggleLeft,
   ToggleRight,
+  Send,
 } from 'lucide-react'
 import { api, CareDraft, CareEvent, CareState, CareFeatures, CarePageSettings, CareStats } from '../lib/api'
 import { useAuth } from '../lib/auth'
@@ -40,8 +41,12 @@ export const Overview: React.FC<OverviewProps> = ({ onNavigate }) => {
 
   const [careState, setCareState] = useState<CareState | null>(null)
   const [scopedStats, setScopedStats] = useState<CareStats | null>(null)
-  const [events, setEvents] = useState<CareEvent[]>([])
-  const [drafts, setDrafts] = useState<CareDraft[]>([])
+  const [commentEvents, setCommentEvents] = useState<CareEvent[]>([])
+  const [commentDrafts, setCommentDrafts] = useState<CareDraft[]>([])
+  const [messageEvents, setMessageEvents] = useState<CareEvent[]>([])
+  const [messageDrafts, setMessageDrafts] = useState<CareDraft[]>([])
+  const [actionLoading, setActionLoading] = useState<string | number | null>(null)
+  const [actionMsg, setActionMsg] = useState<{ id: string | number; msg: string; type: 'success' | 'error' } | null>(null)
   const [loading, setLoading] = useState<boolean>(true)
 
   // Local settings editor state
@@ -86,10 +91,17 @@ export const Overview: React.FC<OverviewProps> = ({ onNavigate }) => {
   // Load data according to active scope
   const loadScopedData = async () => {
     try {
-      const [stateRes, inboxRes, statsRes] = await Promise.all([
+      const [stateRes, cmtInboxRes, msgInboxRes, statsRes] = await Promise.all([
         api.getCareState().catch(() => null),
         api.getInbox({
-          limit: 20,
+          limit: 10,
+          kind: 'comment',
+          brand: scopeBrand || undefined,
+          page_id: scopePageId || undefined,
+        }).catch(() => null),
+        api.getInbox({
+          limit: 10,
+          kind: 'message',
           brand: scopeBrand || undefined,
           page_id: scopePageId || undefined,
         }).catch(() => null),
@@ -113,16 +125,19 @@ export const Overview: React.FC<OverviewProps> = ({ onNavigate }) => {
         }
       }
 
-      if (inboxRes) {
-        setEvents(inboxRes.events || [])
-        setDrafts(inboxRes.drafts || [])
-        if (inboxRes.stats) {
-          setScopedStats(inboxRes.stats)
-        }
+      if (cmtInboxRes) {
+        setCommentEvents(cmtInboxRes.events || [])
+        setCommentDrafts(cmtInboxRes.drafts || [])
+      }
+      if (msgInboxRes) {
+        setMessageEvents(msgInboxRes.events || [])
+        setMessageDrafts(msgInboxRes.drafts || [])
       }
 
       if (statsRes?.stats) {
         setScopedStats(statsRes.stats)
+      } else if (cmtInboxRes?.stats) {
+        setScopedStats(cmtInboxRes.stats)
       }
     } finally {
       setLoading(false)
@@ -146,7 +161,43 @@ export const Overview: React.FC<OverviewProps> = ({ onNavigate }) => {
     total_customers: 0,
   }
 
-  const pendingDrafts = drafts.filter((d) => d.status === 'pending')
+  const pendingCommentDrafts = commentDrafts.filter((d) => d.status === 'pending')
+  const pendingMessageDrafts = messageDrafts.filter((d) => d.status === 'pending')
+  const pendingCommentCount = stats.pending_comment_drafts ?? pendingCommentDrafts.length
+  const pendingMessageCount = stats.pending_message_drafts ?? pendingMessageDrafts.length
+
+  const handleSendDraft = async (draft: CareDraft) => {
+    setActionLoading(draft.id)
+    try {
+      const res = await api.sendDraft(draft.id)
+      if (res.ok) {
+        setActionMsg({ id: draft.id, msg: 'Đã gửi thành công!', type: 'success' })
+        setCommentDrafts((prev) => prev.filter((d) => d.id !== draft.id))
+        setMessageDrafts((prev) => prev.filter((d) => d.id !== draft.id))
+        loadScopedData()
+      } else {
+        setActionMsg({ id: draft.id, msg: res.error || 'Lỗi gửi phản hồi', type: 'error' })
+      }
+    } catch (err: any) {
+      setActionMsg({ id: draft.id, msg: err.message || 'Lỗi gửi phản hồi', type: 'error' })
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  const handleRejectDraft = async (draft: CareDraft) => {
+    setActionLoading(draft.id)
+    try {
+      const res = await api.rejectDraft(draft.id)
+      if (res.ok) {
+        setCommentDrafts((prev) => prev.filter((d) => d.id !== draft.id))
+        setMessageDrafts((prev) => prev.filter((d) => d.id !== draft.id))
+        loadScopedData()
+      }
+    } finally {
+      setActionLoading(null)
+    }
+  }
 
   // Save Care settings
   const handleSaveSettings = async (
@@ -255,6 +306,7 @@ export const Overview: React.FC<OverviewProps> = ({ onNavigate }) => {
       icon: MessageSquare,
       color: 'text-blue-600 bg-blue-50 border-blue-100',
       actionTab: 'inbox',
+      navHash: 'inbox?tab=comments',
     },
     {
       title: 'Lead 24h (Có SĐT)',
@@ -264,18 +316,28 @@ export const Overview: React.FC<OverviewProps> = ({ onNavigate }) => {
       actionTab: 'customers',
     },
     {
-      title: 'Nháp chờ duyệt',
-      value: stats.pending_drafts,
-      icon: Clock,
+      title: 'Nháp comment chờ',
+      value: pendingCommentCount,
+      icon: MessageSquare,
       color: 'text-amber-600 bg-amber-50 border-amber-100',
-      highlight: stats.pending_drafts > 0,
+      highlight: pendingCommentCount > 0,
       actionTab: 'inbox',
+      navHash: 'inbox?tab=comments',
+    },
+    {
+      title: 'Nháp IB chờ',
+      value: pendingMessageCount,
+      icon: Bot,
+      color: 'text-indigo-600 bg-indigo-50 border-indigo-100',
+      highlight: pendingMessageCount > 0,
+      actionTab: 'inbox',
+      navHash: 'inbox?tab=messenger',
     },
     {
       title: 'Javis đã trả lời',
       value: stats.replies_24h,
       icon: CheckCircle2,
-      color: 'text-indigo-600 bg-indigo-50 border-indigo-100',
+      color: 'text-emerald-600 bg-emerald-50 border-emerald-100',
       actionTab: 'inbox',
     },
     {
@@ -283,14 +345,8 @@ export const Overview: React.FC<OverviewProps> = ({ onNavigate }) => {
       value: stats.human_needed_24h,
       icon: AlertTriangle,
       color: 'text-rose-600 bg-rose-50 border-rose-100',
+      highlight: stats.human_needed_24h > 0,
       actionTab: 'tasks',
-    },
-    {
-      title: 'Khách trong CRM',
-      value: stats.total_customers,
-      icon: Users,
-      color: 'text-saoviet-600 bg-saoviet-50 border-saoviet-100',
-      actionTab: 'customers',
     },
   ]
 
@@ -306,6 +362,14 @@ export const Overview: React.FC<OverviewProps> = ({ onNavigate }) => {
               <span>{banner.badge}</span>
               <span className="text-slate-500 font-normal">|</span>
               <span className="text-slate-300 font-normal capitalize">Phạm vi: {scopeLabel}</span>
+              {(pendingCommentCount > 0 || pendingMessageCount > 0) && (
+                <>
+                  <span className="text-slate-500 font-normal">|</span>
+                  <span className="text-amber-300 font-bold capitalize">
+                    {pendingCommentCount} bình luận · {pendingMessageCount} tin nhắn IB chờ duyệt
+                  </span>
+                </>
+              )}
             </div>
             <h1 className="text-xl sm:text-2xl font-bold tracking-tight">
               {banner.title}
@@ -316,13 +380,28 @@ export const Overview: React.FC<OverviewProps> = ({ onNavigate }) => {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            {stats.pending_drafts > 0 && (
+            {pendingCommentCount > 0 && (
               <button
-                onClick={() => onNavigate('inbox')}
-                className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-saoviet-500 hover:bg-saoviet-600 text-white font-bold text-xs shadow-md transition-all cursor-pointer"
+                onClick={() => {
+                  window.location.hash = 'inbox?tab=comments'
+                  onNavigate('inbox')
+                }}
+                className="flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-saoviet-500 hover:bg-saoviet-600 text-white font-bold text-xs shadow-md transition-all cursor-pointer"
               >
-                <span>Duyệt {stats.pending_drafts} nháp ngay</span>
-                <ArrowRight className="w-3.5 h-3.5" />
+                <MessageSquare className="w-3.5 h-3.5" />
+                <span>Duyệt {pendingCommentCount} bình luận</span>
+              </button>
+            )}
+            {pendingMessageCount > 0 && (
+              <button
+                onClick={() => {
+                  window.location.hash = 'inbox?tab=messenger'
+                  onNavigate('inbox')
+                }}
+                className="flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md transition-all cursor-pointer"
+              >
+                <Bot className="w-3.5 h-3.5" />
+                <span>Duyệt {pendingMessageCount} tin nhắn IB</span>
               </button>
             )}
             <button
@@ -342,7 +421,10 @@ export const Overview: React.FC<OverviewProps> = ({ onNavigate }) => {
           return (
             <div
               key={idx}
-              onClick={() => onNavigate(card.actionTab)}
+              onClick={() => {
+                if (card.navHash) window.location.hash = card.navHash
+                onNavigate(card.actionTab)
+              }}
               className={`bg-white rounded-2xl p-4 border transition-all cursor-pointer hover:shadow-md hover:-translate-y-0.5 ${
                 card.highlight ? 'border-amber-400 ring-2 ring-amber-100' : 'border-slate-200'
               }`}
@@ -367,126 +449,250 @@ export const Overview: React.FC<OverviewProps> = ({ onNavigate }) => {
         })}
       </div>
 
-      {/* 2 Columns: Recent Inbox Items & System Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left: Pending Drafts or Recent Events (2 cols) */}
-        <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
-          <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+      {/* 2 Separate Blocks: Comment Drafts & Messenger IB Drafts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Block 1: Bình luận chờ duyệt */}
+        <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
             <div className="flex items-center space-x-2">
               <MessageSquare className="w-5 h-5 text-saoviet-500" />
               <h2 className="font-bold text-slate-900 text-base">
-                {pendingDrafts.length > 0 ? `Nháp chờ duyệt (${pendingDrafts.length})` : 'Sự kiện tương tác gần đây'}
+                Bình luận chờ duyệt ({pendingCommentCount})
               </h2>
             </div>
             <button
-              onClick={() => onNavigate('inbox')}
+              onClick={() => {
+                window.location.hash = 'inbox?tab=comments'
+                onNavigate('inbox')
+              }}
               className="text-xs font-semibold text-saoviet-600 hover:text-saoviet-700 flex items-center space-x-1"
             >
-              <span>Vào hộp thư</span>
+              <span>Vào bình luận</span>
               <ArrowRight className="w-3 h-3" />
             </button>
           </div>
 
-          <div className="divide-y divide-slate-100 mt-2">
-            {pendingDrafts.length > 0
-              ? pendingDrafts.slice(0, 5).map((draft) => {
-                  const ev = events.find((e) => e.id === draft.event_id || e.object_id === draft.target_id)
-                  return (
-                    <div key={draft.id} className="py-3.5 hover:bg-slate-50/80 rounded-xl px-2 transition-colors">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex items-start space-x-3">
-                          <div className="w-9 h-9 rounded-full bg-amber-100 text-amber-800 font-bold text-xs flex items-center justify-center flex-shrink-0">
-                            {ev?.from_name ? ev.from_name.slice(0, 2).toUpperCase() : 'KH'}
-                          </div>
-                          <div>
-                            <div className="flex items-center space-x-2">
-                              <span className="font-bold text-xs text-slate-900">{ev?.from_name || 'Khách hàng'}</span>
-                              {renderPlatformChip(ev?.platform || 'facebook')}
-                              {draft.class && (
-                                <span className="text-[10px] px-1.5 py-0.2 rounded bg-blue-50 text-blue-700 font-medium">
-                                  {draft.class}
-                                </span>
-                              )}
-                            </div>
-                            {ev?.body && (
-                              <p className="text-xs text-slate-700 mt-1 leading-relaxed line-clamp-2">
-                                "{ev.body}"
-                              </p>
-                            )}
-                            <div className="mt-2 p-2 rounded-lg bg-saoviet-50/60 border border-saoviet-100 text-xs text-slate-800">
-                              <span className="font-semibold text-saoviet-700 text-[11px] block mb-0.5">
-                                Javis soạn nháp:
-                              </span>
-                              <span className="italic text-slate-600 line-clamp-2">{draft.proposed}</span>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="text-right flex-shrink-0">
-                          <span className="text-[10px] text-slate-400 block">{timeAgo(draft.created_ts)}</span>
-                          <span className="inline-block mt-1.5 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">
-                            Chờ duyệt
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  )
-                })
-              : events.slice(0, 5).map((item) => (
-                  <div key={item.id} className="py-3.5 hover:bg-slate-50/80 rounded-xl px-2 transition-colors">
+          <div className="divide-y divide-slate-100">
+            {pendingCommentDrafts.length > 0 ? (
+              pendingCommentDrafts.slice(0, 4).map((draft) => {
+                const ev = commentEvents.find((e) => e.id === draft.event_id || e.object_id === draft.target_id)
+                const isBusy = actionLoading === draft.id
+                const customerName = draft.from_name || ev?.from_name || 'Khách hàng'
+                const commentBody = draft.source_body || ev?.body
+                return (
+                  <div key={draft.id} className="py-3.5 hover:bg-slate-50/80 rounded-xl px-2 transition-colors space-y-2">
                     <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-start space-x-3">
-                        <div className="w-9 h-9 rounded-full bg-slate-100 border border-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center flex-shrink-0">
-                          {item.from_name ? item.from_name.slice(0, 2).toUpperCase() : 'KH'}
+                      <div className="flex items-start space-x-2.5">
+                        <div className="w-8 h-8 rounded-full bg-amber-100 text-amber-800 font-bold text-xs flex items-center justify-center flex-shrink-0">
+                          {customerName.slice(0, 2).toUpperCase()}
                         </div>
                         <div>
                           <div className="flex items-center space-x-2">
-                            <span className="font-bold text-xs text-slate-900">{item.from_name || 'Khách hàng'}</span>
-                            {renderPlatformChip(item.platform || 'facebook')}
-                            <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-100 text-slate-600 capitalize">
-                              {item.kind}
-                            </span>
-                            {item.class && (
-                              <span
-                                className={`text-[10px] px-1.5 py-0.2 rounded font-medium ${
-                                  item.class === 'lead'
-                                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                                    : 'bg-blue-50 text-blue-700'
-                                }`}
-                              >
-                                {item.class}
+                            <span className="font-bold text-xs text-slate-900">{customerName}</span>
+                            {renderPlatformChip(draft.event_platform === 'tiktok' ? 'tiktok' : 'facebook')}
+                            {draft.class && (
+                              <span className="text-[10px] px-1.5 py-0.2 rounded bg-blue-50 text-blue-700 font-medium">
+                                {draft.class}
                               </span>
                             )}
                           </div>
-                          <p className="text-xs text-slate-700 mt-1 leading-relaxed line-clamp-2">
-                            "{item.body}"
-                          </p>
+                          {commentBody && (
+                            <p className="text-xs text-slate-700 mt-1 leading-relaxed line-clamp-2">
+                              "{commentBody}"
+                            </p>
+                          )}
                         </div>
                       </div>
-
                       <div className="text-right flex-shrink-0">
-                        <span className="text-[10px] text-slate-400 block">{timeAgo(item.created_ts)}</span>
-                        <span className="inline-block mt-1.5 text-[10px] font-medium text-slate-500">
-                          {formatTime(item.created_ts)}
+                        <span className="text-[10px] text-slate-400 block">{timeAgo(draft.created_ts)}</span>
+                        <span className="inline-block mt-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">
+                          Chờ duyệt
                         </span>
                       </div>
                     </div>
-                  </div>
-                ))}
 
-            {events.length === 0 && drafts.length === 0 && (
-              <div className="py-12 text-center text-slate-400 text-xs">
-                <Bot className="w-8 h-8 mx-auto mb-2 text-slate-300" />
-                <span>Chưa có bình luận hoặc nháp mới nào trong 24 giờ qua</span>
+                    <div className="p-2.5 rounded-lg bg-saoviet-50/70 border border-saoviet-100 text-xs text-slate-800">
+                      <span className="font-semibold text-saoviet-700 text-[11px] block mb-0.5">
+                        Javis soạn nháp phản hồi:
+                      </span>
+                      <span className="italic text-slate-700 line-clamp-2">{draft.proposed}</span>
+                    </div>
+
+                    <div className="flex items-center justify-end space-x-2 pt-1">
+                      <button
+                        onClick={() => handleRejectDraft(draft)}
+                        disabled={isBusy}
+                        className="px-2.5 py-1 text-xs font-semibold text-slate-500 hover:text-red-600 rounded-lg hover:bg-red-50 transition-colors"
+                      >
+                        Bỏ qua
+                      </button>
+                      <button
+                        onClick={() => handleSendDraft(draft)}
+                        disabled={isBusy}
+                        className="flex items-center space-x-1 px-3 py-1 rounded-lg bg-saoviet-500 hover:bg-saoviet-600 text-white font-bold text-xs shadow-sm transition-all"
+                      >
+                        <Send className="w-3 h-3" />
+                        <span>{isBusy ? 'Đang gửi...' : 'Duyệt gửi'}</span>
+                      </button>
+                    </div>
+                  </div>
+                )
+              })
+            ) : commentEvents.length > 0 ? (
+              commentEvents.slice(0, 3).map((item) => (
+                <div key={item.id} className="py-3 hover:bg-slate-50/80 rounded-xl px-2 transition-colors">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <div className="flex items-center space-x-2">
+                        <span className="font-bold text-xs text-slate-900">{item.from_name || 'Khách hàng'}</span>
+                        {renderPlatformChip(item.platform || 'facebook')}
+                        {item.class && (
+                          <span className="text-[10px] px-1.5 py-0.2 rounded bg-blue-50 text-blue-700 font-medium">
+                            {item.class}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-slate-700 mt-1 leading-relaxed line-clamp-2">
+                        "{item.body}"
+                      </p>
+                    </div>
+                    <span className="text-[10px] text-slate-400 flex-shrink-0">{timeAgo(item.created_ts)}</span>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="py-10 text-center text-slate-400 text-xs">
+                <CheckCircle2 className="w-8 h-8 mx-auto mb-2 text-emerald-400" />
+                <p className="font-semibold text-slate-600 text-sm">Chưa có comment trên bài.</p>
+                <p className="text-slate-400 mt-1">Khi có bình luận mới dưới bài viết, Javis sẽ chuẩn bị nháp tại đây.</p>
               </div>
             )}
           </div>
         </div>
 
-        {/* Right: Quick Info, Care Settings & Health Status (1 col) */}
-        <div className="space-y-6">
-          {/* Global Care Configuration Card */}
-          <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-4">
+        {/* Block 2: Tin nhắn IB chờ */}
+        <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div className="flex items-center space-x-2">
+              <Bot className="w-5 h-5 text-blue-500" />
+              <h2 className="font-bold text-slate-900 text-base">
+                Tin nhắn IB chờ ({pendingMessageCount})
+              </h2>
+            </div>
+            <button
+              onClick={() => {
+                window.location.hash = 'inbox?tab=messenger'
+                onNavigate('inbox')
+              }}
+              className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center space-x-1"
+            >
+              <span>Vào hộp thư IB</span>
+              <ArrowRight className="w-3 h-3" />
+            </button>
+          </div>
+
+          <div className="divide-y divide-slate-100">
+            {pendingMessageDrafts.length > 0 ? (
+              pendingMessageDrafts.slice(0, 4).map((draft) => {
+                const ev = messageEvents.find((e) => e.id === draft.event_id || e.object_id === draft.target_id)
+                const isBusy = actionLoading === draft.id
+                const customerName = draft.from_name || ev?.from_name || 'Khách Messenger'
+                const msgBody = draft.source_body || ev?.body
+                return (
+                  <div key={draft.id} className="py-3.5 hover:bg-slate-50/80 rounded-xl px-2 transition-colors space-y-2">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-start space-x-2.5">
+                        <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-800 font-bold text-xs flex items-center justify-center flex-shrink-0">
+                          {customerName.slice(0, 2).toUpperCase()}
+                        </div>
+                        <div>
+                          <div className="flex items-center space-x-2">
+                            <span className="font-bold text-xs text-slate-900">{customerName}</span>
+                            <span className="text-[10px] px-1.5 py-0.2 rounded font-medium bg-indigo-50 text-indigo-700 border border-indigo-200">
+                              Messenger IB
+                            </span>
+                            {draft.class && (
+                              <span className="text-[10px] px-1.5 py-0.2 rounded bg-blue-50 text-blue-700 font-medium">
+                                {draft.class}
+                              </span>
+                            )}
+                          </div>
+                          {msgBody && (
+                            <p className="text-xs text-slate-700 mt-1 leading-relaxed line-clamp-2">
+                              "{msgBody}"
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="text-right flex-shrink-0">
+                        <span className="text-[10px] text-slate-400 block">{timeAgo(draft.created_ts)}</span>
+                        <span className="inline-block mt-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">
+                          Chờ gửi IB
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="p-2.5 rounded-lg bg-blue-50/70 border border-blue-100 text-xs text-slate-800">
+                      <span className="font-semibold text-blue-700 text-[11px] block mb-0.5">
+                        Javis gợi ý câu trả lời IB:
+                      </span>
+                      <span className="italic text-slate-700 line-clamp-2">{draft.proposed}</span>
+                    </div>
+
+                    <div className="flex items-center justify-end space-x-2 pt-1">
+                      <button
+                        onClick={() => handleRejectDraft(draft)}
+                        disabled={isBusy}
+                        className="px-2.5 py-1 text-xs font-semibold text-slate-500 hover:text-red-600 rounded-lg hover:bg-red-50 transition-colors"
+                      >
+                        Bỏ qua
+                      </button>
+                      <button
+                        onClick={() => handleSendDraft(draft)}
+                        disabled={isBusy}
+                        className="flex items-center space-x-1 px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-sm transition-all"
+                      >
+                        <Send className="w-3 h-3" />
+                        <span>{isBusy ? 'Đang gửi...' : 'Gửi nháp IB'}</span>
+                      </button>
+                    </div>
+                  </div>
+                )
+              })
+            ) : messageEvents.length > 0 ? (
+              messageEvents.slice(0, 3).map((item) => (
+                <div key={item.id} className="py-3 hover:bg-slate-50/80 rounded-xl px-2 transition-colors">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <div className="flex items-center space-x-2">
+                        <span className="font-bold text-xs text-slate-900">{item.from_name || 'Khách Messenger'}</span>
+                        <span className="text-[10px] px-1.5 py-0.2 rounded font-medium bg-indigo-50 text-indigo-700 border border-indigo-200">
+                          Messenger
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-700 mt-1 leading-relaxed line-clamp-2">
+                        "{item.body}"
+                      </p>
+                    </div>
+                    <span className="text-[10px] text-slate-400 flex-shrink-0">{timeAgo(item.created_ts)}</span>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="py-10 text-center text-slate-400 text-xs">
+                <Bot className="w-8 h-8 mx-auto mb-2 text-slate-300" />
+                <p className="font-semibold text-slate-600 text-sm">Chưa có tin nhắn hộp thư. Bấm Kéo hộp thư IB.</p>
+                <p className="text-slate-400 mt-1">Tin nhắn từ Business Suite / Messenger sẽ được phân tích tại đây.</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Settings & Guidelines Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Global Care Configuration Card (2 cols) */}
+        <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center space-x-2">
                 <Sliders className="w-4 h-4 text-saoviet-600" />
@@ -690,8 +896,8 @@ export const Overview: React.FC<OverviewProps> = ({ onNavigate }) => {
             )}
           </div>
 
-          {/* Guidelines Box - Brand Adaptive */}
-          <div className="bg-slate-100/90 rounded-2xl border border-slate-200 p-5">
+          {/* Guidelines Box - Brand Adaptive (1 col) */}
+          <div className="lg:col-span-1 bg-slate-100/90 rounded-2xl border border-slate-200 p-5 h-fit">
             <div className="flex items-center space-x-2 text-slate-800 font-bold text-xs mb-2">
               <Calendar className="w-4 h-4 text-saoviet-600" />
               <span>
@@ -715,7 +921,6 @@ export const Overview: React.FC<OverviewProps> = ({ onNavigate }) => {
             </ul>
           </div>
         </div>
-      </div>
 
       {/* Per-Page Care Configuration Overrides Table */}
       <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-4">
