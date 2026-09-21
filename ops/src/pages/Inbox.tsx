@@ -46,6 +46,7 @@ interface MockConversation {
   unreadCount?: number
   hasUnreadDot?: boolean
   tags: { text: string; color: 'red' | 'amber' | 'green' | 'blue' | 'purple' }[]
+  crmTags?: { text: string; color: 'red' | 'amber' | 'green' | 'blue' | 'purple' }[]
   phone: string
   fbId: string
   source: string
@@ -79,6 +80,11 @@ const mockConversationsData: MockConversation[] = [
     tags: [
       { text: 'Lead nóng', color: 'red' },
       { text: 'Cần hỗ trợ', color: 'amber' },
+    ],
+    crmTags: [
+      { text: 'Lead nóng', color: 'red' },
+      { text: 'Quan tâm', color: 'amber' },
+      { text: 'Khách mới', color: 'blue' },
     ],
     phone: '0967 123 456',
     fbId: '1000123456789',
@@ -1196,7 +1202,7 @@ export const Inbox: React.FC = () => {
                 </button>
               </div>
               <div className="flex flex-wrap gap-1.5">
-                {currentConv.tags.map((t, idx) => (
+                {(currentConv.crmTags || currentConv.tags).map((t, idx) => (
                   <span
                     key={idx}
                     className={`px-2 py-0.5 rounded text-xs font-semibold ${tagColorMap[t.color]}`}
@@ -1210,7 +1216,7 @@ export const Inbox: React.FC = () => {
             {/* Customer Status radio/pills */}
             <div className="pt-2 border-t border-slate-100">
               <span className="text-xs font-bold text-slate-800 block mb-2">Trạng thái khách hàng</span>
-              <div className="grid grid-cols-2 gap-1.5">
+              <div className="flex flex-wrap items-center gap-1.5">
                 <button
                   type="button"
                   onClick={() => {
@@ -1218,10 +1224,10 @@ export const Inbox: React.FC = () => {
                       prev.map((c) => (c.id === currentConv.id ? { ...c, status: 'interested' } : c))
                     )
                   }}
-                  className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+                  className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
                     currentConv.status === 'interested'
-                      ? 'bg-amber-50 text-amber-700 border-amber-300 font-bold'
-                      : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                      ? 'bg-amber-50 text-amber-700 border border-amber-300 font-bold'
+                      : 'text-slate-600 hover:bg-slate-100'
                   }`}
                 >
                   <span className="w-2 h-2 rounded-full bg-amber-500" />
@@ -1235,13 +1241,13 @@ export const Inbox: React.FC = () => {
                       prev.map((c) => (c.id === currentConv.id ? { ...c, status: 'lead_hot' } : c))
                     )
                   }}
-                  className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+                  className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-xs font-semibold transition-colors ${
                     currentConv.status === 'lead_hot'
-                      ? 'bg-blue-50 text-blue-700 border-blue-300 font-bold'
-                      : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                      ? 'bg-rose-50 text-rose-700 border border-rose-200'
+                      : 'text-slate-600 hover:bg-slate-100'
                   }`}
                 >
-                  <span className="w-2 h-2 rounded-full bg-rose-500" />
+                  <span className="w-2 h-2 rounded-full bg-rose-600" />
                   <span>Lead nóng</span>
                 </button>
 
@@ -1252,10 +1258,10 @@ export const Inbox: React.FC = () => {
                       prev.map((c) => (c.id === currentConv.id ? { ...c, status: 'purchased' } : c))
                     )
                   }}
-                  className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+                  className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
                     currentConv.status === 'purchased'
-                      ? 'bg-emerald-50 text-emerald-700 border-emerald-300 font-bold'
-                      : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                      ? 'bg-emerald-50 text-emerald-700 border border-emerald-300 font-bold'
+                      : 'text-slate-600 hover:bg-slate-100'
                   }`}
                 >
                   <span className="w-2 h-2 rounded-full bg-emerald-500" />
@@ -1269,10 +1275,10 @@ export const Inbox: React.FC = () => {
                       prev.map((c) => (c.id === currentConv.id ? { ...c, status: 'care_needed' } : c))
                     )
                   }}
-                  className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+                  className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
                     currentConv.status === 'care_needed'
-                      ? 'bg-orange-50 text-orange-700 border-orange-300 font-bold'
-                      : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                      ? 'bg-orange-50 text-orange-700 border border-orange-300 font-bold'
+                      : 'text-slate-600 hover:bg-slate-100'
                   }`}
                 >
                   <span className="w-2 h-2 rounded-full bg-orange-500" />
