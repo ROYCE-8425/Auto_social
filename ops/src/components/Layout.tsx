@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import {
+  Home,
   LayoutDashboard,
   Inbox,
   Users,
@@ -82,7 +83,7 @@ export const Layout: React.FC<LayoutProps> = ({ currentTab, onSelectTab, childre
   }[role || 'staff']
 
   const navItems = [
-    { id: 'overview', label: 'Tổng quan', icon: LayoutDashboard, show: true },
+    { id: 'overview', label: 'Tổng quan', icon: Home, show: true },
     {
       id: 'inbox',
       label: 'Hộp thư & Nháp',
@@ -105,8 +106,8 @@ export const Layout: React.FC<LayoutProps> = ({ currentTab, onSelectTab, childre
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col pb-16 md:pb-0">
       {/* Top Header */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-2xs">
+        <div className="max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo & Title */}
             <div className="flex items-center space-x-2.5">
@@ -128,10 +129,10 @@ export const Layout: React.FC<LayoutProps> = ({ currentTab, onSelectTab, childre
               <button
                 type="button"
                 onClick={() => setScope('all')}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                   scope === 'all'
-                    ? 'bg-blue-100 text-blue-700 border border-blue-300 shadow-2xs'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    ? 'bg-blue-600 text-white shadow-xs'
+                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200 font-medium'
                 }`}
               >
                 Tất cả Page ({eligiblePages.length || 2})
@@ -139,10 +140,10 @@ export const Layout: React.FC<LayoutProps> = ({ currentTab, onSelectTab, childre
               <button
                 type="button"
                 onClick={() => setScope('brand', 'bsn')}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                   scope === 'brand' && scopeBrand === 'bsn'
-                    ? 'bg-blue-100 text-blue-700 border border-blue-300 shadow-2xs font-bold'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    ? 'bg-blue-600 text-white shadow-xs'
+                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200 font-medium'
                 }`}
               >
                 Nhóm Game BSN
@@ -150,10 +151,10 @@ export const Layout: React.FC<LayoutProps> = ({ currentTab, onSelectTab, childre
               <button
                 type="button"
                 onClick={() => setScope('brand', 'saoviet')}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                   scope === 'brand' && scopeBrand === 'saoviet'
-                    ? 'bg-blue-100 text-blue-700 border border-blue-300 shadow-2xs font-bold'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    ? 'bg-blue-600 text-white shadow-xs'
+                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200 font-medium'
                 }`}
               >
                 Trung tâm Sao Việt
@@ -163,15 +164,15 @@ export const Layout: React.FC<LayoutProps> = ({ currentTab, onSelectTab, childre
             {/* Middle: Brain Status Pill & Poll Now */}
             <div className="hidden lg:flex items-center space-x-2.5">
               {careState?.config?.kill_switch ? (
-                <div className="flex items-center space-x-1.5 px-3 py-1.5 rounded-full bg-red-50 border border-red-200 text-red-700 text-xs font-semibold animate-pulse">
+                <div className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs font-semibold animate-pulse">
                   <AlertTriangle className="w-3.5 h-3.5 text-red-600" />
                   <span>Dừng khẩn cấp</span>
                 </div>
               ) : (
-                <div className="flex items-center space-x-1.5 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold">
+                <div className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-medium">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                   <span>Javis đang trực</span>
-                  <ChevronDown className="w-3 h-3 text-emerald-600" />
+                  <ChevronDown className="w-3 h-3 text-emerald-600 ml-0.5" />
                 </div>
               )}
 
@@ -180,7 +181,7 @@ export const Layout: React.FC<LayoutProps> = ({ currentTab, onSelectTab, childre
                   onClick={handlePollNow}
                   disabled={isPolling}
                   title="Quét bình luận ngay"
-                  className="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-xl transition-colors border border-blue-200/60 disabled:opacity-50"
+                  className="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors border border-blue-100 disabled:opacity-50"
                 >
                   <RefreshCw className={`w-3.5 h-3.5 ${isPolling ? 'animate-spin text-blue-600' : 'text-blue-600'}`} />
                   <span>Quét ngay</span>
@@ -188,7 +189,7 @@ export const Layout: React.FC<LayoutProps> = ({ currentTab, onSelectTab, childre
               )}
 
               {pollMsg && (
-                <span className="text-xs font-semibold text-saoviet-700 bg-saoviet-50 px-2 py-0.5 rounded border border-saoviet-200 animate-fade-in">
+                <span className="text-xs font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200 animate-fade-in">
                   {pollMsg}
                 </span>
               )}
@@ -199,7 +200,7 @@ export const Layout: React.FC<LayoutProps> = ({ currentTab, onSelectTab, childre
               {/* Notification Bell with Badge 3 */}
               <button
                 type="button"
-                className="relative p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-full transition-colors"
+                className="relative p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-full transition-colors"
                 title="Thông báo"
               >
                 <Bell className="w-4 h-4" />
@@ -210,14 +211,14 @@ export const Layout: React.FC<LayoutProps> = ({ currentTab, onSelectTab, childre
 
               <div className="flex items-center space-x-2 pl-2 border-l border-slate-200 cursor-pointer">
                 <div className="w-8 h-8 rounded-full bg-indigo-600 text-white font-bold text-xs flex items-center justify-center ring-2 ring-white shadow-2xs">
-                  {user?.name ? user.name.slice(0, 2).toUpperCase() : 'NV'}
+                  {role === 'owner' ? 'CH' : user?.name ? user.name.slice(0, 2).toUpperCase() : 'NV'}
                 </div>
                 <div className="hidden sm:block text-left">
-                  <div className="text-xs font-bold text-slate-900 leading-tight flex items-center space-x-1">
-                    <span>{user?.name || 'Nhân viên trực ca'}</span>
+                  <div className="text-xs font-bold text-slate-800 leading-tight flex items-center space-x-1">
+                    <span>{role === 'owner' ? 'Chủ máy' : user?.name || 'Nhân viên trực ca'}</span>
                     <ChevronDown className="w-3 h-3 text-slate-400" />
                   </div>
-                  <div className="flex items-center space-x-1 text-[10px] text-slate-500 font-medium">
+                  <div className="flex items-center space-x-1 text-[10px] text-slate-400 font-medium">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                     <span>Đang online</span>
                   </div>
@@ -229,7 +230,7 @@ export const Layout: React.FC<LayoutProps> = ({ currentTab, onSelectTab, childre
                 <a
                   href="/app"
                   title="Vào buồng lái điều khiển Javis (chủ máy)"
-                  className="hidden xl:flex items-center space-x-1 px-2.5 py-1 text-xs font-semibold text-slate-700 hover:text-blue-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
+                  className="hidden xl:flex items-center space-x-1 px-3 py-1.5 text-xs font-medium text-slate-700 hover:text-blue-600 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg transition-colors shadow-2xs"
                 >
                   <span>Buồng lái</span>
                   <ExternalLink className="w-3 h-3" />
@@ -256,7 +257,7 @@ export const Layout: React.FC<LayoutProps> = ({ currentTab, onSelectTab, childre
           </div>
 
           {/* Desktop Navigation Bar */}
-          <nav className="hidden md:flex space-x-1 py-1 border-t border-slate-100 overflow-x-auto">
+          <nav className="hidden md:flex space-x-6 pt-1 border-t border-slate-100 overflow-x-auto">
             {navItems.map((item) => {
               const Icon = item.icon
               const active = currentTab === item.id
@@ -264,18 +265,18 @@ export const Layout: React.FC<LayoutProps> = ({ currentTab, onSelectTab, childre
                 <button
                   key={item.id}
                   onClick={() => onSelectTab(item.id)}
-                  className={`flex items-center space-x-2 px-3.5 py-2 rounded-lg text-sm font-medium transition-all ${
+                  className={`flex items-center space-x-2 py-2.5 px-1 text-sm font-medium transition-all relative border-b-2 ${
                     active
-                      ? 'bg-saoviet-500 text-white font-semibold shadow-sm shadow-saoviet-200'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                      ? 'border-blue-600 text-blue-600 font-bold'
+                      : 'border-transparent text-slate-600 hover:text-slate-900 hover:border-slate-300'
                   }`}
                 >
-                  <Icon className={`w-4 h-4 ${active ? 'text-white' : 'text-slate-500'}`} />
+                  <Icon className={`w-4 h-4 ${active ? 'text-blue-600' : 'text-slate-500'}`} />
                   <span>{item.label}</span>
                   {item.badge !== undefined && item.badge > 0 && (
                     <span
                       className={`text-xs px-1.5 py-0.2 rounded-full font-bold ${
-                        active ? 'bg-white text-saoviet-600' : 'bg-saoviet-100 text-saoviet-700'
+                        active ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600'
                       }`}
                     >
                       {item.badge}
@@ -334,7 +335,7 @@ export const Layout: React.FC<LayoutProps> = ({ currentTab, onSelectTab, childre
       {currentTab !== 'overview' && <ScopeBar />}
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <main className="flex-1 max-w-[1536px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {children}
       </main>
 
