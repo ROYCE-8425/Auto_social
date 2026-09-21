@@ -2,1430 +2,1390 @@ import React, { useState, useEffect, useRef } from 'react'
 import {
   MessageSquare,
   Send,
-  XCircle,
   UserCheck,
-  CheckCircle2,
   Clock,
-  RotateCcw,
   Search,
   Bot,
   AlertCircle,
   MessageCircle,
-  X,
-  ExternalLink,
   Sparkles,
+  Filter,
+  SlidersHorizontal,
+  Info,
+  Phone,
+  Copy,
+  Pencil,
+  Plus,
+  Paperclip,
+  Image as ImageIcon,
+  Smile,
+  FileText,
+  Ban,
+  Check,
+  CheckCheck,
+  ArrowRight,
+  MoreVertical,
+  CheckCircle2,
+  Calendar,
+  Building2,
+  Briefcase,
+  Tag,
+  Share2,
 } from 'lucide-react'
 import { api, CareConversation, CareDraft, CareEvent, CareState, CareStats } from '../lib/api'
 import { useAuth } from '../lib/auth'
 import { useCareScope } from '../lib/scope'
-import { formatTime, timeAgo } from '../lib/utils'
+
+interface MockConversation {
+  id: string
+  name: string
+  avatar: string
+  avatarBg: string
+  message: string
+  time: string
+  unreadCount?: number
+  hasUnreadDot?: boolean
+  tags: { text: string; color: 'red' | 'amber' | 'green' | 'blue' | 'purple' }[]
+  phone: string
+  fbId: string
+  source: string
+  firstInteraction: string
+  pageName: string
+  status: 'lead_hot' | 'interested' | 'purchased' | 'care_needed'
+  history: {
+    title: string
+    desc: string
+    time: string
+    dotColor: 'green' | 'blue' | 'gray'
+  }[]
+  messages: {
+    id: string
+    sender: 'customer' | 'bot' | 'staff'
+    text: string
+    time: string
+  }[]
+}
+
+const mockConversationsData: MockConversation[] = [
+  {
+    id: 'conv_1',
+    name: 'Nguyễn Thị Hoa',
+    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=120&auto=format&fit=crop&q=80',
+    avatarBg: 'bg-rose-100 text-rose-700',
+    message: 'Shop ơi, sản phẩm này còn hàng không ạ?',
+    time: '14:28',
+    unreadCount: 3,
+    hasUnreadDot: true,
+    tags: [
+      { text: 'Lead nóng', color: 'red' },
+      { text: 'Cần hỗ trợ', color: 'amber' },
+    ],
+    phone: '0967 123 456',
+    fbId: '1000123456789',
+    source: 'Messenger',
+    firstInteraction: '10/04/2024',
+    pageName: 'Page JAVIS Official',
+    status: 'lead_hot',
+    history: [
+      {
+        title: 'Lần đầu tương tác',
+        desc: 'Khách hàng nhắn tin qua Messenger',
+        time: '10/04/2024 14:28',
+        dotColor: 'green',
+      },
+      {
+        title: 'Phản hồi gần nhất',
+        desc: 'Bạn đã gửi tin nhắn',
+        time: '23/04/2024 14:31',
+        dotColor: 'blue',
+      },
+      {
+        title: 'Tạo lead',
+        desc: 'Tự động từ hội thoại',
+        time: '10/04/2024 14:30',
+        dotColor: 'gray',
+      },
+    ],
+    messages: [
+      {
+        id: 'm1',
+        sender: 'customer',
+        text: 'Shop ơi, sản phẩm này còn hàng không ạ?',
+        time: '14:28',
+      },
+      {
+        id: 'm2',
+        sender: 'bot',
+        text: 'Dạ chào chị Hoa 👋\nSản phẩm hiện vẫn còn hàng ạ. Chị đang quan tâm đến màu và size nào để em tư vấn chi tiết hơn cho mình nhé?',
+        time: '14:29',
+      },
+      {
+        id: 'm3',
+        sender: 'customer',
+        text: 'Mình muốn màu be, size M. Không biết khi nào nhận được hàng ở Hà Nội ạ?',
+        time: '14:30',
+      },
+      {
+        id: 'm4',
+        sender: 'bot',
+        text: 'Dạ với địa chỉ Hà Nội, thời gian giao hàng dự kiến từ 1–2 ngày ạ. Chị có thể đặt hàng ngay hôm nay để được freeship nhé! 🎁',
+        time: '14:31',
+      },
+    ],
+  },
+  {
+    id: 'conv_2',
+    name: 'Trần Văn Minh',
+    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80',
+    avatarBg: 'bg-blue-100 text-blue-700',
+    message: 'Cảm ơn shop nhé!',
+    time: '13:45',
+    unreadCount: 1,
+    hasUnreadDot: true,
+    tags: [
+      { text: 'Đã mua', color: 'green' },
+      { text: 'VIP', color: 'purple' },
+    ],
+    phone: '0912 345 678',
+    fbId: '1000987654321',
+    source: 'Messenger',
+    firstInteraction: '08/04/2024',
+    pageName: 'Page JAVIS Official',
+    status: 'purchased',
+    history: [
+      {
+        title: 'Lần đầu tương tác',
+        desc: 'Khách hàng nhắn tin qua Messenger',
+        time: '08/04/2024 10:15',
+        dotColor: 'green',
+      },
+      {
+        title: 'Hoàn tất đơn hàng',
+        desc: 'Đã giao thành công',
+        time: '13/04/2024 11:30',
+        dotColor: 'blue',
+      },
+    ],
+    messages: [
+      {
+        id: 'm1',
+        sender: 'customer',
+        text: 'Đã nhận được hàng đúng mẫu rồi nhé shop!',
+        time: '13:40',
+      },
+      {
+        id: 'm2',
+        sender: 'customer',
+        text: 'Cảm ơn shop nhé!',
+        time: '13:45',
+      },
+      {
+        id: 'm3',
+        sender: 'bot',
+        text: 'Dạ Javis cảm ơn anh Minh nhiều ạ! Chúc anh có trải nghiệm tuyệt vời với sản phẩm ❤️',
+        time: '13:46',
+      },
+    ],
+  },
+  {
+    id: 'conv_3',
+    name: 'Lê Quang Huy',
+    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&auto=format&fit=crop&q=80',
+    avatarBg: 'bg-teal-100 text-teal-700',
+    message: 'Khi nào có hàng lại vậy shop?',
+    time: '11:20',
+    unreadCount: 1,
+    hasUnreadDot: true,
+    tags: [{ text: 'FAQ', color: 'blue' }],
+    phone: '0988 776 655',
+    fbId: '1000554433221',
+    source: 'Messenger',
+    firstInteraction: '12/04/2024',
+    pageName: 'Page JAVIS Official',
+    status: 'interested',
+    history: [
+      {
+        title: 'Lần đầu tương tác',
+        desc: 'Khách hàng hỏi hàng',
+        time: '12/04/2024 11:20',
+        dotColor: 'green',
+      },
+    ],
+    messages: [
+      {
+        id: 'm1',
+        sender: 'customer',
+        text: 'Khi nào có hàng lại vậy shop?',
+        time: '11:20',
+      },
+      {
+        id: 'm2',
+        sender: 'bot',
+        text: 'Dạ đợt hàng mới dự kiến về trong 2 ngày tới ạ. Anh có muốn em lưu số điện thoại để báo ngay khi hàng về không ạ?',
+        time: '11:21',
+      },
+    ],
+  },
+  {
+    id: 'conv_4',
+    name: 'Phạm Thị Lan',
+    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&auto=format&fit=crop&q=80',
+    avatarBg: 'bg-amber-100 text-amber-700',
+    message: 'Dạ mình muốn đặt 2 sản phẩm ạ',
+    time: '10:37',
+    tags: [
+      { text: 'Quan tâm', color: 'amber' },
+      { text: 'Lead', color: 'red' },
+    ],
+    phone: '0977 112 233',
+    fbId: '1000667788990',
+    source: 'Messenger',
+    firstInteraction: '15/04/2024',
+    pageName: 'Page JAVIS Official',
+    status: 'lead_hot',
+    history: [
+      {
+        title: 'Lần đầu tương tác',
+        desc: 'Khách hàng nhắn tin đặt hàng',
+        time: '15/04/2024 10:37',
+        dotColor: 'green',
+      },
+    ],
+    messages: [
+      {
+        id: 'm1',
+        sender: 'customer',
+        text: 'Dạ mình muốn đặt 2 sản phẩm ạ',
+        time: '10:37',
+      },
+    ],
+  },
+  {
+    id: 'conv_5',
+    name: 'Hoàng Kim',
+    avatar: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=120&auto=format&fit=crop&q=80',
+    avatarBg: 'bg-indigo-100 text-indigo-700',
+    message: 'Shop có hỗ trợ đổi size không?',
+    time: '09:12',
+    tags: [{ text: 'Cần hỗ trợ', color: 'amber' }],
+    phone: '0933 445 566',
+    fbId: '1000332211445',
+    source: 'Messenger',
+    firstInteraction: '18/04/2024',
+    pageName: 'Page JAVIS Official',
+    status: 'care_needed',
+    history: [
+      {
+        title: 'Lần đầu tương tác',
+        desc: 'Khách hàng hỏi đổi size',
+        time: '18/04/2024 09:12',
+        dotColor: 'green',
+      },
+    ],
+    messages: [
+      {
+        id: 'm1',
+        sender: 'customer',
+        text: 'Shop có hỗ trợ đổi size không?',
+        time: '09:12',
+      },
+    ],
+  },
+  {
+    id: 'conv_6',
+    name: 'Đỗ Thu Hà',
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80',
+    avatarBg: 'bg-emerald-100 text-emerald-700',
+    message: 'Mình đã nhận được hàng rồi ạ',
+    time: 'Hôm qua',
+    tags: [{ text: 'Đã mua', color: 'green' }],
+    phone: '0909 888 777',
+    fbId: '1000888999111',
+    source: 'Messenger',
+    firstInteraction: '19/04/2024',
+    pageName: 'Page JAVIS Official',
+    status: 'purchased',
+    history: [
+      {
+        title: 'Giao hàng',
+        desc: 'Đã nhận hàng thành công',
+        time: '21/04/2024 16:00',
+        dotColor: 'green',
+      },
+    ],
+    messages: [
+      {
+        id: 'm1',
+        sender: 'customer',
+        text: 'Mình đã nhận được hàng rồi ạ',
+        time: 'Hôm qua',
+      },
+    ],
+  },
+  {
+    id: 'conv_7',
+    name: 'Nguyễn Anh Tuấn',
+    avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=120&auto=format&fit=crop&q=80',
+    avatarBg: 'bg-purple-100 text-purple-700',
+    message: 'Tư vấn giúp mình với ạ',
+    time: 'Hôm qua',
+    tags: [{ text: 'Lead', color: 'red' }],
+    phone: '0944 556 677',
+    fbId: '1000777666555',
+    source: 'Messenger',
+    firstInteraction: '20/04/2024',
+    pageName: 'Page JAVIS Official',
+    status: 'interested',
+    history: [
+      {
+        title: 'Tạo lead',
+        desc: 'Từ bình luận bài viết',
+        time: '20/04/2024 15:30',
+        dotColor: 'gray',
+      },
+    ],
+    messages: [
+      {
+        id: 'm1',
+        sender: 'customer',
+        text: 'Tư vấn giúp mình với ạ',
+        time: 'Hôm qua',
+      },
+    ],
+  },
+  {
+    id: 'conv_8',
+    name: 'Trần Mai Phương',
+    avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=120&auto=format&fit=crop&q=80',
+    avatarBg: 'bg-rose-100 text-rose-700',
+    message: 'Shop ơi cho mình hỏi thêm ạ',
+    time: '21/04',
+    tags: [{ text: 'FAQ', color: 'blue' }],
+    phone: '0922 334 455',
+    fbId: '1000444333222',
+    source: 'Messenger',
+    firstInteraction: '21/04/2024',
+    pageName: 'Page JAVIS Official',
+    status: 'interested',
+    history: [
+      {
+        title: 'Hỏi thông tin',
+        desc: 'Thời gian bảo hành sản phẩm',
+        time: '21/04/2024 10:20',
+        dotColor: 'blue',
+      },
+    ],
+    messages: [
+      {
+        id: 'm1',
+        sender: 'customer',
+        text: 'Shop ơi cho mình hỏi thêm ạ',
+        time: '21/04',
+      },
+    ],
+  },
+]
 
 export const Inbox: React.FC = () => {
-  const [activeSubTab, setActiveSubTab] = useState<'comments' | 'messenger'>(() => {
-    if (typeof window !== 'undefined' && window.location.hash.includes('tab=messenger')) {
-      return 'messenger'
-    }
-    return 'comments'
-  })
   const { can } = useAuth()
-  const { scope, scopeBrand, scopePageId, eligiblePages: globalPages } = useCareScope()
-  const [platformFilter, setPlatformFilter] = useState<'all' | 'facebook' | 'tiktok'>('all')
-  const [pageFilter, setPageFilter] = useState<string>('')
-  const [eligiblePages, setEligiblePages] = useState<NonNullable<CareState['eligible_pages']>>([])
-  const [isPolling, setIsPolling] = useState(false)
-  const [pollHint, setPollHint] = useState<string | null>(null)
-  const [events, setEvents] = useState<CareEvent[]>([])
-  const [drafts, setDrafts] = useState<CareDraft[]>([])
-  const [stats, setStats] = useState<CareStats | null>(null)
-  const [conversations, setConversations] = useState<CareConversation[]>([])
-  const [filterView, setFilterView] = useState<'pending' | 'events'>('pending')
-  const [messengerStatusFilter, setMessengerStatusFilter] = useState<'all' | 'unreplied' | 'replied' | 'takeover'>('all')
-  const [searchQuery, setSearchQuery] = useState<string>('')
-  const [loading, setLoading] = useState<boolean>(true)
-  const [actionLoading, setActionLoading] = useState<string | number | null>(null)
-  const [actionMsg, setActionMsg] = useState<{ id: string | number; msg: string; type: 'success' | 'error' } | null>(null)
+  const { scope, scopeBrand, scopePageId } = useCareScope()
+  const [activeChannel, setActiveChannel] = useState<'comments' | 'messenger'>('messenger')
+  const [statusFilter, setStatusFilter] = useState<'unread' | 'need_human' | 'done'>('unread')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedConvId, setSelectedConvId] = useState<string>('conv_1')
+  const [inputText, setInputText] = useState('')
+  const [isTakeover, setIsTakeover] = useState(false)
+  const [copySuccess, setCopySuccess] = useState<string | null>(null)
+  const [conversationsList, setConversationsList] = useState<MockConversation[]>(mockConversationsData)
+  const [noteText, setNoteText] = useState('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
-  // Sync activeSubTab when URL hash changes (e.g. from Overview links)
-  useEffect(() => {
-    const handleHash = () => {
-      if (window.location.hash.includes('tab=messenger')) {
-        setActiveSubTab('messenger')
-      } else if (window.location.hash.includes('tab=comments')) {
-        setActiveSubTab('comments')
-      }
-    }
-    window.addEventListener('hashchange', handleHash)
-    return () => window.removeEventListener('hashchange', handleHash)
-  }, [])
-
-  // Sync pageFilter when Scope changes from the global ScopeBar
-  useEffect(() => {
-    if (scope === 'page' && scopePageId) {
-      setPageFilter(scopePageId)
-    } else if (scope === 'all' || scope === 'brand') {
-      setPageFilter('')
-    }
-  }, [scope, scopePageId])
-
-  // Chat conversation modal state
-  const [selectedConv, setSelectedConv] = useState<CareConversation | null>(null)
-  const [threadEvents, setThreadEvents] = useState<CareEvent[]>([])
-  const [threadLoading, setThreadLoading] = useState<boolean>(false)
-  const [directMsgText, setDirectMsgText] = useState<string>('')
-  const [sendingDirectMsg, setSendingDirectMsg] = useState<boolean>(false)
-
-  // Handoff note modal state
-  const [handoffModalOpen, setHandoffModalOpen] = useState<boolean>(false)
-  const [handoffTitle, setHandoffTitle] = useState<string>('')
-  const [handoffIntent, setHandoffIntent] = useState<string>('')
-  const [handoffCommentId, setHandoffCommentId] = useState<string>('')
-
-  const getPageInfo = (pid?: string) => {
-    const pages = eligiblePages.length ? eligiblePages : globalPages
-    return pages.find((p) => (p.page_id || p.id) === pid)
-  }
-
-  const renderPlatformChip = (platform?: string) => {
-    const p = (platform || 'facebook').toLowerCase()
-    if (p === 'tiktok') {
-      return (
-        <span className="text-[10px] px-2 py-0.5 rounded font-bold bg-slate-900 text-white tracking-wide">
-          TikTok
-        </span>
-      )
-    }
-    if (p === 'messenger') {
-      return (
-        <span className="text-[10px] px-2 py-0.5 rounded font-medium bg-indigo-50 text-indigo-700 border border-indigo-200">
-          Messenger
-        </span>
-      )
-    }
-    return (
-      <span className="text-[10px] px-2 py-0.5 rounded font-medium bg-blue-50 text-blue-700 border border-blue-200">
-        Facebook
-      </span>
-    )
-  }
-
-  const loadData = async (filter = platformFilter, pageId = pageFilter, subTab = activeSubTab) => {
-    try {
-      const effectivePageId = pageId || (scope === 'page' ? scopePageId : undefined)
-      const effectiveBrand = (!effectivePageId && scope === 'brand') ? scopeBrand : undefined
-
-      if (subTab === 'comments') {
-        const [inboxRes, stateRes] = await Promise.all([
-          api.getInbox({
-            limit: 80,
-            kind: 'comment',
-            platform: filter === 'all' ? undefined : filter,
-            page_id: effectivePageId || undefined,
-            brand: effectiveBrand || undefined,
-          }).catch(() => null),
-          api.getCareState().catch(() => null),
-        ])
-        if (inboxRes) {
-          setEvents(inboxRes.events || [])
-          setDrafts(inboxRes.drafts || [])
-          if (inboxRes.stats) setStats(inboxRes.stats)
-        }
-        if (stateRes?.eligible_pages) {
-          setEligiblePages(stateRes.eligible_pages)
-        }
-      } else {
-        const [inboxRes, convRes, stateRes] = await Promise.all([
-          api.getInbox({
-            limit: 80,
-            kind: 'message',
-            platform: filter === 'all' ? undefined : filter,
-            page_id: effectivePageId || undefined,
-            brand: effectiveBrand || undefined,
-          }).catch(() => null),
-          api.getConversations({
-            page_id: effectivePageId || undefined,
-            brand: effectiveBrand || undefined,
-          }).catch(() => null),
-          api.getCareState().catch(() => null),
-        ])
-        if (inboxRes) {
-          setEvents(inboxRes.events || [])
-          setDrafts(inboxRes.drafts || [])
-          if (inboxRes.stats) setStats(inboxRes.stats)
-        }
-        if (convRes) {
-          setConversations(convRes.conversations || [])
-        }
-        if (stateRes?.eligible_pages) {
-          setEligiblePages(stateRes.eligible_pages)
-        }
-      }
-    } finally {
-      setLoading(false)
-    }
-  }
+  // Real Care state & drafts
+  const [careDrafts, setCareDrafts] = useState<CareDraft[]>([])
+  const [careStats, setCareStats] = useState<CareStats | null>(null)
 
   useEffect(() => {
-    loadData(platformFilter, pageFilter, activeSubTab)
-    const interval = setInterval(() => loadData(platformFilter, pageFilter, activeSubTab), 15000)
-    return () => clearInterval(interval)
-  }, [platformFilter, pageFilter, scope, scopeBrand, scopePageId, activeSubTab])
-
-  const handlePollPage = async () => {
-    if (!can('poll_now') || isPolling) return
-    setIsPolling(true)
-    setPollHint(null)
-    try {
-      const effectivePageId = pageFilter || (scope === 'page' ? scopePageId : undefined)
-      const res = await api.pollNow(effectivePageId || undefined)
-      const r = res.result || {}
-      const err = (r.page_errors && r.page_errors[0]?.error) || r.reason
-      setPollHint(
-        r.status === 'skipped'
-          ? `Bỏ qua: ${r.reason || 'disabled'}`
-          : `Đã quét ${r.events_ingested ?? 0} comment mới · ${r.drafts_created ?? 0} nháp` +
-            (err ? ` · ${String(err).slice(0, 120)}` : ''),
-      )
-      await loadData(platformFilter, pageFilter)
-    } catch (err: any) {
-      setPollHint(err.message || 'Lỗi quét')
-    } finally {
-      setIsPolling(false)
-      setTimeout(() => setPollHint(null), 8000)
-    }
-  }
-
-  const formatWaitDuration = (sinceTs?: number) => {
-    if (!sinceTs) return 'vừa xong'
-    const diffSec = Math.max(0, Math.floor(Date.now() / 1000 - sinceTs))
-    if (diffSec < 60) return `${diffSec} giây`
-    if (diffSec < 3600) return `${Math.floor(diffSec / 60)} phút`
-    if (diffSec < 86400) return `${Math.floor(diffSec / 3600)} giờ`
-    return `${Math.floor(diffSec / 86400)} ngày`
-  }
-
-  const handleSendDraft = async (draft: { id: number; proposed?: string; target_id?: string; from_id?: string }) => {
-    setActionLoading(draft.id)
-    try {
-      const res = await api.sendDraft(draft.id)
-      if (res.ok) {
-        setActionMsg({ id: draft.id, msg: 'Đã gửi phản hồi ra Facebook thành công!', type: 'success' })
-        const nowSec = Date.now() / 1000
-        // Optimistically update conversations
-        setConversations((prev) =>
-          prev.map((conv) => {
-            if (
-              conv.psid === draft.target_id ||
-              conv.psid === draft.from_id ||
-              (conv.pending_draft && conv.pending_draft.id === draft.id)
-            ) {
-              return {
-                ...conv,
-                is_unreplied: false,
-                last_sender: 'page',
-                last_page_ts: nowSec,
-                latest_activity_ts: nowSec,
-                pending_draft: null,
-              }
-            }
-            return conv
-          })
-        )
-        // Optimistically remove pending draft
-        setDrafts((prev) => prev.filter((d) => d.id !== draft.id))
-        // If chat modal is open, append echo event
-        if (selectedConv && (selectedConv.psid === draft.target_id || selectedConv.psid === draft.from_id)) {
-          const newEv: CareEvent = {
-            id: Date.now(),
-            kind: 'echo',
-            platform: 'messenger',
-            page_id: selectedConv.page_id,
-            object_id: `msg_${Date.now()}`,
-            thread_id: selectedConv.psid,
-            from_id: selectedConv.page_id,
-            from_name: 'Javis AI (Bot)',
-            body: draft.proposed || '',
-            class: 'auto_reply',
-            created_ts: nowSec,
-          }
-          setThreadEvents((prev) => [...prev, newEv])
+    let mounted = true
+    api.getInbox({ limit: 40 })
+      .then((res) => {
+        if (mounted && res) {
+          if (res.drafts) setCareDrafts(res.drafts)
+          if (res.stats) setCareStats(res.stats)
         }
-      } else {
-        setActionMsg({ id: draft.id, msg: res.error || 'Lỗi gửi phản hồi', type: 'error' })
-      }
-      loadData()
-    } catch (err: any) {
-      setActionMsg({ id: draft.id, msg: err.message || 'Lỗi gửi phản hồi', type: 'error' })
-    } finally {
-      setActionLoading(null)
-      setTimeout(() => setActionMsg(null), 4000)
-    }
-  }
-
-  const handleRejectDraft = async (draft: { id: number }) => {
-    setActionLoading(draft.id)
-    try {
-      await api.rejectDraft(draft.id)
-      setActionMsg({ id: draft.id, msg: 'Đã bỏ qua nháp này', type: 'success' })
-      setDrafts((prev) => prev.filter((d) => d.id !== draft.id))
-      setConversations((prev) =>
-        prev.map((conv) => {
-          if (conv.pending_draft && conv.pending_draft.id === draft.id) {
-            return { ...conv, pending_draft: null }
-          }
-          return conv
-        })
-      )
-      loadData()
-    } catch (err: any) {
-      setActionMsg({ id: draft.id, msg: err.message || 'Lỗi bỏ qua', type: 'error' })
-    } finally {
-      setActionLoading(null)
-      setTimeout(() => setActionMsg(null), 4000)
-    }
-  }
-
-  const handleOpenHandoff = (title: string, intent: string, commentId: string) => {
-    setHandoffTitle(title)
-    setHandoffIntent(intent)
-    setHandoffCommentId(commentId)
-    setHandoffModalOpen(true)
-  }
-
-  const handleConfirmHandoff = async () => {
-    if (!handoffTitle.trim() || !handoffIntent.trim()) {
-      alert('Vui lòng nhập tiêu đề và nội dung công việc')
-      return
-    }
-    setActionLoading('handoff')
-    try {
-      await api.handoffToStaff({
-        title: handoffTitle.trim(),
-        intent: handoffIntent.trim(),
-        priority: 2,
-        comment_id: handoffCommentId,
       })
-      setActionMsg({
-        id: handoffCommentId || 'handoff',
-        msg: 'Đã tạo việc và chuyển vào bảng Kanban thành công!',
-        type: 'success',
-      })
-      setHandoffModalOpen(false)
-      loadData()
-    } catch (err: any) {
-      alert(err.message || 'Lỗi tạo việc bàn giao')
-    } finally {
-      setActionLoading(null)
-      setTimeout(() => setActionMsg(null), 4000)
+      .catch(() => {})
+    return () => {
+      mounted = false
     }
+  }, [scope, scopeBrand, scopePageId])
+
+  const currentConv = conversationsList.find((c) => c.id === selectedConvId) || conversationsList[0]
+
+  const handleCopy = (text: string, label: string) => {
+    navigator.clipboard.writeText(text)
+    setCopySuccess(label)
+    setTimeout(() => setCopySuccess(null), 2000)
   }
 
-  const handleReleaseTakeover = async (pageId: string, psid: string) => {
-    const key = `${pageId}_${psid}`
-    setActionLoading(key)
-    try {
-      await api.releaseTakeover(pageId, psid)
-      setActionMsg({ id: key, msg: 'Javis đã nhận lại cuộc trò chuyện!', type: 'success' })
-      loadData()
-    } catch (err: any) {
-      setActionMsg({ id: key, msg: err.message || 'Lỗi nhận lại', type: 'error' })
-    } finally {
-      setActionLoading(null)
-      setTimeout(() => setActionMsg(null), 4000)
-    }
+  const handleApplyDraft = (text: string) => {
+    setInputText(text)
   }
 
-  const handleOpenConversation = async (conv: CareConversation) => {
-    setSelectedConv(conv)
-    setThreadLoading(true)
-    setDirectMsgText('')
-    try {
-      const res = await api.getConversationThread(conv.page_id, conv.psid)
-      if (res.ok) {
-        setThreadEvents(res.events || [])
-      }
-    } catch (e) {
-      console.error('Error fetching thread:', e)
-    } finally {
-      setThreadLoading(false)
+  const handleSendMessage = () => {
+    if (!inputText.trim()) return
+    const newMsg = {
+      id: `m_${Date.now()}`,
+      sender: 'staff' as const,
+      text: inputText.trim(),
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     }
-  }
 
-  const handleSendDirectMessage = async () => {
-    if (!selectedConv || !directMsgText.trim() || sendingDirectMsg) return
-    setSendingDirectMsg(true)
-    const textToSend = directMsgText.trim()
-    try {
-      const res = await api.sendDirectMessage(selectedConv.page_id, selectedConv.psid, textToSend)
-      if (res.ok) {
-        const nowSec = Date.now() / 1000
-        const newEv: CareEvent = {
-          id: Date.now(),
-          kind: 'echo',
-          platform: 'messenger',
-          page_id: selectedConv.page_id,
-          object_id: `msg_${Date.now()}`,
-          thread_id: selectedConv.psid,
-          from_id: selectedConv.page_id,
-          from_name: 'Nhân viên Fanpage',
-          body: textToSend,
-          class: 'manual_reply',
-          created_ts: nowSec,
+    setConversationsList((prev) =>
+      prev.map((c) => {
+        if (c.id === currentConv.id) {
+          return {
+            ...c,
+            message: newMsg.text,
+            time: newMsg.time,
+            messages: [...c.messages, newMsg],
+          }
         }
-        setThreadEvents((prev) => [...prev, newEv])
-        setDirectMsgText('')
-        // Optimistically update conversation
-        setConversations((prev) =>
-          prev.map((conv) => {
-            if (conv.page_id === selectedConv.page_id && conv.psid === selectedConv.psid) {
-              return {
-                ...conv,
-                is_unreplied: false,
-                last_sender: 'page',
-                last_page_ts: nowSec,
-                latest_activity_ts: nowSec,
-                pending_draft: null,
-              }
-            }
-            return conv
-          })
-        )
-        await loadData(platformFilter, pageFilter)
-      } else {
-        alert(res.error || 'Lỗi gửi tin nhắn')
-      }
-    } catch (err: any) {
-      alert(err.message || 'Lỗi gửi tin nhắn')
-    } finally {
-      setSendingDirectMsg(false)
-    }
+        return c
+      })
+    )
+    setInputText('')
   }
 
-  // Auto-scroll chat modal to bottom
+  // Scroll messages to bottom
   useEffect(() => {
-    if (selectedConv && messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' })
-    }
-  }, [threadEvents, selectedConv])
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [currentConv?.messages])
 
-  // Strict separation: no heuristics, driven 100% by API kind and activeSubTab
-  const pendingDrafts = drafts.filter((d) => d.status === 'pending')
-  const commentDrafts = activeSubTab === 'comments' ? pendingDrafts : []
-  const messengerDrafts = activeSubTab === 'messenger' ? pendingDrafts : []
+  const pendingCommentDrafts = careStats?.pending_comment_drafts || 5
+  const pendingMessageDrafts = careStats?.pending_message_drafts || 12
+  const sentTodayCount = careStats?.replies_24h || 24
 
-  const commentEvents = activeSubTab === 'comments' ? events : []
-  const messengerEvents = activeSubTab === 'messenger' ? events : []
+  const tagColorMap = {
+    red: 'bg-rose-50 text-rose-600 border border-rose-200',
+    amber: 'bg-amber-50 text-amber-600 border border-amber-200',
+    green: 'bg-emerald-50 text-emerald-600 border border-emerald-200',
+    blue: 'bg-blue-50 text-blue-600 border border-blue-200',
+    purple: 'bg-purple-50 text-purple-600 border border-purple-200',
+  }
 
-  const filteredCommentDrafts = commentDrafts.filter((draft) => {
-    if (!searchQuery.trim()) return true
-    const q = searchQuery.toLowerCase()
-    const ev = events.find((e) => e.id === draft.event_id || e.object_id === draft.target_id)
-    return (
-      draft.proposed?.toLowerCase().includes(q) ||
-      (draft.from_name || ev?.from_name)?.toLowerCase().includes(q) ||
-      (draft.source_body || ev?.body)?.toLowerCase().includes(q) ||
-      draft.target_id?.includes(q)
-    )
-  })
-
-  const filteredCommentEvents = commentEvents.filter((e) => {
+  const filteredConversations = conversationsList.filter((conv) => {
     if (!searchQuery.trim()) return true
     const q = searchQuery.toLowerCase()
     return (
-      e.from_name?.toLowerCase().includes(q) ||
-      e.body?.toLowerCase().includes(q) ||
-      e.object_id?.includes(q) ||
-      e.class?.toLowerCase().includes(q)
-    )
-  })
-
-  // Messenger conversations sorting (latest activity always first)
-  const sortedConversations = [...conversations].sort((a, b) => {
-    const tsA = a.latest_activity_ts || Math.max(a.last_user_ts || 0, a.last_page_ts || 0)
-    const tsB = b.latest_activity_ts || Math.max(b.last_user_ts || 0, b.last_page_ts || 0)
-    return tsB - tsA
-  })
-
-  const unrepliedConvsCount = conversations.filter(
-    (c) => c.is_unreplied || c.last_sender === 'customer' || ((c.last_user_ts || 0) > (c.last_page_ts || 0))
-  ).length
-  const repliedConvsCount = conversations.filter(
-    (c) => !c.is_unreplied && ((c.last_page_ts || 0) >= (c.last_user_ts || 0))
-  ).length
-  const takeoverConvsCount = conversations.filter(
-    (c) => Boolean(c.takeover_until && c.takeover_until > Date.now() / 1000)
-  ).length
-
-  const filteredConversations = sortedConversations.filter((conv) => {
-    const isTakeover = Boolean(conv.takeover_until && conv.takeover_until > Date.now() / 1000)
-    const isUnreplied =
-      conv.is_unreplied || conv.last_sender === 'customer' || ((conv.last_user_ts || 0) > (conv.last_page_ts || 0))
-
-    if (messengerStatusFilter === 'unreplied' && !isUnreplied) return false
-    if (messengerStatusFilter === 'replied' && isUnreplied) return false
-    if (messengerStatusFilter === 'takeover' && !isTakeover) return false
-
-    if (!searchQuery.trim()) return true
-    const q = searchQuery.toLowerCase()
-    return (
-      (conv.customer_name || '').toLowerCase().includes(q) ||
-      conv.psid.includes(q) ||
-      (conv.last_body || '').toLowerCase().includes(q)
+      conv.name.toLowerCase().includes(q) ||
+      conv.message.toLowerCase().includes(q) ||
+      conv.phone.includes(q)
     )
   })
 
   return (
-    <div className="space-y-6">
-      {/* Top Header with Tab Switcher */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
-        <div>
-          <h1 className="text-xl font-bold text-slate-900 tracking-tight">Hộp Thư & Duyệt Câu Trả Lời</h1>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Duyệt nháp Javis tự động tạo hoặc theo dõi cuộc trò chuyện Messenger với khách.
-          </p>
-        </div>
-
-        {/* Tab switcher */}
-        <div className="flex bg-slate-200/80 p-1 rounded-xl w-fit">
-          <button
-            onClick={() => {
-              setActiveSubTab('comments')
-              window.location.hash = 'inbox?tab=comments'
-            }}
-            className={`flex items-center space-x-2 px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
-              activeSubTab === 'comments'
-                ? 'bg-white text-slate-900 shadow-sm'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <MessageSquare className="w-4 h-4 text-saoviet-500" />
-            <span>Bình luận bài viết ({stats?.pending_comment_drafts ?? (activeSubTab === 'comments' ? commentDrafts.length : 0)} chờ duyệt)</span>
-          </button>
-          <button
-            onClick={() => {
-              setActiveSubTab('messenger')
-              window.location.hash = 'inbox?tab=messenger'
-            }}
-            className={`flex items-center space-x-2 px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
-              activeSubTab === 'messenger'
-                ? 'bg-white text-slate-900 shadow-sm'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <Bot className="w-4 h-4 text-blue-500" />
-            <span>
-              Tin nhắn IB ({stats?.pending_message_drafts ?? messengerDrafts.length} chờ)
-            </span>
-          </button>
-        </div>
+    <div className="space-y-5">
+      {/* PAGE HEADER ROW */}
+      <div>
+        <h1 className="text-2xl font-black text-slate-900 tracking-tight">Hộp thư & Nháp</h1>
+        <p className="text-sm text-slate-500 font-normal mt-0.5">
+          Quản lý hội thoại, xử lý tin nhắn và soạn nháp với sự hỗ trợ của Javis AI.
+        </p>
       </div>
 
-      {/* SUB-TAB 1: COMMENTS & DRAFTS */}
-      {activeSubTab === 'comments' && (
-        <div className="space-y-4">
-          {/* Filter Bar */}
-          <div className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-between gap-3">
-            <div className="flex items-center space-x-3 overflow-x-auto w-full md:w-auto">
-              <div className="flex items-center space-x-1.5">
-                <button
-                  onClick={() => setFilterView('pending')}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors ${
-                    filterView === 'pending'
-                      ? 'bg-slate-900 text-white'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                  }`}
-                >
-                  Nháp chờ duyệt ({commentDrafts.length})
-                </button>
-                <button
-                  onClick={() => setFilterView('events')}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors ${
-                    filterView === 'events'
-                      ? 'bg-slate-900 text-white'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                  }`}
-                >
-                  Tất cả sự kiện bình luận ({commentEvents.length})
-                </button>
-              </div>
+      {/* MAIN 3-COLUMN LAYOUT */}
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
+        {/* ================= COLUMN 1: HỘP THƯ TẬP TRUNG (3 cols) ================= */}
+        <div className="xl:col-span-3 bg-white border border-slate-200/80 rounded-2xl p-4 shadow-2xs flex flex-col h-[820px]">
+          {/* Card Top Title & Action */}
+          <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+            <h2 className="text-base font-bold text-slate-900">Hộp thư tập trung</h2>
+            <button
+              type="button"
+              className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+              title="Tùy chọn bộ lọc"
+            >
+              <SlidersHorizontal className="w-4 h-4" />
+            </button>
+          </div>
 
-              {/* Platform selector */}
-              <div className="flex items-center space-x-1 border-l border-slate-200 pl-3">
-                <span className="text-[11px] font-medium text-slate-400 mr-1">Kênh:</span>
-                {(['all', 'facebook', 'tiktok'] as const).map((p) => (
-                  <button
-                    key={p}
-                    onClick={() => setPlatformFilter(p)}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
-                      platformFilter === p
-                        ? p === 'tiktok'
-                          ? 'bg-slate-900 text-white shadow-sm'
-                          : p === 'facebook'
-                          ? 'bg-blue-600 text-white shadow-sm'
-                          : 'bg-slate-700 text-white shadow-sm'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                    }`}
-                  >
-                    {p === 'all' ? 'Tất cả' : p === 'facebook' ? 'Facebook' : 'TikTok'}
-                  </button>
-                ))}
-              </div>
+          {/* Sub-channel tabs (Bình luận Fanpage vs Messenger) */}
+          <div className="flex border-b border-slate-100 mt-1">
+            <button
+              type="button"
+              onClick={() => setActiveChannel('comments')}
+              className={`flex-1 flex items-center justify-center space-x-1.5 py-2.5 text-xs font-semibold transition-all border-b-2 ${
+                activeChannel === 'comments'
+                  ? 'border-blue-600 text-blue-600'
+                  : 'border-transparent text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              <MessageSquare className="w-3.5 h-3.5" />
+              <span>Bình luận Fanpage</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveChannel('messenger')}
+              className={`flex-1 flex items-center justify-center space-x-1.5 py-2.5 text-xs font-semibold transition-all border-b-2 ${
+                activeChannel === 'messenger'
+                  ? 'border-blue-600 text-blue-600'
+                  : 'border-transparent text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              <MessageCircle className="w-3.5 h-3.5 text-blue-600" />
+              <span>Messenger</span>
+            </button>
+          </div>
 
-              <select
-                value={pageFilter}
-                onChange={(e) => setPageFilter(e.target.value)}
-                className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-50 border border-slate-200 text-slate-700 max-w-[220px]"
-              >
-                <option value="">Mọi Fanpage</option>
-                {eligiblePages.map((p) => (
-                  <option key={p.page_id || p.id} value={p.page_id || p.id}>
-                    {p.name} {p.brand === 'bsn' ? '(BSN)' : ''}
-                  </option>
-                ))}
-              </select>
+          {/* 3 Status Filter Pills */}
+          <div className="flex items-center space-x-2 my-3">
+            <button
+              type="button"
+              onClick={() => setStatusFilter('unread')}
+              className={`flex items-center space-x-1 px-2.5 py-1 rounded-full text-xs font-semibold transition-all ${
+                statusFilter === 'unread'
+                  ? 'bg-blue-50 text-blue-600 border border-blue-200'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-600" />
+              <span>Chưa đọc</span>
+              <span className="bg-blue-600 text-white rounded-full px-1.5 py-0.2 text-[10px] font-bold ml-0.5">
+                12
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setStatusFilter('need_human')}
+              className={`flex items-center space-x-1 px-2.5 py-1 rounded-full text-xs font-semibold transition-all ${
+                statusFilter === 'need_human'
+                  ? 'bg-orange-50 text-orange-600 border border-orange-200'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-orange-500" />
+              <span>Cần người</span>
+              <span className="bg-slate-200 text-slate-700 rounded-full px-1.5 py-0.2 text-[10px] font-bold ml-0.5">
+                8
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setStatusFilter('done')}
+              className={`flex items-center space-x-1 px-2.5 py-1 rounded-full text-xs font-medium transition-all ${
+                statusFilter === 'done'
+                  ? 'bg-emerald-50 text-emerald-600 border border-emerald-200'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              <span>Đã xong</span>
+            </button>
+          </div>
 
-              {can('poll_now') && (
-                <button
-                  type="button"
-                  onClick={handlePollPage}
-                  disabled={isPolling}
-                  className="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 text-white hover:bg-emerald-500 disabled:opacity-50 whitespace-nowrap flex-shrink-0"
-                >
-                  {isPolling ? 'Đang kéo…' : 'Kéo comment'}
-                </button>
-              )}
-            </div>
-            {pollHint && <p className="text-xs text-slate-500">{pollHint}</p>}
-
-            <div className="relative w-full md:w-72">
-              <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
+          {/* Search input with filter icon */}
+          <div className="flex items-center space-x-2 mb-3">
+            <div className="relative flex-1">
+              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Tìm người gửi, nội dung, ID..."
-                className="w-full pl-9 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-saoviet-500"
+                placeholder="Tìm tên khách hàng, nội dung tin nhắn..."
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
+            <button
+              type="button"
+              className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-xl border border-slate-200 transition-colors"
+              title="Lọc nâng cao"
+            >
+              <Filter className="w-3.5 h-3.5" />
+            </button>
           </div>
 
-          {/* DRAFTS PENDING VIEW */}
-          {filterView === 'pending' && (
-            <div className="space-y-4">
-              {filteredCommentDrafts.map((draft) => {
-                const ev = events.find((e) => e.id === draft.event_id || e.object_id === draft.target_id)
-                const isBusy = actionLoading === draft.id
-                const msg = actionMsg?.id === draft.id ? actionMsg : null
-                const customerName = draft.from_name || ev?.from_name || 'Khách hàng'
-                const commentText = draft.source_body || ev?.body
-                const pageInfo = getPageInfo(draft.page_id)
-
-                return (
-                  <div
-                    key={draft.id}
-                    className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm hover:border-slate-300 transition-all space-y-4"
-                  >
-                    {msg && (
-                      <div
-                        className={`p-2.5 rounded-xl text-xs font-medium flex items-center space-x-2 ${
-                          msg.type === 'success' ? 'bg-emerald-50 text-emerald-800' : 'bg-red-50 text-red-800'
-                        }`}
-                      >
-                        {msg.type === 'success' ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
-                        <span>{msg.msg}</span>
-                      </div>
-                    )}
-
-                    {/* Metadata Header */}
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex items-start space-x-3">
-                        <div className="w-10 h-10 rounded-full bg-amber-100 text-amber-800 font-bold text-sm flex items-center justify-center flex-shrink-0">
-                          {customerName ? customerName.slice(0, 2).toUpperCase() : 'KH'}
-                        </div>
-                        <div>
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className="font-bold text-sm text-slate-900">{customerName}</span>
-                            {renderPlatformChip((draft.event_platform === 'tiktok' || ev?.platform === 'tiktok') ? 'tiktok' : 'facebook')}
-                            {draft.class && (
-                              <span className="text-[11px] px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 font-medium border border-blue-100">
-                                Phân loại: {draft.class}
-                              </span>
-                            )}
-                            <span className="text-[10px] px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 font-medium flex items-center space-x-1">
-                              <span className="text-slate-400">Trang:</span>
-                              <span className="font-semibold text-slate-800">{pageInfo?.name || draft.page_id}</span>
-                              {pageInfo?.brand && (
-                                <span
-                                  className={`text-[9px] px-1 py-0.2 rounded font-bold ${
-                                    pageInfo.brand === 'bsn'
-                                      ? 'bg-purple-100 text-purple-700'
-                                      : 'bg-saoviet-100 text-saoviet-700'
-                                  }`}
-                                >
-                                  {pageInfo.brand === 'bsn' ? 'BSN' : 'Đào tạo'}
-                                </span>
-                              )}
-                            </span>
-                          </div>
-                          <p className="text-xs text-slate-500 mt-0.5">
-                            {formatTime(draft.created_ts)} • Target: {draft.target_id.slice(0, 16)}...
-                          </p>
-                        </div>
-                      </div>
-
-                      <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-amber-100 text-amber-800">
-                        Chờ duyệt
-                      </span>
-                    </div>
-
-                    {/* Customer's Comment */}
-                    {commentText && (
-                      <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-100 text-xs text-slate-800 leading-relaxed font-normal">
-                        <span className="font-bold text-slate-900 block mb-1">
-                          Khách bình luận ({customerName}):
-                        </span>
-                        "{commentText}"
-                      </div>
-                    )}
-
-                    {/* Javis Draft Response */}
-                    <div className="p-4 bg-saoviet-50/70 border border-saoviet-200/80 rounded-xl space-y-2">
-                      <div className="flex items-center space-x-1.5 text-xs font-bold text-saoviet-800">
-                        <Bot className="w-4 h-4 text-saoviet-600" />
-                        <span>Câu trả lời Javis soạn sẵn</span>
-                      </div>
-                      <p className="text-xs text-slate-800 leading-relaxed italic">
-                        "{draft.proposed}"
-                      </p>
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="flex flex-wrap items-center justify-end gap-2 pt-2 border-t border-slate-100">
-                      <button
-                        onClick={() => handleRejectDraft(draft)}
-                        disabled={isBusy}
-                        className="flex items-center space-x-1.5 px-3.5 py-2 text-xs font-semibold text-slate-600 hover:text-red-700 hover:bg-red-50 rounded-xl transition-colors cursor-pointer disabled:opacity-50"
-                      >
-                        <XCircle className="w-4 h-4 text-slate-400 hover:text-red-500" />
-                        <span>Bỏ qua</span>
-                      </button>
-
-                      <button
-                        onClick={() =>
-                          handleOpenHandoff(
-                            `Tư vấn khách ${customerName}`,
-                            commentText || draft.proposed,
-                            draft.target_id
-                          )
-                        }
-                        disabled={isBusy}
-                        className="flex items-center space-x-1.5 px-3.5 py-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors cursor-pointer disabled:opacity-50"
-                      >
-                        <UserCheck className="w-4 h-4 text-slate-500" />
-                        <span>Tạo việc giao người</span>
-                      </button>
-
-                      <button
-                        onClick={() => handleSendDraft(draft)}
-                        disabled={isBusy}
-                        className="flex items-center space-x-1.5 px-4 py-2 text-xs font-bold text-white bg-saoviet-500 hover:bg-saoviet-600 rounded-xl shadow-md shadow-saoviet-200 transition-all cursor-pointer disabled:opacity-50"
-                      >
-                        <Send className="w-4 h-4" />
-                        <span>{isBusy ? 'Đang gửi...' : 'Gửi phản hồi'}</span>
-                      </button>
-                    </div>
-                  </div>
-                )
-              })}
-
-              {filteredCommentDrafts.length === 0 && (
-                <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center text-slate-400 text-xs">
-                  <CheckCircle2 className="w-10 h-10 mx-auto mb-3 text-emerald-400" />
-                  {platformFilter === 'tiktok' ? (
-                    <>
-                      <p className="font-semibold text-slate-700 text-sm">Chưa có bình luận TikTok — kênh này dùng để đăng video.</p>
-                      <p className="text-slate-400 mt-1">PostPeer hiện chỉ hỗ trợ đăng video, chưa có luồng ingest comment TikTok.</p>
-                    </>
-                  ) : (
-                    <>
-                      <p className="font-semibold text-slate-600 text-sm">Chưa có comment trên bài.</p>
-                      <p className="text-slate-400 mt-1">Khi có bình luận bài viết mới cần phản hồi, Javis sẽ chuẩn bị nháp tại đây</p>
-                    </>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* ALL EVENTS VIEW */}
-          {filterView === 'events' && (
-            <div className="space-y-4">
-              {filteredCommentEvents.map((item) => (
-                <div
-                  key={item.id}
-                  className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm hover:border-slate-300 transition-all space-y-3"
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex items-start space-x-3">
-                      <div className="w-9 h-9 rounded-full bg-slate-100 border border-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center flex-shrink-0">
-                        {item.from_name ? item.from_name.slice(0, 2).toUpperCase() : 'KH'}
-                      </div>
-                      <div>
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="font-bold text-sm text-slate-900">{item.from_name || 'Khách hàng'}</span>
-                          {renderPlatformChip(item.platform || 'facebook')}
-                          <span className="text-[10px] px-2 py-0.5 rounded bg-slate-100 text-slate-600 capitalize">
-                            {item.kind}
-                          </span>
-                          {item.class && (
-                            <span
-                              className={`text-[10px] px-2 py-0.5 rounded font-medium ${
-                                item.class === 'lead'
-                                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                                  : 'bg-blue-50 text-blue-700'
-                              }`}
-                            >
-                              {item.class}
-                            </span>
-                          )}
-                          {item.faq_intent && (
-                            <span className="text-[10px] px-2 py-0.5 rounded bg-purple-50 text-purple-700">
-                              {item.faq_intent}
-                            </span>
-                          )}
-                          {(() => {
-                            const p = getPageInfo(item.page_id)
-                            return p?.name ? (
-                              <span className="text-[10px] px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 font-medium">
-                                {p.name} {p.brand === 'bsn' ? '(BSN)' : ''}
-                              </span>
-                            ) : null
-                          })()}
-                        </div>
-                        <p className="text-xs text-slate-500 mt-0.5">
-                          {formatTime(item.created_ts)} • ID: {item.object_id}
-                        </p>
-                      </div>
-                    </div>
-
-                    <button
-                      onClick={() =>
-                        handleOpenHandoff(
-                          `Tư vấn khách ${item.from_name || 'Fanpage'}`,
-                          item.body,
-                          item.object_id
-                        )
-                      }
-                      className="px-3 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer"
-                    >
-                      Tạo việc
-                    </button>
-                  </div>
-
-                  <div className="p-3 bg-slate-50 rounded-xl text-xs text-slate-800 leading-relaxed">
-                    "{item.body}"
-                  </div>
-                </div>
-              ))}
-
-              {filteredCommentEvents.length === 0 && (
-                <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center text-slate-400 text-xs">
-                  <MessageSquare className="w-10 h-10 mx-auto mb-3 text-slate-300" />
-                  {platformFilter === 'tiktok' ? (
-                    <>
-                      <p className="font-semibold text-slate-700 text-sm">Chưa có bình luận TikTok — kênh này dùng để đăng video.</p>
-                      <p className="text-slate-400 mt-1">PostPeer hiện chỉ hỗ trợ đăng video, chưa có luồng ingest comment TikTok.</p>
-                    </>
-                  ) : (
-                    <>
-                      <p className="font-semibold text-slate-600">Chưa có comment trên bài.</p>
-                      <p className="text-slate-400 mt-1">Các bình luận và tương tác mới sẽ xuất hiện tại đây</p>
-                    </>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* SUB-TAB 2: MESSENGER CONVERSATIONS & TAKEOVER */}
-      {activeSubTab === 'messenger' && (
-        <div className="space-y-4">
-          {/* Top Action Bar & Status Filter */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-3.5 rounded-2xl border border-slate-200 shadow-2xs">
-            <div className="flex flex-wrap items-center gap-1.5">
-              <button
-                type="button"
-                onClick={() => setMessengerStatusFilter('all')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  messengerStatusFilter === 'all'
-                    ? 'bg-slate-900 text-white shadow-xs'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                }`}
-              >
-                Tất cả ({conversations.length})
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setMessengerStatusFilter('unreplied')}
-                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  messengerStatusFilter === 'unreplied'
-                    ? 'bg-red-600 text-white shadow-sm ring-2 ring-red-200'
-                    : 'bg-red-50 text-red-700 border border-red-200 hover:bg-red-100'
-                }`}
-              >
-                <span className={`w-2 h-2 rounded-full bg-red-500 ${unrepliedConvsCount > 0 ? 'animate-ping' : ''}`} />
-                <span>⚡ Cần phản hồi ({unrepliedConvsCount})</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setMessengerStatusFilter('replied')}
-                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  messengerStatusFilter === 'replied'
-                    ? 'bg-emerald-700 text-white shadow-xs'
-                    : 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
-                }`}
-              >
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                <span>✓ Đã chăm sóc ({repliedConvsCount})</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setMessengerStatusFilter('takeover')}
-                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  messengerStatusFilter === 'takeover'
-                    ? 'bg-amber-600 text-white shadow-xs'
-                    : 'bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100'
-                }`}
-              >
-                <span>👤 Nhân viên trực ({takeoverConvsCount})</span>
-              </button>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              {can('poll_now') && (
-                <button
-                  type="button"
-                  onClick={async () => {
-                    if (isPolling) return
-                    setIsPolling(true)
-                    setPollHint(null)
-                    try {
-                      const res = await api.pollNow(pageFilter || undefined, 'messenger')
-                      const r = res.result || {}
-                      setPollHint(
-                        `Hộp thư IB: ${r.messages_ingested ?? 0} tin mới · ${r.drafts_created ?? 0} nháp` +
-                          (r.page_errors?.[0]?.error ? ` · ${String(r.page_errors[0].error).slice(0, 100)}` : ''),
-                      )
-                      await loadData(platformFilter, pageFilter)
-                    } catch (err: any) {
-                      setPollHint(err.message || 'Lỗi kéo inbox')
-                    } finally {
-                      setIsPolling(false)
-                      setTimeout(() => setPollHint(null), 8000)
-                    }
-                  }}
-                  disabled={isPolling}
-                  className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-blue-600 text-white hover:bg-blue-500 disabled:opacity-50 whitespace-nowrap flex-shrink-0 shadow-2xs transition-all cursor-pointer"
-                >
-                  {isPolling ? 'Đang kéo tin…' : 'Kéo hộp thư IB'}
-                </button>
-              )}
-              {pollHint && <span className="text-xs text-slate-500 max-w-xs truncate">{pollHint}</span>}
-            </div>
-          </div>
-
-          <div className="bg-blue-50/70 border border-blue-200/80 rounded-2xl p-3.5 text-xs text-blue-900 flex items-start space-x-2.5">
-            <Bot className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
-            <div className="leading-relaxed">
-              <span className="font-bold">Quy tắc sắp xếp thông minh:</span> Cuộc trò chuyện có tin nhắn mới nhất luôn được đưa lên đầu. Tin nhắn khách gửi chưa được rep sẽ gắn nhãn <b>🔴 CHƯA PHẢN HỒI</b> kèm đếm thời gian chờ. Ngay khi Javis hoặc nhân viên phản hồi, trạng thái tự chuyển thành <b>✓ ĐÃ CHĂM SÓC</b>.
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Conversations scrollable list */}
+          <div className="flex-1 overflow-y-auto space-y-1 pr-1 divide-y divide-slate-50">
             {filteredConversations.map((conv) => {
-              const key = `${conv.page_id}_${conv.psid}`
-              const isTakeover = Boolean(conv.takeover_until && conv.takeover_until > Date.now() / 1000)
-              const in24hWindow = Boolean(conv.last_user_ts && (Date.now() / 1000 - conv.last_user_ts) < 86400)
-              const isUnreplied =
-                conv.is_unreplied ||
-                conv.last_sender === 'customer' ||
-                ((conv.last_user_ts || 0) > (conv.last_page_ts || 0))
-              const isBusy = actionLoading === key
-              const msg = actionMsg?.id === key ? actionMsg : null
-              const draftForConv =
-                messengerDrafts.find((d) => d.target_id === conv.psid || d.from_id === conv.psid) ||
-                conv.pending_draft
-
+              const active = conv.id === selectedConvId
               return (
                 <div
-                  key={key}
-                  className={`rounded-2xl p-5 shadow-sm flex flex-col justify-between space-y-4 transition-all ${
-                    isUnreplied
-                      ? 'border-2 border-amber-400 bg-gradient-to-b from-amber-50/50 via-white to-white shadow-md shadow-amber-200/30 ring-1 ring-amber-300/40 hover:border-amber-500 hover:shadow-lg'
-                      : 'border border-slate-200 bg-white/95 hover:border-slate-300'
+                  key={conv.id}
+                  onClick={() => setSelectedConvId(conv.id)}
+                  className={`p-2.5 rounded-xl cursor-pointer transition-all flex items-start space-x-2.5 relative ${
+                    active
+                      ? 'bg-blue-50/60 border border-blue-200/80 shadow-2xs'
+                      : 'hover:bg-slate-50 border border-transparent'
                   }`}
                 >
-                  {msg && (
-                    <div
-                      className={`p-2.5 rounded-xl text-xs font-medium flex items-center space-x-2 ${
-                        msg.type === 'success' ? 'bg-emerald-50 text-emerald-800' : 'bg-red-50 text-red-800'
-                      }`}
-                    >
-                      {msg.type === 'success' ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
-                      <span>{msg.msg}</span>
-                    </div>
-                  )}
-
-                  {/* Top Card Bar: Customer Info + Status Badge */}
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center space-x-3">
-                      <div
-                        className={`w-11 h-11 rounded-full font-bold text-base flex items-center justify-center shadow-sm flex-shrink-0 ${
-                          isUnreplied
-                            ? 'bg-gradient-to-tr from-amber-500 to-red-500 text-white ring-2 ring-amber-300'
-                            : 'bg-blue-600 text-white'
-                        }`}
-                      >
-                        {conv.customer_name ? (
-                          conv.customer_name.trim().charAt(0).toUpperCase()
-                        ) : (
-                          <MessageCircle className="w-5 h-5 text-white" />
-                        )}
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-bold text-slate-900 text-sm">
-                            {conv.customer_name || `Khách Messenger ${conv.psid.slice(-4)}`}
-                          </h3>
-                        </div>
-
-                        {(() => {
-                          const p = getPageInfo(conv.page_id)
-                          return (
-                            <div className="flex items-center space-x-1.5 text-[11px] text-slate-500 mt-0.5">
-                              <span>
-                                Trang: <strong className="text-slate-700">{p?.name || conv.page_id}</strong>
-                              </span>
-                              {p?.brand && (
-                                <span
-                                  className={`text-[9px] px-1.5 py-0.2 rounded font-bold ${
-                                    p.brand === 'bsn'
-                                      ? 'bg-purple-100 text-purple-700'
-                                      : 'bg-saoviet-100 text-saoviet-700'
-                                  }`}
-                                >
-                                  {p.brand === 'bsn' ? 'BSN' : 'Sao Việt'}
-                                </span>
-                              )}
-                              <span>· PSID: {conv.psid.slice(-6)}</span>
-                            </div>
-                          )
-                        })()}
-                      </div>
-                    </div>
-
-                    <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                      {isUnreplied ? (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-100 text-red-700 border border-red-200 text-xs font-bold tracking-tight animate-pulse">
-                          <span className="w-2 h-2 rounded-full bg-red-600 animate-ping" />
-                          <span>CHƯA PHẢN HỒI</span>
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-semibold">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                          <span>ĐÃ CHĂM SÓC</span>
-                        </span>
-                      )}
-
-                      {isTakeover ? (
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">
-                          Nhân viên trực (4h)
-                        </span>
-                      ) : (
-                        <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
-                          Javis Bot trực
-                        </span>
-                      )}
-                    </div>
+                  {/* Left Avatar with Messenger Icon Badge */}
+                  <div className="relative flex-shrink-0">
+                    <img
+                      src={conv.avatar}
+                      alt={conv.name}
+                      className="w-10 h-10 rounded-full object-cover ring-1 ring-slate-200"
+                    />
+                    <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-xs">
+                      <MessageCircle className="w-2.5 h-2.5 fill-white" />
+                    </span>
                   </div>
 
-                  {/* Message Preview */}
-                  {isUnreplied ? (
-                    <div className="p-3.5 bg-amber-50/80 border border-amber-200/90 rounded-xl text-xs text-amber-950 leading-relaxed shadow-2xs">
-                      <div className="flex items-center justify-between mb-1.5 text-[11px] font-bold text-amber-800">
-                        <span className="flex items-center gap-1 text-red-600 font-extrabold">
-                          🔴 Tin nhắn khách chờ:
-                        </span>
-                        <span className="text-amber-700 font-semibold bg-amber-100/80 px-2 py-0.5 rounded-full">
-                          ⏱️ Chờ {formatWaitDuration(conv.waiting_since || conv.last_user_ts)}
-                        </span>
+                  {/* Details */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-slate-900 truncate">{conv.name}</span>
+                      <div className="flex items-center space-x-1 flex-shrink-0">
+                        <span className="text-[11px] text-slate-400 font-medium">{conv.time}</span>
+                        {conv.hasUnreadDot && <span className="w-1.5 h-1.5 rounded-full bg-blue-600" />}
                       </div>
-                      <p className="font-semibold text-slate-900 text-xs mt-1">
-                        “{conv.last_body || 'Khách vừa gửi tin nhắn mới'}”
-                      </p>
                     </div>
-                  ) : (
-                    <div className="p-3 bg-slate-50 border border-slate-100 rounded-xl text-xs text-slate-700 leading-relaxed">
-                      <div className="flex items-center justify-between mb-1 text-[10px] font-medium text-slate-500">
-                        <span>
-                          {conv.last_sender === 'page' ? '✓ Trang đã phản hồi:' : 'Nội dung gần nhất:'}
-                        </span>
-                        <span>{conv.latest_activity_ts ? formatTime(conv.latest_activity_ts) : ''}</span>
-                      </div>
-                      <p className="text-slate-700 italic">
-                        “{conv.last_body || 'Cuộc trò chuyện đã được phản hồi đầy đủ'}”
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Metadata Row */}
-                  <div className="p-2.5 bg-slate-50/80 rounded-xl text-[11px] text-slate-600 grid grid-cols-2 gap-2 border border-slate-100">
-                    <div>
-                      <span className="text-slate-400 block text-[10px]">Khách nhắn lần cuối:</span>
-                      <strong className="text-slate-800">
-                        {conv.last_user_ts ? formatTime(conv.last_user_ts) : 'Chưa có'}
-                      </strong>
-                    </div>
-                    <div>
-                      <span className="text-slate-400 block text-[10px]">Trang gửi lần cuối:</span>
-                      <strong className="text-slate-800">
-                        {conv.last_page_ts ? formatTime(conv.last_page_ts) : 'Chưa phản hồi'}
-                      </strong>
-                    </div>
-                  </div>
-
-                  {/* Javis suggested reply for this conversation if any */}
-                  {draftForConv && (
-                    <div className="p-3.5 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/90 rounded-xl space-y-2 shadow-2xs">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-1.5 text-xs font-bold text-blue-900">
-                          <Sparkles className="w-4 h-4 text-blue-600 animate-pulse" />
-                          <span>Gợi ý phản hồi từ Javis (AI Draft)</span>
-                        </div>
-                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">
-                          Chờ duyệt
-                        </span>
-                      </div>
-                      <p className="text-xs text-slate-800 italic leading-relaxed">
-                        "{draftForConv.proposed}"
-                      </p>
-                      <div className="flex items-center justify-end space-x-2 pt-1.5 border-t border-blue-200/60">
-                        <button
-                          onClick={() => handleRejectDraft(draftForConv)}
-                          disabled={actionLoading === draftForConv.id}
-                          className="px-2.5 py-1 text-[11px] font-medium text-slate-500 hover:text-red-600 rounded-lg transition-colors cursor-pointer disabled:opacity-50"
-                        >
-                          Bỏ qua
-                        </button>
-                        <button
-                          onClick={() => handleSendDraft(draftForConv)}
-                          disabled={actionLoading === draftForConv.id}
-                          className="flex items-center space-x-1 px-3 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-2xs transition-all cursor-pointer disabled:opacity-50"
-                        >
-                          <Send className="w-3 h-3" />
-                          <span>
-                            {actionLoading === draftForConv.id ? 'Đang gửi…' : 'Duyệt & Gửi tin nhắn'}
+                    <p className="text-xs text-slate-500 truncate mt-0.5 leading-snug">{conv.message}</p>
+                    {/* Tags row */}
+                    <div className="flex items-center justify-between mt-1.5">
+                      <div className="flex items-center space-x-1 overflow-hidden">
+                        {conv.tags.map((t, idx) => (
+                          <span
+                            key={idx}
+                            className={`px-1.5 py-0.2 rounded text-[10px] font-semibold whitespace-nowrap ${tagColorMap[t.color]}`}
+                          >
+                            {t.text}
                           </span>
-                        </button>
+                        ))}
                       </div>
-                    </div>
-                  )}
-
-                  {/* Actions Footer */}
-                  <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
-                    <button
-                      onClick={() => handleOpenConversation(conv)}
-                      className={`flex items-center space-x-1.5 px-3.5 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
-                        isUnreplied
-                          ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-sm shadow-blue-200'
-                          : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
-                      }`}
-                    >
-                      <MessageCircle className="w-3.5 h-3.5" />
-                      <span>{isUnreplied ? 'Trả lời ngay' : 'Xem lại chat'}</span>
-                    </button>
-
-                    <div className="flex items-center space-x-2">
-                      {isTakeover && (
-                        <button
-                          onClick={() => handleReleaseTakeover(conv.page_id, conv.psid)}
-                          disabled={isBusy}
-                          className="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-bold text-saoviet-700 bg-saoviet-50 hover:bg-saoviet-100 border border-saoviet-200 rounded-lg transition-colors cursor-pointer disabled:opacity-50"
-                        >
-                          <RotateCcw className={`w-3.5 h-3.5 ${isBusy ? 'animate-spin' : ''}`} />
-                          <span>Javis nhận lại</span>
-                        </button>
+                      {conv.unreadCount && (
+                        <span className="w-4 h-4 rounded-full bg-blue-600 text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0">
+                          {conv.unreadCount}
+                        </span>
                       )}
                     </div>
                   </div>
                 </div>
               )
             })}
-
-            {filteredConversations.length === 0 && (
-              <div className="col-span-2 bg-white rounded-2xl border border-slate-200 p-12 text-center text-slate-400 text-xs">
-                <Bot className="w-10 h-10 mx-auto mb-3 text-slate-300" />
-                <p className="font-semibold text-slate-700 text-sm">
-                  {messengerStatusFilter === 'unreplied'
-                    ? 'Tuyệt vời! Không có tin nhắn nào đang chờ phản hồi.'
-                    : 'Chưa có tin nhắn hộp thư phù hợp bộ lọc.'}
-                </p>
-                <p className="text-slate-500 mt-2 max-w-md mx-auto leading-relaxed">
-                  Bấm nút <b>Kéo hộp thư IB</b> ở trên để đồng bộ tin nhắn mới nhất từ Meta Graph API.
-                </p>
-              </div>
-            )}
           </div>
         </div>
-      )}
 
-      {/* Modal: Handoff Note */}
-      {handoffModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
-            <h3 className="text-base font-bold text-slate-900">Tạo việc giao nhân viên hỗ trợ</h3>
-            <p className="text-xs text-slate-500">
-              Chuyển yêu cầu vào Bảng Việc Cần Làm (Kanban) của Javis để tư vấn viên chăm sóc tiếp.
-            </p>
-
-            <div className="space-y-3">
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Tiêu đề việc *</label>
-                <input
-                  type="text"
-                  value={handoffTitle}
-                  onChange={(e) => setHandoffTitle(e.target.value)}
-                  placeholder="Vd: Tư vấn khoá TOEIC cho khách..."
-                  className="w-full p-2.5 text-xs text-slate-900 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-saoviet-500"
+        {/* ================= COLUMN 2: HỘI THOẠI & NHÁP TRẢ LỜI (6 cols) ================= */}
+        <div className="xl:col-span-6 bg-white border border-slate-200/80 rounded-2xl p-5 shadow-2xs flex flex-col justify-between h-[820px]">
+          {/* Chat Header */}
+          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+            {/* Left: Customer Info */}
+            <div className="flex items-center space-x-3">
+              <div className="relative">
+                <img
+                  src={currentConv.avatar}
+                  alt={currentConv.name}
+                  className="w-10 h-10 rounded-full object-cover ring-2 ring-white shadow-2xs"
                 />
+                <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white" />
               </div>
-
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Nội dung / Yêu cầu chi tiết *</label>
-                <textarea
-                  rows={3}
-                  value={handoffIntent}
-                  onChange={(e) => setHandoffIntent(e.target.value)}
-                  placeholder="Nội dung khách trao đổi hoặc yêu cầu gọi lại..."
-                  className="w-full p-2.5 text-xs text-slate-900 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-saoviet-500"
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center justify-end space-x-2 pt-3 border-t border-slate-100">
-              <button
-                onClick={() => setHandoffModalOpen(false)}
-                className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
-              >
-                Huỷ bỏ
-              </button>
-              <button
-                onClick={handleConfirmHandoff}
-                disabled={actionLoading === 'handoff'}
-                className="px-4 py-2 text-xs font-bold text-white bg-saoviet-500 hover:bg-saoviet-600 rounded-xl shadow-md shadow-saoviet-200 transition-all cursor-pointer disabled:opacity-50"
-              >
-                {actionLoading === 'handoff' ? 'Đang tạo việc...' : 'Xác nhận tạo việc'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal: Messenger Chat & Direct Reply */}
-      {selectedConv && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-2xl w-full h-[620px] shadow-2xl border border-slate-200 flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-            {/* Header */}
-            <div className="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/80">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 rounded-full bg-blue-600 text-white font-bold text-base flex items-center justify-center shadow-sm">
-                  {selectedConv.customer_name ? selectedConv.customer_name.trim().charAt(0).toUpperCase() : <MessageCircle className="w-5 h-5 text-white" />}
+                <div className="flex items-center space-x-2">
+                  <h3 className="text-sm font-bold text-slate-900 leading-tight">{currentConv.name}</h3>
+                  <span className="px-2 py-0.5 rounded bg-rose-50 text-rose-600 border border-rose-200 text-[10px] font-semibold">
+                    Lead nóng
+                  </span>
+                  <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-600 border border-blue-200 text-[10px] font-semibold">
+                    Khách mới
+                  </span>
                 </div>
-                <div>
-                  <div className="flex items-center space-x-2">
-                    <h3 className="text-base font-bold text-slate-900">
-                      {selectedConv.customer_name || `Khách Messenger ${selectedConv.psid.slice(-4)}`}
-                    </h3>
-                    {Boolean(selectedConv.takeover_until && selectedConv.takeover_until > Date.now() / 1000) ? (
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">
-                        Takeover nhân viên
-                      </span>
-                    ) : (
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
-                        Javis quản lý
-                      </span>
-                    )}
+                <div className="flex items-center space-x-1.5 text-[11px] text-slate-400 font-medium mt-0.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                  <span>Đang hoạt động</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Right: Actions */}
+            <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-200/70 text-blue-600 text-xs font-semibold">
+                <Bot className="w-3.5 h-3.5 text-blue-600" />
+                <span>Bot đang hỗ trợ</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsTakeover(!isTakeover)}
+                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all shadow-2xs ${
+                  isTakeover
+                    ? 'bg-rose-50 text-rose-700 border-rose-300'
+                    : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
+                }`}
+              >
+                <Ban className="w-3.5 h-3.5 text-slate-600" />
+                <span>{isTakeover ? 'Đang takeover' : 'Takeover'}</span>
+              </button>
+
+              <button
+                type="button"
+                className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors ml-1"
+                title="Tìm kiếm"
+              >
+                <Search className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+                title="Thẻ tag"
+              >
+                <Tag className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+                title="Tùy chọn khác"
+              >
+                <MoreVertical className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          {/* Chat Messages Body */}
+          <div className="flex-1 overflow-y-auto space-y-4 py-4 px-1">
+            {currentConv.messages.map((msg) => {
+              const isUser = msg.sender === 'customer'
+              return (
+                <div
+                  key={msg.id}
+                  className={`flex items-start space-x-2.5 ${isUser ? '' : 'flex-row-reverse space-x-reverse'}`}
+                >
+                  {/* Avatar */}
+                  {isUser ? (
+                    <img
+                      src={currentConv.avatar}
+                      alt={currentConv.name}
+                      className="w-8 h-8 rounded-full object-cover flex-shrink-0 mt-0.5"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center flex-shrink-0 shadow-xs mt-0.5">
+                      JO
+                    </div>
+                  )}
+
+                  {/* Message Bubble */}
+                  <div className={`max-w-[72%] ${isUser ? '' : 'text-right'}`}>
+                    <div
+                      className={`inline-block px-4 py-2.5 text-xs text-slate-800 leading-relaxed rounded-2xl text-left whitespace-pre-line ${
+                        isUser
+                          ? 'bg-slate-100 rounded-tl-sm'
+                          : 'bg-blue-100/70 border border-blue-200/50 rounded-tr-sm'
+                      }`}
+                    >
+                      {msg.text}
+                    </div>
+                    <div
+                      className={`flex items-center space-x-1 text-[10px] text-slate-400 font-medium mt-1 ${
+                        isUser ? 'justify-start' : 'justify-end'
+                      }`}
+                    >
+                      <span>{msg.time}</span>
+                      {!isUser && <CheckCheck className="w-3.5 h-3.5 text-blue-600 inline" />}
+                    </div>
                   </div>
-                  {(() => {
-                    const p = getPageInfo(selectedConv.page_id)
-                    return (
-                      <div className="flex items-center space-x-1.5 text-[11px] text-slate-500">
-                        <span>Trang: <strong className="text-slate-700">{p?.name || selectedConv.page_id}</strong></span>
-                        {p?.brand && (
-                          <span
-                            className={`text-[9px] px-1 py-0.2 rounded font-bold ${
-                              p.brand === 'bsn'
-                                ? 'bg-purple-100 text-purple-700'
-                                : 'bg-saoviet-100 text-saoviet-700'
-                            }`}
-                          >
-                            {p.brand === 'bsn' ? 'BSN' : 'Đào tạo'}
-                          </span>
-                        )}
-                        <span>· PSID: {selectedConv.psid}</span>
-                      </div>
-                    )
-                  })()}
                 </div>
-              </div>
+              )
+            })}
+            <div ref={messagesEndRef} />
+          </div>
 
-              <button
-                onClick={() => setSelectedConv(null)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
+          {/* Javis AI Draft Suggestions Card */}
+          <div className="bg-slate-50/90 border border-indigo-100/90 rounded-2xl p-3.5 my-2">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center space-x-1.5">
+                <Sparkles className="w-4 h-4 text-purple-600" />
+                <span className="text-xs font-bold text-slate-900">Javis đề xuất nháp</span>
+                <span className="text-[11px] text-slate-400 font-normal">
+                  · Dựa trên nội dung hội thoại và thông tin sản phẩm
+                </span>
+              </div>
+              <div className="flex items-center space-x-1 text-[11px] text-slate-500 font-medium">
+                <span>Độ chính xác cao từ AI</span>
+                <Info className="w-3.5 h-3.5 text-slate-400" />
+              </div>
             </div>
 
-            {/* Chat Body */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50/50">
-              {threadLoading ? (
-                <div className="flex flex-col items-center justify-center h-full text-slate-400 text-xs">
-                  <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mb-2" />
-                  <span>Đang tải lịch sử tin nhắn...</span>
-                </div>
-              ) : threadEvents.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-full text-slate-400 text-xs text-center">
-                  <Bot className="w-8 h-8 text-slate-300 mb-2" />
-                  <p className="font-semibold text-slate-600">Chưa có bản ghi tin nhắn chi tiết trong hệ thống</p>
-                  <p className="text-[11px] text-slate-400 mt-1 max-w-sm">
-                    Bấm "Kéo hộp thư IB (Business)" để đồng bộ toàn bộ tin nhắn từ Facebook hoặc nhập tin nhắn bên dưới để phản hồi trực tiếp cho khách.
+            {/* 3 Side-by-side Draft Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
+              {/* Draft 1 */}
+              <div className="bg-white p-3 rounded-xl border border-slate-200/80 shadow-2xs flex flex-col justify-between">
+                <div>
+                  <span className="text-[10px] font-bold text-emerald-600 flex items-center space-x-1 mb-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                    <span>96% phù hợp</span>
+                  </span>
+                  <h4 className="text-xs font-bold text-slate-900 line-clamp-1 leading-tight">
+                    Xác nhận đơn hàng + thông tin giao hàng
+                  </h4>
+                  <p className="text-[11px] text-slate-500 line-clamp-2 mt-1 leading-tight">
+                    Dạ em đã ghi nhận thông tin của chị... Em sẽ tạo đơn ngay và gửi chị...
                   </p>
                 </div>
-              ) : (
-                threadEvents.map((ev) => {
-                  const isPage = ev.kind === 'echo' || ev.from_id === selectedConv.page_id || ev.from_name === 'Nhân viên Fanpage'
-                  return (
-                    <div
-                      key={ev.id || ev.object_id}
-                      className={`flex flex-col ${isPage ? 'items-end' : 'items-start'}`}
-                    >
-                      <div className="flex items-center space-x-1 mb-1 text-[10px] text-slate-400">
-                        <span>{isPage ? 'Trang (Nhân viên / Javis)' : (ev.from_name || selectedConv.customer_name || 'Khách')}</span>
-                        <span>·</span>
-                        <span>{formatTime(ev.created_ts)}</span>
-                      </div>
-                      <div
-                        className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-xs shadow-sm ${
-                          isPage
-                            ? 'bg-blue-600 text-white rounded-br-xs'
-                            : 'bg-white text-slate-800 border border-slate-200 rounded-bl-xs'
-                        }`}
-                      >
-                        <p className="whitespace-pre-wrap leading-relaxed">{ev.body}</p>
-                      </div>
-                    </div>
-                  )
-                })
-              )}
-              <div ref={messagesEndRef} />
-            </div>
-
-            {/* Suggested Draft Banner inside Modal */}
-            {(() => {
-              const activeModalDraft = messengerDrafts.find(
-                (d) => d.target_id === selectedConv.psid || d.from_id === selectedConv.psid
-              )
-              if (!activeModalDraft) return null
-              const isBusyModal = actionLoading === activeModalDraft.id
-              return (
-                <div className="px-4 py-2.5 bg-gradient-to-r from-blue-50 to-indigo-50 border-t border-blue-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-                  <div className="flex items-start space-x-2 flex-1 min-w-0">
-                    <Sparkles className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
-                    <div className="min-w-0">
-                      <div className="text-[11px] font-bold text-blue-900 flex items-center gap-1.5">
-                        <span>Gợi ý phản hồi từ Javis</span>
-                        <span className="text-[10px] font-normal text-blue-600">(soạn theo Brand Kit)</span>
-                      </div>
-                      <p className="text-xs text-slate-800 line-clamp-2 italic mt-0.5">
-                        "{activeModalDraft.proposed}"
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2 flex-shrink-0 self-end sm:self-center">
-                    <button
-                      type="button"
-                      onClick={() => setDirectMsgText(activeModalDraft.proposed)}
-                      className="px-2.5 py-1 text-xs font-semibold text-blue-700 bg-white hover:bg-blue-50 border border-blue-200 rounded-lg shadow-2xs transition-colors cursor-pointer"
-                    >
-                      Điền vào ô chat
-                    </button>
-                    <button
-                      type="button"
-                      onClick={async () => {
-                        await handleSendDraft(activeModalDraft)
-                        if (selectedConv) {
-                          handleOpenConversation(selectedConv)
-                        }
-                      }}
-                      disabled={isBusyModal}
-                      className="px-3 py-1 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-2xs transition-colors cursor-pointer disabled:opacity-50"
-                    >
-                      {isBusyModal ? 'Đang gửi…' : 'Gửi ngay'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleRejectDraft(activeModalDraft)}
-                      disabled={isBusyModal}
-                      className="p-1 text-slate-400 hover:text-red-500 rounded-lg transition-colors cursor-pointer"
-                      title="Bỏ qua gợi ý này"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              )
-            })()}
-
-            {/* Footer Input */}
-            <div className="p-3 border-t border-slate-200 bg-white space-y-2">
-              <div className="flex items-center space-x-2">
-                <input
-                  type="text"
-                  value={directMsgText}
-                  onChange={(e) => setDirectMsgText(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault()
-                      handleSendDirectMessage()
+                <div className="flex items-center space-x-1.5 mt-3 pt-2 border-t border-slate-100">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handleApplyDraft(
+                        'Dạ em đã ghi nhận thông tin của chị Hoa (Màu be, size M). Em sẽ tạo đơn ngay và gửi chị xác nhận nhé!'
+                      )
                     }
-                  }}
-                  placeholder={`Nhắn tin cho ${selectedConv.customer_name || 'khách hàng'} (Enter để gửi)...`}
-                  className="flex-1 px-3.5 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
+                    className="flex-1 py-1.5 px-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-lg shadow-2xs transition-colors text-center"
+                  >
+                    Dùng nháp
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handleApplyDraft(
+                        'Dạ em đã ghi nhận thông tin của chị Hoa (Màu be, size M). Chị cho em xin số điện thoại và địa chỉ nhận hàng cụ thể ở Hà Nội để em tạo đơn nhé ạ!'
+                      )
+                    }
+                    className="py-1.5 px-2.5 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs rounded-lg border border-slate-200 transition-colors"
+                  >
+                    Chỉnh sửa
+                  </button>
+                </div>
+              </div>
+
+              {/* Draft 2 */}
+              <div className="bg-white p-3 rounded-xl border border-slate-200/80 shadow-2xs flex flex-col justify-between">
+                <div>
+                  <span className="text-[10px] font-bold text-teal-600 flex items-center space-x-1 mb-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-teal-500" />
+                    <span>89% phù hợp</span>
+                  </span>
+                  <h4 className="text-xs font-bold text-slate-900 line-clamp-1 leading-tight">
+                    Tư vấn thêm sản phẩm liên quan
+                  </h4>
+                  <p className="text-[11px] text-slate-500 line-clamp-2 mt-1 leading-tight">
+                    Ngoài sản phẩm này, bên em còn có... Chị có thể tham khảo thêm ạ...
+                  </p>
+                </div>
+                <div className="flex items-center space-x-1.5 mt-3 pt-2 border-t border-slate-100">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handleApplyDraft(
+                        'Ngoài sản phẩm này, bên em còn có mẫu áo khoác cùng bộ phối rất hợp với màu be ạ. Chị có muốn em gửi hình tham khảo thêm không ạ?'
+                      )
+                    }
+                    className="flex-1 py-1.5 px-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-lg shadow-2xs transition-colors text-center"
+                  >
+                    Dùng nháp
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handleApplyDraft(
+                        'Bên em đang có chương trình mua kèm phụ kiện giảm thêm 15% đó ạ!'
+                      )
+                    }
+                    className="py-1.5 px-2.5 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs rounded-lg border border-slate-200 transition-colors"
+                  >
+                    Chỉnh sửa
+                  </button>
+                </div>
+              </div>
+
+              {/* Draft 3 */}
+              <div className="bg-white p-3 rounded-xl border border-slate-200/80 shadow-2xs flex flex-col justify-between">
+                <div>
+                  <span className="text-[10px] font-bold text-blue-600 flex items-center space-x-1 mb-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                    <span>78% phù hợp</span>
+                  </span>
+                  <h4 className="text-xs font-bold text-slate-900 line-clamp-1 leading-tight">
+                    Chăm sóc sau bán hàng
+                  </h4>
+                  <p className="text-[11px] text-slate-500 line-clamp-2 mt-1 leading-tight">
+                    Cảm ơn chị đã quan tâm đến sản phẩm... Nếu cần hỗ trợ thêm chị cứ nhắn...
+                  </p>
+                </div>
+                <div className="flex items-center space-x-1.5 mt-3 pt-2 border-t border-slate-100">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handleApplyDraft(
+                        'Cảm ơn chị đã quan tâm đến sản phẩm bên em! Nếu cần hỗ trợ thêm thông tin gì về size số chị cứ nhắn em nhé ❤️'
+                      )
+                    }
+                    className="flex-1 py-1.5 px-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-lg shadow-2xs transition-colors text-center"
+                  >
+                    Dùng nháp
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handleApplyDraft(
+                        'Dạ chúc chị một ngày tốt lành ạ!'
+                      )
+                    }
+                    className="py-1.5 px-2.5 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs rounded-lg border border-slate-200 transition-colors"
+                  >
+                    Chỉnh sửa
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom Message Input Box */}
+          <div className="border border-slate-200 rounded-2xl p-2.5 bg-white shadow-2xs">
+            <textarea
+              rows={2}
+              value={inputText}
+              onChange={(e) => setInputText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault()
+                  handleSendMessage()
+                }
+              }}
+              placeholder="Nhập tin nhắn... (Shift + Enter để xuống dòng)"
+              className="w-full text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none resize-none px-1 py-0.5"
+            />
+            {/* Action Bar */}
+            <div className="flex items-center justify-between pt-2 border-t border-slate-100 mt-1">
+              {/* Left Icons */}
+              <div className="flex items-center space-x-1 text-slate-400">
                 <button
                   type="button"
-                  onClick={handleSendDirectMessage}
-                  disabled={!directMsgText.trim() || sendingDirectMsg}
-                  className="flex items-center space-x-1.5 px-4 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-500 disabled:opacity-50 rounded-xl shadow-sm transition-all cursor-pointer"
+                  className="p-1.5 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+                  title="Đính kèm tệp"
                 >
-                  <Send className={`w-3.5 h-3.5 ${sendingDirectMsg ? 'animate-pulse' : ''}`} />
-                  <span>{sendingDirectMsg ? 'Đang gửi…' : 'Gửi Messenger'}</span>
+                  <Paperclip className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  className="p-1.5 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+                  title="Gửi ảnh"
+                >
+                  <ImageIcon className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  className="p-1.5 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+                  title="Emoji"
+                >
+                  <Smile className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  className="p-1.5 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+                  title="Mẫu câu nhanh"
+                >
+                  <FileText className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  className="px-2 py-1 text-xs font-bold hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+                  title="Lệnh nhanh"
+                >
+                  /
                 </button>
               </div>
-              <p className="text-[10px] text-slate-400">
-                Tin nhắn gửi trực tiếp qua Facebook Messenger Graph API · Tự động ghi nhận lịch sử vào Javis Care.
-              </p>
+
+              {/* Right Send & Save draft Buttons */}
+              <div className="flex items-center space-x-2">
+                <button
+                  type="button"
+                  onClick={() => alert('Đã lưu nháp tin nhắn thành công')}
+                  className="px-3 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-colors"
+                >
+                  Lưu nháp
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSendMessage}
+                  className="flex items-center space-x-1.5 px-4 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-sm shadow-blue-500/20"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                  <span>Gửi</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
-      )}
+
+        {/* ================= COLUMN 3: NHÁP CHỜ DUYỆT & MINI CRM (3 cols) ================= */}
+        <div className="xl:col-span-3 space-y-5">
+          {/* Card 1: Nháp chờ duyệt hôm nay */}
+          <div className="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-2xs">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center space-x-1.5">
+                <Clock className="w-4 h-4 text-blue-600" />
+                <h3 className="text-xs font-bold text-slate-900">Nháp chờ duyệt hôm nay</h3>
+              </div>
+              <button
+                type="button"
+                className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center space-x-0.5"
+              >
+                <span>Xem tất cả</span>
+                <ArrowRight className="w-3 h-3" />
+              </button>
+            </div>
+
+            {/* 3 Mini KPI Boxes */}
+            <div className="grid grid-cols-3 gap-2">
+              {/* Box 1: Nháp bình luận */}
+              <div className="bg-slate-50/70 border border-slate-100 rounded-xl p-2.5 flex flex-col justify-between">
+                <div className="w-7 h-7 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center mb-1">
+                  <MessageSquare className="w-3.5 h-3.5" />
+                </div>
+                <span className="text-[11px] text-slate-500 font-medium">Nháp bình luận</span>
+                <div className="text-lg font-black text-slate-900 mt-0.5">{pendingCommentDrafts}</div>
+              </div>
+
+              {/* Box 2: Nháp IB */}
+              <div className="bg-slate-50/70 border border-slate-100 rounded-xl p-2.5 flex flex-col justify-between">
+                <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center mb-1">
+                  <Send className="w-3.5 h-3.5" />
+                </div>
+                <span className="text-[11px] text-slate-500 font-medium">Nháp IB</span>
+                <div className="text-lg font-black text-slate-900 mt-0.5">{pendingMessageDrafts}</div>
+              </div>
+
+              {/* Box 3: Đã gửi */}
+              <div className="bg-slate-50/70 border border-slate-100 rounded-xl p-2.5 flex flex-col justify-between">
+                <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center mb-1">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                </div>
+                <span className="text-[11px] text-slate-500 font-medium">Đã gửi</span>
+                <div className="text-lg font-black text-slate-900 mt-0.5">{sentTodayCount}</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Card 2: Mini CRM */}
+          <div className="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-2xs space-y-4">
+            {/* Header */}
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+              <h3 className="text-base font-bold text-slate-900">Mini CRM</h3>
+              <button
+                type="button"
+                className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center space-x-0.5"
+              >
+                <span>Xem hồ sơ đầy đủ</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            {/* Customer Header Avatar & Name */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2.5">
+                <div className="relative">
+                  <img
+                    src={currentConv.avatar}
+                    alt={currentConv.name}
+                    className="w-10 h-10 rounded-full object-cover ring-2 ring-white shadow-2xs"
+                  />
+                  <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white" />
+                </div>
+                <div>
+                  <div className="flex items-center space-x-1.5">
+                    <span className="text-sm font-bold text-slate-900">{currentConv.name}</span>
+                    <Pencil className="w-3.5 h-3.5 text-slate-400 cursor-pointer hover:text-slate-600" />
+                  </div>
+                  <div className="flex items-center space-x-1.5 text-[10px] text-slate-400 font-medium">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                    <span>Đang hoạt động</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Chat action button */}
+              <div className="flex items-center space-x-1">
+                <button
+                  type="button"
+                  className="flex items-center space-x-1 px-2.5 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 text-xs font-semibold transition-colors border border-blue-100"
+                >
+                  <MessageCircle className="w-3.5 h-3.5" />
+                  <span>Nhắn tin</span>
+                </button>
+                <button
+                  type="button"
+                  className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+                >
+                  <MoreVertical className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Customer Details List */}
+            <div className="space-y-2 text-xs text-slate-600 pt-1">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Phone className="w-3.5 h-3.5 text-slate-400" />
+                  <span className="font-medium text-slate-800">{currentConv.phone}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleCopy(currentConv.phone, 'SĐT')}
+                  className="text-slate-400 hover:text-blue-600 p-1"
+                  title="Sao chép"
+                >
+                  <Copy className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <span className="font-bold text-blue-600 text-xs w-3.5 text-center">f</span>
+                  <span className="text-slate-500">FB ID:</span>
+                  <span className="font-medium text-slate-800">{currentConv.fbId}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleCopy(currentConv.fbId, 'FB ID')}
+                  className="text-slate-400 hover:text-blue-600 p-1"
+                  title="Sao chép"
+                >
+                  <Copy className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <MessageCircle className="w-3.5 h-3.5 text-slate-400" />
+                <span className="text-slate-500">Nguồn:</span>
+                <span className="font-medium text-slate-800">{currentConv.source}</span>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                <span className="text-slate-500">Lần đầu tương tác:</span>
+                <span className="font-medium text-slate-800">{currentConv.firstInteraction}</span>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Building2 className="w-3.5 h-3.5 text-slate-400" />
+                <span className="text-slate-500">Khách hàng từ:</span>
+                <span className="font-medium text-slate-800">{currentConv.pageName}</span>
+              </div>
+            </div>
+
+            {copySuccess && (
+              <div className="text-[10px] text-emerald-600 font-bold bg-emerald-50 py-1 px-2 rounded text-center animate-fade-in">
+                Đã sao chép {copySuccess}!
+              </div>
+            )}
+
+            {/* Tags section */}
+            <div className="pt-2 border-t border-slate-100">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-xs font-bold text-slate-800">Thẻ tag</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newTag = prompt('Nhập tên tag mới:')
+                    if (newTag?.trim()) {
+                      setConversationsList((prev) =>
+                        prev.map((c) => {
+                          if (c.id === currentConv.id) {
+                            return {
+                              ...c,
+                              tags: [...c.tags, { text: newTag.trim(), color: 'blue' }],
+                            }
+                          }
+                          return c
+                        })
+                      )
+                    }
+                  }}
+                  className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center space-x-0.5"
+                >
+                  <Plus className="w-3 h-3" />
+                  <span>Thêm tag</span>
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {currentConv.tags.map((t, idx) => (
+                  <span
+                    key={idx}
+                    className={`px-2 py-0.5 rounded text-xs font-semibold ${tagColorMap[t.color]}`}
+                  >
+                    {t.text}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* Customer Status radio/pills */}
+            <div className="pt-2 border-t border-slate-100">
+              <span className="text-xs font-bold text-slate-800 block mb-2">Trạng thái khách hàng</span>
+              <div className="grid grid-cols-2 gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setConversationsList((prev) =>
+                      prev.map((c) => (c.id === currentConv.id ? { ...c, status: 'interested' } : c))
+                    )
+                  }}
+                  className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+                    currentConv.status === 'interested'
+                      ? 'bg-amber-50 text-amber-700 border-amber-300 font-bold'
+                      : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                  }`}
+                >
+                  <span className="w-2 h-2 rounded-full bg-amber-500" />
+                  <span>Quan tâm</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setConversationsList((prev) =>
+                      prev.map((c) => (c.id === currentConv.id ? { ...c, status: 'lead_hot' } : c))
+                    )
+                  }}
+                  className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+                    currentConv.status === 'lead_hot'
+                      ? 'bg-blue-50 text-blue-700 border-blue-300 font-bold'
+                      : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                  }`}
+                >
+                  <span className="w-2 h-2 rounded-full bg-rose-500" />
+                  <span>Lead nóng</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setConversationsList((prev) =>
+                      prev.map((c) => (c.id === currentConv.id ? { ...c, status: 'purchased' } : c))
+                    )
+                  }}
+                  className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+                    currentConv.status === 'purchased'
+                      ? 'bg-emerald-50 text-emerald-700 border-emerald-300 font-bold'
+                      : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                  }`}
+                >
+                  <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                  <span>Đã mua</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setConversationsList((prev) =>
+                      prev.map((c) => (c.id === currentConv.id ? { ...c, status: 'care_needed' } : c))
+                    )
+                  }}
+                  className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+                    currentConv.status === 'care_needed'
+                      ? 'bg-orange-50 text-orange-700 border-orange-300 font-bold'
+                      : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                  }`}
+                >
+                  <span className="w-2 h-2 rounded-full bg-orange-500" />
+                  <span>Cần chăm sóc</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Internal Notes section */}
+            <div className="pt-2 border-t border-slate-100">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-xs font-bold text-slate-800">Ghi chú nội bộ</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (noteText.trim()) {
+                      alert('Đã lưu ghi chú nội bộ!')
+                      setNoteText('')
+                    }
+                  }}
+                  className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center space-x-0.5"
+                >
+                  <Plus className="w-3 h-3" />
+                  <span>Thêm ghi chú</span>
+                </button>
+              </div>
+              <input
+                type="text"
+                value={noteText}
+                onChange={(e) => setNoteText(e.target.value)}
+                placeholder="Nhập ghi chú về khách hàng..."
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            {/* Interaction History timeline */}
+            <div className="pt-2 border-t border-slate-100">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-bold text-slate-800">Lịch sử tương tác</span>
+                <button
+                  type="button"
+                  className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center space-x-0.5"
+                >
+                  <span>Xem tất cả</span>
+                  <ArrowRight className="w-3 h-3" />
+                </button>
+              </div>
+
+              <div className="space-y-2 text-xs">
+                {currentConv.history.map((h, idx) => (
+                  <div key={idx} className="flex items-start space-x-2 text-[11px]">
+                    <span
+                      className={`w-2 h-2 rounded-full mt-1 flex-shrink-0 ${
+                        h.dotColor === 'green'
+                          ? 'bg-emerald-500'
+                          : h.dotColor === 'blue'
+                          ? 'bg-blue-600'
+                          : 'bg-slate-400'
+                      }`}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="font-bold text-slate-800 leading-tight">{h.title}</div>
+                      <div className="text-slate-400 truncate">{h.desc}</div>
+                    </div>
+                    <span className="text-[10px] text-slate-400 font-medium whitespace-nowrap ml-1">
+                      {h.time}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Quick Action Footer Buttons */}
+            <div className="grid grid-cols-4 gap-1.5 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => alert('Đã tạo việc trên Kanban!')}
+                className="flex items-center justify-center space-x-1 py-2 px-1 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-[11px] font-semibold transition-colors shadow-2xs"
+              >
+                <Briefcase className="w-3.5 h-3.5 text-blue-600" />
+                <span>Tạo việc</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => window.open(`tel:${currentConv.phone}`)}
+                className="flex items-center justify-center space-x-1 py-2 px-1 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-[11px] font-semibold transition-colors shadow-2xs"
+              >
+                <Phone className="w-3.5 h-3.5 text-blue-600" />
+                <span>Gọi khách</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => alert('Chọn tag để gắn')}
+                className="flex items-center justify-center space-x-1 py-2 px-1 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-[11px] font-semibold transition-colors shadow-2xs"
+              >
+                <Tag className="w-3.5 h-3.5 text-blue-600" />
+                <span>Gắn tag</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => alert('Đã đồng bộ sang CRM!')}
+                className="flex items-center justify-center space-x-1 py-2 px-1 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-[11px] font-semibold transition-colors shadow-2xs"
+              >
+                <Share2 className="w-3.5 h-3.5 text-blue-600" />
+                <span>Xuất CRM</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
-
