@@ -161,11 +161,11 @@ export const OpsChatBubble: React.FC = () => {
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
-        className="fixed bottom-6 right-6 z-40 flex flex-col items-center justify-center w-14 h-14 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white shadow-xl shadow-blue-500/30 transition-all hover:scale-105 active:scale-95 group cursor-pointer"
+        className="fixed bottom-6 right-6 z-40 flex flex-col items-center justify-center w-14 h-14 rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-xl shadow-blue-500/30 transition-all hover:scale-105 active:scale-95 group cursor-pointer"
         title="Hỏi Javis"
       >
         <MessageSquare className="w-5 h-5 text-white" />
-        <span className="text-[10px] font-bold text-white leading-none mt-1 tracking-tight">Hỏi Javis</span>
+        <span className="text-[9px] font-bold text-white leading-none mt-1 tracking-tight">Hỏi Javis</span>
       </button>
 
       {/* Floating Chat Modal Panel */}

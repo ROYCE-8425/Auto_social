@@ -82,19 +82,17 @@ export const Layout: React.FC<LayoutProps> = ({ currentTab, onSelectTab, childre
     owner: 'bg-orange-50 text-saoviet-700 border-saoviet-200',
   }[role || 'staff']
 
-  const navItems = [
+  interface NavItem {
+    id: string
+    label: string
+    icon: any
+    show: boolean
+    badge?: number
+  }
+
+  const navItems: NavItem[] = [
     { id: 'overview', label: 'Tổng quan', icon: Home, show: true },
-    {
-      id: 'inbox',
-      label: 'Hộp thư & Nháp',
-      icon: Inbox,
-      show: true,
-      badge:
-        (careState?.stats?.pending_comment_drafts ?? 0) +
-          (careState?.stats?.pending_message_drafts ?? 0) ||
-        careState?.stats?.pending_drafts ||
-        0,
-    },
+    { id: 'inbox', label: 'Hộp thư & Nháp', icon: Inbox, show: true },
     { id: 'customers', label: 'Khách hàng CRM', icon: Users, show: true },
     { id: 'tasks', label: 'Việc cần làm', icon: CheckSquare, show: true },
     { id: 'trends', label: 'Xu hướng & Chi phí', icon: TrendingUp, show: can('view_trends') },
