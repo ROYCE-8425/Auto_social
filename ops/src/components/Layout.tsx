@@ -19,6 +19,7 @@ import {
   Bell,
   ChevronDown,
   Layers,
+  Share2,
 } from 'lucide-react'
 import { useAuth } from '../lib/auth'
 import { api, CareState } from '../lib/api'
@@ -98,7 +99,7 @@ export const Layout: React.FC<LayoutProps> = ({ currentTab, onSelectTab, childre
     { id: 'tasks', label: 'Việc cần làm', icon: CheckSquare, show: true },
     { id: 'hub', label: 'Điều hành & Tri thức', icon: Layers, show: true },
     { id: 'trends', label: 'Xu hướng & Chi phí', icon: TrendingUp, show: can('view_trends') },
-    { id: 'tiktok', label: 'Kênh TikTok', icon: Video, show: true },
+    { id: 'tiktok', label: 'Đa kênh Social', icon: Share2, show: true },
     { id: 'audit', label: 'Nhật ký', icon: FileText, show: true },
     { id: 'users', label: 'Tài khoản nhân sự', icon: UserCog, show: role === 'owner' },
   ].filter((item) => item.show)
@@ -332,7 +333,7 @@ export const Layout: React.FC<LayoutProps> = ({ currentTab, onSelectTab, childre
       </header>
 
       {/* Global Scope Bar across other /ops pages */}
-      {!['overview', 'inbox', 'tasks', 'customers', 'hub'].includes(currentTab) && <ScopeBar />}
+      {!['overview', 'inbox', 'tasks', 'customers', 'hub', 'tiktok', 'channels'].includes(currentTab) && <ScopeBar />}
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-[1536px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
