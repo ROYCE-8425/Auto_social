@@ -18,6 +18,7 @@ import {
   Video,
   Bell,
   ChevronDown,
+  Layers,
 } from 'lucide-react'
 import { useAuth } from '../lib/auth'
 import { api, CareState } from '../lib/api'
@@ -95,6 +96,7 @@ export const Layout: React.FC<LayoutProps> = ({ currentTab, onSelectTab, childre
     { id: 'inbox', label: 'Hộp thư & Nháp', icon: Inbox, show: true },
     { id: 'customers', label: 'Khách hàng CRM', icon: Users, show: true },
     { id: 'tasks', label: 'Việc cần làm', icon: CheckSquare, show: true },
+    { id: 'hub', label: 'Điều hành & Tri thức', icon: Layers, show: true },
     { id: 'trends', label: 'Xu hướng & Chi phí', icon: TrendingUp, show: can('view_trends') },
     { id: 'tiktok', label: 'Kênh TikTok', icon: Video, show: true },
     { id: 'audit', label: 'Nhật ký', icon: FileText, show: true },
@@ -330,20 +332,21 @@ export const Layout: React.FC<LayoutProps> = ({ currentTab, onSelectTab, childre
       </header>
 
       {/* Global Scope Bar across other /ops pages */}
-      {!['overview', 'inbox', 'tasks'].includes(currentTab) && <ScopeBar />}
+      {!['overview', 'inbox', 'tasks', 'customers', 'hub'].includes(currentTab) && <ScopeBar />}
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-[1536px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {children}
       </main>
 
-      {/* Mobile Fixed Bottom Navigation Bar (5 core tabs) */}
+      {/* Mobile Fixed Bottom Navigation Bar */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-40 px-2 py-1 shadow-lg flex items-center justify-around">
         {[
           { id: 'overview', label: 'Tổng quan', icon: LayoutDashboard },
           { id: 'inbox', label: 'Hộp thư', icon: Inbox, badge: careState?.stats?.pending_drafts },
           { id: 'customers', label: 'Khách', icon: Users },
           { id: 'tasks', label: 'Việc', icon: CheckSquare },
+          { id: 'hub', label: 'Điều hành', icon: Layers },
           { id: 'more', label: 'Thêm', icon: Menu },
         ].map((item) => {
           const Icon = item.icon
