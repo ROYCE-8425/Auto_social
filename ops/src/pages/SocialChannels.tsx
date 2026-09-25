@@ -23,6 +23,17 @@ import {
   Check,
   ChevronDown,
 } from 'lucide-react'
+import {
+  FacebookBadge,
+  TikTokBadge,
+  InstagramBadge,
+  YouTubeBadge,
+  PlatformPill,
+  FacebookIcon,
+  TikTokIcon,
+  InstagramIcon,
+  YouTubeIcon,
+} from '../components/BrandIcons'
 import { api, TikTokStatusResponse, TikTokPostItem } from '../lib/api'
 import { useAuth } from '../lib/auth'
 
@@ -307,15 +318,11 @@ export const SocialChannelsPage: React.FC = () => {
             <div>
               {/* Header */}
               <div className="flex items-start justify-between">
-                <div className="flex items-center space-x-2.5">
-                  <div
-                    className={`w-10 h-10 rounded-xl ${ch.colorBg} ${ch.colorText} flex items-center justify-center font-bold text-sm shadow-sm`}
-                  >
-                    {ch.id === 'facebook' && 'f'}
-                    {ch.id === 'tiktok' && '🎵'}
-                    {ch.id === 'instagram' && '📸'}
-                    {ch.id === 'youtube' && '▶'}
-                  </div>
+                <div className="flex items-center space-x-3">
+                  {ch.id === 'facebook' && <FacebookBadge size="md" />}
+                  {ch.id === 'tiktok' && <TikTokBadge size="md" />}
+                  {ch.id === 'instagram' && <InstagramBadge size="md" />}
+                  {ch.id === 'youtube' && <YouTubeBadge size="md" />}
                   <div>
                     <h3 className="font-bold text-slate-900 text-sm leading-tight">{ch.name}</h3>
                     <span className="text-[10px] text-slate-400 font-mono block">{ch.handle}</span>
@@ -379,25 +386,26 @@ export const SocialChannelsPage: React.FC = () => {
           </div>
 
           {/* Filter channel tabs */}
-          <div className="flex items-center space-x-1 bg-slate-100 p-1 rounded-xl text-xs font-semibold">
+          <div className="flex flex-wrap items-center gap-1 bg-slate-100 p-1 rounded-xl text-xs font-semibold">
             {[
-              { id: 'all', label: 'Tất cả kênh (4)' },
-              { id: 'facebook', label: 'Facebook' },
-              { id: 'tiktok', label: 'TikTok' },
-              { id: 'instagram', label: 'Instagram' },
-              { id: 'youtube', label: 'YouTube' },
+              { id: 'all', label: 'Tất cả kênh (4)', icon: null },
+              { id: 'facebook', label: 'Facebook', icon: <FacebookIcon className="w-3.5 h-3.5 text-[#1877F2]" /> },
+              { id: 'tiktok', label: 'TikTok', icon: <TikTokIcon className="w-3.5 h-3.5" colored /> },
+              { id: 'instagram', label: 'Instagram', icon: <InstagramIcon className="w-3.5 h-3.5 text-[#E60064]" /> },
+              { id: 'youtube', label: 'YouTube', icon: <YouTubeIcon className="w-3.5 h-3.5 text-[#FF0000]" /> },
             ].map((tab) => (
               <button
                 key={tab.id}
                 type="button"
                 onClick={() => setSelectedChannelFilter(tab.id)}
-                className={`px-2.5 py-1 rounded-lg transition-colors cursor-pointer ${
+                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
                   selectedChannelFilter === tab.id
                     ? 'bg-white text-slate-900 shadow-2xs font-bold'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                {tab.label}
+                {tab.icon}
+                <span>{tab.label}</span>
               </button>
             ))}
           </div>
@@ -427,12 +435,7 @@ export const SocialChannelsPage: React.FC = () => {
                     </div>
                   </td>
                   <td className="py-3 px-3 whitespace-nowrap">
-                    <span className="inline-flex items-center space-x-1.5 px-2 py-0.5 rounded-lg text-xs font-bold bg-slate-100 text-slate-800">
-                      {post.channel === 'facebook' && <span className="font-bold text-blue-600">f Facebook</span>}
-                      {post.channel === 'tiktok' && <span>🎵 TikTok</span>}
-                      {post.channel === 'instagram' && <span className="text-rose-600 font-bold">📸 Instagram</span>}
-                      {post.channel === 'youtube' && <span className="text-red-600 font-bold">▶ YouTube</span>}
-                    </span>
+                    <PlatformPill platform={post.channel} />
                   </td>
                   <td className="py-3 px-3 font-semibold text-slate-800 whitespace-nowrap">
                     {post.brand}

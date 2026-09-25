@@ -32,6 +32,7 @@ import {
 import { api, CareCustomer } from '../lib/api'
 import { useAuth } from '../lib/auth'
 import { useCareScope } from '../lib/scope'
+import { FacebookIcon, MessengerIcon, TikTokIcon, PlatformPill } from '../components/BrandIcons'
 
 interface MockCustomer {
   id: string
@@ -282,10 +283,10 @@ export const Customers: React.FC = () => {
 
   // Source badges config
   const sourceIcons = {
-    Facebook: { icon: 'f', bg: 'text-blue-600', label: 'Facebook' },
-    Messenger: { icon: 'M', bg: 'text-blue-500', label: 'Messenger' },
-    TikTok: { icon: '🎵', bg: 'text-slate-900', label: 'TikTok' },
-    Website: { icon: '🌐', bg: 'text-purple-600', label: 'Website' },
+    Facebook: { icon: <FacebookIcon className="w-3.5 h-3.5 text-[#1877F2]" />, label: 'Facebook' },
+    Messenger: { icon: <MessengerIcon className="w-3.5 h-3.5 text-[#0084FF]" />, label: 'Messenger' },
+    TikTok: { icon: <TikTokIcon className="w-3.5 h-3.5" colored />, label: 'TikTok' },
+    Website: { icon: <Globe className="w-3.5 h-3.5 text-purple-600" />, label: 'Website' },
   }
 
   const tagColors = {
@@ -555,11 +556,11 @@ export const Customers: React.FC = () => {
                           {cust.phone}
                         </td>
                         <td className="py-2.5 px-2 whitespace-nowrap">
-                          <span className="inline-flex items-center space-x-1 text-[11px] text-slate-700">
-                            {cust.source === 'Facebook' && <span className="font-bold text-blue-600">f</span>}
-                            {cust.source === 'Messenger' && <span className="font-bold text-blue-500">M</span>}
-                            {cust.source === 'TikTok' && <span>🎵</span>}
-                            {cust.source === 'Website' && <Globe className="w-3 h-3 text-purple-600" />}
+                          <span className="inline-flex items-center space-x-1.5 text-[11px] font-medium text-slate-700">
+                            {cust.source === 'Facebook' && <FacebookIcon className="w-3.5 h-3.5 text-[#1877F2]" />}
+                            {cust.source === 'Messenger' && <MessengerIcon className="w-3.5 h-3.5 text-[#0084FF]" />}
+                            {cust.source === 'TikTok' && <TikTokIcon className="w-3.5 h-3.5" colored />}
+                            {cust.source === 'Website' && <Globe className="w-3.5 h-3.5 text-purple-600" />}
                             <span>{cust.source}</span>
                           </span>
                         </td>
@@ -1025,11 +1026,23 @@ export const Customers: React.FC = () => {
               </div>
 
               {/* Labels */}
-              <div className="flex justify-between gap-3 px-2 pt-2 text-[10px] text-slate-600 font-semibold">
-                <span className="flex-1 text-center truncate">f Facebook</span>
-                <span className="flex-1 text-center truncate">M Messenger</span>
-                <span className="flex-1 text-center truncate">🎵 TikTok</span>
-                <span className="flex-1 text-center truncate">🌐 Website</span>
+              <div className="flex justify-between gap-2 px-1 pt-2 text-[10px] text-slate-600 font-semibold">
+                <span className="flex-1 flex items-center justify-center space-x-1 truncate">
+                  <FacebookIcon className="w-3 h-3 text-[#1877F2]" />
+                  <span>Facebook</span>
+                </span>
+                <span className="flex-1 flex items-center justify-center space-x-1 truncate">
+                  <MessengerIcon className="w-3 h-3 text-[#0084FF]" />
+                  <span>Messenger</span>
+                </span>
+                <span className="flex-1 flex items-center justify-center space-x-1 truncate">
+                  <TikTokIcon className="w-3 h-3" colored />
+                  <span>TikTok</span>
+                </span>
+                <span className="flex-1 flex items-center justify-center space-x-1 truncate">
+                  <Globe className="w-3 h-3 text-purple-600" />
+                  <span>Website</span>
+                </span>
               </div>
             </div>
           </div>

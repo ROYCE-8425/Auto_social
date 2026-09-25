@@ -35,6 +35,7 @@ import {
 import { api, CareConversation, CareDraft, CareEvent, CareState, CareStats } from '../lib/api'
 import { useAuth } from '../lib/auth'
 import { useCareScope } from '../lib/scope'
+import { FacebookIcon, MessengerIcon } from '../components/BrandIcons'
 
 interface MockConversation {
   id: string
@@ -526,7 +527,7 @@ export const Inbox: React.FC = () => {
                   : 'border-transparent text-slate-500 hover:text-slate-800'
               }`}
             >
-              <MessageSquare className="w-3.5 h-3.5" />
+              <FacebookIcon className="w-3.5 h-3.5 text-[#1877F2]" />
               <span>Bình luận Fanpage</span>
             </button>
             <button
@@ -538,7 +539,7 @@ export const Inbox: React.FC = () => {
                   : 'border-transparent text-slate-500 hover:text-slate-800'
               }`}
             >
-              <MessageCircle className="w-3.5 h-3.5 text-blue-600" />
+              <MessengerIcon className="w-3.5 h-3.5 text-[#0084FF]" />
               <span>Messenger</span>
             </button>
           </div>
@@ -631,8 +632,8 @@ export const Inbox: React.FC = () => {
                       alt={conv.name}
                       className="w-10 h-10 rounded-full object-cover ring-1 ring-slate-200"
                     />
-                    <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-xs">
-                      <MessageCircle className="w-2.5 h-2.5 fill-white" />
+                    <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-[#0084FF] text-white flex items-center justify-center shadow-xs">
+                      <MessengerIcon className="w-2.5 h-2.5 text-white" />
                     </span>
                   </div>
 
