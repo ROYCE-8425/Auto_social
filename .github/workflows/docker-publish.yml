@@ -1,14 +1,11 @@
 name: Build & Publish Docker image (GHCR)
 
-# Mỗi lần push lên main → build image Docker và đẩy lên GitHub Container Registry
-# (ghcr.io/blogminhquy/javis-os). Hostinger Docker Manager / VPS chỉ cần PULL image này.
 on:
   push:
     branches: [main]
-    # Chỉ bỏ qua build khi push THUẦN tài liệu (không ảnh hưởng image).
-    # CLAUDE.md là system prompt nạp vào image → KHÔNG ignore, để sửa nó là build lại.
     paths-ignore:
       - "README.md"
+      - "README.en.md"
       - "DEPLOY.md"
       - ".learn/**"
   workflow_dispatch:
