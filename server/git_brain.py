@@ -552,6 +552,14 @@ def _backup_skip(rel: str, sync_images: bool = False) -> bool:
     name = rel.replace("\\", "/").rsplit("/", 1)[-1]
     if name == ".javis-learn.lock" or name.endswith(".tmp"):
         return True
+    # Bỏ qua hồ sơ khách hàng CRM nếu người dùng tắt sao lưu CRM (fanpage_care.backup_crm == False)
+    if "/crm/" in r.lower():
+        try:
+            import config
+            if not config.read_settings().get("fanpage_care", {}).get("backup_crm", True):
+                return True
+        except Exception:
+            pass
     # CHỈ CHỮ mới được sang mirror. Chặn ở đây chứ không trông cả vào .gitignore vì hai việc
     # khác nhau: .gitignore quyết định git COMMIT gì, còn chỗ này quyết định có CHÉP file sang
     # thư mục mirror hay không. Không chặn thì mỗi lượt đồng bộ nhân đôi vài trăm MB media trên

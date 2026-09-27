@@ -67,6 +67,21 @@ KNOWN_LIMITS: tuple[dict, ...] = (
         "source": "Tài liệu rate limit công khai của Groq, tra ngày 2026-08-02",
         "verify": True,
     },
+    {
+        "id": "gemini-tier1-flash",
+        "provider": "google",
+        "model_pattern": "gemini-*-flash*",
+        "rolling_tpm": 1000000,
+        "context_window": 1048576,
+        "reserved_output_tokens": 4000,
+        "window_seconds": 60,
+        "note": "Gemini API Usage Tier 1 (billing đã gắn). Flash ~150 RPM / ~1.500 RPD / "
+                "~1M TPM; trần chi $10/10 phút; cap billing $250/tháng. Số RPM/RPD xem "
+                "AI Studio vì Google không còn bảng tĩnh. Ảnh Imagen/Nano Banana ~10 IPM / "
+                "~500 RPD, chung project với text.",
+        "source": "https://ai.google.dev/gemini-api/docs/rate-limits tra 2026-09-05",
+        "verify": True,
+    },
 )
 
 
