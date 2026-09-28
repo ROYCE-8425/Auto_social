@@ -17,6 +17,23 @@ class MockContext:
 ctx = MockContext()
 
 def run_tests():
+    bsn_dataset = Path(ctx.vault_root) / "attachments" / "dataset" / "game-bsn"
+    created_mock_dataset = False
+    if not bsn_dataset.is_dir():
+        created_mock_dataset = True
+        sub_dir = bsn_dataset / "sample-game"
+        sub_dir.mkdir(parents=True, exist_ok=True)
+        for i in range(15):
+            (sub_dir / f"screenshot_game_bsn_{i}.jpg").write_bytes(b"\xff\xd8\xff\xe0mock_jpg")
+
+    try:
+        _do_run_tests()
+    finally:
+        if created_mock_dataset and bsn_dataset.is_dir():
+            import shutil
+            shutil.rmtree(bsn_dataset, ignore_errors=True)
+
+def _do_run_tests():
     print("=== TEST 1: Detect Course ===")
     test_cases = [
         ("game-bsn", "game-bsn"),
