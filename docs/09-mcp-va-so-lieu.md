@@ -139,7 +139,27 @@ Hai kết nối này nằm ở nhóm **Mạng xã hội** trong Kho, khác hẳn
 - **Facebook Trang (tự tạo app - Graph API)**: quản lý Trang/Fanpage của CHÍNH bạn. Chỉ đọc thì xem danh sách Trang, bài và bình luận; nâng Toàn quyền thì đăng bài chữ, ảnh, album nhiều ảnh, video, sửa bài đã đăng, trả lời và xoá bình luận. Cách đấu giống hệt Meta Ads (Graph API) ở trên và **dùng lại được đúng Facebook App đó** - vẫn phải bật thêm quyền Trang. Khi Facebook hỏi quyền, nhớ TICK chọn các Trang. Mặc định **Chỉ đọc**; xoá bài là không hoàn tác được (Trang không có thùng rác) nên chỉ nâng Toàn quyền khi thật sự cần Javis đăng bài.
 - **Theo dõi Facebook (Apify)**: theo dõi Trang và Nhóm **công khai** của người khác để tìm bài viral, trả về số share/react/bình luận để lọc bài hot. Điểm quan trọng: nó quét qua dịch vụ Apify chứ KHÔNG dùng tài khoản Facebook cá nhân của bạn, nên không lo bị khoá và chạy tốt trên VPS 24/7. Cách đấu: đăng ký apify.com, vào Console > Settings > API & Integrations copy "Personal API token", dán vào. Chi phí tính theo lượt quét, khoảng 2.6 USD cho 1000 bài. Kết nối này **chỉ đọc**, không có đường ghi. Nhóm KÍN chưa hỗ trợ (sẽ cần thêm cookie).
 
-### 5c. Các kết nối còn lại trong kho
+### 5c. Đăng video TikTok (PostPeer)
+
+Cổng kết nối tùy chọn dành cho đăng video ngắn (9:16) lên kênh TikTok thương hiệu (ví dụ `@tinhocsaoviet`) qua dịch vụ trung gian PostPeer (postpeer.dev).
+
+- **Tại sao dùng PostPeer**: TikTok Direct Post API chính thức đòi hỏi kiểm duyệt ứng dụng tổ chức rất khắt khe. PostPeer cung cấp cổng API dạng mang key của bạn (BYO API key, tương tự Apify) - bạn ủy quyền OAuth tài khoản TikTok trên dashboard của PostPeer, Javis chỉ gọi API qua access key.
+- **Ranh giới quan trọng**:
+  - **Facebook Pages TUYỆT ĐỐI KHÔNG đi qua PostPeer**: Meta Graph API và `/connect/facebook/pages` giữ nguyên toàn bộ.
+  - **Phạm vi v1**: Đăng video 9:16 (URL https công khai từ CDN/hosting của bạn), sinh caption ngắn (8-18 dòng) kèm hashtag, tự động kiểm tra `creator_info` để gán `privacyLevel` hợp lệ.
+  - **Không làm / Không hứa ở v1**: Không dùng PostPeer để Care/trả lời comment TikTok, không dùng chạy TikTok Ads (đã có MCP `tiktok-ads` riêng), không xoay vòng hàng chục tài khoản TikTok. Giới hạn v1 là 1 video/ngày cho một kênh thương hiệu.
+- **Cách kết nối từng bước**:
+  1. Đăng ký tài khoản tại [postpeer.dev](https://postpeer.dev) và kết nối kênh TikTok của bạn qua dashboard PostPeer.
+  2. Vào phần API Keys / Access Keys trên PostPeer copy khóa API.
+  3. Ở Javis, vào **Kết nối** > tìm thẻ **PostPeer** > dán Access Key > bấm **Kết nối**.
+  4. Lấy `accountId` của kênh TikTok (qua lệnh `postpeer_accounts` trong chat hoặc trên PostPeer dashboard).
+  5. Mở Brand Kit của kênh (ví dụ `brains/Brain Default/wiki/brand-kits/royce-shop.md`), điền:
+     - `TikTok accountId: <accountId-postpeer>`
+     - `TikTok username: @tinhocsaoviet`
+  6. **Đăng thử**: gửi đường dẫn video https trong chat và yêu cầu Javis đăng thử lên TikTok.
+  7. **Loop đăng tự động hàng ngày**: Tệp loop `dang-video-tiktok-hang-ngay.md` được tạo sẵn nhưng **MẶC ĐỊNH TẮT** (`enabled: false`). Chỉ khi bạn kiểm tra và đổi thành `enabled: true` (kèm quyền Toàn quyền `full`), loop mới tự chạy mỗi ngày 1 lần qua kịch bản `pick_next_tiktok.py`.
+
+### 5d. Các kết nối còn lại trong kho
 
 - **Composio** (nhóm Kho ứng dụng): một kết nối mở ra hơn 500 app (Gmail, Notion, Sheets, GitHub, Linear, Slack...). Vào platform.composio.dev, tạo một MCP server, copy API key dạng `ck_...` dán vào. Sau đó muốn dùng app nào thì bảo thẳng trong chat ("nối Notion qua Composio"), Composio đưa link đăng nhập app đó cho bạn tự đăng nhập. **Lưu ý quan trọng về quyền**: mọi hành động của mọi app đều chạy qua MỘT tool chung của Composio nên Javis không tách được lệnh đọc với lệnh ghi. Mức Chỉ đọc (mặc định) chỉ tìm và xem mô tả tool, chưa chạy được gì; muốn Javis thao tác thật phải nâng **Toàn quyền**, và khi đó Javis làm được MỌI hành động trên các app bạn đã nối, kể cả gửi tin và xoá dữ liệu.
 - **Higgsfield** (nhóm Sáng tạo): tạo và chỉnh ảnh/video bằng AI - sinh ảnh, sinh video, nâng nét, mở rộng khung hình, xoá nền, cắt nhân vật. Đăng nhập một chạm, không cần tạo app hay dán key: bấm **Kết nối** rồi đăng nhập tài khoản Higgsfield và cấp quyền. Mỗi lần tạo hoặc chỉnh **tiêu credit trả trước** trong tài khoản Higgsfield của bạn. Mặc định Ghi nháp (tạo được ngay, chặn xoá và thanh toán); muốn Javis chỉ xem lịch sử cho đỡ tốn credit thì hạ xuống Chỉ đọc.

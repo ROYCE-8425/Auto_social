@@ -17,6 +17,66 @@ import hashlib
 # chúng chỉ nổ đúng lúc đã có sự cố khác, biến một lỗi lẽ ra chỉ cần ghi log thành NameError
 # phá cả luồng. Import một lần ở đây thì mọi chỗ dùng đều an toàn.
 import sys
+if sys.platform == "win32":
+    # Va loi Windows asyncio Python 3.12-3.13: khi client ngat ket noi dot ngot luc accept
+    # (WinError 64 / 121 / 10054), proactor mac dinh dong socket lang nghe lam sap cong 7777.
+    # Doan va nay giu socket lang nghe luon song de tiep tuc phuc vu request tiep theo.
+    try:
+        import asyncio.proactor_events as _pe
+        import asyncio.trsock as _trsock
+        import asyncio.exceptions as _exceptions
+
+        _orig_start_serving = _pe.BaseProactorEventLoop._start_serving
+
+        def _patched_start_serving(self, protocol_factory, sock,
+                                   sslcontext=None, server=None, backlog=100,
+                                   ssl_handshake_timeout=None,
+                                   ssl_shutdown_timeout=None):
+            def loop(f=None):
+                try:
+                    if f is not None:
+                        conn, addr = f.result()
+                        protocol = protocol_factory()
+                        if sslcontext is not None:
+                            self._make_ssl_transport(
+                                conn, protocol, sslcontext, server_side=True,
+                                extra={'peername': addr}, server=server,
+                                ssl_handshake_timeout=ssl_handshake_timeout,
+                                ssl_shutdown_timeout=ssl_shutdown_timeout)
+                        else:
+                            self._make_socket_transport(
+                                conn, protocol,
+                                extra={'peername': addr}, server=server)
+                    if self.is_closed():
+                        return
+                    f = self._proactor.accept(sock)
+                except OSError as exc:
+                    if getattr(exc, 'winerror', None) in (64, 121, 10054) and sock.fileno() != -1 and not self.is_closed():
+                        try:
+                            f = self._proactor.accept(sock)
+                            self._accept_futures[sock.fileno()] = f
+                            f.add_done_callback(loop)
+                            return
+                        except Exception:
+                            pass
+                    if sock.fileno() != -1:
+                        self.call_exception_handler({
+                            'message': 'Accept failed on a socket',
+                            'exception': exc,
+                            'socket': _trsock.TransportSocket(sock),
+                        })
+                        sock.close()
+                except _exceptions.CancelledError:
+                    sock.close()
+                else:
+                    self._accept_futures[sock.fileno()] = f
+                    f.add_done_callback(loop)
+
+            self.call_soon(loop)
+
+        _pe.BaseProactorEventLoop._start_serving = _patched_start_serving
+    except Exception:
+        pass
 import uuid
 from pathlib import Path
 import re
@@ -67,6 +127,7 @@ import connect_health   # sức khoẻ kết nối: vòng check nền + phân lo
 import cred_exchange   # đổi credential hộ user (vd App Password -> Google master token) khi đấu
 import plugins_host   # hệ PLUGIN: thư mục Python thả vào, tự thêm tool/hook cho mọi engine qua hub
 import web_security   # chống CSRF-to-localhost + DNS-rebinding cho web API cục bộ
+import ops_rbac       # phân quyền vận hành (staff, manager, owner) cho /ops
 import image_gen      # tạo ảnh bằng gói ChatGPT (OAuth) - Codex Responses + tool image_generation
 import media_gc       # dọn vùng cache media (attachments/ + inbox/) theo hạn tuổi + trần dung lượng
 import inbox         # hòm thư: mọi kết quả chạy nền để lại một mẩu thư bền ở server
@@ -151,13 +212,16 @@ app.add_middleware(CORSMiddleware,
 
 # Đường dẫn KHÔNG cần đăng nhập. CHỈ các auth endpoint công khai (status/login/setup) -
 # KHÔNG để cả prefix /auth public vì /auth/disable, /auth/logout phải yêu cầu đăng nhập.
-_AUTH_PUBLIC_PREFIX = ("/static", "/health")
+_AUTH_PUBLIC_PREFIX = ("/static", "/health", "/ops/assets", "/tiktok-media")
 # /brand-logo: hiện trên màn đăng nhập (trước session). /tls-check: Caddy gọi (không đăng nhập được).
-_AUTH_PUBLIC_EXACT = ("/", "/favicon.ico", "/auth/status", "/auth/login", "/auth/setup",
+_AUTH_PUBLIC_EXACT = ("/", "/chao", "/app", "/favicon.ico", "/auth/status", "/auth/login", "/auth/setup",
                       "/brand-logo", "/tls-check",
                       # /hub/mcp: Claude CLI/Codex gọi bằng Bearer hub_token riêng (không có cookie).
                       # /connect/oauth/callback: browser redirect từ provider OAuth về.
-                      "/hub/mcp", "/connect/oauth/callback")
+                      "/hub/mcp", "/connect/oauth/callback",
+                      # /hook/facebook: webhook Graph API từ Meta
+                      "/hook/facebook",
+                      "/ops/auth/login", "/ops/auth/logout")
 # Endpoint CHỈ-LOCALHOST: agent (Claude CLI chạy cùng máy/container) curl được mà không cần
 # cookie đăng nhập; request từ ngoài (qua Traefik/Caddy/LAN) đến từ IP khác loopback → vẫn bị chặn.
 # /reminders/cancel đi cùng nhóm với /reminders (TẠO nhắc): huỷ là thao tác YẾU HƠN tạo, nên
@@ -188,10 +252,52 @@ async def _csrf_guard(request: Request, call_next):
 @app.middleware("http")
 async def _auth_guard(request: Request, call_next):
     """Chặn endpoint khi CẦN đăng nhập (đã đặt mật khẩu HOẶC chạy public) mà chưa có session.
-    Khi chạy public (0.0.0.0) lần đầu chưa có mật khẩu → vẫn chặn để ÉP tạo tài khoản trước
-    (setup_required), tránh hở dashboard điều khiển Claude full quyền ra Internet."""
+    Đồng thời áp dụng phân quyền RBAC (ops_rbac) cho nhân viên CSKH (staff) và quản lý (manager).
+    """
+    path = request.url.path
+    ops_user = ops_rbac.get_current_ops_user(request)
+
+    # 1. Bảo vệ buồng lái console (`/app`). `/` và `/chao` là landing công khai.
+    # Staff và Manager cấm tuyệt đối console chủ máy.
+    if path in ("/app", "/index.html"):
+        if ops_user and ops_user.get("role") in ("staff", "manager"):
+            return JSONResponse(
+                {"error": "Chỉ chủ máy mới được truy cập console điều khiển", "role": ops_user.get("role")},
+                status_code=403
+            )
+
+    # 2. Xử lý không gian /ops (giao diện và API vận hành)
+    if path == "/ops" or path.startswith("/ops/"):
+        if path in ("/ops/auth/login", "/ops/auth/logout") or path.startswith("/ops/assets"):
+            return await call_next(request)
+        # Trang UI frontend (/ops, /ops/inbox, /ops/customers, etc.): cho phép tải HTML5 shell
+        if not path.startswith(("/ops/me", "/ops/users", "/ops/qa")):
+            return await call_next(request)
+        # Endpoint API /ops/me, /ops/users hoặc /ops/qa: kiểm tra phiên đăng nhập & RBAC
+        if not ops_user:
+            return JSONResponse({"error": "unauthorized", "auth_required": True}, status_code=401)
+        allowed, reason = ops_rbac.check_access_permission(ops_user, path, request.method)
+        if not allowed:
+            return JSONResponse({"error": reason or "forbidden", "role": ops_user.get("role")}, status_code=403)
+        return await call_next(request)
+
+    # 3. RBAC Policy check cho người dùng ops_session trên mọi API khác (/fanpage-care/*, /kanban, /usage/*, etc.)
+    if ops_user:
+        payload = None
+        if path == "/fanpage-care/settings" and request.method.upper() == "POST":
+            try:
+                body_bytes = await request.body()
+                if body_bytes:
+                    payload = json.loads(body_bytes.decode("utf-8"))
+            except Exception:
+                payload = None
+        allowed, reason = ops_rbac.check_access_permission(ops_user, path, request.method, payload=payload)
+        if not allowed:
+            return JSONResponse({"error": reason or "forbidden", "role": ops_user.get("role")}, status_code=403)
+        return await call_next(request)
+
+    # 4. Kiểm tra session admin Javis cũ cho các route console / API hệ thống
     if cfgmod.gate_active():
-        path = request.url.path
         client_host = request.client.host if request.client else ""
         public = (path in _AUTH_PUBLIC_EXACT
                   or any(path.startswith(p) for p in _AUTH_PUBLIC_PREFIX)
@@ -235,6 +341,10 @@ DASHBOARD_PATH = Path(__file__).parent.parent / "dashboard"
 import mimetypes
 mimetypes.add_type("image/webp", ".webp")
 app.mount("/static", StaticFiles(directory=str(DASHBOARD_PATH)), name="static")
+
+OPS_DIST_PATH = Path(__file__).parent.parent / "ops" / "dist"
+if (OPS_DIST_PATH / "assets").exists():
+    app.mount("/ops/assets", StaticFiles(directory=str(OPS_DIST_PATH / "assets")), name="ops_assets")
 
 
 @app.middleware("http")
@@ -318,7 +428,7 @@ def _brain_memory_dir(brain: str) -> Path:
 # (~5,7k token) và tăng tuyến tính theo số ký ức - đúng cái bệnh curator vừa mắc, không có gì
 # chặn. Trần này chưa cắt gì hôm nay (18.363 < 20.000), nó biến đường dốc thành đường phẳng.
 MEMORY_INDEX_MAX = int(os.getenv("JAVIS_MEMORY_INDEX_MAX", "20000"))
-_MEM_ITEM_RE = re.compile(r'^(\s*-\s*\[[^\]]*\]\([^)]*\))\s*[-–—]?\s*(.*)$')
+_MEM_ITEM_RE = re.compile(r'^(\s*-\s*\[[^\]]*\]\([^)]*\))\s*[---]?\s*(.*)$')
 
 
 def _fit_memory_index(mem: str, cap: int = None) -> str:
@@ -729,8 +839,7 @@ for _p in (BRAINS_DIR, OBSIDIAN_VAULT_PATH):
         pass
 
 
-@app.get("/")
-async def root():
+def _console_html():
     html = (DASHBOARD_PATH / "index.html").read_text(encoding="utf-8")
     # Ép khoá cache của MỌI file .js/.css theo phiên bản app. Trước đây mỗi file có ?v=NN
     # gõ tay, và suốt hàng chục bản không ai nhớ tăng console.js?v=72 nên trình duyệt cứ
@@ -739,6 +848,28 @@ async def root():
     ver = _app_version() or "0"
     html = re.sub(r'(/static/[\w./-]+\.(?:js|css))\?v=[\w.]+', r'\1?v=' + ver, html)
     return HTMLResponse(html, headers={"Cache-Control": "no-cache, no-store, must-revalidate"})
+
+
+def _landing_html():
+    p = PROJECT_ROOT / "website" / "index.html"
+    html = p.read_text(encoding="utf-8")
+    return HTMLResponse(html, headers={"Cache-Control": "no-cache, no-store, must-revalidate"})
+
+
+@app.get("/")
+@app.get("/chao")
+async def public_landing():
+    """Trang giới thiệu công khai (cuộc thi / khách). Console chủ máy ở /app."""
+    return _landing_html()
+
+
+@app.get("/app")
+async def console_app():
+    """Buồng lái Javis (dashboard cũ tại /)."""
+    return _console_html()
+
+
+root = console_app
 
 
 @app.post("/stop")
@@ -1150,7 +1281,7 @@ PROVIDER_DEFS = [   # thứ tự = thứ tự hiển thị card ở trang Models
     {"id": "anthropic-api", "label": "Anthropic (API)",         "kind": "api", "key_field": "anthropic_api_key", "catalog_key": "anthropic-api",
      "default_models": ["claude-opus-4-8", "claude-sonnet-4-6", "claude-haiku-4-5-20251001"]},
     {"id": "openai",        "label": "OpenAI (ChatGPT API)",    "kind": "api", "key_field": "openai_api_key",    "catalog_key": "openai",
-     "default_models": ["gpt-4o", "gpt-4o-mini", "o3-mini"]},
+     "default_models": ["gpt-5.5", "gpt-4o", "gpt-4o-mini", "o3-mini"]},
     {"id": "gemini",        "label": "Google Gemini (API)",     "kind": "api", "key_field": "gemini_api_key",    "catalog_key": "gemini",
      "default_models": ["gemini-2.5-flash", "gemini-2.5-pro", "gemini-2.0-flash"]},
     {"id": "groq",          "label": "Groq (API)",              "kind": "api", "key_field": "groq_api_key",      "catalog_key": "groq",
@@ -1258,6 +1389,7 @@ def _providers_view(cfg):
             _a = antigravity_cli.auth_status_nen()   # cùng lý do nhánh `configured` ở trên
             item["cli_found"] = bool(antigravity_cli.find_antigravity_cli())
             item["auth_method"] = _a.get("method", "")
+            item["account"] = _a.get("email", "")
             item["auth_error"] = _a.get("error", "")
             item["cai_lenh"] = antigravity_cli.lenh_cai()
             # Không có nút Ngắt: token nằm trong keyring của hệ điều hành, Javis không giữ nên
@@ -3131,6 +3263,199 @@ async def connect_catalog():
             "strict": bool(cfgmod.read_settings().get("mcp", {}).get("strict")), "hub": _hub_enabled()}
 
 
+@app.get("/connect/facebook/pages")
+async def connect_facebook_pages():
+    """Fanpage đã tick lúc OAuth hoặc nạp Page Access Token — gộp MỌI kết nối. Không lộ page token."""
+    by_id = {}
+    last_err = ""
+    try:
+        import oauth_mcp
+        import httpx
+        tokens = []
+        for c in mcp_store.list_connections():
+            if c.get("connector_id") != "facebook-pages":
+                continue
+            if not oauth_mcp.status(c["id"]).get("connected"):
+                continue
+            hdr = await oauth_mcp.auth_headers(c["id"])
+            tok = (hdr.get("Authorization") or "").replace("Bearer ", "").strip()
+            if tok and tok not in tokens:
+                tokens.append(tok)
+        if tokens:
+            async with httpx.AsyncClient(timeout=20) as client:
+                for token in tokens:
+                    r = await client.get(
+                        "https://graph.facebook.com/v25.0/me/accounts",
+                        params={"fields": "id,name,category", "limit": 200, "access_token": token})
+                    d = r.json()
+                    if isinstance(d, dict) and d.get("error"):
+                        err = d["error"]
+                        last_err = err.get("message") if isinstance(err, dict) else str(err)
+                        continue
+                    for p in (d.get("data") or []):
+                        pid = str(p.get("id") or "")
+                        if pid:
+                            by_id[pid] = {
+                                "id": pid,
+                                "name": p.get("name") or "",
+                                "category": p.get("category") or "",
+                                "connected": True,
+                                "source": "oauth"
+                            }
+    except Exception as e:
+        last_err = f"{type(e).__name__}: {e}"
+
+    # Gộp các trang có manual Page Access Token từ Javis/page_tokens.json và wiki/brand-kits/*.md
+    try:
+        from pathlib import Path
+        repo = Path(__file__).resolve().parents[1]
+        default_brain = repo / "brains" / "Brain Default"
+        roots = [default_brain, repo] if default_brain.is_dir() else [repo]
+        for r in roots:
+            tok_file = r / "Javis" / "page_tokens.json"
+            if tok_file.is_file():
+                try:
+                    import json
+                    tdata = json.loads(tok_file.read_text(encoding="utf-8"))
+                    if isinstance(tdata, dict):
+                        for pid, info in tdata.items():
+                            if isinstance(info, dict) and info.get("access_token"):
+                                pid_str = str(pid)
+                                if pid_str not in by_id:
+                                    by_id[pid_str] = {
+                                        "id": pid_str,
+                                        "name": info.get("name") or f"Page {pid_str}",
+                                        "category": "Community",
+                                        "connected": True,
+                                        "has_token": True,
+                                        "source": "manual_token"
+                                    }
+                                else:
+                                    by_id[pid_str]["has_token"] = True
+                except Exception:
+                    pass
+            bk_dir = r / "wiki" / "brand-kits"
+            if bk_dir.is_dir():
+                import re
+                for p in bk_dir.glob("*.md"):
+                    if p.name.startswith("_"):
+                        continue
+                    try:
+                        md = p.read_text(encoding="utf-8")
+                        m_pid = re.search(r"^[ \t]*[-*][ \t]*(?:Page ID|page_id|ID Fanpage|ID Trang)[ \t]*:[ \t]*(.+)$", md, re.M | re.I)
+                        m_tok = re.search(r"^[ \t]*[-*][ \t]*(?:Access Token|access_token|Page Token|Token)[ \t]*:[ \t]*(.+)$", md, re.M | re.I)
+                        if m_pid and m_tok:
+                            pid_str = m_pid.group(1).strip()
+                            if pid_str and pid_str not in by_id:
+                                m_name = re.search(r"^[ \t]*[-*][ \t]*Tên Fanpage:[ \t]*(.+)$", md, re.M)
+                                name = m_name.group(1).strip() if m_name else p.stem
+                                by_id[pid_str] = {
+                                    "id": pid_str,
+                                    "name": name,
+                                    "category": "Community",
+                                    "connected": True,
+                                    "has_token": True,
+                                    "source": "manual_token"
+                                }
+                            elif pid_str in by_id:
+                                by_id[pid_str]["has_token"] = True
+                    except Exception:
+                        pass
+    except Exception:
+        pass
+
+    pages = list(by_id.values())
+    if not pages:
+        if last_err:
+            return {"ok": False, "pages": [], "error": last_err}
+        return {"ok": False, "pages": [], "error": "Chưa kết nối Facebook Trang hoặc chưa nạp Page Access Token"}
+    return {"ok": True, "pages": pages}
+
+
+@app.post("/connect/facebook/verify-token")
+async def connect_facebook_verify_token(request: Request):
+    """Kiểm tra tính sống còn và hạn sử dụng của một Page Access Token trực tiếp với Facebook Graph API."""
+    import time
+    data = await request.json()
+    token = (data.get("token") or "").strip()
+    page_id = str(data.get("page_id") or "").strip()
+    if not token:
+        return {"ok": False, "is_valid": False, "error": "Thiếu mã Access Token để kiểm tra"}
+
+    import httpx
+    try:
+        async with httpx.AsyncClient(timeout=15) as client:
+            target = page_id if page_id else "me"
+            r = await client.get(
+                f"https://graph.facebook.com/v25.0/{target}",
+                params={"fields": "id,name", "access_token": token}
+            )
+            d = r.json()
+            if isinstance(d, dict) and d.get("error"):
+                err = d["error"]
+                msg = err.get("message") if isinstance(err, dict) else str(err)
+                code = err.get("code") if isinstance(err, dict) else None
+                return {
+                    "ok": False,
+                    "is_valid": False,
+                    "error": msg,
+                    "code": code,
+                    "status_text": f"Token không hợp lệ hoặc đã hết hạn: {msg}"
+                }
+
+            page_name = d.get("name") or ""
+            ret_id = str(d.get("id") or "")
+
+            expires_at = None
+            is_permanent = False
+            days_left = None
+            scopes = []
+            try:
+                r_dbg = await client.get(
+                    "https://graph.facebook.com/v25.0/debug_token",
+                    params={"input_token": token, "access_token": token}
+                )
+                dbg_data = r_dbg.json().get("data") or {}
+                if dbg_data:
+                    exp = dbg_data.get("expires_at", 0)
+                    expires_at = exp
+                    scopes = dbg_data.get("scopes") or []
+                    if exp == 0:
+                        is_permanent = True
+                    elif exp and exp > time.time():
+                        days_left = max(0, int((exp - time.time()) / 86400))
+                    elif exp and exp <= time.time():
+                        return {
+                            "ok": False,
+                            "is_valid": False,
+                            "error": "Token đã hết hạn",
+                            "status_text": "Token đã hết hạn sử dụng. Cần nạp token mới."
+                        }
+            except Exception:
+                pass
+
+            if is_permanent:
+                status_desc = "Token vĩnh viễn (Never expires) — Sẵn sàng đăng bài Graph API"
+            elif days_left is not None:
+                status_desc = f"Token đang hoạt động — Còn lại {days_left} ngày"
+            else:
+                status_desc = "Token đang hoạt động bình thường — Sẵn sàng đăng bài"
+
+            return {
+                "ok": True,
+                "is_valid": True,
+                "page_id": ret_id,
+                "page_name": page_name,
+                "is_permanent": is_permanent,
+                "expires_at": expires_at,
+                "days_left": days_left,
+                "scopes": scopes,
+                "status_text": status_desc
+            }
+    except Exception as e:
+        return {"ok": False, "is_valid": False, "error": f"Lỗi kết nối Facebook: {e}"}
+
+
 @app.post("/connect/add")
 async def connect_add(request: Request):
     """Thêm tài khoản cho 1 connector trong kho: lưu tạm → VALIDATE ngay (gọi tool xác minh,
@@ -3505,6 +3830,13 @@ async def settings_set(section: str = Form(...), data: str = Form("{}")):
             m["claude_auth"] = (claude_auth.API_KEY
                                 if str(patch["claude_auth"] or "").strip().lower() == claude_auth.API_KEY
                                 else claude_auth.SUBSCRIPTION)
+        if "gemini_image_model" in patch:
+            import image_gen
+            mid = str(patch.get("gemini_image_model") or "").strip()
+            allowed = {x["id"] for x in image_gen.list_gemini_image_models()}
+            invalid = getattr(image_gen, "KNOWN_INVALID_IMAGE_MODELS", set())
+            if mid in allowed or (mid.startswith("imagen-") and mid not in invalid):
+                m["gemini_image_model"] = mid
         if "auxiliary" in patch:   # model phụ cho việc nền (provider + model)
             aux_patch = patch["auxiliary"] or {}
             aux = m.setdefault("auxiliary", {})
@@ -3943,6 +4275,19 @@ async def provider_models_index(provider: str, refresh: bool = False) -> dict:
 async def provider_models(provider: str = Query(...), refresh: bool = Query(False)):
     """Model động cho 1 provider. ``refresh=1`` bỏ cache để picker hỏi Codex ngay."""
     return await provider_models_index(provider, refresh=refresh)
+
+
+@app.get("/provider/image-models")
+async def provider_image_models(provider: str = Query("gemini")):
+    """Danh sách model gen ảnh (Imagen / Nano Banana) + model đang chọn."""
+    if provider != "gemini":
+        return {"ok": False, "models": [], "current": ""}
+    import image_gen
+    s = cfgmod.read_settings()
+    cur = str(((s.get("model") or {}).get("gemini_image_model") or "")).strip()
+    if not cur:
+        cur = image_gen.resolve_gemini_image_model()
+    return {"ok": True, "models": image_gen.list_gemini_image_models(), "current": cur}
 
 
 @app.get("/memory/stats")
@@ -6698,8 +7043,12 @@ def _workflow_agent_helpers(brain, tools):
     vault_root = str(_brain_root(brain))
 
     def _mk(sysprompt, model=None, provider=""):
+        if not model and not provider:
+            aux_sp = aux_engine.read_spec()
+            provider = aux_sp.get("provider") or aux_engine.CLAUDE
+            model = aux_sp.get("model") or ""
         prov = _agent_model_provider(model, provider)
-        if prov == "openai-oauth" and model and tools is None and find_codex_cli():
+        if prov == "openai-oauth" and tools is None and find_codex_cli():
             openai_oauth.write_codex_auth()
             cc = CodexCLI(cwd=vault_root, tag="workflow", model=_codex_safe_model(model),
                           instructions=sysprompt)
@@ -6727,13 +7076,16 @@ def _workflow_agent_helpers(brain, tools):
         # allowed_tools + disallowed_tools của chính CLI đó, engine nhà khác lấy tool từ hub
         # nên không mang theo được rào ấy. Đây là hành vi đã hứa trong docs/07, không phải
         # bỏ sót - đổi nó là nới quyền cho việc chạy nền mà không ai yêu cầu.
-        if tools is None and prov not in ("anthropic-cli", "openai-oauth"):
+        if tools is None and prov not in ("anthropic-cli", "openai-oauth", ""):
             # Nhà khác Claude/Codex: mượn ĐÚNG bộ dựng engine của việc nền thay vì viết bản
             # thứ hai - aux_engine.swap lo cả key, khả dụng, tool qua hub và chuỗi dự phòng
             # (nhà đã chọn chết giữa chừng thì lùi về Claude/bộ não chính, không chết lặng).
             # Gọi SAU khi đã gắn javis_vault/system_prompt vì _build_* đọc lại từ engine này.
             try:
-                c = aux_engine.swap(c, tag="workflow", codex_profile=_write_codex_profile,
+                # mode=full: Kanban đăng bài (tools=None). Thiếu mode thì swap coi
+                # Antigravity/Gemini hỏng là "tạm dùng Claude" → 2s Not logged in.
+                c = aux_engine.swap(c, mode="full", tag="workflow",
+                                    codex_profile=_write_codex_profile,
                                     spec={"provider": prov, "model": (model or "")})
             except Exception as e:
                 print(f"[agent engine] {prov}: {type(e).__name__}: {e}", file=__import__('sys').stderr)
@@ -7582,6 +7934,484 @@ tasks_feature = tasks_mod.register(app, tasks_mod.TasksDeps(
 # Gate ở learn.py (cap "task" mặc định off + chỉ enqueue khi allow_write); dedup ở tasks.enqueue.
 learn_feature.deps.enqueue_task = tasks_feature.enqueue
 
+import fanpage_care as fanpage_care_mod
+_care_brain = cfgmod.read_settings().get("fanpage_care", {}).get("brain", "Brain Default")
+_care_vault = _brain_root(_care_brain)
+fanpage_care_feature = fanpage_care_mod.register(app, fanpage_care_mod.FanpageCareDeps(
+    vault_root=_care_vault,
+    brain=_care_brain,
+    get_settings=cfgmod.read_settings,
+    update_settings=cfgmod.write_settings,
+    tasks_feature=tasks_feature,
+    inbox_add=inbox.add,
+))
+
+
+# ============================================================
+# OPS DASHBOARD (/ops) - Bảng điều khiển vận hành & CSKH Sao Việt
+# docs/dev/2026-09-16-ops-dashboard-plan.md
+# ============================================================
+@app.post("/ops/auth/login")
+async def ops_auth_login(request: Request):
+    """Đăng nhập phân quyền Ops (staff, manager, hoặc chủ máy)."""
+    try:
+        data = await request.json()
+    except Exception:
+        data = {}
+    username = str(data.get("username") or "").strip()
+    password = str(data.get("password") or "")
+    if not username or not password:
+        return JSONResponse({"ok": False, "error": "Vui lòng nhập tên đăng nhập và mật khẩu"}, status_code=400)
+
+    user = ops_rbac.verify_login(username, password)
+    if not user:
+        return JSONResponse({"ok": False, "error": "Sai tên đăng nhập hoặc mật khẩu"}, status_code=401)
+
+    token = ops_rbac.create_session(user["id"], user["username"], user["role"], user.get("name", ""))
+    resp = JSONResponse({"ok": True, "user": user})
+    resp.set_cookie("ops_session", token, httponly=True, samesite="lax", max_age=30 * 86400, path="/")
+    return resp
+
+
+@app.post("/ops/auth/logout")
+async def ops_auth_logout(request: Request):
+    """Đăng xuất khỏi phân hệ Ops."""
+    tok = request.cookies.get("ops_session", "")
+    if tok:
+        ops_rbac.drop_session(tok)
+    resp = JSONResponse({"ok": True})
+    resp.delete_cookie("ops_session", path="/")
+    return resp
+
+
+@app.get("/ops/me")
+async def ops_get_me(request: Request):
+    """Trả thông tin người dùng hiện tại từ cookie javis_session hoặc ops_session."""
+    user = ops_rbac.get_current_ops_user(request)
+    return {"user": user}
+
+
+@app.get("/ops/users")
+async def ops_list_users(request: Request):
+    """Danh sách tài khoản nhân sự phụ (Owner only)."""
+    user = ops_rbac.get_current_ops_user(request)
+    if not user or user.get("role") != "owner":
+        return JSONResponse({"error": "Chỉ chủ máy mới được quản lý tài khoản nhân sự", "role": user.get("role") if user else None}, status_code=403)
+    users = [ops_rbac.sanitize_user(u) for u in ops_rbac.load_users()]
+    return {"users": users}
+
+
+@app.post("/ops/users")
+async def ops_create_user(request: Request):
+    """Tạo tài khoản nhân sự phụ mới (Owner only)."""
+    user = ops_rbac.get_current_ops_user(request)
+    if not user or user.get("role") != "owner":
+        return JSONResponse({"error": "Chỉ chủ máy mới được tạo tài khoản", "role": user.get("role") if user else None}, status_code=403)
+    try:
+        data = await request.json()
+    except Exception:
+        data = {}
+    try:
+        new_u = ops_rbac.create_user(
+            username=data.get("username", ""),
+            password=data.get("password", ""),
+            role=data.get("role", "staff"),
+            name=data.get("name", "")
+        )
+        return {"ok": True, "user": new_u}
+    except ValueError as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=400)
+
+
+@app.put("/ops/users/{user_id}")
+async def ops_update_user(user_id: str, request: Request):
+    """Cập nhật tài khoản nhân sự phụ (Owner only)."""
+    user = ops_rbac.get_current_ops_user(request)
+    if not user or user.get("role") != "owner":
+        return JSONResponse({"error": "Chỉ chủ máy mới được sửa tài khoản", "role": user.get("role") if user else None}, status_code=403)
+    try:
+        data = await request.json()
+    except Exception:
+        data = {}
+    try:
+        updated = ops_rbac.update_user(user_id, data)
+        if not updated:
+            return JSONResponse({"ok": False, "error": "Không tìm thấy người dùng"}, status_code=404)
+        return {"ok": True, "user": updated}
+    except ValueError as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=400)
+
+
+@app.delete("/ops/users/{user_id}")
+async def ops_delete_user(user_id: str, request: Request):
+    """Xoá tài khoản nhân sự phụ (Owner only)."""
+    user = ops_rbac.get_current_ops_user(request)
+    if not user or user.get("role") != "owner":
+        return JSONResponse({"error": "Chỉ chủ máy mới được xoá tài khoản", "role": user.get("role") if user else None}, status_code=403)
+    ok = ops_rbac.delete_user(user_id)
+    if not ok:
+        return JSONResponse({"ok": False, "error": "Không tìm thấy tài khoản để xoá"}, status_code=404)
+    return {"ok": True}
+
+
+@app.post("/ops/qa")
+async def ops_qa_chat(request: Request):
+    """Trợ lý Hỏi đáp Ca làm việc trên /ops (Staff, Manager, Owner)."""
+    user = ops_rbac.get_current_ops_user(request)
+    if not user:
+        return JSONResponse({"error": "unauthorized", "auth_required": True}, status_code=401)
+
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+
+    msg = str(body.get("message") or "").strip()
+    if not msg:
+        return JSONResponse({"ok": False, "error": "Vui lòng nhập câu hỏi"}, status_code=400)
+
+    scope = body.get("scope")
+    import ops_qa
+    vault_root = Path(__file__).parent.parent / "brains" / "Brain Default"
+    res = await ops_qa.answer_ops_qa(message=msg, scope=scope, user=user, vault_root=vault_root)
+    return res
+
+
+@app.api_route("/ops/{full_path:path}", methods=["GET", "HEAD"])
+@app.api_route("/ops", methods=["GET", "HEAD"])
+async def serve_ops_dashboard(full_path: str = ""):
+    """Phục vụ giao diện Single-Page App Ops Dashboard (HTML5 History Mode Fallback)."""
+    index_file = OPS_DIST_PATH / "index.html"
+    if not index_file.exists():
+        return HTMLResponse(
+            "<!DOCTYPE html><html><body><h1>Ops Dashboard chưa được build.</h1>"
+            "<p>Vui lòng chạy <code>npm run build</code> trong thư mục <code>ops/</code>.</p></body></html>",
+            status_code=503
+        )
+    if full_path:
+        target = OPS_DIST_PATH / full_path
+        if target.is_file():
+            return FileResponse(str(target))
+    return HTMLResponse(
+        index_file.read_text(encoding="utf-8"),
+        headers={"Cache-Control": "no-cache, no-store, must-revalidate"}
+    )
+
+
+# ============================================================
+# TIKTOK STUDIO & MEDIA API
+# docs/dev/2026-09-17-gemini-tiktok-dang-that-ui.md
+# ============================================================
+import tiktok_service
+
+
+@app.api_route("/tiktok-media/{rel:path}", methods=["GET", "HEAD"])
+async def serve_tiktok_media(rel: str):
+    """Phục vụ ảnh 9:16 công khai cho PostPeer fetch qua HTTPS (trannhuy.online/tiktok-media/...).
+    Chống path-traversal: chỉ phục vụ trong attachments/dataset/_xuat-tiktok.
+    """
+    clean_rel = rel.replace("\\", "/").strip("/")
+    if not clean_rel or ".." in clean_rel:
+        return JSONResponse({"error": "Path traversal prohibited"}, status_code=404)
+    
+    brain = cfgmod.read_settings().get("fanpage_care", {}).get("brain", "Brain Default")
+    vault = _brain_root(brain)
+    base_dir = (Path(vault) / "attachments" / "dataset" / "_xuat-tiktok").resolve()
+    target = (base_dir / clean_rel).resolve()
+    
+    try:
+        target.relative_to(base_dir)
+    except ValueError:
+        return JSONResponse({"error": "Path traversal prohibited"}, status_code=404)
+        
+    if not target.is_file():
+        return JSONResponse({"error": "File not found"}, status_code=404)
+        
+    suffix = target.suffix.lower()
+    media_types = {
+        ".png": "image/png",
+        ".jpg": "image/jpeg",
+        ".jpeg": "image/jpeg",
+        ".webp": "image/webp",
+        ".gif": "image/gif",
+        ".mp4": "video/mp4",
+    }
+    media_type = media_types.get(suffix, "application/octet-stream")
+    return FileResponse(str(target), media_type=media_type)
+
+
+@app.get("/tiktok/status")
+async def tiktok_get_status(request: Request):
+    """Trạng thái TikTok: kết nối, masked key, tài khoản, kit, loop, 10 bài gần nhất."""
+    user = ops_rbac.get_current_ops_user(request)
+    role = user.get("role", "staff") if user else "guest"
+    brain = cfgmod.read_settings().get("fanpage_care", {}).get("brain", "Brain Default")
+    vault = _brain_root(brain)
+    status_data = tiktok_service.get_tiktok_status(vault_root=vault)
+    status_data["role"] = role
+    return status_data
+
+
+@app.post("/tiktok/post")
+async def tiktok_post_photos(request: Request):
+    """Đăng bộ ảnh 9:16 carousel lên TikTok thật qua PostPeer (Owner only).
+    Staff nhận 403 Forbidden.
+    """
+    user = ops_rbac.get_current_ops_user(request)
+    if not user or user.get("role") != "owner":
+        return JSONResponse({"error": "Chỉ chủ máy mới có quyền đăng TikTok", "role": user.get("role") if user else None}, status_code=403)
+        
+    try:
+        data = await request.json()
+    except Exception:
+        data = {}
+        
+    brand_kit = str(data.get("brand_kit") or "game-gia-re-bsn").strip()
+    account_id = data.get("account_id")
+    caption = data.get("caption")
+    product_title = data.get("product_title")
+    product_price = data.get("product_price")
+    images = data.get("images")
+    auto_add_music = bool(data.get("auto_add_music", True))
+    draft = bool(data.get("draft", False))
+    
+    brain = cfgmod.read_settings().get("fanpage_care", {}).get("brain", "Brain Default")
+    vault = _brain_root(brain)
+    
+    result = await asyncio.to_thread(
+        tiktok_service.post_photos_to_tiktok,
+        brand_kit=brand_kit,
+        account_id=account_id,
+        caption=caption,
+        product_title=product_title,
+        product_price=product_price,
+        images=images,
+        auto_add_music=auto_add_music,
+        draft=draft,
+        vault_root=vault
+    )
+    
+    status_code = 200 if result.get("ok") else 400
+    return JSONResponse(result, status_code=status_code)
+
+
+@app.post("/tiktok/upload")
+async def tiktok_upload_image(
+    request: Request,
+    file: UploadFile = File(...),
+    brand: str = Form("bsn"),
+    crop_9_16: bool = Form(True)
+):
+    """Tải ảnh lên thư mục dataset _xuat-tiktok/{brand}/ và tự động crop 9:16 nếu cần (Owner only)."""
+    user = ops_rbac.get_current_ops_user(request)
+    if not user or user.get("role") != "owner":
+        return JSONResponse({"error": "Chỉ chủ máy mới có quyền tải ảnh", "role": user.get("role") if user else None}, status_code=403)
+        
+    clean_brand = "bsn" if "bsn" in brand.lower() else ("saoviet" if "sao" in brand.lower() else "bsn")
+    brain = cfgmod.read_settings().get("fanpage_care", {}).get("brain", "Brain Default")
+    vault = _brain_root(brain)
+    target_dir = Path(vault) / "attachments" / "dataset" / "_xuat-tiktok" / clean_brand
+    target_dir.mkdir(parents=True, exist_ok=True)
+    
+    orig_name = Path(file.filename or "upload.png").name
+    safe_name = f"{int(time.time())}_{secrets.token_hex(3)}_{orig_name}"
+    save_path = target_dir / safe_name
+    
+    content = await file.read()
+    save_path.write_bytes(content)
+    
+    if crop_9_16:
+        try:
+            cropped_path = tiktok_service.crop_image_to_9_16(save_path)
+            if cropped_path != save_path and save_path.exists():
+                save_path.unlink()
+            save_path = cropped_path
+        except Exception:
+            pass
+        
+    rel_path = f"{clean_brand}/{save_path.name}"
+    public_url = f"{tiktok_service.PUBLIC_BASE_URL.rstrip('/')}/tiktok-media/{rel_path}"
+    
+    return {
+        "ok": True,
+        "filename": save_path.name,
+        "brand": clean_brand,
+        "rel_path": rel_path,
+        "public_url": public_url
+    }
+
+
+@app.post("/tiktok/loop-toggle")
+async def tiktok_loop_toggle(request: Request):
+    """Bật/tắt loop đăng TikTok tự động hàng ngày (Owner only)."""
+    user = ops_rbac.get_current_ops_user(request)
+    if not user or user.get("role") != "owner":
+        return JSONResponse({"error": "Chỉ chủ máy mới có quyền bật/tắt loop", "role": user.get("role") if user else None}, status_code=403)
+        
+    try:
+        data = await request.json()
+    except Exception:
+        data = {}
+    enabled = bool(data.get("enabled", False))
+    brain = cfgmod.read_settings().get("fanpage_care", {}).get("brain", "Brain Default")
+    vault = _brain_root(brain)
+    loop_info = tiktok_service.set_loop_status(enabled, vault_root=vault)
+    return {"ok": True, "loop": loop_info}
+
+
+@app.post("/tiktok/kit-account")
+async def tiktok_set_kit_account(request: Request):
+    """Cập nhật accountId PostPeer cho brand kit TikTok (Owner only)."""
+    user = ops_rbac.get_current_ops_user(request)
+    if not user or user.get("role") != "owner":
+        return JSONResponse({"error": "Chỉ chủ máy mới có quyền cấu hình kit", "role": user.get("role") if user else None}, status_code=403)
+        
+    try:
+        data = await request.json()
+    except Exception:
+        data = {}
+    brand_kit = str(data.get("brand_kit") or "").strip()
+    account_id = str(data.get("account_id") or "").strip()
+    account_name = str(data.get("account_name") or "").strip()
+    
+    if not brand_kit or not account_id:
+        return JSONResponse({"ok": False, "error": "brand_kit và account_id không được để trống"}, status_code=400)
+        
+    brain = cfgmod.read_settings().get("fanpage_care", {}).get("brain", "Brain Default")
+    vault = _brain_root(brain)
+    ok = tiktok_service.update_brand_kit_account(brand_kit, account_id, account_name, vault_root=vault)
+    if not ok:
+        return JSONResponse({"ok": False, "error": f"Không tìm thấy kit {brand_kit}"}, status_code=404)
+    return {"ok": True, "brand_kit": brand_kit, "account_id": account_id}
+
+
+# ============================================================
+# AI OPERATIONS CENTER (Javis Ops Enterprise SME)
+# ============================================================
+import ops_briefing
+import lead_scoring
+import ops_attribution
+import ops_campaign
+
+
+@app.get("/ops/briefing/today")
+async def ops_get_daily_briefing(request: Request):
+    """Lấy bản tin điều hành sáng nay (Daily Executive Briefing)."""
+    user = ops_rbac.get_current_ops_user(request)
+    if not user:
+        return JSONResponse({"error": "Chưa đăng nhập Ops"}, status_code=401)
+    briefing = ops_briefing.get_daily_briefing()
+    return briefing
+
+
+@app.post("/ops/briefing/send")
+async def ops_send_daily_briefing(request: Request):
+    """Bắn bản tin điều hành sáng nay tới Telegram hoặc Zalo của Sếp."""
+    user = ops_rbac.get_current_ops_user(request)
+    if not user or user.get("role") not in ("owner", "admin"):
+        return JSONResponse({"error": "Chỉ Quản lý hoặc Chủ máy mới có quyền gửi bản tin"}, status_code=403)
+    try:
+        data = await request.json()
+    except Exception:
+        data = {}
+    channel = str(data.get("channel") or "telegram").strip().lower()
+    res = ops_briefing.send_briefing_to_owner(channel=channel)
+    return res
+
+
+@app.post("/ops/lead-scoring/evaluate")
+async def ops_evaluate_lead_score(request: Request):
+    """Đánh giá Lead Score, phân loại Hot/Warm/Cold và gợi ý Next Best Action."""
+    user = ops_rbac.get_current_ops_user(request)
+    if not user:
+        return JSONResponse({"error": "Chưa đăng nhập Ops"}, status_code=401)
+    try:
+        data = await request.json()
+    except Exception:
+        data = {}
+    messages = data.get("messages") or []
+    phone = data.get("phone")
+    last_msg_ts = float(data.get("last_msg_ts") or time.time())
+    current_status = data.get("current_status") or "interested"
+
+    lead_info = lead_scoring.evaluate_lead_score(messages, phone=phone)
+    next_action = lead_scoring.determine_next_best_action(lead_info, last_msg_ts, messages, current_status=current_status)
+    risk_level, risk_label = lead_scoring.classify_approval_risk(next_action.get("type", ""), next_action.get("draft_text", ""))
+
+    return {
+        "ok": True,
+        "lead_info": lead_info,
+        "next_action": next_action,
+        "risk_level": risk_level,
+        "risk_label": risk_label,
+    }
+
+
+@app.get("/ops/attribution/matrix")
+async def ops_get_attribution_matrix(request: Request):
+    """Lấy ma trận chuyển đổi từ nội dung (Content-to-Sale) tới doanh thu thực tế."""
+    user = ops_rbac.get_current_ops_user(request)
+    if not user:
+        return JSONResponse({"error": "Chưa đăng nhập Ops"}, status_code=401)
+    matrix = ops_attribution.get_content_attribution_matrix()
+    return matrix
+
+
+@app.get("/ops/attribution/insights")
+async def ops_get_attribution_insights(request: Request):
+    """Lấy công thức mẫu nội dung bán chạy (AI Content Learning Loop)."""
+    user = ops_rbac.get_current_ops_user(request)
+    if not user:
+        return JSONResponse({"error": "Chưa đăng nhập Ops"}, status_code=401)
+    insights = ops_attribution.get_content_learning_insights()
+    return insights
+
+
+@app.get("/ops/competitor/radar")
+async def ops_get_competitor_radar(request: Request):
+    """Lấy báo cáo Rada đối thủ & phân tích khoảng trống nội dung (Competitor Radar)."""
+    user = ops_rbac.get_current_ops_user(request)
+    if not user:
+        return JSONResponse({"error": "Chưa đăng nhập Ops"}, status_code=401)
+    radar = ops_attribution.get_competitor_radar()
+    return radar
+
+
+@app.post("/ops/campaigns/autopilot")
+async def ops_post_campaign_autopilot(request: Request):
+    """Kích hoạt AI Campaign Autopilot sinh kế hoạch chiến dịch đa kênh từ mục tiêu."""
+    user = ops_rbac.get_current_ops_user(request)
+    if not user:
+        return JSONResponse({"error": "Chưa đăng nhập Ops"}, status_code=401)
+    try:
+        data = await request.json()
+    except Exception:
+        data = {}
+    goal = str(data.get("goal") or "Tuyển 50 học viên khóa MOS").strip()
+    target_metric = str(data.get("target_metric") or "50 học viên").strip()
+    duration_weeks = int(data.get("duration_weeks") or 4)
+    budget_vnd = data.get("budget_vnd")
+    if budget_vnd is not None:
+        try:
+            budget_vnd = int(budget_vnd)
+        except Exception:
+            budget_vnd = None
+    res = ops_campaign.generate_campaign_autopilot(
+        goal=goal,
+        target_metric=target_metric,
+        duration_weeks=duration_weeks,
+        budget_vnd=budget_vnd,
+    )
+    return {
+        "ok": True,
+        "campaign_plan": res,
+        **res,
+    }
+
+
+
+
+
 
 # ============================================================
 # NHẮC HẸN TỪ CHAT (reminders.py) - "30 phút nữa nhắc anh...", "8h30 sáng mai...".
@@ -8119,7 +8949,9 @@ async def javis_index(brain: str = Query("brain")):
 @app.post("/image/generate")
 async def image_generate(prompt: str = Form(...), aspect_ratio: str = Form("square"),
                          quality: str = Form("medium"), brain: str = Form("brain"),
-                         images: str = Form("")):
+                         images: str = Form(""), page_id: str = Form(""),
+                         save_under: str = Form(""),
+                         ai_render_brand: str = Form("")):
     """Tạo ảnh bằng gói ChatGPT (OAuth) → lưu vào attachments/ của vault. Cho UI/gọi trực tiếp;
     engine LLM dùng tool javis_generate_image (plugin image-chatgpt). Trả rel_path để nhúng ![](...).
 
@@ -8127,7 +8959,10 @@ async def image_generate(prompt: str = Form(...), aspect_ratio: str = Form("squa
     thì ChatGPT nhìn thấy ảnh thật để sửa/dựng theo thay vì vẽ từ mô tả suông."""
     ds = [x.strip() for x in re.split(r"[,\n]", images or "") if x.strip()]
     res = await image_gen.generate_chatgpt(prompt, aspect_ratio, quality,
-                                           vault_root=_brain_root(brain), images=ds)
+                                           vault_root=_brain_root(brain), images=ds,
+                                           page_id=page_id,
+                                           save_under=(save_under or None),
+                                           ai_render_brand=str(ai_render_brand).strip().lower() in ("1", "true", "yes", "on", "co", "có"))
     return JSONResponse(res, status_code=200 if res.get("ok") else 400)
 
 
@@ -9848,6 +10683,50 @@ async def websocket_endpoint(ws: WebSocket):
                                      compaction.bootstrap_prompt(
                                          _codex_raw, _codex_current,
                                          summary=_row0.get("compact_summary") or ""))
+                    codex_response_engine = "codex"
+
+                    async def _oauth_direct_fallback():
+                        nonlocal final_text, _ctx_in, codex_response_engine
+                        creds = openai_oauth.valid_creds() or {}
+                        if not creds.get("access_token"):
+                            await ws.send_text(json.dumps({
+                                "type": "error",
+                                "content": "OpenAI OAuth het phien dang nhap. Vao Models ket noi lai ChatGPT.",
+                            }))
+                            return
+                        codex_response_engine = "openai-oauth"
+                        store.clear_codex_thread_id(conv_sid)
+                        await ws.send_text(json.dumps({
+                            "type": "system",
+                            "content": "Codex CLI trong container chua nhan dang nhap, Javis tam dung OpenAI OAuth truc tiep cho luot nay.",
+                        }))
+                        direct_messages = ([{"role": "system", "content": sysprompt}]
+                                           + _codex_raw
+                                           + [{"role": "user", "content": user_message}])
+                        async for ev in engine.openai_responses_stream(
+                                creds.get("access_token", ""), creds.get("account_id", ""),
+                                actual_model, direct_messages, reasoning):
+                            et = ev.get("type")
+                            if et == "meta":
+                                _CONTEXT_RUNTIME.set_route(
+                                    runtime_trace, "openai-oauth", ev.get("model") or actual_model)
+                            elif et == "text":
+                                final_text += ev.get("content") or ""
+                                await ws.send_text(json.dumps({
+                                    "type": "stream", "content": ev.get("content") or "", "tts": False,
+                                }))
+                            elif et == "usage":
+                                _ctx_in += int(ev.get("input", 0) or 0)
+                                usage_store.record(
+                                    "openai-oauth", actual_model, ev.get("input", 0), ev.get("output", 0)
+                                )
+                                _CONTEXT_RUNTIME.record_usage(
+                                    runtime_trace, ev.get("input", 0), ev.get("output", 0))
+                            elif et == "error":
+                                await ws.send_text(json.dumps({
+                                    "type": "error", "content": ev.get("content") or "OpenAI OAuth loi.",
+                                }))
+
                     async def _consume_codex(prompt, suppress_resume_error=False):
                         # _ctx_in PHẢI khai nonlocal: nó bị `+=` ngay dưới, mà thiếu dòng này
                         # thì Python coi nó là biến CỤC BỘ của hàm con - đọc trước khi gán là
@@ -9888,6 +10767,10 @@ async def websocket_endpoint(ws: WebSocket):
                                     resume_failed = True
                                     if suppress_resume_error:
                                         continue
+                                _err = str(ev.get("content") or "")
+                                if "not logged in" in _err.lower() and "/login" in _err.lower():
+                                    nonlocal_codex_login_error[0] = True
+                                    continue
                                 _noi = _subscription_limit_message(ev.get("content") or "", "codex")
                                 if _noi:
                                     _CONTEXT_RUNTIME.record_runtime_event(
@@ -9898,6 +10781,7 @@ async def websocket_endpoint(ws: WebSocket):
                                     "type": "error", "content": _noi or ev["content"]}))
                         return resume_failed
 
+                    nonlocal_codex_login_error = [False]
                     _resume_failed = await _consume_codex(
                         _codex_prompt, suppress_resume_error=bool(stored_codex_thread))
                     if stored_codex_thread and _resume_failed and not final_text:
@@ -9912,8 +10796,10 @@ async def websocket_endpoint(ws: WebSocket):
                             _codex_raw, _codex_current,
                             summary=_row0.get("compact_summary") or "")
                         await _consume_codex(_fallback)
+                    if not final_text and nonlocal_codex_login_error[0]:
+                        await _oauth_direct_fallback()
                     await ws.send_text(json.dumps({
-                        "type": "response", "content": final_text, "engine": "codex",
+                        "type": "response", "content": final_text, "engine": codex_response_engine,
                         "model": actual_model, "session_id": conv_sid,
                         **_ctx_frame(runtime_trace, _ctx_in)}))
             elif (kind == "api" and api_key) or kind == "oauth":

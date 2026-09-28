@@ -38,7 +38,10 @@
     models: "cpu",
     channels: "send",
     mcp: "plug",
+    fanpagecare: "messages-square",
+    tiktok: "image",
     plugins: "toolbox",
+    brandkits: "palette",
     logs: "scroll-text",
     account: "circle-user",
     usage: "chart-column",
@@ -79,8 +82,8 @@
   // tiếng Việt khi thiếu key, nên một bản dịch làm dở không bao giờ để lại key trần trên rail.
   const RAIL_ITEMS = [
     "home", "chat", "settings", "workflows", "agents", "skills", "chatbots", "files",
-    "terminal", "selfimprove", "learn", "kanban", "models", "channels", "mcp", "plugins",
-    "logs", "account", "usage",
+    "terminal", "selfimprove", "learn", "kanban", "models", "channels", "mcp", "fanpagecare", "tiktok", "plugins",
+    "brandkits", "logs", "account", "usage",
   ].map(id => ({ id, icon: ICON[id], get label() { return t(`page.${id}.label`); } }));
 
   // ---- Gom rail thành nhóm theo chức năng (dễ tìm hơn danh sách phẳng 18 mục) ----
@@ -95,9 +98,9 @@
     // Thêm chức năng Code mới = thêm 1 mục vào RAIL_ITEMS + 1 id vào đây + 1 dòng trong
     // CHUC_NANG của dashboard/code-term.js.
     { get label() { return t("nav.group.code"); },        icon: GICON["Code"],     ids: ["terminal"] },
-    { get label() { return t("nav.group.nang_luc"); },    icon: GICON["Năng lực"], ids: ["agents", "chatbots", "skills", "workflows", "plugins"] },
+    { get label() { return t("nav.group.nang_luc"); },    icon: GICON["Năng lực"], ids: ["agents", "chatbots", "skills", "workflows", "plugins", "brandkits"] },
     { get label() { return t("nav.group.viec"); },        icon: GICON["Việc"],     ids: ["kanban", "selfimprove"] },
-    { get label() { return t("nav.group.ket_noi"); },     icon: GICON["Kết nối"],  ids: ["mcp", "channels", "models"] },
+    { get label() { return t("nav.group.ket_noi"); },     icon: GICON["Kết nối"],  ids: ["mcp", "channels", "fanpagecare", "tiktok", "models"] },
     { get label() { return t("nav.group.he_thong"); },    icon: GICON["Hệ thống"], ids: ["usage", "settings", "logs", "account"], foot: true },
   ];
   const RAIL_BY_ID = Object.fromEntries(RAIL_ITEMS.map(i => [i.id, i]));
@@ -128,7 +131,7 @@
   //
   // `page.<id>.title` cho phép tiêu đề trang KHÁC nhãn trên rail khi cần (rail chật nên
   // "Việc", trang rộng nên "Việc (Kanban)"); thiếu key đó thì tự rơi về `page.<id>.label`.
-  const VIEW_META = Object.fromEntries(["home", "chat", "settings", "workflows", "agents", "skills", "files", "terminal", "selfimprove", "chatbots", "learn", "kanban", "models", "channels", "mcp", "plugins", "logs", "account", "usage"].map(id => [id, {
+  const VIEW_META = Object.fromEntries(["home", "chat", "settings", "workflows", "agents", "skills", "files", "terminal", "selfimprove", "chatbots", "learn", "kanban", "models", "channels", "mcp", "fanpagecare", "tiktok", "plugins", "brandkits", "logs", "account", "usage"].map(id => [id, {
     icon: VIEW_ICON[id],
     get label() {
       const rieng = t(`page.${id}.title`);
@@ -369,6 +372,21 @@
     if (id === "chatbots") return renderChatbots(el);
     if (id === "learn")    return renderLearn(el);
     if (id === "kanban")   return renderKanban(el);
+    if (id === "brandkits") {
+      if (window.JavisBrandKits && JavisBrandKits.render) return JavisBrandKits.render(el);
+      el.innerHTML = placeholder(id, "brand-kits-ui.js chưa sẵn sàng.");
+      return;
+    }
+    if (id === "fanpagecare") {
+      if (window.JavisFanpageCare && JavisFanpageCare.render) return JavisFanpageCare.render(el);
+      el.innerHTML = placeholder(id, "fanpage-care.js chưa sẵn sàng.");
+      return;
+    }
+    if (id === "tiktok") {
+      if (window.JavisTikTok && JavisTikTok.render) return JavisTikTok.render(el);
+      el.innerHTML = placeholder(id, "tiktok-studio.js chưa sẵn sàng.");
+      return;
+    }
     if (id === "logs")     return renderLogs(el);
     if (id === "usage")    return renderUsage(el);
     el.innerHTML = placeholder(id);
@@ -2462,10 +2480,14 @@
     el.querySelector("#knSave").onclick = async () => {
       const title = el.querySelector("#knTitle").value.trim();
       if (!title) { alert(t("kanban.need_title")); return; }
+      const routeVal = el.querySelector("#knRoute").value;
+      const isFbPost = routeVal === "wf:dang-bai-that-facebook";
       await post("/kanban/task", {
         title, intent: el.querySelector("#knIntent").value.trim() || title,
-        route: el.querySelector("#knRoute").value, priority: el.querySelector("#knPrio").value,
+        route: routeVal, priority: el.querySelector("#knPrio").value,
         needs_approval: el.querySelector("#knApprove").checked ? "1" : "0",
+        capability: isFbPost ? "external-write" : "auto",
+        execution_mode: isFbPost ? "full" : "auto",
       });
       el.querySelector("#knTitle").value = ""; el.querySelector("#knIntent").value = "";
       el.querySelector("#knForm").style.display = "none"; load();
@@ -2557,20 +2579,20 @@
 
     async function showTask(id) {
       openDrawer();
-      drawerBody.innerHTML = esc(t("common.loading"));
+      drawerBody.innerHTML = esc(window.t ? window.t("common.loading") : "Đang tải…");
       let d = {}; try { d = await (await fetch(`/kanban/task/show?brain=${encodeURIComponent(fbrain())}&id=${encodeURIComponent(id)}`)).json(); } catch (e) {}
-      if (!d.ok) { drawerBody.innerHTML = `<span style="color:var(--red)">${esc(d.error || t("kanban.cant_load"))}</span>`; return; }
-      const t = d.task || {}, events = d.events || [], runs = d.runs || [];
-      const acts = taskActions(t);
-      drawerTitle.textContent = t.title || window.t("kanban.detail");
+      if (!d.ok) { drawerBody.innerHTML = `<span style="color:var(--red)">${esc(d.error || (window.t ? window.t("kanban.cant_load") : "Không tải được"))}</span>`; return; }
+      const taskObj = d.task || {}, events = d.events || [], runs = d.runs || [];
+      const acts = taskActions(taskObj);
+      drawerTitle.textContent = taskObj.title || (window.t ? window.t("kanban.detail") : "Chi tiết");
       drawerBody.innerHTML = `
-        <div style="color:var(--text);white-space:pre-wrap">${esc(t.intent || "")}</div>
-        <div class="kn-task-meta" style="margin-top:10px"><span>${esc(_kstatus(t.status))}</span><span>${esc(t.capability || "auto")}</span><span>mode ${esc(t.execution_mode || "auto")}</span><span>${esc(window.t("kanban.prio_lc"))} ${Number(t.priority || 2)}</span></div>
+        <div style="color:var(--text);white-space:pre-wrap">${esc(taskObj.intent || "")}</div>
+        <div class="kn-task-meta" style="margin-top:10px"><span>${esc(_kstatus(taskObj.status))}</span><span>${esc(taskObj.capability || "auto")}</span><span>mode ${esc(taskObj.execution_mode || "auto")}</span><span>${esc(window.t ? window.t("kanban.prio_lc") : "ưu tiên")} ${Number(taskObj.priority || 2)}</span></div>
         ${acts.length ? `<div class="kn-actions" style="margin-top:14px">${acts.join("")}</div>` : ""}
-        ${t.block_reason ? `<div class="kn-detail-block"><h4>${esc(window.t("kanban.blocked_reason"))}</h4><div style="color:var(--red)">${esc(t.block_reason)}</div></div>` : ""}
-        ${t.result ? `<div class="kn-detail-block"><h4>${esc(window.t("kanban.result"))}</h4><div style="white-space:pre-wrap">${esc(t.result)}</div></div>` : ""}
-        <div class="kn-detail-block"><h4>${esc(window.t("kanban.runs"))} (${runs.length})</h4>${runs.length ? runs.map(r => `<div class="kn-event"><b>${esc(r.status)}</b> · ${new Date(Number(r.started_at || 0) * 1000).toLocaleString()}${r.error ? `<div style="color:var(--red)">${esc(r.error)}</div>` : ""}</div>`).join("") : `<div class="dim">${esc(window.t("kanban.no_runs"))}</div>`}</div>
-        <div class="kn-detail-block"><h4>${esc(window.t("kanban.lifecycle"))}</h4>${events.length ? events.map(v => `<div class="kn-event"><b>${esc(v.event_type)}</b> · ${new Date(Number(v.created_at || 0) * 1000).toLocaleString()}<div>${esc(v.message || "")}</div></div>`).join("") : `<div class="dim">${esc(window.t("kanban.no_events"))}</div>`}</div>`;
+        ${taskObj.block_reason ? `<div class="kn-detail-block"><h4>${esc(window.t ? window.t("kanban.blocked_reason") : "Lý do chặn")}</h4><div style="color:var(--red)">${esc(taskObj.block_reason)}</div></div>` : ""}
+        ${taskObj.result ? `<div class="kn-detail-block"><h4>${esc(window.t ? window.t("kanban.result") : "Kết quả")}</h4><div style="white-space:pre-wrap">${esc(taskObj.result)}</div></div>` : ""}
+        <div class="kn-detail-block"><h4>${esc(window.t ? window.t("kanban.runs") : "Lượt chạy")} (${runs.length})</h4>${runs.length ? runs.map(r => `<div class="kn-event"><b>${esc(r.status)}</b> · ${new Date(Number(r.started_at || 0) * 1000).toLocaleString()}${r.error ? `<div style="color:var(--red)">${esc(r.error)}</div>` : ""}</div>`).join("") : `<div class="dim">${esc(window.t ? window.t("kanban.no_runs") : "Chưa có lượt chạy")}</div>`}</div>
+        <div class="kn-detail-block"><h4>${esc(window.t ? window.t("kanban.lifecycle") : "Vòng đời")}</h4>${events.length ? events.map(v => `<div class="kn-event"><b>${esc(v.event_type)}</b> · ${new Date(Number(v.created_at || 0) * 1000).toLocaleString()}<div>${esc(v.message || "")}</div></div>`).join("") : `<div class="dim">${esc(window.t ? window.t("kanban.no_events") : "Chưa có sự kiện")}</div>`}</div>`;
       bindActionButtons(drawerBody);
     }
 
@@ -3477,11 +3499,17 @@
         </div>`;
       }
       const masked = (m[KEYFIELD[p.id]] || "").slice(-4);
+      const imgPick = (p.id === "gemini" && on)
+        ? `<div class="prov-note" style="margin-top:8px">Model gen ảnh (Google Imagen 3) - bấm chọn là lưu ngay; key Google phải mở API ảnh.</div>
+           <div class="prov-action" style="margin-top:6px"><label class="gcard-meta" style="margin-right:8px">Ảnh</label>
+           <select class="js-input" id="geminiImgModel" style="max-width:320px"><option>Đang tải…</option></select></div>`
+        : "";
       return `<div class="prov-card ${p.is_main ? "main" : ""}">
         ${provHead(p, on, p.kind === "cli" ? "MCP/skill" : "MCP Javis", (on ? t("models.st_connected") : t("models.st_not_connected")) + " · " + p.models.length + " model")}
         ${p.needs_key
           ? `<div class="prov-action"><input class="js-input" id="pk-${p.id}" type="password" placeholder="${on ? esc(t("models.key_change_ph", { duoi: masked })) : esc(t("models.key_ph"))}"><button class="gcard-btn" data-pk="${p.id}">${on ? esc(t("models.key_change")) : esc(t("models.connect"))}</button>${on ? `<button class="gcard-btn ghost" data-disc="${p.id}">${esc(t("models.disconnect"))}</button>` : ""}</div>`
           : `<div class="prov-note">${esc(t("models.no_key_note"))}</div>`}
+        ${imgPick}
       </div>`;
     };
 
@@ -3602,6 +3630,25 @@
         renderModelsCloudTab(el);
       };
     });
+    const imgSel = el.querySelector("#geminiImgModel");
+    if (imgSel) {
+      (async () => {
+        let d = { models: [], current: "" };
+        try { d = await (await fetch("/provider/image-models?provider=gemini")).json(); } catch (e) {}
+        const mods = d.models || [];
+        const cur = d.current || "";
+        imgSel.innerHTML = mods.map(x =>
+          `<option value="${esc(x.id)}" ${x.id === cur ? "selected" : ""}>${esc(x.label)} · ${esc(x.id)}</option>`
+        ).join("") || `<option value="">(không có model)</option>`;
+        imgSel.onchange = async () => {
+          const v = imgSel.value;
+          if (!v) return;
+          imgSel.disabled = true;
+          await saveSetting("model", { gemini_image_model: v });
+          imgSel.disabled = false;
+        };
+      })();
+    }
     const ol = el.querySelector("[data-oauth-login]");
     if (ol) ol.onclick = () => startOauthLogin(el);
     const ob = el.querySelector("[data-oauth-browser]");
@@ -3961,6 +4008,11 @@
     let selModel = (selProv === main.provider) ? (main.model || null) : null;
     const liveCache = {};      // pid -> {models:[], live:bool} - model load động từ API provider
     let loadingProv = null;
+    let imgModels = [];
+    let imgCurrent = "";
+    let imgLoading = false;
+    let imgSaveMsg = "";
+    const isImageChatId = (id) => /image|imagen/i.test(String(id || ""));
 
     const modelsFor = (pid) => (liveCache[pid] && liveCache[pid].models) || (providers.find(x => x.id === pid) || {}).models || [];
     const tagFor = (pid) => {
@@ -3989,15 +4041,31 @@
         if (!selModel || ms.indexOf(selModel) < 0)
           selModel = (pid === main.provider && ms.indexOf(main.model) >= 0) ? main.model : (ms[0] || null);
       }
+      if (pid === "gemini") ensureImageModels();
+      draw();
+    }
+
+    async function ensureImageModels() {
+      if (imgModels.length || imgLoading) { draw(); return; }
+      imgLoading = true; draw();
+      try {
+        const d = await (await fetch("/provider/image-models?provider=gemini")).json();
+        imgModels = d.models || [];
+        imgCurrent = d.current || "";
+      } catch (e) { imgModels = []; }
+      imgLoading = false;
       draw();
     }
 
     const draw = () => {
-      const models = modelsFor(selProv);
+      const models = modelsFor(selProv).filter((mod) => selProv !== "gemini" || !isImageChatId(mod));
+      const imgLine = (selProv === "gemini" && imgCurrent)
+        ? " · ảnh: " + imgCurrent
+        : "";
       modal.innerHTML = `
         <div class="mp-box">
           <div class="mp-head">
-            <div><div class="mp-title">${esc(opts.title || "SET MAIN MODEL")}</div><div class="mp-sub">${esc(t("models.mp_current"))} ${esc(main.model || t("models.mp_default"))} · ${esc(main.provider || "")}</div></div>
+            <div><div class="mp-title">${esc(opts.title || "SET MAIN MODEL")}</div><div class="mp-sub">${esc(t("models.mp_current"))} ${esc(main.model || t("models.mp_default"))} · ${esc(main.provider || "")}${esc(imgLine)}</div></div>
             <button class="mp-x" data-act="close">${X_ICON}</button>
           </div>
           <input class="mp-filter" placeholder="${esc(t("models.mp_filter"))}" value="${esc(filterQ)}">
@@ -4011,10 +4079,17 @@
               <button class="mp-model ${mod === selModel ? "sel" : ""}" data-mod="${esc(mod)}">${esc(mod)}${(selProv === main.provider && mod === main.model) ? ` <span class="mp-cur">${esc(t("models.mp_using"))}</span>` : ""}</button>`).join("")
                 : (loadingProv === selProv ? '<div class="mp-empty">' + esc(t("models.mp_loading")) + '</div>'
                     : '<div class="mp-empty">' + esc((liveCache[selProv] && liveCache[selProv].error)
-                        || t("models.mp_empty")) + '</div>')}</div>
+                        || t("models.mp_empty")) + '</div>')}
+              ${selProv === "gemini" ? `<div class="mp-img-head">Gen ảnh · Google Imagen 3 - bấm là lưu, đổi lại bất cứ lúc nào</div>
+                ${imgLoading ? '<div class="mp-empty">Đang tải model ảnh…</div>' : (imgModels.map(im =>
+                  `<button type="button" class="mp-model mp-img ${im.id === imgCurrent ? "sel" : ""}" data-img="${esc(im.id)}">${esc(im.label)} <span class="mp-cur">${im.id === imgCurrent ? "ĐANG DÙNG · " : ""}${esc(im.id)}</span></button>`
+                ).join("") || '<div class="mp-empty">Không tải được danh sách Imagen.</div>')}` : ""}
+            </div>
           </div>
           <div class="mp-foot">
-            <span class="mp-note">${esc(opts.note || t("models.mp_note"))}</span>
+            <span class="mp-note">${esc(imgSaveMsg || (selProv === "gemini"
+              ? "Chat: chọn dòng trên rồi Switch. Ảnh: bấm model Imagen 3 là lưu ngay (không cần Switch)."
+              : (opts.note || t("models.mp_note"))))}</span>
             <div><button class="mp-btn" data-act="close">${esc(t("common.cancel"))}</button><button class="mp-btn primary" data-act="switch" ${selModel ? "" : "disabled"}>${esc(opts.title ? t("models.mp_pick") : "Switch")}</button></div>
           </div>
         </div>`;
@@ -4024,7 +4099,21 @@
         selModel = (selProv === main.provider && ms.indexOf(main.model) >= 0) ? main.model : (liveCache[selProv] ? (ms[0] || null) : null);
         ensureModels(selProv);
       });
-      modal.querySelectorAll(".mp-model").forEach(b => b.onclick = () => { selModel = b.dataset.mod; draw(); });
+      modal.querySelectorAll(".mp-model[data-mod]").forEach(b => b.onclick = () => { selModel = b.dataset.mod; draw(); });
+      modal.querySelectorAll(".mp-model[data-img]").forEach(b => b.onclick = async () => {
+        const id = b.dataset.img;
+        if (!id) return;
+        imgCurrent = id;
+        imgSaveMsg = "Đang lưu model ảnh…";
+        draw();
+        try {
+          await saveSetting("model", { gemini_image_model: id });
+          imgSaveMsg = "Đã lưu ảnh: " + id + " - đổi lại bất cứ lúc nào trong hộp này.";
+        } catch (e) {
+          imgSaveMsg = "Lưu model ảnh thất bại.";
+        }
+        draw();
+      });
       modal.querySelectorAll('[data-act="close"]').forEach(b => b.onclick = () => modal.classList.remove("open"));
       const applyFilter = () => {
         const q = filterQ.toLowerCase();
@@ -4410,17 +4499,36 @@
     // localhost vì Meta chỉ miễn HTTP cho host 'localhost'.
     return location.origin.replace("://127.0.0.1", "://localhost") + "/connect/oauth/callback";
   }
-  function redirectCopyBox() {
-    const uri = _redirectUri();
-    return '<div class="wiz-copy"><input class="js-input" readonly value="' + esc(uri) + '">'
+  function _copyBox(val) {
+    // textarea 2 dòng: URL dài không bị cắt giữa chừng như input 1 dòng (Facebook
+    // khớp từng ký tự — copy thiếu /callback hoặc thiếu chữ h là đăng nhập chết).
+    return '<div class="wiz-copy"><textarea class="js-input" readonly rows="2">' + esc(val) + '</textarea>'
       + '<button type="button" class="mp-btn wiz-copy-btn">Sao chép</button></div>';
+  }
+  function redirectCopyBox() {
+    return _copyBox(_redirectUri());
+  }
+  // Site URL cho nền tảng Website trong Facebook App (https://tên-miền/).
+  function siteCopyBox() {
+    const origin = location.origin.replace("://127.0.0.1", "://localhost");
+    return _copyBox(origin + "/");
   }
   // Ô sao chép TÊN MIỀN trần (không https, không /) - cho ô "Miền ứng dụng"
   // (App Domains) của Facebook. Cũng động theo địa chỉ đang mở như redirect.
-  function domainCopyBox() {
+  // Subdomain (vd javissocial.aisaoviet.com) Facebook hay bắt THÊM miền gốc
+  // aisaoviet.com — thiếu là báo "Không thể tải URL" dù đã dán subdomain.
+  function _appDomains() {
     const host = location.hostname === "127.0.0.1" ? "localhost" : location.hostname;
-    return '<div class="wiz-copy"><input class="js-input" readonly value="' + esc(host) + '">'
-      + '<button type="button" class="mp-btn wiz-copy-btn">Sao chép</button></div>';
+    const out = [host];
+    const parts = host.split(".");
+    if (parts.length >= 3 && host !== "localhost") {
+      const root = parts.slice(-2).join(".");
+      if (root && root !== host) out.push(root);
+    }
+    return out;
+  }
+  function domainCopyBox() {
+    return _appDomains().map(h => _copyBox(h)).join("");
   }
   function stepsHtml(con) {
     const st = con.steps || [];
@@ -4428,13 +4536,15 @@
     return '<ol class="conn-steps">' + st.map(s =>
       '<li>' + esc(s.text)
       + (s.link ? ' <button type="button" class="mp-btn wiz-open step-link" data-url="' + esc(s.link) + '">' + esc(s.link_label || "Mở trang") + ' ↗</button>' : "")
-      + (s.copy === "redirect" ? redirectCopyBox() : s.copy === "domain" ? domainCopyBox() : "")
+      + (s.copy === "redirect" ? redirectCopyBox()
+        : s.copy === "domain" ? domainCopyBox()
+        : s.copy === "site" ? siteCopyBox() : "")
       + '</li>').join("") + '</ol>';
   }
   function wireWizCommon(m) {
     m.querySelectorAll(".wiz-open").forEach(b => { b.onclick = () => window.open(b.dataset.url, "_blank", "noopener"); });
     m.querySelectorAll(".wiz-copy-btn").forEach(btn => btn.onclick = async () => {
-      const inp = btn.parentElement.querySelector("input");
+      const inp = btn.parentElement.querySelector("input, textarea");
       if (!inp) return;
       try { await navigator.clipboard.writeText(inp.value); }
       catch (e) { inp.select(); try { document.execCommand("copy"); } catch (_) {} }

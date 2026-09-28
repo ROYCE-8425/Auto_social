@@ -8,10 +8,10 @@
 
 ## Test
 
-<!-- Đã chạy `python tests/run.py` chưa? Có test thủ công gì thêm không (vd thử trên UI)? -->
+<!-- Đã chạy test chưa? Có test thủ công gì thêm không (vd thử trên UI)? -->
 
-- [ ] `python tests/run.py` chạy xanh
-- [ ]
+- [ ] `python tests/run.py --py` hoặc `pytest tests/python/test_ops_*.py` chạy xanh
+- [ ] Đã kiểm tra `git diff` - KHÔNG chứa token / key / mật khẩu
 
 ## Ảnh hưởng
 
