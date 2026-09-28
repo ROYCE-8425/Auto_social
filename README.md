@@ -179,7 +179,7 @@ Script sẽ tự động:
 
 1. Cài đặt **Python 3.12** (chọn *"Add Python to PATH"*) và **Node.js LTS**.
 2. Chạy file: `setup.bat` (tự động cài môi trường).
-3. Khởi động hệ thống: `JAVIS OS.bat` hoặc chạy nền bằng `start-javis.vbs`.
+3. Khởi động hệ thống: `JAVIS OS.bat` hoặc chạy nền bằng `start-javis.vbs` (tự chạy khi mở máy: `javis-autostart.bat`).
 4. Mở trình duyệt truy cập: `http://localhost:7777/ops`.
 5. Dừng hệ thống: chạy `stop-javis.bat`.
 

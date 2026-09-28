@@ -172,7 +172,7 @@ chmod +x install.sh
 
 1. Install **Python 3.12** (check *"Add Python to PATH"*) and **Node.js LTS**.
 2. Run: `setup.bat`.
-3. Launch: `JAVIS OS.bat` or run in background via `start-javis.vbs`.
+3. Launch: `JAVIS OS.bat` or run in background via `start-javis.vbs` (autostart on boot: `javis-autostart.bat`).
 4. Open your browser: `http://localhost:7777/ops`.
 5. Stop server: `stop-javis.bat`.
 
