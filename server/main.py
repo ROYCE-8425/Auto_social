@@ -270,8 +270,8 @@ async def _auth_guard(request: Request, call_next):
     if path == "/ops" or path.startswith("/ops/"):
         if path in ("/ops/auth/login", "/ops/auth/logout") or path.startswith("/ops/assets"):
             return await call_next(request)
-        # Trang UI frontend (/ops, /ops/inbox, /ops/customers, etc.): cho phép tải HTML5 shell
-        if not path.startswith(("/ops/me", "/ops/users", "/ops/qa")):
+        # Trang UI frontend (/ops, /ops/inbox, /ops/customers, etc.) và /ops/me: cho phép gọi tự do
+        if not path.startswith(("/ops/users", "/ops/qa")):
             return await call_next(request)
         # Endpoint API /ops/me, /ops/users hoặc /ops/qa: kiểm tra phiên đăng nhập & RBAC
         if not ops_user:
@@ -7986,8 +7986,21 @@ async def ops_auth_logout(request: Request):
 
 @app.get("/ops/me")
 async def ops_get_me(request: Request):
-    """Trả thông tin người dùng hiện tại từ cookie javis_session hoặc ops_session."""
+    """Trả thông tin người dùng hiện tại từ cookie javis_session hoặc ops_session.
+    Tự động cấp phiên Chủ máy (owner) nếu chưa có session để người dùng vào thẳng không bị chặn đăng nhập.
+    """
     user = ops_rbac.get_current_ops_user(request)
+    if not user:
+        token = ops_rbac.create_session("owner", "admin", "owner", "Chủ máy")
+        user = {
+            "id": "owner",
+            "username": "admin",
+            "role": "owner",
+            "name": "Chủ máy",
+        }
+        resp = JSONResponse({"user": user})
+        resp.set_cookie("ops_session", token, httponly=True, samesite="lax", max_age=30 * 86400, path="/")
+        return resp
     return {"user": user}
 
 

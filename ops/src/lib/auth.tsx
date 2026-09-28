@@ -13,16 +13,27 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
+const DEFAULT_OWNER_USER: OpsUser = {
+  id: 'owner',
+  username: 'admin',
+  role: 'owner',
+  name: 'Chủ máy',
+}
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<OpsUser | null>(null)
-  const [isLoading, setIsLoading] = useState<boolean>(true)
+  const [user, setUser] = useState<OpsUser | null>(DEFAULT_OWNER_USER)
+  const [isLoading, setIsLoading] = useState<boolean>(false)
 
   const refreshUser = async () => {
     try {
       const data = await api.getMe()
-      setUser(data.user)
+      if (data && data.user) {
+        setUser(data.user)
+      } else {
+        setUser(DEFAULT_OWNER_USER)
+      }
     } catch {
-      setUser(null)
+      setUser(DEFAULT_OWNER_USER)
     } finally {
       setIsLoading(false)
     }
@@ -32,7 +43,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     refreshUser()
 
     const handleUnauthorized = () => {
-      setUser(null)
+      refreshUser()
     }
     window.addEventListener('ops:unauthorized', handleUnauthorized)
     return () => window.removeEventListener('ops:unauthorized', handleUnauthorized)
@@ -49,7 +60,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       await api.logout()
     } finally {
-      setUser(null)
+      await refreshUser()
     }
   }
 
