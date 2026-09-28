@@ -212,3 +212,5 @@ page_tokens.json
 !**/page_tokens.example.json
 !page_tokens.example.json
 *.sqlite3*
+
+scripts/deploy_vps.py
