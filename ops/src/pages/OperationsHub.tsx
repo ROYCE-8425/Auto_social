@@ -195,7 +195,7 @@ const modulesData: HubModuleItem[] = [
       {
         id: 'rec_204',
         name: 'Hợp đồng dịch vụ #HD-2024-089',
-        target: 'Khách hàng Công ty Sao Việt',
+        target: 'Khách hàng Đối tác Doanh nghiệp',
         aiStatus: 'AI đã điền đủ MST, SĐT, giá trị 18.000.000đ, sẵn sàng ký',
         updated: '14:20',
         humanVerdict: 'pending',

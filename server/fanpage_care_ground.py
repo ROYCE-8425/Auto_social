@@ -320,7 +320,7 @@ def build_care_llm_prompt(
     - Yêu cầu model trả về JSON object có cite_files.
     """
     clean_kit = sanitize_kit(kit)
-    page_name = clean_kit.get("name") or "Trung tâm Sao Việt"
+    page_name = clean_kit.get("name") or "Royce Shop"
     hotline = clean_kit.get("hotline") or ""
     addr = address_short(clean_kit)
 

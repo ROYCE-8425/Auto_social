@@ -20,7 +20,7 @@ Tài liệu định hình bản sắc thương hiệu, cấu hình kết nối m
 - Điều không được làm: Biến dạng logo, dùng font ngoài hệ thống, viết văn mẫu sáo rỗng
 
 ## Kênh Facebook
-- Bật: true
+- Bật: false
 - Page ID: 000000000000000
 - Tỷ lệ ảnh: 1:1
 - Caption: dài (album)

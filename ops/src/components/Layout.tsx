@@ -158,7 +158,7 @@ export const Layout: React.FC<LayoutProps> = ({ currentTab, onSelectTab, childre
                     : 'bg-slate-100 text-slate-700 hover:bg-slate-200 font-medium'
                 }`}
               >
-                Trung tâm Sao Việt
+                {eligiblePages.find((p) => (p.brand || '').toLowerCase() === 'saoviet')?.name || 'Royce Shop'}
               </button>
             </div>
 

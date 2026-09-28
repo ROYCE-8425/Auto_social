@@ -373,7 +373,7 @@ export const Customers: React.FC = () => {
             <select className="appearance-none bg-white border border-slate-200 text-slate-700 rounded-xl px-3 py-1.5 pr-7 text-xs font-medium hover:bg-slate-50 shadow-2xs focus:outline-none cursor-pointer">
               <option>Tất cả thương hiệu</option>
               <option>Nhóm Game BSN</option>
-              <option>Trung tâm Sao Việt</option>
+              <option>Royce Shop</option>
             </select>
             <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>

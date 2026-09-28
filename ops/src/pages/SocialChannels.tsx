@@ -181,9 +181,9 @@ const recentMultiPosts: MultiPostRecord[] = [
   {
     id: 'p4',
     time: '11:30 Hôm nay',
-    brand: 'Sao Việt',
+    brand: 'Royce Shop',
     channel: 'facebook',
-    title: 'Khai giảng lớp Vận Hành Social Media Chuyên Nghiệp K12',
+    title: 'Bộ sưu tập sản phẩm công nghệ độc quyền tháng này',
     type: 'Album ảnh Facebook',
     status: 'Đã đăng',
     url: 'https://facebook.com',
@@ -211,9 +211,9 @@ const recentMultiPosts: MultiPostRecord[] = [
   {
     id: 'p7',
     time: 'Hôm qua 15:00',
-    brand: 'Sao Việt',
+    brand: 'Royce Shop',
     channel: 'instagram',
-    title: 'Tips trả lời khách hàng trong 30 giây với Javis AI',
+    title: 'Tips trả lời khách hàng trong 30 giây với Sèo Trum AI',
     type: 'Instagram Reels',
     status: 'Đã đăng',
     url: 'https://instagram.com',
