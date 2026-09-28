@@ -37,12 +37,13 @@ def test_render_bsn_new_templates():
     from fanpage_care_ground import render_template
 
     kit_path = ROOT / "brains" / "Brain Default" / "wiki" / "brand-kits" / "game-gia-re-bsn.md"
+    kit_md = kit_path.read_text(encoding="utf-8") if kit_path.is_file() else "# Kit Game Giá Rẻ BSN\n- Tên Fanpage: Game Giá Rẻ BSN\n- Hotline: 0877 104 996\n- Page ID: 343562028848465\n"
     kit = {
         "file": "game-gia-re-bsn.md",
         "brand": "bsn",
         "name": "Game Giá Rẻ BSN",
         "hotline": "0877 104 996",
-        "md": kit_path.read_text(encoding="utf-8"),
+        "md": kit_md,
     }
 
     for key in ["chao_hoi", "bao_hanh", "key_steam", "viet_hoa", "cai_dat"]:
@@ -92,8 +93,17 @@ async def test_inbound_message_auto_replies_greeting(monkeypatch, tmp_path):
 
     vault = tmp_path / "vault"
     kits = vault / "wiki" / "brand-kits"
-    kits.mkdir(parents=True)
-    kit_content = (ROOT / "brains" / "Brain Default" / "wiki" / "brand-kits" / "game-gia-re-bsn.md").read_text(encoding="utf-8")
+    bsn_src = ROOT / "brains" / "Brain Default" / "wiki" / "brand-kits" / "game-gia-re-bsn.md"
+    kit_content = bsn_src.read_text(encoding="utf-8") if bsn_src.is_file() else (
+        "# Kit: Game Giá Rẻ BSN\n"
+        "- Brand: bsn\n"
+        "- Tên Fanpage: Game Giá Rẻ BSN\n"
+        "- Page ID: 343562028848465\n"
+        "- Hotline: 0877 104 996\n"
+        "## Kênh Facebook\n"
+        "- Bật: true\n"
+        "- Page ID: 343562028848465\n"
+    )
     (kits / "game-gia-re-bsn.md").write_text(kit_content, encoding="utf-8")
 
     state = tmp_path / "state"
@@ -147,7 +157,17 @@ async def test_inbound_comment_auto_replies_fallback(monkeypatch, tmp_path):
     vault = tmp_path / "vault"
     kits = vault / "wiki" / "brand-kits"
     kits.mkdir(parents=True)
-    kit_content = (ROOT / "brains" / "Brain Default" / "wiki" / "brand-kits" / "game-gia-re-bsn.md").read_text(encoding="utf-8")
+    bsn_src = ROOT / "brains" / "Brain Default" / "wiki" / "brand-kits" / "game-gia-re-bsn.md"
+    kit_content = bsn_src.read_text(encoding="utf-8") if bsn_src.is_file() else (
+        "# Kit: Game Giá Rẻ BSN\n"
+        "- Brand: bsn\n"
+        "- Tên Fanpage: Game Giá Rẻ BSN\n"
+        "- Page ID: 343562028848465\n"
+        "- Hotline: 0877 104 996\n"
+        "## Kênh Facebook\n"
+        "- Bật: true\n"
+        "- Page ID: 343562028848465\n"
+    )
     (kits / "game-gia-re-bsn.md").write_text(kit_content, encoding="utf-8")
 
     state = tmp_path / "state"

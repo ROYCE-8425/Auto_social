@@ -21,12 +21,18 @@ async def test_poll_messenger_ingests_customer_message(monkeypatch, tmp_path):
     vault = tmp_path / "vault"
     kits = vault / "wiki" / "brand-kits"
     kits.mkdir(parents=True)
-    (kits / "game-gia-re-bsn.md").write_text(
-        (ROOT / "brains" / "Brain Default" / "wiki" / "brand-kits" / "game-gia-re-bsn.md").read_text(
-            encoding="utf-8"
-        ),
-        encoding="utf-8",
+    bsn_src = ROOT / "brains" / "Brain Default" / "wiki" / "brand-kits" / "game-gia-re-bsn.md"
+    bsn_text = bsn_src.read_text(encoding="utf-8") if bsn_src.is_file() else (
+        "# Kit: Game Giá Rẻ BSN\n"
+        "- Brand: bsn\n"
+        "- Tên Fanpage: Game Giá Rẻ BSN\n"
+        "- Page ID: 343562028848465\n"
+        "- Hotline: 0877 104 996\n"
+        "## Kênh Facebook\n"
+        "- Bật: true\n"
+        "- Page ID: 343562028848465\n"
     )
+    (kits / "game-gia-re-bsn.md").write_text(bsn_text, encoding="utf-8")
     state = tmp_path / "state"
     state.mkdir()
     monkeypatch.setattr(store, "DEFAULT_DB_PATH", state / "care.sqlite3")

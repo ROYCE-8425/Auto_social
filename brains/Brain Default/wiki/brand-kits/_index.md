@@ -21,12 +21,10 @@ updated: 2026-09-16
 - [[brand-kits/_the-khoa-hoc]] thẻ / folder ảnh
 - [[brand-kits/_anh-da-dung]] ảnh gốc đã dùng
 
-## Page đã có kit
-- [[brand-kits/royce-shop]] Royce Shop (Page ID: 988656934325292)
-- [[brand-kits/game-gia-re-bsn]] Game Giá Rẻ BSN (Page ID: 343562028848465)
+## Hướng dẫn tạo Brand Kit mới
+1. Sao chép file mẫu từ `brand.example.md` thành `<ten-brand>.md` (ví dụ: `my-brand.md`).
+2. Khai báo đầy đủ thông tin Fanpage, TikTok, nhận diện thương hiệu và chân trang.
+3. Để bảo mật thông tin khi đẩy lên GitHub mã nguồn mở, các file brand kit riêng (`*.md`) sẽ được Git tự động bỏ qua (ignored). Hệ thống trên máy chủ VPS vẫn đọc và chạy bình thường.
 
-## Bảng tra cứu bí danh nhanh (Alias Mapping)
-| Từ khóa gọi tắt | File Brand Kit chính thức | Page ID |
-|---|---|---|
-| royce, royce shop | royce-shop.md | 988656934325292 |
-| bsn, game bsn, game gia re bsn | game-gia-re-bsn.md | 343562028848465 |
+## File mẫu hệ thống
+- [[brand-kits/brand.example]] File mẫu cấu hình Brand Kit chuẩn đa kênh

@@ -132,6 +132,40 @@ brains/*/scratch/*
 !brains/*/scratch/make_square_cover.py
 !brains/*/scratch/make_cover_autocad.py
 
+# Demo pack & brand backups
+demo_pack.tar.gz
+brand_demo_backup/
+
+# Brand kits riêng tư (chỉ giữ file mẫu và cấu hình chung hệ thống)
+brains/*/wiki/brand-kits/*.md
+!brains/*/wiki/brand-kits/_*.md
+!brains/*/wiki/brand-kits/*.example.md
+
+# Hồ sơ sản phẩm/khóa học riêng (chỉ giữ file mẫu)
+brains/*/wiki/courses/*.md
+!brains/*/wiki/courses/*.example.md
+
+# Dataset ảnh riêng (chỉ giữ thư mục mẫu và thư mục xuất)
+brains/*/attachments/dataset/*/
+!brains/*/attachments/dataset/_mau/
+!brains/*/attachments/dataset/_mau/**
+!brains/*/attachments/dataset/_xuat/
+brains/*/attachments/dataset/_xuat/*
+!brains/*/attachments/dataset/_xuat/.gitkeep
+!brains/*/attachments/dataset/_xuat-tiktok/
+brains/*/attachments/dataset/_xuat-tiktok/*
+!brains/*/attachments/dataset/_xuat-tiktok/.gitkeep
+!brains/*/attachments/dataset/_xuat-tiktok/README.md
+!brains/*/attachments/dataset/sample/
+!brains/*/attachments/dataset/sample/**
+!brains/*/attachments/dataset/chung/
+brains/*/attachments/dataset/chung/*
+!brains/*/attachments/dataset/chung/.gitkeep
+
+# Sources Facebook nháp riêng
+brains/*/sources/facebook-nhap/*
+!brains/*/sources/facebook-nhap/.gitkeep
+
 
 # Ban backup brain do server tu tao
 brains-backup/

@@ -10,4 +10,4 @@ Không có thẻ khớp chủ đề bài → không đăng page đó.
 
 | id | Tên |
 | --- | --- |
-| game-bsn | Game Giá Rẻ BSN (Game Bản Quyền / Offline) |
+| sample | Mẫu danh mục sản phẩm / dịch vụ |

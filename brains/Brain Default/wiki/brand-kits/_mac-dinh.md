@@ -10,9 +10,9 @@ Gốc cho mọi Fanpage và Kênh xuất bản nội dung. Tạo kênh/page mớ
 - Màu chính: #2C7BE5
 - Màu phụ: #00D4FF
 - Font: Inter, Montserrat, Roboto
-- Logo chính: attachments/dataset/game-bsn/Logo-wed-bsn.png
-- Logo trắng: attachments/dataset/game-bsn/Logo-wed-bsn.png
-- Icon: attachments/dataset/game-bsn/logog-game-gia-re-bsn-512x512.png
+- Logo chính: attachments/dataset/_mau/logo-placeholder.png
+- Logo trắng: attachments/dataset/_mau/logo-placeholder.png
+- Icon: attachments/dataset/_mau/logo-placeholder.png
 - Phong cách hình ảnh: công nghệ, hiện đại, sắc nét, tối giản, premium
 - Tone of voice: chuyên nghiệp, thân thiện, rõ ràng, phản hồi nhanh chóng
 - Điều không được làm: đổi màu logo ngoài palette, đăng ảnh vỡ nhòe, văn mẫu sáo rỗng
@@ -66,5 +66,5 @@ Gốc cho mọi Fanpage và Kênh xuất bản nội dung. Tạo kênh/page mớ
 - Page ID:
 - Thẻ sản phẩm: all
 - Hotline riêng:
-- Folder ảnh (dataset): game-bsn
+- Folder ảnh (dataset): default
 - Hashtag thêm:
