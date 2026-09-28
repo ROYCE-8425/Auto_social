@@ -11,11 +11,13 @@
 ## ⚠️ Nguyên tắc an toàn & Cấm lộ thông tin bí mật
 
 1. **Tuyệt đối KHÔNG đăng token / API key / mật khẩu lên GitHub Issues hoặc Pull Requests công khai.**
-   * Bao gồm nhưng không giới hạn: Meta Graph User/Page Access Tokens (`page_tokens.json`), PostPeer API Key, OpenAI/Claude/Gemini API keys, `.env`, `settings.json`.
+   * Bao gồm nhưng không giới hạn: Meta Graph User/Page Access Tokens (`page_tokens.json`), PostPeer API Key, OpenAI/Claude/Gemini API keys, `.env`, `settings.json`, `server/.secret_key`, `server/.hub_token`, `*.sqlite3`, `*.db`, log hội thoại và dữ liệu khách hàng thật.
 2. **Kiểm tra trước khi commit:**
    * Hệ thống đã cấu hình `.gitignore` chặn các file nhạy cảm. Luôn chạy `git status` trước khi commit để đảm bảo không vô tình thêm file bí mật vận hành vào git.
 3. **Biến môi trường:**
    * Sử dụng biến môi trường hoặc cấu hình qua giao diện bảo mật của Javis thay vì hardcode thông tin bí mật vào mã nguồn.
+4. **Demo công khai:**
+   * Khi quay video, chụp màn hình hoặc gửi bài dự thi, hãy dùng dữ liệu mẫu đã ẩn danh. Không hiển thị access token, số điện thoại thật, tên khách thật hoặc nội dung inbox thật.
 
 ---
 

@@ -37,6 +37,7 @@ import {
   Zap,
   Layers,
   Compass,
+  RefreshCw,
 } from 'lucide-react'
 import { api, CareConversation, CareDraft, CareEvent, CareState, CareStats } from '../lib/api'
 import { useAuth } from '../lib/auth'
@@ -451,26 +452,126 @@ export const Inbox: React.FC = () => {
   const [copySuccess, setCopySuccess] = useState<string | null>(null)
   const [conversationsList, setConversationsList] = useState<MockConversation[]>(mockConversationsData)
   const [noteText, setNoteText] = useState('')
+  const [isPolling, setIsPolling] = useState(false)
+  const [pollNotice, setPollNotice] = useState<string | null>(null)
+  const [rawEvents, setRawEvents] = useState<CareEvent[]>([])
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   // Real Care state & drafts
   const [careDrafts, setCareDrafts] = useState<CareDraft[]>([])
   const [careStats, setCareStats] = useState<CareStats | null>(null)
 
+  const loadInboxData = () => {
+    // 1. Lấy danh sách hội thoại thực tế từ Fanpage qua /fanpage-care/conversations
+    api.getConversations({
+      page_id: scopePageId || undefined,
+      brand: scopeBrand || undefined,
+    }).then((res) => {
+      if (res?.ok && res.conversations && res.conversations.length > 0) {
+        const mapped: MockConversation[] = res.conversations.map((c) => {
+          const pageTitle = c.page_id === '343562028848465'
+            ? 'Game Giá Rẻ BSN'
+            : (c.page_id === '988656934325292' ? 'Royce Shop' : 'Fanpage')
+
+          const timeStr = c.last_event_ts
+            ? new Date(c.last_event_ts * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            : 'Vừa xong'
+
+          return {
+            id: `${c.page_id}_${c.psid}`,
+            name: c.customer_name || 'Khách hàng Facebook',
+            avatar: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(c.customer_name || 'Khách')}&backgroundColor=0084ff,2563eb,10b981,f59e0b`,
+            avatarBg: 'bg-blue-100 text-blue-700',
+            message: c.last_body || 'Đã gửi một tin nhắn đến shop',
+            time: timeStr,
+            hasUnreadDot: Boolean(c.is_unreplied),
+            unreadCount: c.is_unreplied ? 1 : undefined,
+            tags: c.is_unreplied
+              ? [{ text: 'Cần hỗ trợ', color: 'amber' as const }]
+              : [{ text: 'Đã trả lời', color: 'green' as const }],
+            crmTags: [
+              { text: pageTitle, color: 'blue' as const },
+              { text: 'Facebook', color: 'purple' as const },
+            ],
+            phone: 'Chưa có SĐT',
+            fbId: c.psid,
+            source: 'Messenger',
+            firstInteraction: timeStr,
+            pageName: pageTitle,
+            status: c.is_unreplied ? 'care_needed' as const : 'interested' as const,
+            history: [
+              {
+                title: 'Tin nhắn gần nhất',
+                desc: c.last_body || 'Tương tác qua Messenger',
+                time: timeStr,
+                dotColor: 'green' as const,
+              }
+            ],
+            messages: [
+              {
+                id: `m_init_${c.psid}`,
+                sender: c.last_sender === 'page' ? 'bot' : 'customer',
+                text: c.last_body || 'Chào shop',
+                time: timeStr,
+              }
+            ],
+          }
+        })
+        setConversationsList(mapped)
+        setSelectedConvId((prev) => {
+          if (mapped.some((m) => m.id === prev)) return prev
+          return mapped[0].id
+        })
+      }
+    }).catch(() => {})
+
+    // 2. Lấy danh sách nháp AI, sự kiện và thống kê thực tế
+    api.getInbox({
+      page_id: scopePageId || undefined,
+      brand: scopeBrand || undefined,
+      limit: 100,
+    }).then((res) => {
+      if (res?.ok) {
+        if (res.drafts) setCareDrafts(res.drafts)
+        if (res.stats) setCareStats(res.stats)
+        if (res.events) setRawEvents(res.events)
+      }
+    }).catch(() => {})
+  }
+
   useEffect(() => {
-    let mounted = true
-    api.getInbox({ limit: 40 })
-      .then((res) => {
-        if (mounted && res) {
-          if (res.drafts) setCareDrafts(res.drafts)
-          if (res.stats) setCareStats(res.stats)
-        }
-      })
-      .catch(() => {})
-    return () => {
-      mounted = false
-    }
+    loadInboxData()
   }, [scope, scopeBrand, scopePageId])
+
+  // Tải chi tiết lịch sử tin nhắn thật khi chọn hội thoại
+  useEffect(() => {
+    if (!selectedConvId) return
+    const parts = selectedConvId.split('_')
+    if (parts.length >= 2 && parts[0] !== 'conv') {
+      const pageId = parts[0]
+      const psid = parts.slice(1).join('_')
+      api.getConversationThread(pageId, psid).then((res) => {
+        if (res?.ok && res.events && res.events.length > 0) {
+          const sortedEvents = [...res.events].sort((a, b) => (a.created_ts || 0) - (b.created_ts || 0))
+          const threadMsgs = sortedEvents.map((ev, i) => {
+            const isBot = ev.kind === 'echo' || ev.from_name === 'Javis AI' || ev.class === 'auto_reply'
+            const isStaff = ev.from_name === 'Nhân viên Fanpage'
+            return {
+              id: `ev_${ev.id || i}`,
+              sender: isBot ? ('bot' as const) : (isStaff ? ('staff' as const) : ('customer' as const)),
+              text: ev.body,
+              time: ev.created_ts
+                ? new Date(ev.created_ts * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                : '',
+            }
+          })
+          setConversationsList((prev) =>
+            prev.map((c) => (c.id === selectedConvId ? { ...c, messages: threadMsgs } : c))
+          )
+        }
+      }).catch(() => {})
+    }
+  }, [selectedConvId])
 
   const currentConv = conversationsList.find((c) => c.id === selectedConvId) || conversationsList[0]
 
@@ -484,12 +585,29 @@ export const Inbox: React.FC = () => {
     setInputText(text)
   }
 
-  const handleSendMessage = () => {
+  const handlePollNow = async () => {
+    setIsPolling(true)
+    setPollNotice('Đang kéo tin nhắn và bình luận mới nhất từ Fanpage...')
+    try {
+      await api.pollNow()
+      setPollNotice('Đã đồng bộ thành công!')
+      loadInboxData()
+      setTimeout(() => setPollNotice(null), 3000)
+    } catch (err: any) {
+      setPollNotice(`Đồng bộ thất bại: ${err?.message || 'Lỗi mạng'}`)
+      setTimeout(() => setPollNotice(null), 3000)
+    } finally {
+      setIsPolling(false)
+    }
+  }
+
+  const handleSendMessage = async () => {
     if (!inputText.trim()) return
+    const textToSend = inputText.trim()
     const newMsg = {
       id: `m_${Date.now()}`,
       sender: 'staff' as const,
-      text: inputText.trim(),
+      text: textToSend,
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     }
 
@@ -507,6 +625,18 @@ export const Inbox: React.FC = () => {
       })
     )
     setInputText('')
+
+    // Gửi trực tiếp qua Facebook Messenger nếu có page_id & psid
+    const parts = currentConv.id.split('_')
+    if (parts.length >= 2 && parts[0] !== 'conv') {
+      const pageId = parts[0]
+      const psid = parts.slice(1).join('_')
+      try {
+        await api.sendDirectMessage(pageId, psid, textToSend)
+      } catch (err) {
+        console.error('Lỗi gửi tin nhắn trực tiếp qua Messenger:', err)
+      }
+    }
   }
 
   // Scroll messages to bottom
@@ -526,7 +656,65 @@ export const Inbox: React.FC = () => {
     purple: 'bg-purple-50 text-purple-600 border border-purple-200',
   }
 
-  const filteredConversations = conversationsList.filter((conv) => {
+  // List of comment conversations from real events
+  const commentConversations: MockConversation[] = rawEvents
+    .filter((e) => e.kind === 'comment' || e.platform === 'facebook')
+    .map((e) => {
+      const pageTitle = e.page_id === '343562028848465'
+        ? 'Game Giá Rẻ BSN'
+        : (e.page_id === '988656934325292' ? 'Royce Shop' : 'Fanpage Facebook')
+      const timeStr = e.created_ts
+        ? new Date(e.created_ts * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        : 'Vừa xong'
+
+      return {
+        id: `cmt_${e.id}`,
+        name: e.from_name || 'Khách hàng Facebook',
+        avatar: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(e.from_name || 'Khách')}&backgroundColor=1877F2,2563eb,0084ff`,
+        avatarBg: 'bg-blue-100 text-blue-700',
+        message: e.body || 'Đã để lại bình luận trên bài viết',
+        time: timeStr,
+        hasUnreadDot: false,
+        tags: [{ text: 'Bình luận', color: 'blue' as const }],
+        crmTags: [
+          { text: pageTitle, color: 'blue' as const },
+          { text: 'Post Comment', color: 'purple' as const },
+        ],
+        phone: 'Chưa có SĐT',
+        fbId: e.from_id || e.object_id,
+        source: 'Facebook',
+        firstInteraction: timeStr,
+        pageName: pageTitle,
+        status: 'interested' as const,
+        history: [
+          {
+            title: 'Bình luận bài viết',
+            desc: e.body,
+            time: timeStr,
+            dotColor: 'blue' as const,
+          },
+        ],
+        messages: [
+          {
+            id: `msg_cmt_${e.id}`,
+            sender: 'customer',
+            text: e.body,
+            time: timeStr,
+          },
+        ],
+      }
+    })
+
+  const effectiveConversations = activeChannel === 'comments'
+    ? (commentConversations.length > 0 ? commentConversations : conversationsList.filter(c => c.source === 'Facebook'))
+    : conversationsList.filter(c => c.source !== 'Facebook')
+
+  const unreadCountBadge = effectiveConversations.filter(c => c.hasUnreadDot).length
+  const needHumanBadge = effectiveConversations.filter(c => c.status === 'care_needed').length
+
+  const filteredConversations = effectiveConversations.filter((conv) => {
+    if (statusFilter === 'unread' && !conv.hasUnreadDot && unreadCountBadge > 0) return false
+    if (statusFilter === 'need_human' && conv.status !== 'care_needed' && needHumanBadge > 0) return false
     if (!searchQuery.trim()) return true
     const q = searchQuery.toLowerCase()
     return (
@@ -539,11 +727,30 @@ export const Inbox: React.FC = () => {
   return (
     <div className="space-y-5">
       {/* PAGE HEADER ROW */}
-      <div>
-        <h1 className="text-2xl font-black text-slate-900 tracking-tight">Hộp thư & Nháp</h1>
-        <p className="text-sm text-slate-500 font-normal mt-0.5">
-          Quản lý hội thoại, xử lý tin nhắn và soạn nháp với sự hỗ trợ của Javis AI.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight">Hộp thư & Nháp</h1>
+          <p className="text-sm text-slate-500 font-normal mt-0.5">
+            Quản lý hội thoại và tin nhắn đồng bộ trực tiếp từ Fanpage ({conversationsList.length} hội thoại).
+          </p>
+          {pollNotice && (
+            <div className="mt-1 text-xs font-semibold text-blue-600 bg-blue-50 border border-blue-200 px-2.5 py-0.5 rounded-lg inline-flex items-center gap-1.5 animate-fade-in">
+              <RefreshCw className={`w-3 h-3 ${isPolling ? 'animate-spin' : ''}`} />
+              <span>{pollNotice}</span>
+            </div>
+          )}
+        </div>
+
+        <button
+          type="button"
+          onClick={handlePollNow}
+          disabled={isPolling}
+          className="flex items-center space-x-1.5 px-3 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-sm shadow-blue-200 disabled:opacity-60 cursor-pointer self-start sm:self-auto"
+          title="Kéo tin nhắn và bình luận mới nhất từ Facebook Fanpage"
+        >
+          <RefreshCw className={`w-3.5 h-3.5 ${isPolling ? 'animate-spin' : ''}`} />
+          <span>{isPolling ? 'Đang kéo tin...' : 'Đồng bộ từ Fanpage'}</span>
+        </button>
       </div>
 
       {/* MAIN 3-COLUMN LAYOUT */}
@@ -615,9 +822,11 @@ export const Inbox: React.FC = () => {
             >
               <span className="w-1.5 h-1.5 rounded-full bg-blue-600" />
               <span>Chưa đọc</span>
-              <span className="bg-blue-600 text-white rounded-full px-1.5 py-0.2 text-[10px] font-bold ml-0.5">
-                12
-              </span>
+              {unreadCountBadge > 0 && (
+                <span className="bg-blue-600 text-white rounded-full px-1.5 py-0.2 text-[10px] font-bold ml-0.5">
+                  {unreadCountBadge}
+                </span>
+              )}
             </button>
             <button
               type="button"
@@ -630,9 +839,11 @@ export const Inbox: React.FC = () => {
             >
               <span className="w-1.5 h-1.5 rounded-full bg-orange-500" />
               <span>Cần người</span>
-              <span className="bg-slate-200 text-slate-700 rounded-full px-1.5 py-0.2 text-[10px] font-bold ml-0.5">
-                8
-              </span>
+              {needHumanBadge > 0 && (
+                <span className="bg-orange-600 text-white rounded-full px-1.5 py-0.2 text-[10px] font-bold ml-0.5">
+                  {needHumanBadge}
+                </span>
+              )}
             </button>
             <button
               type="button"

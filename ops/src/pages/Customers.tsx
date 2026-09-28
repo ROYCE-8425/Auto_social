@@ -28,6 +28,7 @@ import {
   ChevronLeft,
   ChevronRight,
   TrendingUp,
+  RefreshCw,
 } from 'lucide-react'
 import { api, CareCustomer } from '../lib/api'
 import { useAuth } from '../lib/auth'
@@ -267,13 +268,128 @@ const mockCustomersList: MockCustomer[] = [
 export const Customers: React.FC = () => {
   const { role, can } = useAuth()
   const { scope, scopeBrand, scopePageId } = useCareScope()
+  const [customersList, setCustomersList] = useState<MockCustomer[]>(mockCustomersList)
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>('c1')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [copySuccess, setCopySuccess] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [isPolling, setIsPolling] = useState(false)
+  const [pollNotice, setPollNotice] = useState<string | null>(null)
+  const [customerDetail, setCustomerDetail] = useState<any>(null)
+
+  const loadCustomers = () => {
+    setLoading(true)
+    api.getCustomers({ brand: scopeBrand || undefined, page_id: scopePageId || undefined, limit: 100 })
+      .then((res) => {
+        if (res?.ok && res.customers && res.customers.length > 0) {
+          const mapped: MockCustomer[] = res.customers.map((c) => {
+            const hasPhone = c.phones && c.phones.length > 0
+            const isLead = c.tags?.includes('lead') || c.tags?.includes('hot')
+            const isBought = c.tags?.includes('bought') || c.tags?.includes('paid')
+            const status: 'Lead nóng' | 'Đang tư vấn' | 'Đã mua' | 'Khiếu nại' = isLead
+              ? 'Lead nóng'
+              : (isBought ? 'Đã mua' : 'Đang tư vấn')
+            const statusColor: 'rose' | 'green' | 'blue' | 'amber' = isLead
+              ? 'rose'
+              : (isBought ? 'green' : 'blue')
+            const tag = c.tags?.[0] ? (c.tags[0] === 'lead' ? 'Lead nóng' : c.tags[0].toUpperCase()) : 'Fanpage'
+            const tagColor: 'rose' | 'green' | 'blue' | 'purple' | 'amber' | 'slate' = isLead ? 'rose' : 'blue'
+
+            return {
+              id: c.crm_id,
+              name: c.name,
+              avatar: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(c.name)}&backgroundColor=2563eb,10b981,f59e0b,f43f5e`,
+              snippet: c.course_interest || `Khách hàng từ ${c.campus || 'Fanpage'}`,
+              phone: hasPhone ? c.phones[0] : 'Chưa có SĐT',
+              source: 'Messenger',
+              tag,
+              tagColor,
+              status,
+              statusColor,
+              lastInteraction: new Date(c.updated_ts * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+              fbId: c.crm_id.replace('c_', '1000'),
+              area: c.campus || 'Game Giá Rẻ BSN',
+              createdDate: new Date(c.updated_ts * 1000).toLocaleDateString('vi-VN'),
+              notes: c.course_interest ? `Quan tâm: ${c.course_interest}` : `Đồng bộ từ Fanpage ${c.campus || 'Game Giá Rẻ BSN'}`,
+              tagsList: c.tags || ['Fanpage'],
+              timeline: [
+                {
+                  type: 'customer',
+                  title: 'Tương tác Fanpage',
+                  content: `Khách hàng tương tác qua kênh Messenger/Facebook của ${c.campus || 'Fanpage'}`,
+                },
+                {
+                  type: 'ai',
+                  title: 'Javis AI tự động ghi nhận',
+                  content: 'Đã lưu trữ hồ sơ CRM và đồng bộ trạng thái hội thoại.',
+                },
+              ],
+            }
+          })
+          setCustomersList(mapped)
+          setSelectedCustomerId(mapped[0].id)
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }
+
+  useEffect(() => {
+    loadCustomers()
+  }, [scopeBrand, scopePageId])
+
+  useEffect(() => {
+    if (selectedCustomerId && selectedCustomerId.startsWith('c_')) {
+      api.getCustomerDetail(selectedCustomerId).then((res: any) => {
+        if (res?.ok) {
+          setCustomerDetail(res)
+        }
+      }).catch(() => {})
+    }
+  }, [selectedCustomerId])
+
+  const handlePollNow = async () => {
+    setIsPolling(true)
+    setPollNotice('Đang kéo khách hàng & tương tác mới nhất từ Fanpage...')
+    try {
+      await api.pollNow()
+      setPollNotice('Đã đồng bộ thành công!')
+      loadCustomers()
+      setTimeout(() => setPollNotice(null), 3000)
+    } catch (err: any) {
+      setPollNotice(`Đồng bộ thất bại: ${err?.message || 'Lỗi mạng'}`)
+      setTimeout(() => setPollNotice(null), 3000)
+    } finally {
+      setIsPolling(false)
+    }
+  }
+
+  const handleExportCSV = () => {
+    const headers = ['ID', 'Tên khách hàng', 'SĐT', 'Khu vực / Fanpage', 'Nguồn', 'Trạng thái', 'Tag', 'Lần cuối']
+    const rows = filteredCustomers.map((c) => [
+      c.id,
+      `"${c.name}"`,
+      `"${c.phone}"`,
+      `"${c.area || ''}"`,
+      c.source,
+      c.status,
+      `"${c.tagsList?.join(', ') || ''}"`,
+      c.lastInteraction,
+    ])
+    const csvContent = '\uFEFF' + [headers.join(','), ...rows.map((r) => r.join(','))].join('\n')
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', `khach_hang_crm_${new Date().toISOString().slice(0, 10)}.csv`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
 
   const selectedCustomer =
-    mockCustomersList.find((c) => c.id === selectedCustomerId) || mockCustomersList[0]
+    customersList.find((c) => c.id === selectedCustomerId) || customersList[0] || mockCustomersList[0]
 
   const handleCopy = (text: string, label: string) => {
     navigator.clipboard.writeText(text)
@@ -306,7 +422,7 @@ export const Customers: React.FC = () => {
   }
 
   // Filter customers
-  const filteredCustomers = mockCustomersList.filter((c) => {
+  const filteredCustomers = customersList.filter((c) => {
     if (statusFilter !== 'all' && c.status !== statusFilter) return false
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase()
@@ -319,6 +435,12 @@ export const Customers: React.FC = () => {
     return true
   })
 
+  // Real KPIs calculations
+  const totalCustomersCount = customersList.length
+  const leadsWithPhoneCount = customersList.filter((c) => c.phone && c.phone !== 'Chưa có SĐT').length
+  const consultingCount = customersList.filter((c) => c.status === 'Đang tư vấn').length
+  const boughtCount = customersList.filter((c) => c.status === 'Đã mua' || c.status === 'Lead nóng').length
+
   return (
     <div className="space-y-5 animate-fade-in">
       {/* ================= HEADER & SEARCH / FILTER TOOLBAR ================= */}
@@ -326,12 +448,30 @@ export const Customers: React.FC = () => {
         <div>
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Khách hàng CRM</h1>
           <p className="text-xs text-slate-500 mt-0.5">
-            Quản lý hồ sơ khách hàng, lead và lịch sử tương tác đa kênh.
+            Quản lý hồ sơ khách hàng thật đồng bộ trực tiếp từ Fanpage ({totalCustomersCount} khách hàng).
           </p>
+          {pollNotice && (
+            <div className="mt-1 text-xs font-semibold text-blue-600 bg-blue-50 border border-blue-200 px-2.5 py-0.5 rounded-lg inline-flex items-center gap-1.5 animate-fade-in">
+              <RefreshCw className={`w-3 h-3 ${isPolling ? 'animate-spin' : ''}`} />
+              <span>{pollNotice}</span>
+            </div>
+          )}
         </div>
 
         {/* Controls Toolbar */}
         <div className="flex flex-wrap items-center gap-2">
+          {/* Sync Fanpage Button */}
+          <button
+            type="button"
+            onClick={handlePollNow}
+            disabled={isPolling}
+            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-sm shadow-blue-200 disabled:opacity-60 cursor-pointer"
+            title="Đồng bộ khách hàng và tin nhắn mới nhất trực tiếp từ Facebook Fanpage"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isPolling ? 'animate-spin' : ''}`} />
+            <span>{isPolling ? 'Đang kéo...' : 'Đồng bộ Fanpage'}</span>
+          </button>
+
           {/* Search box */}
           <div className="relative w-64 sm:w-72">
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -368,46 +508,14 @@ export const Customers: React.FC = () => {
             ))}
           </div>
 
-          {/* Brand select */}
-          <div className="relative">
-            <select className="appearance-none bg-white border border-slate-200 text-slate-700 rounded-xl px-3 py-1.5 pr-7 text-xs font-medium hover:bg-slate-50 shadow-2xs focus:outline-none cursor-pointer">
-              <option>Tất cả thương hiệu</option>
-              <option>Nhóm Game BSN</option>
-              <option>Royce Shop</option>
-            </select>
-            <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
-          </div>
-
-          {/* Source select */}
-          <div className="relative">
-            <select className="appearance-none bg-white border border-slate-200 text-slate-700 rounded-xl px-3 py-1.5 pr-7 text-xs font-medium hover:bg-slate-50 shadow-2xs focus:outline-none cursor-pointer">
-              <option>Tất cả nguồn</option>
-              <option>Facebook</option>
-              <option>Messenger</option>
-              <option>TikTok</option>
-              <option>Website</option>
-            </select>
-            <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
-          </div>
-
-          {/* Export Excel */}
+          {/* Export Excel / CSV */}
           <button
             type="button"
-            onClick={() => alert('Đang xuất danh sách khách hàng ra Excel...')}
-            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-xs font-semibold hover:bg-slate-50 shadow-2xs transition-colors"
+            onClick={handleExportCSV}
+            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-xs font-semibold hover:bg-slate-50 shadow-2xs transition-colors cursor-pointer"
           >
             <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
-            <span>Xuất Excel</span>
-          </button>
-
-          {/* + Tạo khách hàng */}
-          <button
-            type="button"
-            onClick={() => alert('Mở form tạo hồ sơ khách hàng mới')}
-            className="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-sm shadow-blue-200"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>Tạo khách hàng</span>
+            <span>Xuất CSV</span>
           </button>
         </div>
       </div>
@@ -418,10 +526,9 @@ export const Customers: React.FC = () => {
         <div className="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-2xs flex items-center justify-between">
           <div>
             <span className="text-xs text-slate-500 font-medium">Tổng khách hàng</span>
-            <div className="text-2xl font-black text-slate-900 mt-0.5">582</div>
+            <div className="text-2xl font-black text-slate-900 mt-0.5">{totalCustomersCount}</div>
             <div className="flex items-center space-x-1 text-[11px] text-emerald-600 font-semibold mt-1">
-              <span>↑ 12%</span>
-              <span className="text-slate-400 font-normal">so với tháng trước</span>
+              <span>Đồng bộ từ Fanpage</span>
             </div>
           </div>
           <div className="w-11 h-11 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center">
@@ -433,10 +540,9 @@ export const Customers: React.FC = () => {
         <div className="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-2xs flex items-center justify-between">
           <div>
             <span className="text-xs text-slate-500 font-medium">Lead có SĐT</span>
-            <div className="text-2xl font-black text-slate-900 mt-0.5">431</div>
+            <div className="text-2xl font-black text-slate-900 mt-0.5">{leadsWithPhoneCount}</div>
             <div className="flex items-center space-x-1 text-[11px] text-emerald-600 font-semibold mt-1">
-              <span>↑ 8%</span>
-              <span className="text-slate-400 font-normal">so với tháng trước</span>
+              <span>Đã thu thập SĐT</span>
             </div>
           </div>
           <div className="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
@@ -448,10 +554,9 @@ export const Customers: React.FC = () => {
         <div className="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-2xs flex items-center justify-between">
           <div>
             <span className="text-xs text-slate-500 font-medium">Đang tư vấn</span>
-            <div className="text-2xl font-black text-slate-900 mt-0.5">96</div>
-            <div className="flex items-center space-x-1 text-[11px] text-emerald-600 font-semibold mt-1">
-              <span>↑ 24%</span>
-              <span className="text-slate-400 font-normal">so với tháng trước</span>
+            <div className="text-2xl font-black text-slate-900 mt-0.5">{consultingCount}</div>
+            <div className="flex items-center space-x-1 text-[11px] text-orange-600 font-semibold mt-1">
+              <span>Hội thoại đang mở</span>
             </div>
           </div>
           <div className="w-11 h-11 rounded-2xl bg-orange-50 text-orange-600 flex items-center justify-center">
@@ -459,14 +564,13 @@ export const Customers: React.FC = () => {
           </div>
         </div>
 
-        {/* Card 4: Đã mua */}
+        {/* Card 4: Lead nóng / Đã mua */}
         <div className="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-2xs flex items-center justify-between">
           <div>
-            <span className="text-xs text-slate-500 font-medium">Đã mua</span>
-            <div className="text-2xl font-black text-slate-900 mt-0.5">156</div>
-            <div className="flex items-center space-x-1 text-[11px] text-emerald-600 font-semibold mt-1">
-              <span>↑ 18%</span>
-              <span className="text-slate-400 font-normal">so với tháng trước</span>
+            <span className="text-xs text-slate-500 font-medium">Lead nóng & Đã mua</span>
+            <div className="text-2xl font-black text-slate-900 mt-0.5">{boughtCount}</div>
+            <div className="flex items-center space-x-1 text-[11px] text-teal-600 font-semibold mt-1">
+              <span>Cần chăm sóc chốt đơn</span>
             </div>
           </div>
           <div className="w-11 h-11 rounded-2xl bg-teal-50 text-teal-600 flex items-center justify-center">
@@ -587,29 +691,13 @@ export const Customers: React.FC = () => {
 
           {/* Pagination Footer */}
           <div className="flex items-center justify-between pt-3 border-t border-slate-100 text-xs text-slate-500 mt-2">
-            <span>Hiển thị 1 - 10 trong 582 khách hàng</span>
+            <span>Hiển thị {filteredCustomers.length > 0 ? 1 : 0} - {filteredCustomers.length} trong {customersList.length} khách hàng</span>
             <div className="flex items-center space-x-1">
               <button type="button" className="p-1 rounded hover:bg-slate-100 text-slate-400">
                 <ChevronLeft className="w-3.5 h-3.5" />
               </button>
               <button type="button" className="w-6 h-6 rounded bg-blue-600 text-white font-bold text-xs flex items-center justify-center">
                 1
-              </button>
-              <button type="button" className="w-6 h-6 rounded hover:bg-slate-100 text-xs">
-                2
-              </button>
-              <button type="button" className="w-6 h-6 rounded hover:bg-slate-100 text-xs">
-                3
-              </button>
-              <button type="button" className="w-6 h-6 rounded hover:bg-slate-100 text-xs">
-                4
-              </button>
-              <button type="button" className="w-6 h-6 rounded hover:bg-slate-100 text-xs">
-                5
-              </button>
-              <span className="text-slate-400 px-1">...</span>
-              <button type="button" className="w-6 h-6 rounded hover:bg-slate-100 text-xs">
-                59
               </button>
               <button type="button" className="p-1 rounded hover:bg-slate-100 text-slate-400">
                 <ChevronRight className="w-3.5 h-3.5" />
@@ -952,7 +1040,7 @@ export const Customers: React.FC = () => {
                   />
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                  <span className="text-base font-black text-slate-900 leading-none">582</span>
+                  <span className="text-base font-black text-slate-900 leading-none">{totalCustomersCount}</span>
                   <span className="text-[9px] text-slate-400 font-medium mt-0.5">khách hàng</span>
                 </div>
               </div>
@@ -960,28 +1048,20 @@ export const Customers: React.FC = () => {
               {/* Legend List */}
               <div className="space-y-1 text-[11px] text-slate-600 pl-2">
                 <div className="flex items-center space-x-1.5">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
-                  <span>Đã mua: <strong>156 (26%)</strong></span>
+                  <span className="w-2 h-2 rounded-full bg-orange-500 shrink-0" />
+                  <span>Lead nóng: <strong>{boughtCount} ({totalCustomersCount ? Math.round((boughtCount / totalCustomersCount) * 100) : 0}%)</strong></span>
                 </div>
                 <div className="flex items-center space-x-1.5">
                   <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0" />
-                  <span>Đang tư vấn: <strong>96 (16%)</strong></span>
+                  <span>Đang tư vấn: <strong>{consultingCount} ({totalCustomersCount ? Math.round((consultingCount / totalCustomersCount) * 100) : 0}%)</strong></span>
                 </div>
                 <div className="flex items-center space-x-1.5">
-                  <span className="w-2 h-2 rounded-full bg-orange-500 shrink-0" />
-                  <span>Lead nóng: <strong>88 (15%)</strong></span>
-                </div>
-                <div className="flex items-center space-x-1.5">
-                  <span className="w-2 h-2 rounded-full bg-cyan-500 shrink-0" />
-                  <span>Khách mới: <strong>142 (24%)</strong></span>
-                </div>
-                <div className="flex items-center space-x-1.5">
-                  <span className="w-2 h-2 rounded-full bg-yellow-500 shrink-0" />
-                  <span>Khiếu nại: <strong>36 (6%)</strong></span>
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                  <span>Có SĐT: <strong>{leadsWithPhoneCount} ({totalCustomersCount ? Math.round((leadsWithPhoneCount / totalCustomersCount) * 100) : 0}%)</strong></span>
                 </div>
                 <div className="flex items-center space-x-1.5">
                   <span className="w-2 h-2 rounded-full bg-slate-400 shrink-0" />
-                  <span>Khác: <strong>64 (11%)</strong></span>
+                  <span>Khác: <strong>{Math.max(0, totalCustomersCount - boughtCount - consultingCount)}</strong></span>
                 </div>
               </div>
             </div>
@@ -1063,51 +1143,11 @@ export const Customers: React.FC = () => {
             </div>
 
             <div className="space-y-2.5">
-              {[
-                {
-                  name: 'Trần Thị Mai',
-                  avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=80&auto=format&fit=crop&q=80',
-                  time: '09:00',
-                  note: 'Khách đã xem báo giá, cần follow up',
-                  tag: 'Lead nóng',
-                  tagColor: 'bg-rose-50 text-rose-600 border-rose-200',
-                },
-                {
-                  name: 'Lê Hoàng Nam',
-                  avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&auto=format&fit=crop&q=80',
-                  time: '10:30',
-                  note: 'Hẹn tư vấn qua điện thoại',
-                  tag: 'Đang tư vấn',
-                  tagColor: 'bg-blue-50 text-blue-600 border-blue-200',
-                },
-                {
-                  name: 'Phạm Minh Tú',
-                  avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&auto=format&fit=crop&q=80',
-                  time: '14:00',
-                  note: 'Chưa phản hồi sau 1 ngày',
-                  tag: 'Quan tâm',
-                  tagColor: 'bg-amber-50 text-amber-600 border-amber-200',
-                },
-                {
-                  name: 'Hoàng Anh Khoa',
-                  avatar: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=80&auto=format&fit=crop&q=80',
-                  time: '15:30',
-                  note: 'Gửi thêm thông tin sản phẩm',
-                  tag: 'Khách mới',
-                  tagColor: 'bg-cyan-50 text-cyan-600 border-cyan-200',
-                },
-                {
-                  name: 'Đặng Thu Trang',
-                  avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&auto=format&fit=crop&q=80',
-                  time: '16:00',
-                  note: 'Nhắc lịch hẹn demo',
-                  tag: 'Tư vấn',
-                  tagColor: 'bg-blue-50 text-blue-600 border-blue-200',
-                },
-              ].map((item, idx) => (
+              {customersList.slice(0, 5).map((item) => (
                 <div
-                  key={idx}
-                  className="flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 transition-colors border border-transparent hover:border-slate-100"
+                  key={item.id}
+                  onClick={() => setSelectedCustomerId(item.id)}
+                  className="flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 transition-colors border border-transparent hover:border-slate-100 cursor-pointer"
                 >
                   <div className="flex items-center space-x-2">
                     <img
@@ -1120,19 +1160,22 @@ export const Customers: React.FC = () => {
                         <span className="text-xs font-bold text-slate-900 truncate">
                           {item.name}
                         </span>
-                        <span className="text-[10px] text-slate-400 font-mono">{item.time}</span>
+                        <span className="text-[10px] text-slate-400 font-mono">{item.lastInteraction || 'Hôm nay'}</span>
                       </div>
-                      <p className="text-[10px] text-slate-400 truncate">{item.note}</p>
+                      <p className="text-[10px] text-slate-400 truncate">{item.snippet || 'Quan tâm tự vấn'}</p>
                     </div>
                   </div>
 
                   <div className="flex items-center space-x-1.5 shrink-0">
-                    <span className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${item.tagColor}`}>
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${tagColors[item.tagColor] || tagColors.blue}`}>
                       {item.tag}
                     </span>
                     <button
                       type="button"
-                      onClick={() => alert(`Đang kết nối cuộc gọi đến ${item.name}...`)}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        alert(`Đang kết nối cuộc gọi đến ${item.name} (${item.phone})...`)
+                      }}
                       className="p-1 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors"
                       title="Gọi khách"
                     >

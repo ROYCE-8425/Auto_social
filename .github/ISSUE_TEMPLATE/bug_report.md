@@ -1,12 +1,12 @@
 ---
 name: Báo lỗi (Bug Report)
-about: Tạo báo cáo giúp cải thiện Javis Ops
+about: Tạo báo cáo giúp cải thiện Sèo Trum / Auto_social
 title: '[BUG] '
 labels: bug
 assignees: ''
 ---
 
-> ⚠️ **CẢNH BÁO BẢO MẬT:** Tuyệt đối **KHÔNG** dán token Facebook (`page_tokens.json`), PostPeer API Key, Gemini/OpenAI key, hay mật khẩu vào issue này. Nếu phát hiện lỗ hổng bảo mật, vui lòng xem [SECURITY.md](../../SECURITY.md).
+> ⚠️ **CẢNH BÁO BẢO MẬT:** Tuyệt đối **KHÔNG** dán token Facebook (`page_tokens.json`), PostPeer API Key, Gemini/OpenAI key, file state/database hoặc mật khẩu vào issue này. Nếu phát hiện lỗ hổng bảo mật, vui lòng xem [SECURITY.md](../../SECURITY.md).
 
 ## Mô tả lỗi
 Mô tả rõ ràng và ngắn gọn về lỗi bạn gặp phải.

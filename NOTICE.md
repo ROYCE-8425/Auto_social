@@ -3,6 +3,7 @@
 Dự án **Sèo Trum** (repository: `ROYCE-8425/Auto_social`) được phát triển dựa trên nền tảng mã nguồn mở **Javis OS** dưới giấy phép MIT License:
 - Upstream project: [Javis OS](https://github.com/blogminhquy/javis-os)
 - Copyright (c) 2026 Nguyễn Minh Quý (blogminhquy)
+- License: MIT License. Bản sao giấy phép đầy đủ nằm trong [LICENSE](LICENSE).
 
 ---
 
@@ -37,4 +38,5 @@ Dự án **Sèo Trum** kế thừa kiến trúc nhân tác tử (AI Agentic Kern
 
 - Toàn bộ mã nguồn nền tảng Javis OS: Copyright (c) 2026 Nguyễn Minh Quý (blogminhquy), MIT License.
 - Toàn bộ lớp mở rộng nghiệp vụ Sèo Trum: Copyright (c) 2026 Nhóm phát triển Sèo Trum (ROYCE-8425/Auto_social), MIT License.
+- Khi phân phối bản sửa đổi, vui lòng giữ lại [LICENSE](LICENSE), file NOTICE này và phần ghi công upstream trong README.
 - Xem chi tiết tại [LICENSE](LICENSE).

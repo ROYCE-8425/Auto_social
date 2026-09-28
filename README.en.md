@@ -10,7 +10,7 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-Async-009688.svg)](https://fastapi.tiangolo.com/)
 [![React: 18](https://img.shields.io/badge/React-18-61dafb.svg)](https://react.dev/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ed.svg)](https://www.docker.com/)
-[![CI Status](https://img.shields.io/badge/CI-Passing-brightgreen.svg)](.github/workflows/ci.yml)
+[![CI Workflow](https://img.shields.io/badge/CI-GitHub_Actions-brightgreen.svg)](.github/workflows/ci.yml)
 
 *[Tiếng Việt](README.md) · **English***
 
@@ -22,6 +22,9 @@
 > **Foundation & MIT License Statement:**  
 > **Sèo Trum** is built on the open-source agentic AI foundation **[Javis OS](https://github.com/blogminhquy/javis-os)** (Copyright © 2026 Nguyễn Minh Quý - blogminhquy, MIT License).  
 > The Sèo Trum team inherits the core agentic runtime and Model Context Protocol (MCP Hub) from Javis OS, while designing and building the complete social business layer: **Social Channels Hub, TikTok Gateway Automation, Human-in-the-Loop Unified Inbox, Auto Lead Scoring CRM, and the RBAC Operations Portal (`/ops`)**.
+
+> [!IMPORTANT]
+> **Open-source status:** This repository is published as an independent MIT-licensed open-source project with upstream attribution to Javis OS in [NOTICE.md](NOTICE.md). Contributors may fork, run, file Issues, and open Pull Requests through [CONTRIBUTING.md](CONTRIBUTING.md). Do not commit live business data, tokens, API keys, or personal runtime state.
 
 ---
 
@@ -194,6 +197,14 @@ chmod +x install.sh
 
 ---
 
+## 🔒 Security & Data Safety
+
+- Keep customer data, conversation logs, Brand Kits, API keys, and runtime state out of public commits.
+- Use `.env`, the Javis secure settings flow, or deployment secrets for credentials.
+- Review [docs/OPEN_SOURCE_CHECKLIST.md](docs/OPEN_SOURCE_CHECKLIST.md) before publishing a release, demo package, or contest submission.
+
+---
+
 ## 📜 Attribution & License
 
 This project is licensed under the **MIT License**:
@@ -206,6 +217,13 @@ This project is licensed under the **MIT License**:
   Copyright (c) 2026 Sèo Trum Contributors (`ROYCE-8425/Auto_social`)
 
 See [LICENSE](LICENSE) and [NOTICE.md](NOTICE.md) for full legal text.
+
+## 🤝 Community & Contribution
+
+- Contribution guide: [CONTRIBUTING.md](CONTRIBUTING.md)
+- Private security reporting: [SECURITY.md](SECURITY.md)
+- Code of conduct: [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
+- Credits: [AUTHORS.md](AUTHORS.md)
 
 ---
 

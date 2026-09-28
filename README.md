@@ -10,7 +10,7 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-Async-009688.svg)](https://fastapi.tiangolo.com/)
 [![React: 18](https://img.shields.io/badge/React-18-61dafb.svg)](https://react.dev/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ed.svg)](https://www.docker.com/)
-[![CI Status](https://img.shields.io/badge/CI-Passing-brightgreen.svg)](.github/workflows/ci.yml)
+[![CI Workflow](https://img.shields.io/badge/CI-GitHub_Actions-brightgreen.svg)](.github/workflows/ci.yml)
 
 ***Tiếng Việt** · [English](README.en.md)*
 
@@ -22,6 +22,9 @@
 > **Tuyên bố Nền tảng & Giấy phép MIT:**  
 > Dự án **Sèo Trum** được phát triển trên nền tảng tác tử AI mã nguồn mở **[Javis OS](https://github.com/blogminhquy/javis-os)** (Bản quyền © 2026 Nguyễn Minh Quý - blogminhquy, giấy phép MIT).  
 > Nhóm tác giả Sèo Trum kế thừa nhân xử lý tác tử và cổng kết nối công cụ (MCP Hub) của Javis OS, đồng thời thiết kế và phát triển mới hoàn toàn: **Hệ thống điều phối đa kênh (Social Channels Hub), Cổng xuất bản TikTok tự động, Hộp thư hợp nhất Human-in-the-Loop, CRM chấm điểm lead tự động và Cổng vận hành phân quyền RBAC (`/ops`)**.
+
+> [!IMPORTANT]
+> **Trạng thái mã nguồn mở:** Repo này được công bố như một dự án open source độc lập theo giấy phép MIT, có ghi công upstream Javis OS tại [NOTICE.md](NOTICE.md). Mọi người có thể fork, chạy thử, mở Issue/Pull Request theo [CONTRIBUTING.md](CONTRIBUTING.md). Không commit dữ liệu vận hành thật, token, API key hoặc file state cá nhân vào repo.
 
 ---
 
@@ -209,6 +212,8 @@ Sao chép `env.example` thành `.env` và điều chỉnh các thông số phù 
 - **Phòng chống tấn công Web:** Mặc định tích hợp bộ lọc chống tấn công CSRF, DNS-rebinding và giới hạn tần suất đăng nhập (Rate-limiting).
 - **Fail-Closed RBAC:** Tất cả các endpoint nghiệp vụ `/ops/*` đều bắt buộc xác thực phiên và kiểm tra quyền hạn trước khi trả dữ liệu.
 
+Trước khi public, release hoặc nộp bài dự thi, hãy rà lại [docs/OPEN_SOURCE_CHECKLIST.md](docs/OPEN_SOURCE_CHECKLIST.md).
+
 ---
 
 ## 🧪 Kiểm thử Tự động (Automated Testing)
@@ -242,6 +247,13 @@ Dự án phát hành dưới giấy phép mã nguồn mở **MIT License**:
   Copyright (c) 2026 Nhóm phát triển Sèo Trum (`ROYCE-8425/Auto_social`)
 
 Xem chi tiết điều khoản cấp phép tại [LICENSE](LICENSE) và [NOTICE.md](NOTICE.md).
+
+## 🤝 Cộng đồng & Đóng góp
+
+- Hướng dẫn đóng góp: [CONTRIBUTING.md](CONTRIBUTING.md)
+- Báo cáo bảo mật riêng tư: [SECURITY.md](SECURITY.md)
+- Quy tắc ứng xử: [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
+- Danh sách ghi công: [AUTHORS.md](AUTHORS.md)
 
 ---
 

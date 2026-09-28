@@ -1,6 +1,6 @@
 ---
 name: Đề xuất tính năng (Feature Request)
-about: Đề xuất ý tưởng hoặc cải tiến mới cho Javis Ops
+about: Đề xuất ý tưởng hoặc cải tiến mới cho Sèo Trum / Auto_social
 title: '[FEATURE] '
 labels: enhancement
 assignees: ''
