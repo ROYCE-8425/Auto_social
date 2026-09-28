@@ -35,7 +35,7 @@ import { useAuth } from '../lib/auth'
 import { useCareScope } from '../lib/scope'
 import { FacebookIcon, MessengerIcon, TikTokIcon, PlatformPill } from '../components/BrandIcons'
 
-interface MockCustomer {
+export interface CustomerItem {
   id: string
   name: string
   avatar: string
@@ -61,218 +61,21 @@ interface MockCustomer {
   }[]
 }
 
-const mockCustomersList: MockCustomer[] = [
-  {
-    id: 'c1',
-    name: 'Nguyễn Thị Hoa',
-    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=120&auto=format&fit=crop&q=80',
-    snippet: 'Sản phẩm này còn...',
-    phone: '0967 123 456',
-    source: 'Facebook',
-    tag: 'Game',
-    tagColor: 'blue',
-    status: 'Đang tư vấn',
-    statusColor: 'blue',
-    lastInteraction: '14:28',
-    fbId: '1000123456789',
-    area: 'Hà Nội',
-    createdDate: '10/04/2024 14:28',
-    notes: 'Khách quan tâm gói Game, cần tư vấn chi tiết và báo giá.',
-    tagsList: ['Game', 'VIP', 'Quan tâm'],
-    timeline: [
-      {
-        type: 'customer',
-        title: 'Khách hàng nhắn tin',
-        content: 'Sản phẩm này còn hàng không ạ? Mình muốn tư vấn thêm về gói Game.',
-      },
-      {
-        type: 'ai',
-        title: 'Javis AI phản hồi',
-        content: 'Đã gửi tin nhắn tự động giới thiệu sản phẩm và bảng giá.',
-        action: 'Xem nội dung',
-      },
-      {
-        type: 'staff',
-        title: 'Nhân viên Trần Văn Minh phản hồi',
-        content: 'Tư vấn chi tiết về gói Game, hẹn khách xem thêm ưu đãi.',
-      },
-      {
-        type: 'status',
-        title: 'Cập nhật trạng thái',
-        content: 'Chuyển từ Khách mới → Đang tư vấn bởi Trần Văn Minh',
-      },
-      {
-        type: 'note',
-        title: 'Thêm ghi chú',
-        content: 'Khách quan tâm, sẽ follow up lại vào ngày mai.',
-      },
-    ],
-  },
-  {
-    id: 'c2',
-    name: 'Trần Văn Minh',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80',
-    snippet: 'Cảm ơn shop nhé!',
-    phone: '0903 456 789',
-    source: 'Messenger',
-    tag: 'VIP',
-    tagColor: 'purple',
-    status: 'Đã mua',
-    statusColor: 'green',
-    lastInteraction: '13:46',
-    fbId: '1000987654321',
-    area: 'TP. Hồ Chí Minh',
-    createdDate: '08/04/2024 10:15',
-    notes: 'Khách hàng VIP, mua gói trọn năm. Đã hoàn tất thanh toán.',
-    tagsList: ['VIP', 'Đã mua', 'Trung thành'],
-  },
-  {
-    id: 'c3',
-    name: 'Lê Quang Huy',
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&auto=format&fit=crop&q=80',
-    snippet: 'Khi nào có hàng lại v...',
-    phone: 'Chưa có',
-    source: 'TikTok',
-    tag: 'Quan tâm',
-    tagColor: 'amber',
-    status: 'Lead nóng',
-    statusColor: 'rose',
-    lastInteraction: '11:20',
-    area: 'Đà Nẵng',
-    createdDate: '12/04/2024 09:30',
-    notes: 'Hỏi về đợt nhập hàng tiếp theo trên TikTok live.',
-    tagsList: ['Quan tâm', 'TikTok', 'Lead nóng'],
-  },
-  {
-    id: 'c4',
-    name: 'Phạm Thị Lan',
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&auto=format&fit=crop&q=80',
-    snippet: 'Dạ mình tư vấn thêm...',
-    phone: '0987 654 321',
-    source: 'Facebook',
-    tag: 'Tư vấn',
-    tagColor: 'blue',
-    status: 'Đang tư vấn',
-    statusColor: 'blue',
-    lastInteraction: '10:37',
-    fbId: '1000555666777',
-    area: 'Hải Phòng',
-    createdDate: '15/04/2024 14:10',
-    notes: 'Cần tư vấn đặt mua 2 tài khoản cùng lúc.',
-    tagsList: ['Tư vấn', 'Lead', 'Facebook'],
-  },
-  {
-    id: 'c5',
-    name: 'Hoàng Kim',
-    avatar: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=120&auto=format&fit=crop&q=80',
-    snippet: 'Shop có hỗ trợ đổi tr...',
-    phone: 'Chưa có',
-    source: 'Website',
-    tag: 'Cần hỗ trợ',
-    tagColor: 'rose',
-    status: 'Khiếu nại',
-    statusColor: 'amber',
-    lastInteraction: '09:12',
-    area: 'Cần Thơ',
-    createdDate: '18/04/2024 08:45',
-    notes: 'Hỏi chính sách đổi trả hàng sau khi mua.',
-    tagsList: ['Cần hỗ trợ', 'Khiếu nại'],
-  },
-  {
-    id: 'c6',
-    name: 'Đỗ Thu Hà',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80',
-    snippet: 'Mình ở quận nào vạ...',
-    phone: '0321 456 789',
-    source: 'Messenger',
-    tag: 'Game',
-    tagColor: 'blue',
-    status: 'Đang tư vấn',
-    statusColor: 'blue',
-    lastInteraction: 'Hôm qua',
-    area: 'Hà Nội',
-    createdDate: '19/04/2024 16:20',
-    notes: 'Hỏi địa chỉ cửa hàng gần nhất để qua trải nghiệm.',
-    tagsList: ['Game', 'Messenger'],
-  },
-  {
-    id: 'c7',
-    name: 'Nguyễn Anh Tuấn',
-    avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=120&auto=format&fit=crop&q=80',
-    snippet: 'Tư vấn gói bên mình...',
-    phone: '0868 111 222',
-    source: 'TikTok',
-    tag: 'Khách cũ',
-    tagColor: 'green',
-    status: 'Đã mua',
-    statusColor: 'green',
-    lastInteraction: 'Hôm qua',
-    area: 'Bình Dương',
-    createdDate: '11/03/2024 11:00',
-    notes: 'Khách cũ quay lại gia hạn gói dịch vụ.',
-    tagsList: ['Khách cũ', 'Đã mua'],
-  },
-  {
-    id: 'c8',
-    name: 'Trần Mai Phương',
-    avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=120&auto=format&fit=crop&q=80',
-    snippet: 'Cho mình hỏi về chi...',
-    phone: '0976 333 888',
-    source: 'Facebook',
-    tag: 'Quan tâm',
-    tagColor: 'amber',
-    status: 'Đang tư vấn',
-    statusColor: 'blue',
-    lastInteraction: '21/04',
-    area: 'Hà Nội',
-    createdDate: '21/04/2024 15:30',
-    notes: 'Hỏi chiết khấu khi mua số lượng lớn.',
-    tagsList: ['Quan tâm', 'Tư vấn'],
-  },
-  {
-    id: 'c9',
-    name: 'Bùi Văn Nam',
-    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=120&auto=format&fit=crop&q=80',
-    snippet: 'Có khuyến mãi khôn...',
-    phone: 'Chưa có',
-    source: 'Website',
-    tag: 'Tiềm năng',
-    tagColor: 'purple',
-    status: 'Lead nóng',
-    statusColor: 'rose',
-    lastInteraction: '21/04',
-    area: 'Nam Định',
-    createdDate: '21/04/2024 10:05',
-    notes: 'Khách tìm hiểu voucher giảm giá tuần này.',
-    tagsList: ['Tiềm năng', 'Website'],
-  },
-  {
-    id: 'c10',
-    name: 'Nguyễn Thị Hương',
-    avatar: 'https://images.unsplash.com/photo-1548142813-c348350df52b?w=120&auto=format&fit=crop&q=80',
-    snippet: 'Dạ mình nhận được r...',
-    phone: '0909 222 333',
-    source: 'Messenger',
-    tag: 'Khách cũ',
-    tagColor: 'green',
-    status: 'Đã mua',
-    statusColor: 'green',
-    lastInteraction: '20/04',
-    area: 'Đồng Nai',
-    createdDate: '01/04/2024 13:40',
-    notes: 'Đã nhận được mã code kích hoạt và xác nhận ok.',
-    tagsList: ['Khách cũ', 'Đã mua'],
-  },
-]
-
 export const Customers: React.FC = () => {
   const { role, can } = useAuth()
   const { scope, scopeBrand, scopePageId } = useCareScope()
-  const [customersList, setCustomersList] = useState<MockCustomer[]>(mockCustomersList)
-  const [selectedCustomerId, setSelectedCustomerId] = useState<string>('c1')
+  const [customersList, setCustomersList] = useState<CustomerItem[]>([])
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string>('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [copySuccess, setCopySuccess] = useState<string | null>(null)
+  const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'info' | 'error' } | null>(null)
+
+  const showToast = (text: string, type: 'success' | 'info' | 'error' = 'info') => {
+    setToastMessage({ text, type })
+    setTimeout(() => setToastMessage(null), 3000)
+  }
+
   const [loading, setLoading] = useState(false)
   const [isPolling, setIsPolling] = useState(false)
   const [pollNotice, setPollNotice] = useState<string | null>(null)
@@ -283,7 +86,7 @@ export const Customers: React.FC = () => {
     api.getCustomers({ brand: scopeBrand || undefined, page_id: scopePageId || undefined, limit: 100 })
       .then((res) => {
         if (res?.ok && res.customers && res.customers.length > 0) {
-          const mapped: MockCustomer[] = res.customers.map((c) => {
+          const mapped: CustomerItem[] = res.customers.map((c) => {
             const hasPhone = c.phones && c.phones.length > 0
             const isLead = c.tags?.includes('lead') || c.tags?.includes('hot')
             const isBought = c.tags?.includes('bought') || c.tags?.includes('paid')
@@ -328,10 +131,17 @@ export const Customers: React.FC = () => {
             }
           })
           setCustomersList(mapped)
-          setSelectedCustomerId(mapped[0].id)
+          setSelectedCustomerId((prev) => (mapped.some((m) => m.id === prev) ? prev : mapped[0]?.id || ''))
+        } else {
+          setCustomersList([])
+          setSelectedCustomerId('')
         }
       })
-      .catch(() => {})
+      .catch((err: any) => {
+        showToast(err?.message || 'Không thể tải danh sách khách hàng', 'error')
+        setCustomersList([])
+        setSelectedCustomerId('')
+      })
       .finally(() => setLoading(false))
   }
 
@@ -365,6 +175,22 @@ export const Customers: React.FC = () => {
     }
   }
 
+  const handleBackfill = async () => {
+    setIsPolling(true)
+    setPollNotice('Đang tổng hợp hồ sơ CRM từ tất cả sự kiện Fanpage...')
+    try {
+      const res = await api.backfillCustomers()
+      setPollNotice(`Đã cập nhật ${res.customers_created || 0} hồ sơ khách hàng mới!`)
+      loadCustomers()
+      setTimeout(() => setPollNotice(null), 3000)
+    } catch (err: any) {
+      setPollNotice(`Backfill lỗi: ${err?.message || 'Lỗi mạng'}`)
+      setTimeout(() => setPollNotice(null), 3000)
+    } finally {
+      setIsPolling(false)
+    }
+  }
+
   const handleExportCSV = () => {
     const headers = ['ID', 'Tên khách hàng', 'SĐT', 'Khu vực / Fanpage', 'Nguồn', 'Trạng thái', 'Tag', 'Lần cuối']
     const rows = filteredCustomers.map((c) => [
@@ -388,14 +214,15 @@ export const Customers: React.FC = () => {
     document.body.removeChild(link)
   }
 
-  const selectedCustomer =
-    customersList.find((c) => c.id === selectedCustomerId) || customersList[0] || mockCustomersList[0]
+  const selectedCustomer: CustomerItem | null =
+    customersList.find((c) => c.id === selectedCustomerId) || customersList[0] || null
 
   const handleCopy = (text: string, label: string) => {
     navigator.clipboard.writeText(text)
     setCopySuccess(label)
     setTimeout(() => setCopySuccess(null), 2000)
   }
+
 
   // Source badges config
   const sourceIcons = {
@@ -472,6 +299,37 @@ export const Customers: React.FC = () => {
             <span>{isPolling ? 'Đang kéo...' : 'Đồng bộ Fanpage'}</span>
           </button>
 
+          {/* Backfill CRM Button */}
+          <button
+            type="button"
+            onClick={handleBackfill}
+            disabled={isPolling}
+            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold transition-all shadow-2xs disabled:opacity-60 cursor-pointer"
+            title="Quét lại toàn bộ lịch sử tin nhắn & bình luận để cập nhật hồ sơ CRM"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+            <span>Tổng hợp CRM</span>
+          </button>
+        </div>
+      </div>
+
+      {toastMessage && (
+        <div className={`p-3 rounded-xl text-xs font-semibold flex items-center justify-between animate-fade-in ${
+          toastMessage.type === 'error'
+            ? 'bg-rose-50 text-rose-700 border border-rose-200'
+            : toastMessage.type === 'success'
+            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+            : 'bg-blue-50 text-blue-700 border border-blue-200'
+        }`}>
+          <span>{toastMessage.text}</span>
+          <button type="button" onClick={() => setToastMessage(null)} className="text-slate-400 hover:text-slate-600 ml-2 cursor-pointer font-bold">×</button>
+        </div>
+      )}
+
+      {/* Toolbar filters */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+
+
           {/* Search box */}
           <div className="relative w-64 sm:w-72">
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -518,7 +376,6 @@ export const Customers: React.FC = () => {
             <span>Xuất CSV</span>
           </button>
         </div>
-      </div>
 
       {/* ================= 4 KPI CARDS ================= */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
@@ -708,248 +565,253 @@ export const Customers: React.FC = () => {
 
         {/* ================= COL 2: HỒ SƠ KHÁCH HÀNG (4 cols) ================= */}
         <div className="xl:col-span-4 bg-white border border-slate-200/80 rounded-2xl p-4 shadow-2xs space-y-4 min-h-[780px]">
-          {/* Header */}
-          <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-            <h3 className="text-sm font-bold text-slate-900">Hồ sơ khách hàng</h3>
-            <div className="flex items-center space-x-1.5">
-              <button
-                type="button"
-                className="flex items-center space-x-1 px-2.5 py-1 rounded-lg border border-slate-200 text-slate-700 text-xs font-semibold hover:bg-slate-50 transition-colors"
-              >
-                <Pencil className="w-3 h-3 text-slate-400" />
-                <span>Chỉnh sửa</span>
-              </button>
-              <button type="button" className="p-1 text-slate-400 hover:text-slate-700 rounded-lg">
-                <MoreVertical className="w-4 h-4" />
-              </button>
+          {!selectedCustomer ? (
+            <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-center p-6 text-slate-400">
+              <Users className="w-12 h-12 text-slate-300 mb-3" />
+              <h4 className="text-sm font-bold text-slate-700">Chưa có khách hàng</h4>
+              <p className="text-xs text-slate-400 mt-1 max-w-xs">
+                Chọn một khách hàng từ danh sách bên trái hoặc bấm "Đồng bộ Fanpage" để tải dữ liệu.
+              </p>
             </div>
-          </div>
-
-          {/* Customer Avatar & Hero */}
-          <div className="flex items-center space-x-3">
-            <img
-              src={selectedCustomer.avatar}
-              alt={selectedCustomer.name}
-              className="w-12 h-12 rounded-full object-cover ring-2 ring-white shadow-2xs"
-            />
-            <div>
-              <div className="flex items-center space-x-1.5">
-                <h4 className="text-base font-bold text-slate-900 leading-tight">
-                  {selectedCustomer.name}
-                </h4>
-                <span className="px-2 py-0.5 rounded bg-rose-50 text-rose-600 border border-rose-200 text-[10px] font-semibold">
-                  Lead nóng
-                </span>
-                <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-600 border border-blue-200 text-[10px] font-semibold">
-                  Khách mới
-                </span>
-              </div>
-              <div className="flex items-center space-x-1 text-xs text-slate-400 font-mono mt-0.5">
-                <span>ID Facebook: {selectedCustomer.fbId || '1000123456789'}</span>
-                <button
-                  type="button"
-                  onClick={() => handleCopy(selectedCustomer.fbId || '1000123456789', 'FB ID')}
-                  className="hover:text-blue-600 p-0.5"
-                >
-                  <Copy className="w-3 h-3" />
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Customer Detail Fields */}
-          <div className="space-y-2 text-xs text-slate-600 pt-1 border-t border-slate-100">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <Phone className="w-3.5 h-3.5 text-slate-400" />
-                <span className="text-slate-500">SĐT:</span>
-                <span className="font-semibold text-slate-900">{selectedCustomer.phone}</span>
-              </div>
-              <button
-                type="button"
-                onClick={() => handleCopy(selectedCustomer.phone, 'SĐT')}
-                className="text-slate-400 hover:text-blue-600 p-1"
-              >
-                <Copy className="w-3.5 h-3.5" />
-              </button>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <span className="text-slate-400 font-bold w-3.5 text-center">@</span>
-              <span className="text-slate-500">Nguồn đến:</span>
-              <span className="font-semibold text-slate-900">{selectedCustomer.source}</span>
-              <span className="text-blue-600 text-[11px] cursor-pointer hover:underline">
-                Xem trang
-              </span>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <Building2 className="w-3.5 h-3.5 text-slate-400" />
-              <span className="text-slate-500">Khu vực:</span>
-              <span className="font-semibold text-slate-900">{selectedCustomer.area || 'Hà Nội'}</span>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <Calendar className="w-3.5 h-3.5 text-slate-400" />
-              <span className="text-slate-500">Ngày tạo:</span>
-              <span className="font-semibold text-slate-900">
-                {selectedCustomer.createdDate || '10/04/2024 14:28'}
-              </span>
-            </div>
-
-            <div className="pt-1">
-              <span className="text-slate-500 block mb-0.5">Ghi chú:</span>
-              <div className="bg-slate-50 p-2 rounded-xl text-slate-700 leading-relaxed border border-slate-100 text-[11px]">
-                {selectedCustomer.notes || 'Khách quan tâm gói Game, cần tư vấn chi tiết và báo giá.'}
-              </div>
-            </div>
-
-            {/* Tags */}
-            <div className="pt-2">
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-slate-500 font-medium">Tag khách hàng:</span>
-                <button
-                  type="button"
-                  className="text-blue-600 font-semibold text-[11px] hover:text-blue-700 flex items-center space-x-0.5"
-                >
-                  <Plus className="w-3 h-3" />
-                  <span>Thêm tag</span>
-                </button>
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                {(selectedCustomer.tagsList || ['Game', 'VIP', 'Quan tâm']).map((tg) => (
-                  <span
-                    key={tg}
-                    className="px-2 py-0.5 rounded text-xs font-semibold bg-blue-50 text-blue-600 border border-blue-200"
+          ) : (
+            <>
+              {/* Header */}
+              <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                <h3 className="text-sm font-bold text-slate-900">Hồ sơ khách hàng</h3>
+                <div className="flex items-center space-x-1.5">
+                  <button
+                    type="button"
+                    onClick={() => showToast(`Đang mở chỉnh sửa hồ sơ ${selectedCustomer.name}`, 'info')}
+                    className="flex items-center space-x-1 px-2.5 py-1 rounded-lg border border-slate-200 text-slate-700 text-xs font-semibold hover:bg-slate-50 transition-colors"
                   >
-                    {tg}
-                  </span>
-                ))}
+                    <Pencil className="w-3 h-3 text-slate-400" />
+                    <span>Chỉnh sửa</span>
+                  </button>
+                  {can('delete_crm') && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (confirm(`Bạn có chắc chắn muốn xóa khách hàng ${selectedCustomer.name}?`)) {
+                          api.deleteCustomer(selectedCustomer.id)
+                            .then(() => {
+                              showToast(`Đã xóa khách hàng ${selectedCustomer.name}`, 'success')
+                              loadCustomers()
+                            })
+                            .catch((err) => showToast(err?.message || 'Lỗi khi xóa', 'error'))
+                        }
+                      }}
+                      className="px-2 py-1 rounded-lg border border-rose-200 text-rose-600 text-xs font-semibold hover:bg-rose-50 transition-colors"
+                      title="Xóa khách hàng"
+                    >
+                      Xóa
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
 
-            {/* Status Dropdown */}
-            <div className="pt-2">
-              <span className="text-slate-500 font-medium block mb-1">Trạng thái khách hàng:</span>
-              <select className="w-full bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-semibold text-blue-700 focus:outline-none">
-                <option>● Đang tư vấn</option>
-                <option>● Lead nóng</option>
-                <option>● Đã mua</option>
-                <option>● Khiếu nại</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Quick Action Buttons */}
-          <div className="grid grid-cols-4 gap-1.5 pt-2 border-t border-slate-100">
-            <button
-              type="button"
-              onClick={() => alert(`Đang gọi đến số ${selectedCustomer.phone}...`)}
-              className="flex items-center justify-center space-x-1 py-2 px-1 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold shadow-sm transition-colors"
-            >
-              <Phone className="w-3.5 h-3.5" />
-              <span>Gọi khách</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => alert('Chuyển sang khung chat với khách...')}
-              className="flex items-center justify-center space-x-1 py-2 px-1 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-[11px] font-semibold transition-colors shadow-2xs"
-            >
-              <MessageCircle className="w-3.5 h-3.5 text-blue-600" />
-              <span>Nhắn tin</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => alert('Đã tạo việc cần làm trên Kanban!')}
-              className="flex items-center justify-center space-x-1 py-2 px-1 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-[11px] font-semibold transition-colors shadow-2xs"
-            >
-              <CheckSquare className="w-3.5 h-3.5 text-blue-600" />
-              <span>Tạo việc</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => alert('Gắn tag mới')}
-              className="flex items-center justify-center space-x-1 py-2 px-1 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-[11px] font-semibold transition-colors shadow-2xs"
-            >
-              <Tag className="w-3.5 h-3.5 text-blue-600" />
-              <span>Gắn tag</span>
-            </button>
-          </div>
-
-          {/* Timeline: Lịch sử tương tác */}
-          <div className="pt-2 border-t border-slate-100 space-y-2.5">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-900">Lịch sử tương tác</span>
-              <button
-                type="button"
-                className="text-[11px] font-medium text-slate-500 hover:text-slate-800 flex items-center space-x-0.5"
-              >
-                <span>Tất cả</span>
-                <ChevronDown className="w-3 h-3 text-slate-400" />
-              </button>
-            </div>
-
-            <div className="space-y-3 relative pl-4 border-l-2 border-slate-100 text-xs">
-              {(selectedCustomer.timeline || [
-                {
-                  type: 'customer',
-                  title: 'Khách hàng nhắn tin',
-                  content: 'Sản phẩm này còn hàng không ạ? Mình muốn tư vấn thêm về gói Game.',
-                },
-                {
-                  type: 'ai',
-                  title: 'Javis AI phản hồi',
-                  content: 'Đã gửi tin nhắn tự động giới thiệu sản phẩm và bảng giá.',
-                  action: 'Xem nội dung',
-                },
-                {
-                  type: 'staff',
-                  title: 'Nhân viên Trần Văn Minh phản hồi',
-                  content: 'Tư vấn chi tiết về gói Game, hẹn khách xem thêm ưu đãi.',
-                },
-                {
-                  type: 'status',
-                  title: 'Cập nhật trạng thái',
-                  content: 'Chuyển từ Khách mới → Đang tư vấn bởi Trần Văn Minh',
-                },
-                {
-                  type: 'note',
-                  title: 'Thêm ghi chú',
-                  content: 'Khách quan tâm, sẽ follow up lại vào ngày mai.',
-                },
-              ]).map((event, idx) => (
-                <div key={idx} className="relative group">
-                  <span
-                    className={`absolute -left-[21px] top-0.5 w-3 h-3 rounded-full ring-4 ring-white ${
-                      event.type === 'customer'
-                        ? 'bg-blue-500'
-                        : event.type === 'ai'
-                        ? 'bg-purple-500'
-                        : event.type === 'staff'
-                        ? 'bg-emerald-500'
-                        : event.type === 'status'
-                        ? 'bg-teal-500'
-                        : 'bg-amber-500'
-                    }`}
-                  />
-                  <div>
-                    <div className="flex items-center justify-between font-bold text-slate-800 text-[11px]">
-                      <span>{event.title}</span>
-                      {event.action && (
-                        <button type="button" className="text-blue-600 hover:underline font-semibold text-[10px]">
-                          {event.action}
-                        </button>
-                      )}
-                    </div>
-                    <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">
-                      {event.content}
-                    </p>
+              {/* Customer Avatar & Hero */}
+              <div className="flex items-center space-x-3">
+                <img
+                  src={selectedCustomer.avatar}
+                  alt={selectedCustomer.name}
+                  className="w-12 h-12 rounded-full object-cover ring-2 ring-white shadow-2xs"
+                />
+                <div>
+                  <div className="flex items-center space-x-1.5">
+                    <h4 className="text-base font-bold text-slate-900 leading-tight">
+                      {selectedCustomer.name}
+                    </h4>
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${
+                      selectedCustomer.status === 'Lead nóng'
+                        ? 'bg-rose-50 text-rose-600 border-rose-200'
+                        : selectedCustomer.status === 'Đã mua'
+                        ? 'bg-emerald-50 text-emerald-600 border-emerald-200'
+                        : 'bg-blue-50 text-blue-600 border-blue-200'
+                    }`}>
+                      {selectedCustomer.status}
+                    </span>
+                  </div>
+                  <div className="flex items-center space-x-1 text-xs text-slate-400 font-mono mt-0.5">
+                    <span>ID: {selectedCustomer.id}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleCopy(selectedCustomer.id, 'ID')}
+                      className="hover:text-blue-600 p-0.5"
+                    >
+                      <Copy className="w-3 h-3" />
+                    </button>
                   </div>
                 </div>
-              ))}
-            </div>
-          </div>
+              </div>
+
+              {/* Customer Detail Fields */}
+              <div className="space-y-2 text-xs text-slate-600 pt-1 border-t border-slate-100">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Phone className="w-3.5 h-3.5 text-slate-400" />
+                    <span className="text-slate-500">SĐT:</span>
+                    <span className="font-semibold text-slate-900">{selectedCustomer.phone}</span>
+                  </div>
+                  {selectedCustomer.phone && selectedCustomer.phone !== 'Chưa có SĐT' && (
+                    <button
+                      type="button"
+                      onClick={() => handleCopy(selectedCustomer.phone, 'SĐT')}
+                      className="text-slate-400 hover:text-blue-600 p-1"
+                    >
+                      <Copy className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <span className="text-slate-400 font-bold w-3.5 text-center">@</span>
+                  <span className="text-slate-500">Nguồn đến:</span>
+                  <span className="font-semibold text-slate-900">{selectedCustomer.source}</span>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Building2 className="w-3.5 h-3.5 text-slate-400" />
+                  <span className="text-slate-500">Khu vực / Page:</span>
+                  <span className="font-semibold text-slate-900">{selectedCustomer.area || 'Fanpage'}</span>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                  <span className="text-slate-500">Ngày cập nhật:</span>
+                  <span className="font-semibold text-slate-900">
+                    {selectedCustomer.createdDate || 'Hôm nay'}
+                  </span>
+                </div>
+
+                <div className="pt-1">
+                  <span className="text-slate-500 block mb-0.5">Ghi chú & Quan tâm:</span>
+                  <div className="bg-slate-50 p-2 rounded-xl text-slate-700 leading-relaxed border border-slate-100 text-[11px]">
+                    {selectedCustomer.notes || 'Khách hàng quan tâm dịch vụ trên Fanpage.'}
+                  </div>
+                </div>
+
+                {/* Tags */}
+                <div className="pt-2">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-slate-500 font-medium">Tag khách hàng:</span>
+                    <button
+                      type="button"
+                      onClick={() => showToast(`Đang phân loại tag AI cho ${selectedCustomer.name}`, 'info')}
+                      className="text-blue-600 font-semibold text-[11px] hover:text-blue-700 flex items-center space-x-0.5"
+                    >
+                      <Plus className="w-3 h-3" />
+                      <span>Thêm tag</span>
+                    </button>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {(selectedCustomer.tagsList || ['Fanpage']).map((tg) => (
+                      <span
+                        key={tg}
+                        className="px-2 py-0.5 rounded text-xs font-semibold bg-blue-50 text-blue-600 border border-blue-200"
+                      >
+                        {tg}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Quick Action Buttons */}
+              <div className="grid grid-cols-4 gap-1.5 pt-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (selectedCustomer.phone && selectedCustomer.phone !== 'Chưa có SĐT' && selectedCustomer.phone !== 'Chưa có') {
+                      window.location.href = `tel:${selectedCustomer.phone.replace(/\s+/g, '')}`
+                    } else {
+                      showToast('Khách hàng chưa để lại số điện thoại.', 'info')
+                    }
+                  }}
+                  className="flex items-center justify-center space-x-1 py-2 px-1 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold shadow-sm transition-colors cursor-pointer"
+                >
+                  <Phone className="w-3.5 h-3.5" />
+                  <span>Gọi khách</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    window.location.hash = 'inbox'
+                  }}
+                  className="flex items-center justify-center space-x-1 py-2 px-1 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-[11px] font-semibold transition-colors shadow-2xs cursor-pointer"
+                >
+                  <MessageCircle className="w-3.5 h-3.5 text-blue-600" />
+                  <span>Nhắn tin</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    showToast(`Đã tạo nhiệm vụ chăm sóc cho ${selectedCustomer.name} trên Kanban`, 'success')
+                  }}
+                  className="flex items-center justify-center space-x-1 py-2 px-1 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-[11px] font-semibold transition-colors shadow-2xs cursor-pointer"
+                >
+                  <CheckSquare className="w-3.5 h-3.5 text-blue-600" />
+                  <span>Tạo việc</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    showToast(`Hồ sơ ${selectedCustomer.name} được phân loại tự động bởi AI.`, 'info')
+                  }}
+                  className="flex items-center justify-center space-x-1 py-2 px-1 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-[11px] font-semibold transition-colors shadow-2xs cursor-pointer"
+                >
+                  <Tag className="w-3.5 h-3.5 text-blue-600" />
+                  <span>Gắn tag</span>
+                </button>
+              </div>
+
+              {/* Timeline: Lịch sử tương tác */}
+              <div className="pt-2 border-t border-slate-100 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-900">Lịch sử tương tác</span>
+                  <span className="text-[11px] font-medium text-slate-400">
+                    Thời gian thực
+                  </span>
+                </div>
+
+                <div className="space-y-3 relative pl-4 border-l-2 border-slate-100 text-xs">
+                  {(selectedCustomer.timeline && selectedCustomer.timeline.length > 0) ? (
+                    selectedCustomer.timeline.map((event, idx) => (
+                      <div key={idx} className="relative group">
+                        <span
+                          className={`absolute -left-[21px] top-0.5 w-3 h-3 rounded-full ring-4 ring-white ${
+                            event.type === 'customer'
+                              ? 'bg-blue-500'
+                              : event.type === 'ai'
+                              ? 'bg-purple-500'
+                              : event.type === 'staff'
+                              ? 'bg-emerald-500'
+                              : event.type === 'status'
+                              ? 'bg-teal-500'
+                              : 'bg-amber-500'
+                          }`}
+                        />
+                        <div>
+                          <div className="flex items-center justify-between font-bold text-slate-800 text-[11px]">
+                            <span>{event.title}</span>
+                          </div>
+                          <p className="text-slate-600 text-[11px] mt-0.5 leading-relaxed">{event.content}</p>
+                          {event.time && (
+                            <span className="text-[10px] text-slate-400 font-mono mt-0.5 block">{event.time}</span>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-slate-400 text-xs py-2 italic">
+                      Chưa có lịch sử tương tác ghi nhận.
+                    </div>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
         </div>
+
 
         {/* ================= COL 3: ANALYTICS & FOLLOW-UP (3 cols) ================= */}
         <div className="xl:col-span-3 space-y-4">
@@ -1127,11 +989,11 @@ export const Customers: React.FC = () => {
             </div>
           </div>
 
-          {/* Card 3: Khách cần follow-up hôm nay (12) */}
+          {/* Card 3: Khách cần follow-up hôm nay */}
           <div className="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-2xs space-y-3">
             <div className="flex items-center justify-between">
               <h3 className="text-xs font-bold text-slate-900">
-                Khách cần follow-up hôm nay (12)
+                Khách cần follow-up ({customersList.length})
               </h3>
               <button
                 type="button"
@@ -1174,9 +1036,13 @@ export const Customers: React.FC = () => {
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation()
-                        alert(`Đang kết nối cuộc gọi đến ${item.name} (${item.phone})...`)
+                        if (item.phone && item.phone !== 'Chưa có SĐT' && item.phone !== 'Chưa có') {
+                          window.location.href = `tel:${item.phone.replace(/\s+/g, '')}`
+                        } else {
+                          showToast(`Khách hàng ${item.name} chưa để lại số điện thoại`, 'info')
+                        }
                       }}
-                      className="p-1 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors"
+                      className="p-1 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors cursor-pointer"
                       title="Gọi khách"
                     >
                       <Phone className="w-3.5 h-3.5" />

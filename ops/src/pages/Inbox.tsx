@@ -44,7 +44,7 @@ import { useAuth } from '../lib/auth'
 import { useCareScope } from '../lib/scope'
 import { FacebookIcon, MessengerIcon, TikTokIcon } from '../components/BrandIcons'
 
-interface MockConversation {
+export interface ConversationItem {
   id: string
   name: string
   avatar: string
@@ -89,368 +89,23 @@ interface MockConversation {
   }[]
 }
 
-const mockConversationsData: MockConversation[] = [
-  {
-    id: 'conv_1',
-    name: 'Nguyễn Thị Hoa',
-    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=120&auto=format&fit=crop&q=80',
-    avatarBg: 'bg-rose-100 text-rose-700',
-    message: 'Shop ơi, sản phẩm này còn hàng không ạ?',
-    time: '14:28',
-    unreadCount: 3,
-    hasUnreadDot: true,
-    tags: [
-      { text: 'Lead nóng', color: 'red' },
-      { text: 'Cần hỗ trợ', color: 'amber' },
-    ],
-    crmTags: [
-      { text: 'Lead nóng', color: 'red' },
-      { text: 'Quan tâm', color: 'amber' },
-      { text: 'Khách mới', color: 'blue' },
-    ],
-    phone: '0967 123 456',
-    fbId: '1000123456789',
-    source: 'Messenger',
-    firstInteraction: '10/04/2024',
-    pageName: 'Page JAVIS Official',
-    status: 'lead_hot',
-    leadScore: {
-      score: 88,
-      tier: 'hot',
-      nextBestAction: 'Gợi ý freeship + chốt ưu đãi ngay vì khách ở Hà Nội muốn nhận nhanh 1-2 ngày',
-      suggestedScript: 'Dạ với địa chỉ Hà Nội, shop hỗ trợ giao nhanh 1 ngày và freeship hôm nay ạ. Bạn cho mình xin số điện thoại để tạo đơn liền nhé!',
-      reason: 'Khách hỏi trực tiếp màu be size M, hỏi thời gian nhận hàng tại Hà Nội (tín hiệu chốt đơn 92%)',
-      risk: 'medium',
-    },
-    omnichannel: [
-      { channel: 'messenger', label: 'Messenger', count: 5, lastActive: '14:31' },
-      { channel: 'facebook', label: 'Bình luận Fanpage', count: 2, lastActive: '10/04' },
-      { channel: 'tiktok', label: 'Xem video TikTok', count: 1, lastActive: '09/04' },
-      { channel: 'zalo', label: 'Zalo số 0967 123 456', count: 1, lastActive: 'Hôm nay' },
-    ],
-    history: [
-      {
-        title: 'Lần đầu tương tác',
-        desc: 'Khách hàng nhắn tin qua Messenger',
-        time: '10/04/2024 14:28',
-        dotColor: 'green',
-      },
-      {
-        title: 'Phản hồi gần nhất',
-        desc: 'Bạn đã gửi tin nhắn',
-        time: '23/04/2024 14:31',
-        dotColor: 'blue',
-      },
-      {
-        title: 'Tạo lead',
-        desc: 'Tự động từ hội thoại',
-        time: '10/04/2024 14:30',
-        dotColor: 'gray',
-      },
-    ],
-    messages: [
-      {
-        id: 'm1',
-        sender: 'customer',
-        text: 'Shop ơi, sản phẩm này còn hàng không ạ?',
-        time: '14:28',
-      },
-      {
-        id: 'm2',
-        sender: 'bot',
-        text: 'Dạ chào bạn Hoa!\nSản phẩm hiện vẫn còn hàng ạ. Bạn đang quan tâm đến màu và size nào để mình tư vấn chi tiết hơn nhé?',
-        time: '14:29',
-      },
-      {
-        id: 'm3',
-        sender: 'customer',
-        text: 'Mình muốn màu be, size M. Không biết khi nào nhận được hàng ở Hà Nội ạ?',
-        time: '14:30',
-      },
-      {
-        id: 'm4',
-        sender: 'bot',
-        text: 'Dạ với địa chỉ Hà Nội, thời gian giao hàng dự kiến từ 1–2 ngày ạ. Bạn có thể đặt hàng ngay hôm nay để được freeship nhé!',
-        time: '14:31',
-      },
-    ],
-  },
-  {
-    id: 'conv_2',
-    name: 'Trần Văn Minh',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80',
-    avatarBg: 'bg-blue-100 text-blue-700',
-    message: 'Cảm ơn shop nhé!',
-    time: '13:45',
-    unreadCount: 1,
-    hasUnreadDot: true,
-    tags: [
-      { text: 'Đã mua', color: 'green' },
-      { text: 'VIP', color: 'purple' },
-    ],
-    phone: '0912 345 678',
-    fbId: '1000987654321',
-    source: 'Messenger',
-    firstInteraction: '08/04/2024',
-    pageName: 'Page JAVIS Official',
-    status: 'purchased',
-    leadScore: {
-      score: 65,
-      tier: 'warm',
-      nextBestAction: 'Gửi lời cảm ơn kèm mã giảm giá 15% cho lần mua hàng tiếp theo',
-      suggestedScript: 'Cảm ơn bạn Minh nhiều ạ! Shop xin tặng bạn mã VIP15 giảm 15% cho đơn hàng kế tiếp nhé.',
-      reason: 'Khách hàng cũ vừa nhận hàng thành công và để lại phản hồi tốt',
-      risk: 'low',
-    },
-    omnichannel: [
-      { channel: 'messenger', label: 'Messenger', count: 3, lastActive: '13:45' },
-      { channel: 'facebook', label: 'Fanpage BSN', count: 1, lastActive: '08/04' },
-    ],
-    history: [
-      {
-        title: 'Lần đầu tương tác',
-        desc: 'Khách hàng nhắn tin qua Messenger',
-        time: '08/04/2024 10:15',
-        dotColor: 'green',
-      },
-      {
-        title: 'Hoàn tất đơn hàng',
-        desc: 'Đã giao thành công',
-        time: '13/04/2024 11:30',
-        dotColor: 'blue',
-      },
-    ],
-    messages: [
-      {
-        id: 'm1',
-        sender: 'customer',
-        text: 'Đã nhận được hàng đúng mẫu rồi nhé shop!',
-        time: '13:40',
-      },
-      {
-        id: 'm2',
-        sender: 'customer',
-        text: 'Cảm ơn shop nhé!',
-        time: '13:45',
-      },
-      {
-        id: 'm3',
-        sender: 'bot',
-        text: 'Dạ Javis cảm ơn bạn Minh nhiều ạ! Chúc bạn có trải nghiệm tuyệt vời với sản phẩm!',
-        time: '13:46',
-      },
-    ],
-  },
-  {
-    id: 'conv_3',
-    name: 'Lê Quang Huy',
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&auto=format&fit=crop&q=80',
-    avatarBg: 'bg-teal-100 text-teal-700',
-    message: 'Khi nào có hàng lại vậy shop?',
-    time: '11:20',
-    unreadCount: 1,
-    hasUnreadDot: true,
-    tags: [{ text: 'FAQ', color: 'blue' }],
-    phone: '0988 776 655',
-    fbId: '1000554433221',
-    source: 'Messenger',
-    firstInteraction: '12/04/2024',
-    pageName: 'Page JAVIS Official',
-    status: 'interested',
-    history: [
-      {
-        title: 'Lần đầu tương tác',
-        desc: 'Khách hàng hỏi hàng',
-        time: '12/04/2024 11:20',
-        dotColor: 'green',
-      },
-    ],
-    messages: [
-      {
-        id: 'm1',
-        sender: 'customer',
-        text: 'Khi nào có hàng lại vậy shop?',
-        time: '11:20',
-      },
-      {
-        id: 'm2',
-        sender: 'bot',
-        text: 'Dạ đợt hàng mới dự kiến về trong 2 ngày tới ạ. Anh có muốn em lưu số điện thoại để báo ngay khi hàng về không ạ?',
-        time: '11:21',
-      },
-    ],
-  },
-  {
-    id: 'conv_4',
-    name: 'Phạm Thị Lan',
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&auto=format&fit=crop&q=80',
-    avatarBg: 'bg-amber-100 text-amber-700',
-    message: 'Dạ mình muốn đặt 2 sản phẩm ạ',
-    time: '10:37',
-    tags: [
-      { text: 'Quan tâm', color: 'amber' },
-      { text: 'Lead', color: 'red' },
-    ],
-    phone: '0977 112 233',
-    fbId: '1000667788990',
-    source: 'Messenger',
-    firstInteraction: '15/04/2024',
-    pageName: 'Page JAVIS Official',
-    status: 'lead_hot',
-    history: [
-      {
-        title: 'Lần đầu tương tác',
-        desc: 'Khách hàng nhắn tin đặt hàng',
-        time: '15/04/2024 10:37',
-        dotColor: 'green',
-      },
-    ],
-    messages: [
-      {
-        id: 'm1',
-        sender: 'customer',
-        text: 'Dạ mình muốn đặt 2 sản phẩm ạ',
-        time: '10:37',
-      },
-    ],
-  },
-  {
-    id: 'conv_5',
-    name: 'Hoàng Kim',
-    avatar: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=120&auto=format&fit=crop&q=80',
-    avatarBg: 'bg-indigo-100 text-indigo-700',
-    message: 'Shop có hỗ trợ đổi size không?',
-    time: '09:12',
-    tags: [{ text: 'Cần hỗ trợ', color: 'amber' }],
-    phone: '0933 445 566',
-    fbId: '1000332211445',
-    source: 'Messenger',
-    firstInteraction: '18/04/2024',
-    pageName: 'Page JAVIS Official',
-    status: 'care_needed',
-    history: [
-      {
-        title: 'Lần đầu tương tác',
-        desc: 'Khách hàng hỏi đổi size',
-        time: '18/04/2024 09:12',
-        dotColor: 'green',
-      },
-    ],
-    messages: [
-      {
-        id: 'm1',
-        sender: 'customer',
-        text: 'Shop có hỗ trợ đổi size không?',
-        time: '09:12',
-      },
-    ],
-  },
-  {
-    id: 'conv_6',
-    name: 'Đỗ Thu Hà',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80',
-    avatarBg: 'bg-emerald-100 text-emerald-700',
-    message: 'Mình đã nhận được hàng rồi ạ',
-    time: 'Hôm qua',
-    tags: [{ text: 'Đã mua', color: 'green' }],
-    phone: '0909 888 777',
-    fbId: '1000888999111',
-    source: 'Messenger',
-    firstInteraction: '19/04/2024',
-    pageName: 'Page JAVIS Official',
-    status: 'purchased',
-    history: [
-      {
-        title: 'Giao hàng',
-        desc: 'Đã nhận hàng thành công',
-        time: '21/04/2024 16:00',
-        dotColor: 'green',
-      },
-    ],
-    messages: [
-      {
-        id: 'm1',
-        sender: 'customer',
-        text: 'Mình đã nhận được hàng rồi ạ',
-        time: 'Hôm qua',
-      },
-    ],
-  },
-  {
-    id: 'conv_7',
-    name: 'Nguyễn Anh Tuấn',
-    avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=120&auto=format&fit=crop&q=80',
-    avatarBg: 'bg-purple-100 text-purple-700',
-    message: 'Tư vấn giúp mình với ạ',
-    time: 'Hôm qua',
-    tags: [{ text: 'Lead', color: 'red' }],
-    phone: '0944 556 677',
-    fbId: '1000777666555',
-    source: 'Messenger',
-    firstInteraction: '20/04/2024',
-    pageName: 'Page JAVIS Official',
-    status: 'interested',
-    history: [
-      {
-        title: 'Tạo lead',
-        desc: 'Từ bình luận bài viết',
-        time: '20/04/2024 15:30',
-        dotColor: 'gray',
-      },
-    ],
-    messages: [
-      {
-        id: 'm1',
-        sender: 'customer',
-        text: 'Tư vấn giúp mình với ạ',
-        time: 'Hôm qua',
-      },
-    ],
-  },
-  {
-    id: 'conv_8',
-    name: 'Trần Mai Phương',
-    avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=120&auto=format&fit=crop&q=80',
-    avatarBg: 'bg-rose-100 text-rose-700',
-    message: 'Shop ơi cho mình hỏi thêm ạ',
-    time: '21/04',
-    tags: [{ text: 'FAQ', color: 'blue' }],
-    phone: '0922 334 455',
-    fbId: '1000444333222',
-    source: 'Messenger',
-    firstInteraction: '21/04/2024',
-    pageName: 'Page JAVIS Official',
-    status: 'interested',
-    history: [
-      {
-        title: 'Hỏi thông tin',
-        desc: 'Thời gian bảo hành sản phẩm',
-        time: '21/04/2024 10:20',
-        dotColor: 'blue',
-      },
-    ],
-    messages: [
-      {
-        id: 'm1',
-        sender: 'customer',
-        text: 'Shop ơi cho mình hỏi thêm ạ',
-        time: '21/04',
-      },
-    ],
-  },
-]
-
 export const Inbox: React.FC = () => {
   const { can } = useAuth()
   const { scope, scopeBrand, scopePageId } = useCareScope()
   const [activeChannel, setActiveChannel] = useState<'comments' | 'messenger' | 'tiktok'>('messenger')
   const [statusFilter, setStatusFilter] = useState<'unread' | 'need_human' | 'done'>('unread')
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedConvId, setSelectedConvId] = useState<string>('conv_1')
+  const [selectedConvId, setSelectedConvId] = useState<string>('')
   const [inputText, setInputText] = useState('')
   const [isTakeover, setIsTakeover] = useState(false)
   const [copySuccess, setCopySuccess] = useState<string | null>(null)
-  const [conversationsList, setConversationsList] = useState<MockConversation[]>(mockConversationsData)
+  const [conversationsList, setConversationsList] = useState<ConversationItem[]>([])
+  const [toastMessage, setToastMessage] = useState<string | null>(null)
+
+  const showToast = (msg: string) => {
+    setToastMessage(msg)
+    setTimeout(() => setToastMessage(null), 3500)
+  }
   const [noteText, setNoteText] = useState('')
   const [isPolling, setIsPolling] = useState(false)
   const [pollNotice, setPollNotice] = useState<string | null>(null)
@@ -468,7 +123,7 @@ export const Inbox: React.FC = () => {
       brand: scopeBrand || undefined,
     }).then((res) => {
       if (res?.ok && res.conversations && res.conversations.length > 0) {
-        const mapped: MockConversation[] = res.conversations.map((c) => {
+        const mapped: ConversationItem[] = res.conversations.map((c) => {
           const pageTitle = c.page_id === '343562028848465'
             ? 'Game Giá Rẻ BSN'
             : (c.page_id === '988656934325292' ? 'Royce Shop' : 'Fanpage')
@@ -519,9 +174,11 @@ export const Inbox: React.FC = () => {
         })
         setConversationsList(mapped)
         setSelectedConvId((prev) => {
-          if (mapped.some((m) => m.id === prev)) return prev
-          return mapped[0].id
+          if (prev && mapped.some((m) => m.id === prev)) return prev
+          return mapped[0]?.id || ''
         })
+      } else {
+        setConversationsList([])
       }
     }).catch(() => {})
 
@@ -573,91 +230,8 @@ export const Inbox: React.FC = () => {
     }
   }, [selectedConvId])
 
-  const currentConv = conversationsList.find((c) => c.id === selectedConvId) || conversationsList[0]
-
-  const handleCopy = (text: string, label: string) => {
-    navigator.clipboard.writeText(text)
-    setCopySuccess(label)
-    setTimeout(() => setCopySuccess(null), 2000)
-  }
-
-  const handleApplyDraft = (text: string) => {
-    setInputText(text)
-  }
-
-  const handlePollNow = async () => {
-    setIsPolling(true)
-    setPollNotice('Đang kéo tin nhắn và bình luận mới nhất từ Fanpage...')
-    try {
-      await api.pollNow()
-      setPollNotice('Đã đồng bộ thành công!')
-      loadInboxData()
-      setTimeout(() => setPollNotice(null), 3000)
-    } catch (err: any) {
-      setPollNotice(`Đồng bộ thất bại: ${err?.message || 'Lỗi mạng'}`)
-      setTimeout(() => setPollNotice(null), 3000)
-    } finally {
-      setIsPolling(false)
-    }
-  }
-
-  const handleSendMessage = async () => {
-    if (!inputText.trim()) return
-    const textToSend = inputText.trim()
-    const newMsg = {
-      id: `m_${Date.now()}`,
-      sender: 'staff' as const,
-      text: textToSend,
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    }
-
-    setConversationsList((prev) =>
-      prev.map((c) => {
-        if (c.id === currentConv.id) {
-          return {
-            ...c,
-            message: newMsg.text,
-            time: newMsg.time,
-            messages: [...c.messages, newMsg],
-          }
-        }
-        return c
-      })
-    )
-    setInputText('')
-
-    // Gửi trực tiếp qua Facebook Messenger nếu có page_id & psid
-    const parts = currentConv.id.split('_')
-    if (parts.length >= 2 && parts[0] !== 'conv') {
-      const pageId = parts[0]
-      const psid = parts.slice(1).join('_')
-      try {
-        await api.sendDirectMessage(pageId, psid, textToSend)
-      } catch (err) {
-        console.error('Lỗi gửi tin nhắn trực tiếp qua Messenger:', err)
-      }
-    }
-  }
-
-  // Scroll messages to bottom
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [currentConv?.messages])
-
-  const pendingCommentDrafts = careStats?.pending_comment_drafts || 5
-  const pendingMessageDrafts = careStats?.pending_message_drafts || 12
-  const sentTodayCount = careStats?.replies_24h || 24
-
-  const tagColorMap = {
-    red: 'bg-rose-50 text-rose-600 border border-rose-200',
-    amber: 'bg-amber-50 text-amber-600 border border-amber-200',
-    green: 'bg-emerald-50 text-emerald-600 border border-emerald-200',
-    blue: 'bg-blue-50 text-blue-600 border border-blue-200',
-    purple: 'bg-purple-50 text-purple-600 border border-purple-200',
-  }
-
   // List of comment conversations from real events
-  const commentConversations: MockConversation[] = rawEvents
+  const commentConversations: ConversationItem[] = rawEvents
     .filter((e) => e.kind === 'comment' || e.platform === 'facebook')
     .map((e) => {
       const pageTitle = e.page_id === '343562028848465'
@@ -708,6 +282,91 @@ export const Inbox: React.FC = () => {
   const effectiveConversations = activeChannel === 'comments'
     ? (commentConversations.length > 0 ? commentConversations : conversationsList.filter(c => c.source === 'Facebook'))
     : conversationsList.filter(c => c.source !== 'Facebook')
+
+  const currentConv = effectiveConversations.find((c) => c.id === selectedConvId) || effectiveConversations[0] || null
+
+  const handleCopy = (text: string, label: string) => {
+    navigator.clipboard.writeText(text)
+    setCopySuccess(label)
+    setTimeout(() => setCopySuccess(null), 2000)
+  }
+
+  const handleApplyDraft = (text: string) => {
+    setInputText(text)
+  }
+
+  const handlePollNow = async () => {
+    setIsPolling(true)
+    setPollNotice('Đang kéo tin nhắn và bình luận mới nhất từ Fanpage...')
+    try {
+      await api.pollNow()
+      setPollNotice('Đã đồng bộ thành công!')
+      loadInboxData()
+      setTimeout(() => setPollNotice(null), 3000)
+    } catch (err: any) {
+      setPollNotice(`Đồng bộ thất bại: ${err?.message || 'Lỗi mạng'}`)
+      setTimeout(() => setPollNotice(null), 3000)
+    } finally {
+      setIsPolling(false)
+    }
+  }
+
+  const handleSendMessage = async () => {
+    if (!inputText.trim() || !currentConv) return
+    const textToSend = inputText.trim()
+    const newMsg = {
+      id: `m_${Date.now()}`,
+      sender: 'staff' as const,
+      text: textToSend,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    }
+
+    setConversationsList((prev) =>
+      prev.map((c) => {
+        if (c.id === currentConv.id) {
+          return {
+            ...c,
+            message: newMsg.text,
+            time: newMsg.time,
+            messages: [...c.messages, newMsg],
+          }
+        }
+        return c
+      })
+    )
+    setInputText('')
+
+    // Gửi trực tiếp qua Facebook Messenger nếu có page_id & psid
+    const parts = currentConv.id.split('_')
+    if (parts.length >= 2 && parts[0] !== 'conv') {
+      const pageId = parts[0]
+      const psid = parts.slice(1).join('_')
+      try {
+        await api.sendDirectMessage(pageId, psid, textToSend)
+        showToast('Đã gửi tin nhắn qua Facebook Messenger')
+      } catch (err) {
+        console.error('Lỗi gửi tin nhắn trực tiếp qua Messenger:', err)
+        showToast('Lỗi gửi tin nhắn qua Messenger')
+      }
+    }
+  }
+
+  // Scroll messages to bottom
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [currentConv?.messages])
+
+  const pendingCommentDrafts = careStats?.pending_comment_drafts ?? 0
+  const pendingMessageDrafts = careStats?.pending_message_drafts ?? 0
+  const sentTodayCount = careStats?.replies_24h ?? 0
+
+  const tagColorMap = {
+    red: 'bg-rose-50 text-rose-600 border border-rose-200',
+    amber: 'bg-amber-50 text-amber-600 border border-amber-200',
+    green: 'bg-emerald-50 text-emerald-600 border border-emerald-200',
+    blue: 'bg-blue-50 text-blue-600 border border-blue-200',
+    purple: 'bg-purple-50 text-purple-600 border border-purple-200',
+  }
 
   const unreadCountBadge = effectiveConversations.filter(c => c.hasUnreadDot).length
   const needHumanBadge = effectiveConversations.filter(c => c.status === 'care_needed').length
@@ -895,7 +554,17 @@ export const Inbox: React.FC = () => {
             ) : filteredConversations.length === 0 ? (
               <div className="p-8 text-center text-slate-400 text-xs">
                 <MessageSquare className="w-8 h-8 mx-auto mb-2 text-slate-300" />
-                <p>Không có hội thoại nào phù hợp</p>
+                <p className="font-semibold text-slate-600 mb-1">Chưa có hội thoại nào</p>
+                <p className="text-slate-400 text-[11px] mb-3">Nhấn Đồng bộ để kéo tin nhắn và bình luận mới nhất từ Facebook Fanpage.</p>
+                <button
+                  type="button"
+                  onClick={handlePollNow}
+                  disabled={isPolling}
+                  className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs transition-colors"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${isPolling ? 'animate-spin' : ''}`} />
+                  <span>{isPolling ? 'Đang đồng bộ...' : 'Đồng bộ ngay'}</span>
+                </button>
               </div>
             ) : (
               filteredConversations.map((conv) => {
@@ -986,6 +655,23 @@ export const Inbox: React.FC = () => {
               <p className="text-xs text-slate-400 mt-1 max-w-md">
                 PostPeer hiện chỉ hỗ trợ đăng video, chưa có luồng ingest comment TikTok. Hệ thống tự động phân phối video ngắn theo lịch.
               </p>
+            </div>
+          ) : !currentConv ? (
+            <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
+              <MessageSquare className="w-14 h-14 mb-4 text-slate-300" />
+              <h3 className="text-base font-bold text-slate-900">Chưa có hội thoại được chọn</h3>
+              <p className="text-xs text-slate-500 mt-1 max-w-md">
+                Vui lòng chọn một khách hàng từ danh sách bên trái hoặc nhấn &quot;Đồng bộ ngay&quot; để lấy dữ liệu mới nhất từ Fanpage.
+              </p>
+              <button
+                type="button"
+                onClick={handlePollNow}
+                disabled={isPolling}
+                className="mt-4 inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs transition-colors"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isPolling ? 'animate-spin' : ''}`} />
+                <span>{isPolling ? 'Đang kéo tin nhắn...' : 'Đồng bộ Fanpage ngay'}</span>
+              </button>
             </div>
           ) : (
             <>
@@ -1380,7 +1066,7 @@ export const Inbox: React.FC = () => {
               <div className="flex items-center space-x-2">
                 <button
                   type="button"
-                  onClick={() => alert('Đã lưu nháp tin nhắn thành công')}
+                  onClick={() => showToast('Đã lưu nháp tin nhắn vào bộ nhớ đệm')}
                   className="px-3 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-colors"
                 >
                   Lưu nháp
@@ -1454,15 +1140,25 @@ export const Inbox: React.FC = () => {
             {/* Header */}
             <div className="flex items-center justify-between pb-2 border-b border-slate-100">
               <h3 className="text-base font-bold text-slate-900">Mini CRM</h3>
-              <button
-                type="button"
-                className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center space-x-0.5"
-              >
-                <span>Xem hồ sơ đầy đủ</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
+              {currentConv && (
+                <button
+                  type="button"
+                  className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center space-x-0.5"
+                >
+                  <span>Xem hồ sơ đầy đủ</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              )}
             </div>
 
+            {!currentConv ? (
+              <div className="py-8 text-center text-slate-400 text-xs">
+                <FileText className="w-8 h-8 mx-auto mb-2 text-slate-300" />
+                <p className="font-semibold text-slate-600 mb-1">Chưa chọn khách hàng</p>
+                <p className="text-slate-400 text-[11px]">Chọn một hội thoại để xem thông tin chi tiết và gắn nhãn CRM.</p>
+              </div>
+            ) : (
+            <>
             {/* Customer Header Avatar & Name */}
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2.5">
@@ -1717,7 +1413,7 @@ export const Inbox: React.FC = () => {
                   type="button"
                   onClick={() => {
                     if (noteText.trim()) {
-                      alert('Đã lưu ghi chú nội bộ!')
+                      showToast('Đã lưu ghi chú nội bộ thành công!')
                       setNoteText('')
                     }
                   }}
@@ -1777,7 +1473,7 @@ export const Inbox: React.FC = () => {
             <div className="grid grid-cols-4 gap-1.5 pt-2 border-t border-slate-100">
               <button
                 type="button"
-                onClick={() => alert('Đã tạo việc trên Kanban!')}
+                onClick={() => showToast('Đã tạo việc trên Kanban thành công!')}
                 className="flex items-center justify-center space-x-1 py-2 px-1 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-[11px] font-semibold transition-colors shadow-2xs"
               >
                 <Briefcase className="w-3.5 h-3.5 text-blue-600" />
@@ -1795,7 +1491,7 @@ export const Inbox: React.FC = () => {
 
               <button
                 type="button"
-                onClick={() => alert('Chọn tag để gắn')}
+                onClick={() => showToast('Đã cập nhật nhãn phân loại khách hàng')}
                 className="flex items-center justify-center space-x-1 py-2 px-1 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-[11px] font-semibold transition-colors shadow-2xs"
               >
                 <Tag className="w-3.5 h-3.5 text-blue-600" />
@@ -1804,16 +1500,25 @@ export const Inbox: React.FC = () => {
 
               <button
                 type="button"
-                onClick={() => alert('Đã đồng bộ sang CRM!')}
+                onClick={() => showToast('Đã đồng bộ thông tin khách hàng sang CRM!')}
                 className="flex items-center justify-center space-x-1 py-2 px-1 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-[11px] font-semibold transition-colors shadow-2xs"
               >
                 <Share2 className="w-3.5 h-3.5 text-blue-600" />
                 <span>Xuất CRM</span>
               </button>
             </div>
+            </>
+            )}
           </div>
         </div>
       </div>
+
+      {toastMessage && (
+        <div className="fixed bottom-6 right-6 z-50 bg-slate-900 text-white px-4 py-2.5 rounded-xl shadow-lg text-xs font-semibold flex items-center space-x-2 animate-bounce">
+          <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+          <span>{toastMessage}</span>
+        </div>
+      )}
     </div>
   )
 }

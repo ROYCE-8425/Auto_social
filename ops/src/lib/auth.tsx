@@ -13,16 +13,9 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-const DEFAULT_OWNER_USER: OpsUser = {
-  id: 'owner',
-  username: 'admin',
-  role: 'owner',
-  name: 'Chủ máy',
-}
-
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<OpsUser | null>(DEFAULT_OWNER_USER)
-  const [isLoading, setIsLoading] = useState<boolean>(false)
+  const [user, setUser] = useState<OpsUser | null>(null)
+  const [isLoading, setIsLoading] = useState<boolean>(true)
 
   const refreshUser = async () => {
     try {
@@ -30,10 +23,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (data && data.user) {
         setUser(data.user)
       } else {
-        setUser(DEFAULT_OWNER_USER)
+        setUser(null)
       }
     } catch {
-      setUser(DEFAULT_OWNER_USER)
+      setUser(null)
     } finally {
       setIsLoading(false)
     }

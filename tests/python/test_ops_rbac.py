@@ -204,3 +204,45 @@ def test_rbac_matrix_manager():
     for path, method in forbidden_routes:
         allowed, reason = ops_rbac.check_access_permission(manager, path, method)
         assert allowed is False, f"Manager lẽ ra PHẢI bị chặn ở {path}, nhưng lại lọt!"
+
+
+def test_ops_me_unauthenticated_production_returns_401(monkeypatch):
+    """Khi không ở chế độ demo và không có session: GET /ops/me trả về 401."""
+    monkeypatch.delenv("JAVIS_OPS_DEMO_AUTO_OWNER", raising=False)
+    monkeypatch.delenv("JAVIS_REQUIRE_LOGIN", raising=False)
+    from fastapi.testclient import TestClient
+    import main
+    with TestClient(main.app, base_url="http://127.0.0.1") as client:
+        res = client.get("/ops/me")
+        assert res.status_code == 401
+        data = res.json()
+        assert data.get("user") is None
+        assert data.get("error") == "unauthorized"
+
+
+def test_ops_me_demo_auto_owner_when_env_enabled(monkeypatch):
+    """Khi bật JAVIS_OPS_DEMO_AUTO_OWNER=1: GET /ops/me tự cấp phiên demo."""
+    monkeypatch.setenv("JAVIS_OPS_DEMO_AUTO_OWNER", "1")
+    from fastapi.testclient import TestClient
+    import main
+    with TestClient(main.app, base_url="http://127.0.0.1") as client:
+        res = client.get("/ops/me")
+        assert res.status_code == 200
+        data = res.json()
+        assert data.get("user") is not None
+        assert data["user"]["role"] == "owner"
+        assert data.get("data_source") == "demo_seed"
+
+
+def test_ops_me_authenticated_owner():
+    """Khi có session ops_session hợp lệ: GET /ops/me trả về user tương ứng."""
+    tok = ops_rbac.create_session("u_owner", "admin", "owner", "Chủ máy")
+    from fastapi.testclient import TestClient
+    import main
+    with TestClient(main.app, base_url="http://127.0.0.1", cookies={"ops_session": tok}) as client:
+        res = client.get("/ops/me")
+        assert res.status_code == 200
+        data = res.json()
+        assert data.get("user") is not None
+        assert data["user"]["role"] == "owner"
+        assert data.get("data_source") == "real"

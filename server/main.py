@@ -7987,21 +7987,14 @@ async def ops_auth_logout(request: Request):
 @app.get("/ops/me")
 async def ops_get_me(request: Request):
     """Trả thông tin người dùng hiện tại từ cookie javis_session hoặc ops_session.
-    Tự động cấp phiên Chủ máy (owner) nếu chưa có session để người dùng vào thẳng không bị chặn đăng nhập.
+    Trong production: nếu chưa đăng nhập, trả về 401 Unauthorized.
+    Chỉ tự cấp session khi có cờ demo explicit JAVIS_OPS_DEMO_AUTO_OWNER=1 hoặc JAVIS_REQUIRE_LOGIN=0.
     """
     user = ops_rbac.get_current_ops_user(request)
     if not user:
-        token = ops_rbac.create_session("owner", "admin", "owner", "Chủ máy")
-        user = {
-            "id": "owner",
-            "username": "admin",
-            "role": "owner",
-            "name": "Chủ máy",
-        }
-        resp = JSONResponse({"user": user})
-        resp.set_cookie("ops_session", token, httponly=True, samesite="lax", max_age=30 * 86400, path="/")
-        return resp
-    return {"user": user}
+        return JSONResponse({"user": None, "error": "unauthorized"}, status_code=401)
+    ds = "demo_seed" if user.get("is_demo") else "real"
+    return {"user": user, "data_source": ds}
 
 
 @app.get("/ops/users")

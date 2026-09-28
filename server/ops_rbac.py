@@ -186,12 +186,25 @@ def drop_session(token: str):
     _save_sessions()
 
 
+def is_demo_auto_owner() -> bool:
+    """Kiểm tra xem hệ thống có đang bật chế độ demo tự động nhận owner hay không.
+    Chỉ bật khi JAVIS_OPS_DEMO_AUTO_OWNER=1 hoặc JAVIS_REQUIRE_LOGIN=0.
+    Mặc định ở production: False (yêu cầu đăng nhập an toàn).
+    """
+    if os.getenv("JAVIS_OPS_DEMO_AUTO_OWNER", "").strip().lower() in ("1", "true", "yes"):
+        return True
+    if os.getenv("JAVIS_REQUIRE_LOGIN", "").strip().lower() in ("0", "false", "no"):
+        return True
+    return False
+
+
 def get_current_ops_user(request) -> Optional[dict]:
     """Đọc người dùng hiện tại từ request.
     Ưu tiên 1: Session admin Javis (cookie javis_session) -> luôn là role owner.
     Ưu tiên 2: Session Ops (cookie ops_session).
     Ưu tiên 3: Authorization header (Bearer ops_...).
-    Mặc định chế độ mở: Tự động cấp quyền Chủ máy (owner) để vào thẳng buồng lái vận hành.
+    Ưu tiên 4: Chế độ demo (chỉ khi JAVIS_OPS_DEMO_AUTO_OWNER=1 hoặc JAVIS_REQUIRE_LOGIN=0).
+    Mặc định production: Trả về None nếu chưa đăng nhập.
     """
     # 1. Kiểm tra cookie javis_session
     javis_tok = request.cookies.get("javis_session", "")
@@ -220,15 +233,19 @@ def get_current_ops_user(request) -> Optional[dict]:
         if s:
             return s
 
-    # 4. Chế độ mở (người dùng yêu cầu tạm thời bỏ đăng nhập để ấn vào là dùng được luôn)
-    cfg = cfgmod.read_settings()
-    admin_uname = cfg.get("auth", {}).get("username") or "admin"
-    return {
-        "id": "owner",
-        "username": admin_uname,
-        "role": "owner",
-        "name": "Chủ máy",
-    }
+    # 4. Chế độ demo auto-owner (chỉ khi có biến môi trường chỉ định)
+    if is_demo_auto_owner():
+        cfg = cfgmod.read_settings()
+        admin_uname = cfg.get("auth", {}).get("username") or "admin"
+        return {
+            "id": "owner",
+            "username": admin_uname,
+            "role": "owner",
+            "name": "Chủ máy (Demo)",
+            "is_demo": True,
+        }
+
+    return None
 
 
 

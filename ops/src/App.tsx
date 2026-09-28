@@ -50,8 +50,8 @@ export const App: React.FC = () => {
     )
   }
 
-  // Chế độ mở: Bỏ qua màn hình đăng nhập, người dùng vào thẳng buồng lái vận hành
-  // if (!user) return <Login />
+  // Yêu cầu đăng nhập an toàn khi chưa xác thực
+  if (!user) return <Login />
 
   return (
     <CareScopeProvider>
