@@ -25,8 +25,9 @@ def run_tests():
         sub_dir = bsn_dataset / "sample-game"
         sub_dir.mkdir(parents=True, exist_ok=True)
         for i in range(15):
-            (bsn_dataset / f"screenshot_game_bsn_{i}.jpg").write_bytes(b"\xff\xd8\xff\xe0mock_jpg" + bytes([i]))
-            (sub_dir / f"screenshot_game_bsn_{i}.jpg").write_bytes(b"\xff\xd8\xff\xe0mock_jpg" + bytes([i]))
+            content = b"\xff\xd8\xff\xe0mock_jpg_unique_bytes_" + bytes([i]) * 10
+            (bsn_dataset / f"screenshot-game-bsn-{i}.jpg").write_bytes(content)
+            (sub_dir / f"screenshot-game-bsn-{i}.jpg").write_bytes(content)
 
     try:
         _do_run_tests()
