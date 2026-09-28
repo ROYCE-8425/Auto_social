@@ -8090,26 +8090,6 @@ async def ops_qa_chat(request: Request):
     return res
 
 
-@app.api_route("/ops/{full_path:path}", methods=["GET", "HEAD"])
-@app.api_route("/ops", methods=["GET", "HEAD"])
-async def serve_ops_dashboard(full_path: str = ""):
-    """Phục vụ giao diện Single-Page App Ops Dashboard (HTML5 History Mode Fallback)."""
-    index_file = OPS_DIST_PATH / "index.html"
-    if not index_file.exists():
-        return HTMLResponse(
-            "<!DOCTYPE html><html><body><h1>Ops Dashboard chưa được build.</h1>"
-            "<p>Vui lòng chạy <code>npm run build</code> trong thư mục <code>ops/</code>.</p></body></html>",
-            status_code=503
-        )
-    if full_path:
-        target = OPS_DIST_PATH / full_path
-        if target.is_file():
-            return FileResponse(str(target))
-    return HTMLResponse(
-        index_file.read_text(encoding="utf-8"),
-        headers={"Cache-Control": "no-cache, no-store, must-revalidate"}
-    )
-
 
 # ============================================================
 # TIKTOK STUDIO & MEDIA API
@@ -8420,10 +8400,30 @@ async def ops_post_campaign_autopilot(request: Request):
         "campaign_plan": res,
         **res,
     }
+@app.api_route("/ops/{full_path:path}", methods=["GET", "HEAD"])
+@app.api_route("/ops", methods=["GET", "HEAD"])
+async def serve_ops_dashboard(full_path: str = ""):
+    """Phục vụ giao diện Single-Page App Ops Dashboard (HTML5 History Mode Fallback)."""
+    api_prefixes = ("briefing", "lead-scoring", "attribution", "competitor", "campaigns", "auth", "me", "users", "qa")
+    clean_p = full_path.strip("/")
+    if any(clean_p == p or clean_p.startswith(p + "/") for p in api_prefixes):
+        return JSONResponse({"error": "Ops API route not found", "path": full_path}, status_code=404)
 
-
-
-
+    index_file = OPS_DIST_PATH / "index.html"
+    if not index_file.exists():
+        return HTMLResponse(
+            "<!DOCTYPE html><html><body><h1>Ops Dashboard chưa được build.</h1>"
+            "<p>Vui lòng chạy <code>npm run build</code> trong thư mục <code>ops/</code>.</p></body></html>",
+            status_code=503
+        )
+    if full_path:
+        target = OPS_DIST_PATH / full_path
+        if target.is_file():
+            return FileResponse(str(target))
+    return HTMLResponse(
+        index_file.read_text(encoding="utf-8"),
+        headers={"Cache-Control": "no-cache, no-store, must-revalidate"}
+    )
 
 
 # ============================================================

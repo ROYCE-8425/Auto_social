@@ -190,6 +190,8 @@ def get_current_ops_user(request) -> Optional[dict]:
     """Đọc người dùng hiện tại từ request.
     Ưu tiên 1: Session admin Javis (cookie javis_session) -> luôn là role owner.
     Ưu tiên 2: Session Ops (cookie ops_session).
+    Ưu tiên 3: Authorization header (Bearer ops_...).
+    Mặc định chế độ mở: Tự động cấp quyền Chủ máy (owner) để vào thẳng buồng lái vận hành.
     """
     # 1. Kiểm tra cookie javis_session
     javis_tok = request.cookies.get("javis_session", "")
@@ -210,7 +212,24 @@ def get_current_ops_user(request) -> Optional[dict]:
         if s:
             return s
 
-    return None
+    # 3. Kiểm tra Authorization header
+    auth_hdr = request.headers.get("Authorization", "")
+    if auth_hdr.startswith("Bearer "):
+        tok = auth_hdr[7:].strip()
+        s = get_session(tok)
+        if s:
+            return s
+
+    # 4. Chế độ mở (người dùng yêu cầu tạm thời bỏ đăng nhập để ấn vào là dùng được luôn)
+    cfg = cfgmod.read_settings()
+    admin_uname = cfg.get("auth", {}).get("username") or "admin"
+    return {
+        "id": "owner",
+        "username": admin_uname,
+        "role": "owner",
+        "name": "Chủ máy",
+    }
+
 
 
 def verify_login(username: str, password: str) -> Optional[dict]:
