@@ -21,10 +21,12 @@ def run_tests():
     created_mock_dataset = False
     if not bsn_dataset.is_dir():
         created_mock_dataset = True
+        bsn_dataset.mkdir(parents=True, exist_ok=True)
         sub_dir = bsn_dataset / "sample-game"
         sub_dir.mkdir(parents=True, exist_ok=True)
         for i in range(15):
-            (sub_dir / f"screenshot_game_bsn_{i}.jpg").write_bytes(b"\xff\xd8\xff\xe0mock_jpg")
+            (bsn_dataset / f"screenshot_game_bsn_{i}.jpg").write_bytes(b"\xff\xd8\xff\xe0mock_jpg" + bytes([i]))
+            (sub_dir / f"screenshot_game_bsn_{i}.jpg").write_bytes(b"\xff\xd8\xff\xe0mock_jpg" + bytes([i]))
 
     try:
         _do_run_tests()
