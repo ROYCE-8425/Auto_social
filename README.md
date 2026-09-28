@@ -2,7 +2,7 @@
 
 # 🚀 SÈO TRUM (Auto Social AI)
 
-**Nền tảng Tự động hóa Vận hành & Phân phối Nội dung Đa Kênh Cho Doanh Nghiệp SME**  
+**Nền tảng Tự động hóa Vận hành & Phân phối Nội dung Đa Kênh Cho Doanh Nghiệp SME. Đứng trên AI agentic đổi được bộ não Javis OS (MIT) - năng lực nằm ở Javis, không nằm ở model, hỗ trợ 11 nhà cung cấp.**  
 *Mã nguồn mở (MIT License) · Tự host (Self-Hosted) · Bảo mật dữ liệu (Privacy-First)*
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-emerald.svg)](LICENSE)
@@ -63,7 +63,7 @@ Hệ thống phân tách rành mạch không gian trải nghiệm theo đúng va
 |---|---|---|---|
 | **Trang chủ** | `/` | Khách truy cập, đối tác | Landing Page hiện đại giới thiệu tính năng, kiến trúc, bảng so sánh và bảng giá tự host |
 | **Vận hành** | `/ops` | Nhân viên CSKH & Quản lý | Không gian làm việc hằng ngày: Duyệt nháp trả lời, quản lý khách hàng CRM, theo dõi lịch đăng đa kênh, bảng việc Kanban |
-| **Buồng lái** | `/app` | Chủ máy (Owner) | Cấu hình bộ não AI, kết nối MCP, Second Brain Markdown, quản lý tài nguyên máy chủ |
+| **Buồng lái** | `/app` | Chủ máy (Owner) | Cấu hình bộ não AI, kết nối MCP, Second Brain Markdown, thanh điều hướng gom thành **7 nhóm** chức năng |
 
 ---
 
@@ -95,9 +95,9 @@ Hệ thống phân tách rành mạch không gian trải nghiệm theo đúng va
 
 ### 6. Bảo mật & Phân quyền RBAC 3 Cấp
 - 3 vai trò độc lập:
-  * `staff`: Nhân viên trực ca CSKH — chỉ được xem hộp thư trong phạm vi phân công, duyệt nháp, tra cứu thông tin ca trực.
-  * `manager`: Quản lý vận hành — xem báo cáo phân tích, gộp dữ liệu CRM, điều phối bảng việc Kanban.
-  * `owner`: Chủ máy — toàn quyền quản trị tài khoản, cấu hình hệ thống và mở buồng lái `/app`.
+  * `staff`: Nhân viên trực ca CSKH  -  chỉ được xem hộp thư trong phạm vi phân công, duyệt nháp, tra cứu thông tin ca trực.
+  * `manager`: Quản lý vận hành  -  xem báo cáo phân tích, gộp dữ liệu CRM, điều phối bảng việc Kanban.
+  * `owner`: Chủ máy  -  toàn quyền quản trị tài khoản, cấu hình hệ thống và mở buồng lái `/app`.
 - Máy chủ bảo vệ route nghiêm ngặt: Tự động từ chối bằng HTTP 403 fail-closed khi tài khoản không đủ quyền.
 
 ---
@@ -247,7 +247,7 @@ Xem chi tiết điều khoản cấp phép tại [LICENSE](LICENSE) và [NOTICE.
 
 <div align="center">
 
-**SÈO TRUM — Đồng hành cùng doanh nghiệp SME làm chủ kỷ nguyên tự động hóa AI.**  
+**SÈO TRUM  -  Đồng hành cùng doanh nghiệp SME làm chủ kỷ nguyên tự động hóa AI.**  
 Mọi đóng góp, báo lỗi (issue) và Pull Request đều được hoan nghênh trên [GitHub Repository](https://github.com/ROYCE-8425/Auto_social).
 
 </div>

@@ -2,7 +2,7 @@
 
 # 🚀 SÈO TRUM (Auto Social AI)
 
-**Multi-Channel Social Operations & Content Distribution Platform for SMEs**  
+**Multi-Channel Social Operations & Content Distribution Platform for SMEs. Built on swappable-brain agentic AI Javis OS (MIT) - capabilities reside in Javis, not models, supporting 11 providers.**  
 *Open Source (MIT License) · Self-Hosted · Privacy-First*
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-emerald.svg)](LICENSE)
@@ -61,7 +61,7 @@ For Small and Medium Enterprises (SMEs), social media is the commercial lifebloo
 |---|---|---|---|
 | **Public Landing** | `/` | General public & partners | High-conversion presentation of features, architecture, comparison table, and self-hosted benefits |
 | **Operations Hub** | `/ops` | Support Staff & Managers | Daily workspace: Draft review, customer CRM, multi-channel schedule, and Kanban operations board |
-| **System Cockpit** | `/app` | Machine Owner | AI runtime setup, MCP integrations, Markdown Second Brain, and server maintenance |
+| **System Cockpit** | `/app` | Machine Owner | AI runtime setup, MCP integrations, Markdown Second Brain, navigation rail with **7 groups** |
 
 ---
 
@@ -93,9 +93,9 @@ For Small and Medium Enterprises (SMEs), social media is the commercial lifebloo
 
 ### 6. Strict RBAC Security Matrix
 - Three defined roles:
-  * `staff`: Shift agents — view assigned inboxes, approve drafts, query shift knowledge.
-  * `manager`: Operations leads — view analytics, merge CRM records, manage Kanban boards.
-  * `owner`: Machine owner — full account management, system configuration, access to `/app`.
+  * `staff`: Shift agents  -  view assigned inboxes, approve drafts, query shift knowledge.
+  * `manager`: Operations leads  -  view analytics, merge CRM records, manage Kanban boards.
+  * `owner`: Machine owner  -  full account management, system configuration, access to `/app`.
 - Fail-closed security: Unauthorized requests are rejected with strict HTTP 403 Forbidden responses.
 
 ---
@@ -211,7 +211,7 @@ See [LICENSE](LICENSE) and [NOTICE.md](NOTICE.md) for full legal text.
 
 <div align="center">
 
-**SÈO TRUM — Empowering SMEs with Open-Source AI Automation.**  
+**SÈO TRUM  -  Empowering SMEs with Open-Source AI Automation.**  
 Contributions, bug reports, and Pull Requests are welcome on [GitHub](https://github.com/ROYCE-8425/Auto_social).
 
 </div>
