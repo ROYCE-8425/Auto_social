@@ -4,8 +4,7 @@ Thư mục chứa các tệp hình ảnh và video định dạng dọc 9:16 (10
 Hệ thống Javis và công cụ đăng PostPeer sẽ đọc các tệp từ đây để chuyển thành URL công khai.
 
 ## Cấu trúc thư mục:
-- sn/: Ảnh và video 9:16 dành cho kênh Game Giá Rẻ BSN (poster game, gameplay, ảnh bản quyền).
-- saoviet/: Ảnh và video 9:16 dành cho kênh Tin Học Sao Việt (khóa học, mẹo Excel/AutoCAD).
+- `bsn/`: Ảnh và video 9:16 dành cho kênh Game Giá Rẻ BSN (poster game, gameplay, ảnh bản quyền).
 
 ## Lưu ý:
 1. Chỉ lưu các tệp ảnh/video đã chuẩn hóa tỉ lệ dọc 9:16.

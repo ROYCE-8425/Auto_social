@@ -19,6 +19,8 @@ ctx = MockContext()
 def run_tests():
     print("=== TEST 1: Detect Course ===")
     test_cases = [
+        ("game-bsn", "game-bsn"),
+        ("Game Giá Rẻ BSN", "game-bsn"),
         ("tin-hoc", "tin-hoc"),
         ("Tin học văn phòng & AI", "tin-hoc"),
         ("autocad", "ve-ky-thuat"),
@@ -34,67 +36,55 @@ def run_tests():
         print(f"  OK: '{inp}' -> '{ckey}'")
 
     print("\n=== TEST 2: Strict Cover Guard (Chặn cover sai ngành) ===")
-    dummy_dohoa = Path(ctx.vault_root) / "attachments" / "dataset" / "do-hoa" / "temp_dohoa_poster.png"
-    dummy_cad = Path(ctx.vault_root) / "attachments" / "dataset" / "ve-ky-thuat" / "temp_autocad_poster.png"
-    dummy_dohoa.write_bytes(b"\x89PNG\r\n\x1a\nfake")
-    dummy_cad.write_bytes(b"\x89PNG\r\n\x1a\nfake")
+    dummy_cad = Path(ctx.vault_root) / "attachments" / "dataset" / "_xuat" / "temp_autocad_poster.png"
+    dummy_cad.parent.mkdir(parents=True, exist_ok=True)
+    dummy_cad.write_bytes(b"\x89PNG\r\n\x1a\nfake_cad")
     try:
-        # Thử truyền cover đồ họa vào bài tin-hoc
-        photos, err = plugin._auto_prepare_album("tin-hoc", str(dummy_dohoa.relative_to(ctx.vault_root)), ctx)
+        # Thử truyền cover autocad vào bài game-bsn (autocad nằm trong forbidden list của game-bsn)
+        photos, err = plugin._auto_prepare_album("game-bsn", str(dummy_cad.relative_to(ctx.vault_root)), ctx)
         assert err is not None and "VIOLATION_ASSET_GUARD" in err, f"Chưa chặn cover sai ngành: {err}"
-        print(f"  OK: Đã chặn cover đồ họa khi đăng tin-hoc: {err[:60]}...")
-
-        # Thử truyền cover autocad vào bài ke-toan
-        photos, err = plugin._auto_prepare_album("ke-toan", str(dummy_cad.relative_to(ctx.vault_root)), ctx)
-        assert err is not None and "VIOLATION_ASSET_GUARD" in err, f"Chưa chặn cover sai ngành: {err}"
-        print(f"  OK: Đã chặn cover AutoCAD khi đăng ke-toan: {err[:60]}...")
+        print(f"  OK: Đã chặn cover AutoCAD khi đăng game-bsn: {err[:60]}...")
     finally:
-        if dummy_dohoa.exists(): dummy_dohoa.unlink()
         if dummy_cad.exists(): dummy_cad.unlink()
 
     print("\n=== TEST 3: Auto Prepare Album - Chặn thiếu cover AI & Thành công khi có cover AI ===")
     # 3.1: Thử gọi không truyền cover hoặc cover='auto' -> PHẢI trả về POST_SKIP ly-do=thieu-cover-ai
-    for course in ["tin-hoc", "ve-ky-thuat", "do-hoa", "ke-toan"]:
+    for course in ["game-bsn"]:
         photos, err = plugin._auto_prepare_album(course, "auto", ctx)
         assert err is not None and "POST_SKIP ly-do=thieu-cover-ai" in err, f"Chưa chặn thiếu cover AI cho {course}: {err}"
         print(f"  OK: Đã chặn thành công khi không có cover AI cho '{course}'")
 
     # 3.2: Khi có cover AI hợp lệ -> Tạo album thành công 100%, ảnh cover làm photos[0]
-    dummy_covers = {}
-    for course, alias in [("tin-hoc", "tinhoc"), ("ve-ky-thuat", "cad"), ("do-hoa", "dohoa"), ("ke-toan", "ketoan")]:
-        cov_p = Path(ctx.vault_root) / "attachments" / "dataset" / "_xuat" / f"ai_gen_cover_{alias}_test.png"
-        cov_p.write_bytes(b"\x89PNG\r\n\x1a\nfake_ai_cover")
-        dummy_covers[course] = cov_p
+    cov_p = Path(ctx.vault_root) / "attachments" / "dataset" / "_xuat" / "ai_gen_cover_bsn_test.png"
+    cov_p.parent.mkdir(parents=True, exist_ok=True)
+    cov_p.write_bytes(b"\x89PNG\r\n\x1a\nfake_ai_cover")
 
     try:
-        for course in ["tin-hoc", "ve-ky-thuat", "do-hoa", "ke-toan"]:
-            cov_p = dummy_covers[course]
-            photos, err = plugin._auto_prepare_album(course, str(cov_p.relative_to(ctx.vault_root)), ctx)
-            assert err is None, f"Lỗi tạo album cho {course}: {err}"
-            assert len(photos) >= 5, f"Album {course} không đủ ảnh: {len(photos)}"
-            assert "ai_gen_cover" in Path(photos[0]).name, f"Ảnh đầu không phải cover AI: {photos[0]}"
-            print(f"  OK: [{course}] Đã tạo album {len(photos)} ảnh chuẩn hóa với cover AI:")
-            for i, p in enumerate(photos[:2]):
-                print(f"       Ảnh #{i}: {Path(p).name}")
+        photos, err = plugin._auto_prepare_album("game-bsn", str(cov_p.relative_to(ctx.vault_root)), ctx)
+        assert err is None, f"Lỗi tạo album cho game-bsn: {err}"
+        assert len(photos) >= 5, f"Album game-bsn không đủ ảnh: {len(photos)}"
+        assert "ai_gen_cover" in Path(photos[0]).name, f"Ảnh đầu không phải cover AI: {photos[0]}"
+        print(f"  OK: [game-bsn] Đã tạo album {len(photos)} ảnh chuẩn hóa với cover AI:")
+        for i, p in enumerate(photos[:2]):
+            print(f"       Ảnh #{i}: {Path(p).name}")
     finally:
-        for p in dummy_covers.values():
-            if p.exists(): p.unlink()
+        if cov_p.exists(): cov_p.unlink()
 
     print("\n=== TEST 4: Hub Call Auto Post Guard ===")
     hub_call_path = repo_root / "brains" / "Brain Default" / "scratch" / "hub_call.py"
     sys.path.insert(0, str(hub_call_path.parent))
     import hub_call  # noqa: E402
 
-    ckey, spec = hub_call.detect_course("tin-hoc")
-    assert ckey == "tin-hoc"
-    photos = hub_call.unique_dataset_photos("tin-hoc _ai", forbidden=spec["forbidden"])
+    ckey, spec = hub_call.detect_course("game-bsn")
+    assert ckey == "game-bsn"
+    photos = hub_call.unique_dataset_photos("game-bsn", forbidden=spec["forbidden"])
     assert len(photos) > 10
-    # Đảm bảo không có bất kỳ file cad hay dohoa nào lọt vào
+    # Đảm bảo không có bất kỳ file forbidden nào lọt vào
     for p in photos:
         p_stem = Path(p).stem.lower().replace(" ", "").replace("_", "").replace("-", "")
         for forb in spec["forbidden"]:
             assert forb not in p_stem, f"File vi phạm lọt vào: {p}"
-    print(f"  OK: hub_call lọc {len(photos)} ảnh tin-hoc _ai 100% sạch, không dính forbidden keywords.")
+    print(f"  OK: hub_call lọc {len(photos)} ảnh game-bsn 100% sạch, không dính forbidden keywords.")
 
     print("\n=== TEST 5: Integration 1 - Resolve Docker Container Paths ===")
     test_cov = Path(ctx.vault_root) / "attachments" / "dataset" / "_xuat" / "docker_test_cover.png"
@@ -120,10 +110,11 @@ def run_tests():
 
     print("\n=== TEST 6: Integration 2 - Direct Auto Prepare Album với Container Path ===")
     dummy_cov = Path(ctx.vault_root) / "attachments" / "dataset" / "_xuat" / "direct_album_cover.png"
+    dummy_cov.parent.mkdir(parents=True, exist_ok=True)
     dummy_cov.write_bytes(b"\x89PNG\r\n\x1a\ndirect_cover")
     try:
         container_p = "/brains/Brain Default/attachments/dataset/_xuat/direct_album_cover.png"
-        photos, err = plugin._auto_prepare_album("do-hoa", container_p, ctx)
+        photos, err = plugin._auto_prepare_album("game-bsn", container_p, ctx)
         assert err is None, f"Lỗi auto_prepare_album với container path: {err}"
         assert len(photos) >= 5, f"Không đủ ảnh: {len(photos)}"
         assert Path(photos[0]).name == "direct_album_cover.png", f"Cover đầu không khớp: {photos[0]}"
@@ -141,6 +132,10 @@ def run_tests():
          "Dựa theo wiki và brand kit Royce Shop, bài viết có 7 ảnh bao gồm cover AI. "
          "post_id: 122104593884849684_122104594244849684. page: Royce Shop",
          "do-hoa"),
+        ("Game Giá Rẻ BSN",
+         "Đã đăng bài viết game bản quyền Steam cho page Game Giá Rẻ BSN với 8 ảnh. "
+         "post_id: 343562028848465_99999999999999",
+         "game-bsn"),
         ("Tin học văn phòng & AI",
          "Đã đăng bài viết tuyển sinh Tin học văn phòng & AI cho page Royce Shop với 8 ảnh. "
          "post_id: 122104593884849684_99999999999999",

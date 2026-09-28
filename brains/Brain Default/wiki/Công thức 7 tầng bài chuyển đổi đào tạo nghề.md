@@ -7,7 +7,7 @@ created: 2026-09-04
 updated: 2026-09-04
 source: [[conversations/2026-09-04]]
 ---
-Framework Direct Response cho bài tuyển sinh khóa học nghề trên Facebook, đúc từ mẫu bài Kế toán Sao Việt. [[conversations/2026-09-04]]
+Framework Direct Response cho bài tuyển sinh / chuyển đổi dịch vụ trên Facebook. [[conversations/2026-09-04]]
 
 1. **Hook đảo định kiến:** mở bằng câu hỏi nhức nhối (ví dụ "Học Kế Toán Có Khó Không?") rồi nâng tầm nghề. [[conversations/2026-09-04]]
 2. **Call-out đối tượng:** điểm mặt 2-3 nhóm (mất gốc, bắt đầu từ zero, học lâu không dùng). [[conversations/2026-09-04]]

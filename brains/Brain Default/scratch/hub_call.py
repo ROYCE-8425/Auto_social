@@ -47,6 +47,12 @@ COURSE_SPECS = {
         "forbidden": ["dohoa", "do-hoa", "do_hoa", "photoshop", "illustrator", "autocad", "cad", "vekythuat", "ve-ky-thuat", "solidworks", "tinhoc", "tin-hoc", "vanphong", "office", "word", "excel"],
         "display": "Kế toán thực hành",
     },
+    "game-bsn": {
+        "folder": "game-bsn",
+        "aliases": ["game", "bsn", "game-bsn", "game-gia-re", "steam", "offline", "gamegiarebsn"],
+        "forbidden": ["autocad", "cad", "vekythuat", "ve-ky-thuat", "solidworks", "ketoan", "ke-toan", "ke_toan", "misa", "tax", "tinhoc", "tin-hoc", "vanphong", "office", "word", "excel", "tuyensinh", "tuyen-sinh", "khaigiang", "khai-giang", "chungkhoan"],
+        "display": "Game Giá Rẻ BSN (Kho Game Steam Offline & Bản Quyền)",
+    },
 }
 
 
@@ -93,6 +99,8 @@ def resolve_dataset_folder(folder):
         f = "do-hoa"
     elif any(k in low for k in ("ketoan", "misa", "tax", "sach", "chungtu")):
         f = "ke-toan"
+    elif any(k in low for k in ("game", "bsn", "steam")):
+        f = "game-bsn"
     elif low in ("chung", "logo"):
         f = "chung"
 
