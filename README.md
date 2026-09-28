@@ -1,8 +1,16 @@
 <div align="center">
 
-# 🚀 Javis Ops
+# 🚀 SÈO TRUM (Auto Social AI)
 
-**Lớp vận hành mạng xã hội cho SME, tự host, mã nguồn mở. Đứng trên AI agentic đổi được bộ não [Javis OS](https://github.com/blogminhquy/javis-os) (MIT).**
+**Nền tảng Tự động hóa Vận hành & Phân phối Nội dung Đa Kênh Cho Doanh Nghiệp SME**  
+*Mã nguồn mở (MIT License) · Tự host (Self-Hosted) · Bảo mật dữ liệu (Privacy-First)*
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-emerald.svg)](LICENSE)
+[![Python: 3.12](https://img.shields.io/badge/Python-3.12-blue.svg)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-Async-009688.svg)](https://fastapi.tiangolo.com/)
+[![React: 18](https://img.shields.io/badge/React-18-61dafb.svg)](https://react.dev/)
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ed.svg)](https://www.docker.com/)
+[![CI Status](https://img.shields.io/badge/CI-Passing-brightgreen.svg)](.github/workflows/ci.yml)
 
 ***Tiếng Việt** · [English](README.en.md)*
 
@@ -10,333 +18,236 @@
 
 ---
 
-## 🎯 Đây là gì
-Não AI (Javis) chạy nền (năng lực nằm ở Javis, không nằm ở model, hỗ trợ 11 nhà cung cấp). Nhân viên dùng `/ops`. Chủ máy dùng `/app`.
-
-## 🚪 Ba cửa
-
-| URL | Ai sử dụng | Công việc |
-|---|---|---|
-| `/` | Công chúng, khách truy cập | Trang giới thiệu (Landing Page) |
-| `/ops` | Nhân viên CSKH, Quản lý | Hộp thư duyệt nháp, CRM khách hàng, bảng việc, TikTok (xem) |
-| `/app` | Chủ máy (Owner) | Buồng lái kỹ thuật: Console, MCP, loop, agent, đăng thử TikTok |
-
-## ⚡ Tính năng cốt lõi (Features)
-- **Trung tâm Phân phối Đa Kênh (Social Channels Hub):** Điều phối tập trung "Bộ Tứ Quyền Lực" (Facebook & Messenger, TikTok Video & Shop, Instagram & Threads, YouTube Shorts & Channel). Tái sử dụng 1 nội dung video dọc/carousel phân phối tới 95% khách hàng mà không tốn công biên tập nhiều lần.
-- **Hộp thư Hợp nhất & Duyệt Nháp (Human-in-the-Loop):** AI tự động phân loại ý định, trích xuất SĐT và soạn nháp câu trả lời cho cả bình luận Fanpage và tin nhắn Messenger. Nhân viên kiểm duyệt 1-click trước khi gửi, đảm bảo kiểm soát chất lượng tuyệt đối.
-- **Khách hàng CRM & Chấm điểm Lead:** Tự động lưu trữ hồ sơ tương tác, phân nhóm khách hàng (Lead nóng, Đang tư vấn, Đã mua, Khiếu nại), đo lường hiệu quả từng kênh chuyển đổi.
-- **Trung tâm Điều hành & Bảng việc Kanban:** Theo dõi trạng thái quy trình tự động hóa, kiểm soát tiến độ công việc và can thiệp nhanh khi cần.
-- **Xuất bản TikTok Tự động (PostPeer Gateway):** Đăng video dọc 9:16 và bộ ảnh carousel, tự động gắn nhạc nền Hot (`autoAddMusic`), phục vụ media an toàn qua CDN `/tiktok-media`.
-- **Hệ thống Brand Kit Đa Thương hiệu:** Quản lý tài sản thương hiệu bằng Markdown độc lập, hỗ trợ cách ly hoàn toàn dữ liệu giữa các nhãn hàng khác nhau.
-- **Bảo mật & Phân quyền RBAC:** 3 vai trò độc lập `staff` (Nhân viên CSKH), `manager` (Quản lý vận hành), `owner` (Chủ máy). Máy chủ bảo vệ route bằng HTTP 403 fail-closed nghiêm ngặt.
-
-## 🚫 Không phải
-- **Không phải** SaaS thu phí khóa vendor (Vendor lock-in).
-- **Không phải** giải pháp thay thế Facebook Graph API bằng PostPeer (chỉ dùng PostPeer làm cầu nối BYO key cho TikTok).
-- **Không phải** chatbot full-brain mở thả nổi ra ngoài cho khách tự do chat với AI.
-
-## ⏱️ Nhanh
-Triển khai bằng Docker hoặc VPS như Javis OS gốc.
-- Giao diện Landing: `http://<ip>:7777/`
-- Giao diện Vận hành: `http://<ip>:7777/ops`
-- Buồng lái Chủ máy: `http://<ip>:7777/app`
-*(Ví dụ triển khai demo: `https://trannhuy.online`)*
-
-## 🔒 Bảo mật
-- Tuyệt đối **không** commit `page_tokens.json`, `POSTPEER_API_KEY`, `.env`, `settings.json` vào git.
-- Các script tích hợp (như `scripts/connect_postpeer.py`) đọc cấu hình trực tiếp từ biến môi trường hoặc vault an toàn.
-- Xem chi tiết tại [SECURITY.md](SECURITY.md).
-
-## 📜 Ghi công & Bản quyền (Attribution)
-Javis OS © Nguyễn Minh Quý (blogminhquy), MIT License.  
-Lớp vận hành Javis Ops © 2026 contributors of Auto_social / Javis Ops, MIT License.  
-Xem chi tiết tại [NOTICE.md](NOTICE.md) và [LICENSE](LICENSE).
+> [!NOTE]
+> **Tuyên bố Nền tảng & Giấy phép MIT:**  
+> Dự án **Sèo Trum** được phát triển trên nền tảng tác tử AI mã nguồn mở **[Javis OS](https://github.com/blogminhquy/javis-os)** (Bản quyền © 2026 Nguyễn Minh Quý - blogminhquy, giấy phép MIT).  
+> Nhóm tác giả Sèo Trum kế thừa nhân xử lý tác tử và cổng kết nối công cụ (MCP Hub) của Javis OS, đồng thời thiết kế và phát triển mới hoàn toàn: **Hệ thống điều phối đa kênh (Social Channels Hub), Cổng xuất bản TikTok tự động, Hộp thư hợp nhất Human-in-the-Loop, CRM chấm điểm lead tự động và Cổng vận hành phân quyền RBAC (`/ops`)**.
 
 ---
 
+## 🎯 Giới thiệu Dự án
 
-## 🚀 Cài đặt
+Đối với các doanh nghiệp vừa và nhỏ (SME), mạng xã hội là huyết mạch kinh doanh nhưng cũng là gánh nặng vận hành lớn:
+1. **Quá tải & Bỏ sót khách hàng:** Khách hàng phân mảnh trên 4–5 nền tảng (Facebook, TikTok, Instagram, YouTube). Trả lời chậm trễ sau 15–30 phút khiến tỷ lệ rớt đơn lên đến 60%.
+2. **Rủi ro AI phát ngôn sai lệch:** Sử dụng chatbot tự do thả nổi (free-wheeling AI) dễ dẫn đến ảo giác (hallucination), tư vấn sai giá, cam kết sai chính sách gây khủng hoảng thương hiệu.
+3. **Bẫy chi phí SaaS đóng:** Các nền tảng thương mại thu phí theo từng page, từng tài khoản nhân sự và khóa chặt dữ liệu khách hàng.
 
-> ⚠️ **Quan trọng về bảo mật:** Javis chạy bộ não AI với **toàn quyền** trên máy. Khi chạy public (Docker/VPS/Hostinger), Javis **tự bắt buộc đăng nhập** - mở app ra là màn tạo tài khoản / đăng nhập, không ai điều khiển được khi chưa có mật khẩu.
-
-### Cách 1 - Hostinger Docker Manager (tên miền + HTTPS) ⚡
-
-VPS Hostinger → **Docker Manager → Compose → URL** → dán **file Hostinger** rồi **Deploy**:
-```
-https://raw.githubusercontent.com/blogminhquy/javis-os/main/docker-compose.hostinger.yml
-```
-Ô **Environment** của mẫu mới chỉ còn 3 trường cần thiết: `DOMAIN_NAME`,
-`JAVIS_ADMIN_USER`, `JAVIS_ADMIN_PASSWORD`. Các biến kỹ thuật về cổng, state,
-brain và thư mục chạy đã được ẩn vì Docker image tự đặt đúng.
-
-Đặt `DOMAIN_NAME` để Traefik của Hostinger cấp HTTPS:
-- **Link miễn phí** (không cần mua tên miền): `DOMAIN_NAME=javis.<hostname-vps>.hstgr.cloud`
-  (hostname xem ở hPanel → VPS, vd `javis.srv1562015.hstgr.cloud`).
-- **Tên miền riêng:** `DOMAIN_NAME=tenmien.com` + trỏ DNS A về IP VPS.
-
-Deploy → đợi 1-3 phút Traefik cấp SSL → mở `https://<DOMAIN_NAME>`. (Chi tiết + xử lý sự cố: [DEPLOY.md](DEPLOY.md).)
-
-> Chỉ muốn chạy nhanh bằng `http://<ip>:7777` (chưa cần tên miền): dùng `docker-compose.yml` (Cách 2).
-
-**3 việc làm 1 lần:**
-1. **Để image GHCR ở chế độ Public:** GitHub → repo → **Packages** → `javis-os` → *Package settings* → Visibility = **Public**.
-2. **Tạo tài khoản admin** (chọn 1):
-   - *Khuyến nghị:* điền sẵn `JAVIS_ADMIN_USER` + `JAVIS_ADMIN_PASSWORD` đang có trong ô Environment → mở app **đăng nhập luôn**.
-   - *Hoặc:* mở app sẽ hỏi **MÃ THIẾT LẬP** - trong **App terminal** (vào bên trong container) chạy: `cat /data/state/.setup_token`.
-3. **Đăng nhập bộ não:** App terminal → `claude auth login --claudeai` → mở link, dán code. (Dùng gói ChatGPT thì đăng nhập ở trang **Models** sau khi mở app.)
-
-### Cách 2 - Docker trên VPS bất kỳ (pull image, không cần clone)
-
-```bash
-# Cần Docker (chưa có?  curl -fsSL https://get.docker.com | sh)
-mkdir javis && cd javis
-curl -fsSLO https://raw.githubusercontent.com/blogminhquy/javis-os/main/docker-compose.yml
-
-docker compose run --rm javis claude auth login --claudeai   # đăng nhập Claude 1 lần
-docker compose up -d                                          # pull image + chạy
-```
-Mở `http://<ip-vps>:7777` → màn tạo tài khoản admin (xem MÃ THIẾT LẬP trong `docker compose logs javis`).
-
-### Cách 3 - Cài trực tiếp lên Linux/macOS (không Docker)
-
-```bash
-git clone https://github.com/blogminhquy/javis-os.git javis && cd javis
-chmod +x install.sh && ./install.sh
-```
-Script tự cài Python + Node + hai engine CLI (Claude Code, Codex), tạo venv, đăng ký dịch vụ systemd tự chạy khi boot, in ra địa chỉ. Báo Claude chưa đăng nhập thì chạy 1 lần: `claude auth login --claudeai`.
-
-> 🍎 **macOS - mở như một app:** sau khi cài xong, double-click `JAVIS OS.app` (hoặc `Start JAVIS OS.command`) để chạy server + mở dashboard; tự chạy khi đăng nhập máy: `./bin/javis-autostart.sh install`. Chi tiết: [bin/README.md](bin/README.md).
-
-### Cách 4 - Windows (máy cá nhân)
-
-```
-1. Cài Python 3.12 (tick "Add to PATH") + Node.js LTS
-2. Double-click  setup.bat   (chạy hiện cửa sổ - tự cài Claude Code + Codex)
-   Lần sau muốn chạy ngầm: start-javis.vbs   (log ở server\javis.log)
-3. Mở http://localhost:7777 → trang Models, đăng nhập bộ não muốn dùng
-4. Dừng: stop-javis.bat
-```
-
-> 🪟 **Windows - mở như một app:** sau khi `setup.bat` chạy xong lần đầu, từ đó về sau chỉ cần double-click **`JAVIS OS.bat`** - server tự chạy nền (không cửa sổ đen) rồi dashboard tự mở thành **cửa sổ riêng** không thanh địa chỉ, có ô riêng trên taskbar. Tự chạy khi đăng nhập máy: `javis-autostart.bat install` (gỡ: `uninstall`).
-
-### Nhiều bản Javis trên cùng một VPS (mỗi bản một link riêng)
-
-Chạy được bao nhiêu bản cũng được - brain, cài đặt và tài khoản của mỗi bản tách bạch hoàn toàn.
-Chỉ cần ba giá trị khác nhau giữa các bản: `JAVIS_NAME`, `JAVIS_HOST_PORT`, `DOMAIN_NAME`.
-
-- **Hostinger:** deploy `docker-compose.hostinger.yml` thành stack thứ hai, điền ba ô đó.
-- **VPS tự quản:** chạy proxy dùng chung `docker-compose.proxy.yml` **một lần cho cả máy**, rồi
-  mỗi bản một thư mục riêng dùng kèm `docker-compose.multi.yml`. Proxy tự phát hiện bản mới,
-  tự xin SSL - thêm bản không phải sửa gì ở proxy.
-- **Native:** `JAVIS_NAME=javis-shop JAVIS_PORT=7778 ./install.sh`.
-
-Bỏ trống các biến = y hệt cách cài cũ. Từng bước một: **[DEPLOY.md](DEPLOY.md)**.
-
-📄 Chi tiết hơn (named tunnel URL cố định, build từ source…) xem **[DEPLOY.md](DEPLOY.md)**.
+**SÈO TRUM** ra đời để giải quyết triệt để 3 bài toán trên bằng mô hình **Human-in-the-Loop**:
+- **AI đảm nhận 80% tác vụ lặp lại:** Quét tin nhắn, bình luận 24/7; phân loại ý định khách hàng; tự động trích xuất số điện thoại; soạn sẵn bản nháp câu trả lời chuẩn xác theo Brand Kit thương hiệu chỉ trong 30 giây.
+- **Con người nắm 20% quyền quyết định then chốt:** Nhân viên CSKH kiểm tra bản nháp và bấm "Duyệt gửi" 1-click. Tuyệt đối không để AI tự ý phát ngôn ra ngoài khi chưa được xác nhận.
+- **1 Nội dung $\rightarrow$ 4 Kênh phân phối:** Biên tập một video ngắn hoặc album ảnh, tự động đẩy lên Facebook Reels, TikTok, Instagram và YouTube Shorts.
 
 ---
 
-## 🎬 Thiết lập lần đầu
+## 🚪 Mô hình 3 Cửa Truy cập (Three Portals)
 
-Mở Javis → bộ cài đặt sẽ dẫn bạn qua:
+Hệ thống phân tách rành mạch không gian trải nghiệm theo đúng vai trò người dùng:
 
-1. **Tài khoản admin** - đặt mật khẩu (bắt buộc khi chạy public, để chặn người lạ).
-2. **Chọn bộ não** - đi bằng gói subscription thì đăng nhập 1 lần, không cần API key: Claude Code lưu token trong `~/.claude` (Docker: volume riêng → không mất khi update), ChatGPT/Codex đăng nhập ngay trong trang **Models**. Đi bằng API key thì chỉ dán key OpenRouter / OpenAI / Gemini / Anthropic là xong. Ở thẻ Claude Code còn một ô **"Chạy bằng"**: giữ gói đang đăng nhập, hoặc chuyển sang API key Anthropic - hai lựa chọn giữ nguyên năng lực, chỉ khác ai trả tiền và ai chịu rủi ro (xem cảnh báo ở trên).
-3. **Chọn model** - mặc định chọn sẵn Claude Code, nhưng đổi sang nhà cung cấp nào trong **Models** cũng được và **không mất chức năng nào** (trừ chạy lệnh máy, vốn chỉ có ở hai engine CLI).
-4. **Đấu kết nối** (tuỳ chọn) - vào **Kết nối**, chọn dịch vụ trong Kho rồi dán key hoặc quét QR. Javis sẽ báo cáo số liệu thật từ đó.
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│                          HỆ THỐNG SÈO TRUM                             │
+├───────────────────┬──────────────────────────┬─────────────────────────┤
+│    Cửa 1: `/`     │      Cửa 2: `/ops`       │       Cửa 3: `/app`     │
+│   (Landing Page)  │     (Sèo Trum Ops)       │     (Buồng lái Lõi)     │
+├───────────────────┼──────────────────────────┼─────────────────────────┤
+│ Công chúng, khách │ Nhân viên CSKH (Staff),  │ Chủ máy (Owner),        │
+│ ghé thăm tìm hiểu │ Quản lý vận hành (Mgr)   │ Kỹ sư vận hành hệ thống │
+├───────────────────┼──────────────────────────┼─────────────────────────┤
+│ Giới thiệu tính   │ Hộp thư duyệt nháp 30s,  │ Buồng lái AI, MCP Hub,  │
+│ năng, bảng so     │ CRM & bắt số Lead nóng,  │ Second Brain Wiki, nạp  │
+│ sánh, live demo   │ Social Hub, bảng Kanban  │ model AI, console máy   │
+└───────────────────┴──────────────────────────┴─────────────────────────┘
+```
 
----
-
-## 📖 Hướng dẫn sử dụng
-
-> 📚 **Tài liệu chi tiết:** xem thư mục **[docs/](docs/README.md)** - hướng dẫn từng chức năng (mở ở đâu, bấm gì, dùng thế nào). Bảng dưới là bản đồ nhanh; cột **Chi tiết** dẫn tới trang hướng dẫn tương ứng.
-
-Thanh điều hướng bên trái gom **19 trang** thành **7 nhóm** (bấm tên nhóm để mở):
-
-| Nhóm | Mục | Làm gì | Chi tiết |
+| Cửa | Đường dẫn | Người dùng | Chức năng chính |
 |---|---|---|---|
-| **Trợ lý** | **Javis** | Màn chính: trò chuyện (gõ hoặc nói), đồ thị tri thức, cây thư mục brain bên trái. | [Trò chuyện & giọng nói](docs/02-tro-chuyen-va-giong-noi.md) · [Đồ thị tri thức](docs/03-do-thi-tri-thuc.md) |
-| | **Trò chuyện** | Khung chat rộng toàn màn hình kèm cột lịch sử hội thoại. | [Phiên hội thoại](docs/04-phien-hoi-thoai.md) |
-| **Bộ não** | **Tệp tin** | Duyệt brain, **sửa `.md`/`.txt` trực tiếp**, tìm file theo tên/nội dung, tải lên/về. | [Quản lý tệp tin](docs/05-quan-ly-tep-tin.md) |
-| | **Tự học** | Javis tự rút ký ức, đúc Wiki, kỹ năng sau mỗi hội thoại; hoàn tác được. | [Tự học](docs/22-tu-hoc.md) |
-| **Code** | **Terminal** | **Dòng lệnh thật** của máy chạy Javis, mở ngay trong trình duyệt - khỏi mở SSH. | [Nhóm Code: Terminal](docs/27-tab-code-terminal.md) |
-| **Năng lực** | **Agents** | Tạo trợ lý chuyên biệt (vai trò + skill + bộ nhớ riêng). | [Agents & Workflows](docs/07-agents-va-workflows.md) |
-| | **Skills** | Gom nhóm + tìm kiếm + **bật/tắt** + thêm/sửa/xoá + nhập/xuất skill. | [Skills](docs/06-skills.md) |
-| | **Workflows** | Tạo/chạy chuỗi tự động (agent → agent), có bước kiểm chứng. | [Agents & Workflows](docs/07-agents-va-workflows.md) |
-| | **Plugins** | Thêm tool/hook native cho mọi engine bằng một thư mục Python. | [Plugins](docs/20-plugins.md) |
-| | **Chatbot** | Đem Agent ra trả lời khách qua bot Telegram/Zalo riêng, brain riêng. | [Chatbot](docs/25-chatbot.md) |
-| **Việc** | **Việc** | Hàng đợi task nền do AI tự đặc tả và tự chạy; bạn chỉ xử lý ngoại lệ. | [Việc (Kanban)](docs/21-viec-kanban.md) |
-| | **Việc định kỳ** | Nhiều vòng lặp chạy nền + nhắc hẹn theo giờ hoặc cron. | [Việc định kỳ & Nhắc hẹn](docs/08-viec-dinh-ky.md) |
-| **Kết nối** | **Kết nối** | Kho dịch vụ ngoài, đa tài khoản cùng một dịch vụ, phân quyền 3 mức. | [Kết nối & số liệu](docs/09-mcp-va-so-lieu.md) |
-| | **Kênh** | Bật bot Telegram (hỏi Javis qua điện thoại). | [Kênh Telegram](docs/11-telegram.md) · [Kênh Zalo](docs/12-zalo.md) |
-| | *(terminal)* | `pip install javis-cli` rồi gõ `javis "..."` - kênh thứ ba, cùng một Javis. | [Javis CLI](docs/24-cli-terminal.md) |
-| | **Models** | Main model + các provider + mức suy nghĩ + model việc nền. | [Models & engine](docs/10-models-va-engine.md) |
-| **Hệ thống** | **Mức dùng** | Token và chi phí theo ngày, theo nhà cung cấp, theo nguồn phát sinh. | [Mức dùng](docs/23-muc-dung-token.md) |
-| | **Cài đặt** | Trạng thái hệ thống, giao diện & brain, giọng nói, thương hiệu, tên miền. | [Bắt đầu & thiết lập](docs/01-bat-dau-thiet-lap.md) |
-| | **Cập nhật** | Phiên bản hiện tại, cập nhật/Redeploy, tiến trình và nhật ký tính năng mới. | [Khắc phục sự cố](docs/17-khac-phuc-su-co.md) |
-| | **Tài khoản** | Workspace, đăng nhập/đăng xuất, đổi/tắt mật khẩu, token API cho CLI. | [Bảo mật & tài khoản](docs/14-bao-mat-tai-khoan.md) · [Javis CLI](docs/24-cli-terminal.md) |
-
-**Mục lục đầy đủ (27 trang):** [docs/README.md](docs/README.md) - gồm thêm [Second Brain: bộ nhớ / Wiki / INGEST](docs/13-second-brain-bo-nho-wiki.md), [Sao lưu brain lên GitHub](docs/18-sao-luu-github.md), [Task & Dataview trong note](docs/19-task-va-dataview.md), [Thương hiệu & tên miền riêng](docs/15-thuong-hieu-ten-mien.md), [Cấu hình .env](docs/16-cau-hinh-env.md).
-
-### Vài luồng hay dùng
-
-- **Hỏi số liệu:** *"Doanh thu hôm nay thế nào? So với hôm qua?"* → Javis gọi đúng kết nối, trả số thật + đề xuất.
-- **Tiêu hoá tri thức (INGEST):** thả file/ghi chú vào → Javis tóm tắt, rút insight, viết vào Wiki, gợi ý task.
-- **Giao việc nền:** vào **Việc** → **+ Giao goal** → mô tả bằng lời (vd *"tổng hợp bán hàng tuần này, tìm hàng bán chậm, soạn 3 caption đẩy hàng"*) → AI tự đặc tả và chạy, báo kết quả về Telegram.
-- **Việc định kỳ:** vào **Việc định kỳ** → **+ Thêm việc** → chọn *Việc lặp* (mỗi N phút) hoặc *Nhắc hẹn* (8h30 mỗi ngày).
-- **Giọng nói:** bấm mic (hoặc bật rảnh tay) → nói → Javis trả lời bằng giọng.
+| **Trang chủ** | `/` | Khách truy cập, đối tác | Landing Page hiện đại giới thiệu tính năng, kiến trúc, bảng so sánh và bảng giá tự host |
+| **Vận hành** | `/ops` | Nhân viên CSKH & Quản lý | Không gian làm việc hằng ngày: Duyệt nháp trả lời, quản lý khách hàng CRM, theo dõi lịch đăng đa kênh, bảng việc Kanban |
+| **Buồng lái** | `/app` | Chủ máy (Owner) | Cấu hình bộ não AI, kết nối MCP, Second Brain Markdown, quản lý tài nguyên máy chủ |
 
 ---
 
-## ⚙️ Cấu hình (`.env`)
+## ⚡ Tính năng Cốt lõi (Core Features)
 
-Mọi dòng để trống vẫn chạy được. Sao chép `env.example` → `.env` (file mẫu cố ý KHÔNG có dấu chấm đầu để Docker Manager của Hostinger không tự nhập nó vào ô Environment).
+### 1. Trung tâm Phân phối Đa Kênh (Social Channels Hub)
+- Điều phối tập trung 4 nền tảng mạng xã hội: **Facebook Fanpage & Messenger**, **TikTok Video & Shop**, **Instagram & Threads**, **YouTube Shorts & Channel**.
+- Ma trận phân phối 1:N: Tái sử dụng 1 video ngắn 9:16 hoặc bộ ảnh carousel để tiếp cận 95% tệp khách hàng tiềm năng mà không tốn công biên tập nhiều lần.
+
+### 2. Hộp thư Hợp nhất & Duyệt Nháp 30 Giây (Unified Care Inbox)
+- Gom bình luận Fanpage và tin nhắn Messenger vào một luồng duy nhất theo thời gian thực.
+- **Bộ lọc ý định (Rules-First Intent Classifier):** Nhận diện chính xác khách hỏi giá, tư vấn cấu hình, hỏi địa chỉ, check inbox hay khiếu nại.
+- **Trích xuất số điện thoại tự động:** Tự động bắt SĐT từ bình luận/tin nhắn (hỗ trợ đầy đủ các định dạng số Việt Nam: `09x`, `08x`, `+84`, có dấu chấm/cách/gạch ngang).
+- **Phòng chống ảo giác (Anti-Hallucination):** AI chỉ soạn nháp dựa trên thông tin có sẵn trong Brand Kit. Nhân viên bấm 1-click "Duyệt gửi" hoặc chỉnh sửa nhanh trước khi gửi.
+
+### 3. Khách hàng CRM & Chấm điểm Lead Tự động
+- Tự động xây dựng hồ sơ khách hàng từ dữ liệu tương tác mạng xã hội.
+- Phân loại trạng thái vòng đời khách hàng: *Khách mới $\rightarrow$ Đang tư vấn $\rightarrow$ Đã để lại SĐT (Lead nóng) $\rightarrow$ Đã mua hàng $\rightarrow$ Khiếu nại*.
+- Hỗ trợ gộp trùng khách hàng (Merge Profiles) đa kênh và gắn thẻ tag phân nhóm.
+
+### 4. Xuất bản TikTok Tự động (PostPeer BYO Gateway)
+- Tích hợp cổng xuất bản video ngắn và album ảnh carousel qua PostPeer API (hỗ trợ Bring Your Own API Key).
+- Tính năng tự động lồng nhạc nền hot trend (`autoAddMusic=True`).
+- Máy chủ phục vụ CDN nội bộ `/tiktok-media` đáp ứng đúng tiêu chuẩn kỹ thuật kiểm duyệt của TikTok Content API.
+
+### 5. Quản lý Đa Thương hiệu (Multi-Brand Kit Resolver)
+- Quản lý thông tin từng thương hiệu bằng các file Markdown độc lập.
+- Cô lập dữ liệu hoàn toàn: Giá cả, hotline, kịch bản chốt đơn của thương hiệu này không bao giờ bị rò rỉ sang thương hiệu khác.
+
+### 6. Bảo mật & Phân quyền RBAC 3 Cấp
+- 3 vai trò độc lập:
+  * `staff`: Nhân viên trực ca CSKH — chỉ được xem hộp thư trong phạm vi phân công, duyệt nháp, tra cứu thông tin ca trực.
+  * `manager`: Quản lý vận hành — xem báo cáo phân tích, gộp dữ liệu CRM, điều phối bảng việc Kanban.
+  * `owner`: Chủ máy — toàn quyền quản trị tài khoản, cấu hình hệ thống và mở buồng lái `/app`.
+- Máy chủ bảo vệ route nghiêm ngặt: Tự động từ chối bằng HTTP 403 fail-closed khi tài khoản không đủ quyền.
+
+---
+
+## 🏗️ Kiến trúc Hệ thống (System Architecture)
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                          TẦNG KẾT NỐI (GATEWAY LAYER)                           │
+│  Meta Graph API v20        PostPeer TikTok Gateway       YouTube Data API v3    │
+│  (Fanpage & Messenger)     (Video 9:16 & Carousel)       (Shorts & Channel)     │
+└─────────────────────────┬───────────────────────────────────────────────────────┘
+                          │ Webhooks & Polling Engine
+┌─────────────────────────▼───────────────────────────────────────────────────────┐
+│                    TẦNG LÕI XỬ LÝ & TÁC TỬ (CORE RUNTIME)                       │
+│                                                                                 │
+│  FastAPI Asynchronous Server ───┬─── SQLite WAL Queue (Chống nghẽn đơn)         │
+│  Regex Phone Extractor          ├─── Rules-first Intent Classifier              │
+│  Brand Kit Knowledge Resolver   └─── Human-in-the-Loop Draft Engine             │
+│                                                                                 │
+│  [Nhân Tác tử Agentic Kế thừa từ Javis OS (MIT) - Hỗ trợ 11 Nhà cung cấp AI]    │
+│  Claude Code SDK · OpenAI Codex · Google Gemini · OpenRouter · DeepSeek         │
+└─────────────────────────┬───────────────────────────────────────────────────────┘
+                          │ REST API & WebSocket Events
+┌─────────────────────────▼───────────────────────────────────────────────────────┐
+│                      TẦNG GIAO DIỆN (PRESENTATION LAYER)                        │
+│                                                                                 │
+│   Landing Page (`/`)         Sèo Trum Ops (`/ops`)         Buồng lái Lõi (`/app`)│
+│   (HTML5 + Tailwind)         (React 18 + Tailwind SPA)     (Dashboard Quản trị) │
+└─────────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 🚀 Cài đặt & Triển khai Nhanh (Deployment)
+
+### Cách 1: Triển khai bằng Docker Compose (Khuyến nghị trên VPS)
+
+```bash
+# 1. Clone repository
+git clone https://github.com/ROYCE-8425/Auto_social.git seotrum
+cd seotrum
+
+# 2. Tạo file cấu hình từ file mẫu
+cp env.example .env
+
+# 3. Khởi chạy toàn bộ hệ thống bằng Docker Compose
+docker compose up -d
+
+# 4. Kiểm tra trạng thái container
+docker compose ps
+```
+
+Sau khi khởi chạy thành công:
+- **Landing Page:** `http://<ip-vps>:7777/`
+- **Sèo Trum Ops:** `http://<ip-vps>:7777/ops`
+- **Buồng lái Chủ máy:** `http://<ip-vps>:7777/app`
+
+---
+
+### Cách 2: Triển khai Trực tiếp trên Linux / macOS (Native Systemd)
+
+```bash
+git clone https://github.com/ROYCE-8425/Auto_social.git seotrum
+cd seotrum
+
+chmod +x install.sh
+./install.sh
+```
+
+Script sẽ tự động:
+- Cài đặt Python 3.12, Node.js và môi trường ảo `venv`.
+- Cài đặt các thư viện phụ thuộc (`requirements.txt`).
+- Đăng ký dịch vụ `systemd` tự động khởi chạy cùng hệ điều hành.
+
+---
+
+### Cách 3: Chạy trên Windows (Máy tính Cá nhân)
+
+1. Cài đặt **Python 3.12** (chọn *"Add Python to PATH"*) và **Node.js LTS**.
+2. Chạy file: `setup.bat` (tự động cài môi trường).
+3. Khởi động hệ thống: `JAVIS OS.bat` hoặc chạy nền bằng `start-javis.vbs`.
+4. Mở trình duyệt truy cập: `http://localhost:7777/ops`.
+5. Dừng hệ thống: chạy `stop-javis.bat`.
+
+---
+
+## ⚙️ Cấu hình Biến Môi trường (`.env`)
+
+Sao chép `env.example` thành `.env` và điều chỉnh các thông số phù hợp:
 
 | Biến | Ý nghĩa | Mặc định |
 |---|---|---|
-| `JAVIS_HOST` | Địa chỉ nghe. `127.0.0.1`=chỉ máy này; `0.0.0.0`=public | `127.0.0.1` |
-| `JAVIS_PORT` | Cổng | `7777` |
-| `JAVIS_REQUIRE_LOGIN` | `1`/`0` ép bật/tắt bắt buộc đăng nhập (mặc định: bật khi bind public) | *(auto)* |
-| `JAVIS_ADMIN_USER` / `JAVIS_ADMIN_PASSWORD` | Tạo sẵn admin lúc deploy (khỏi cần MÃ THIẾT LẬP) | - |
-| `JAVIS_ALLOWED_HOSTS` | Thêm hostname vào danh sách cho phép (chống CSRF / DNS-rebinding) | localhost + tên miền đã đặt |
-| `JAVIS_SECURE_COOKIE` | Ép cookie `Secure`. Chỉ bật khi chắc chắn HTTPS đầu-cuối | *(auto theo tên miền)* |
-| `JAVIS_STATE_DIR` | Nơi ghi state (settings, sessions, khoá mã hoá, cấu hình việc định kỳ) | `server/` (Docker: `/data/state`) |
-| `BRAINS_DIR` | Thư mục CHA chứa mọi brain | `brains/` (Docker: `/brains`) |
-| `OBSIDIAN_VAULT_PATH` | Vault Second Brain ngoài (nếu bạn đã có vault sẵn) | `vault/` (Docker: `/data/vault`) |
-| `CLAUDE_CWD` | Thư mục làm việc của bộ não Claude | repo root |
-| `JAVIS_ENABLE_USER_PLUGINS` | `true` mới cho phép chạy plugin do bạn cài (code Python thật trong server) | *(tắt)* |
-| `WATCHTOWER_TOKEN` | Token cho nút "Cập nhật ngay" trên bản Docker | `javis-update` |
-| `TTS_VOICE` / `TTS_RATE` | Giọng đọc + tốc độ (Edge TTS) | `vi-VN-HoaiMyNeural` / `+5%` |
-
-Danh sách đầy đủ mọi biến: [docs/16 - Cấu hình .env](docs/16-cau-hinh-env.md).
+| `JAVIS_HOST` | Địa chỉ lắng nghe (`127.0.0.1` nội bộ hoặc `0.0.0.0` công khai) | `127.0.0.1` |
+| `JAVIS_PORT` | Cổng dịch vụ HTTP | `7777` |
+| `JAVIS_REQUIRE_LOGIN` | Bắt buộc đăng nhập tài khoản | `1` |
+| `JAVIS_ADMIN_USER` | Tên tài khoản quản trị tối cao (Owner) | *(tự đặt)* |
+| `JAVIS_ADMIN_PASSWORD` | Mật khẩu tài khoản quản trị tối cao | *(tự đặt)* |
+| `DOMAIN_NAME` | Tên miền trỏ về máy chủ (tự cấp chứng chỉ SSL) | *(tùy chọn)* |
+| `POSTPEER_API_KEY` | Khóa API PostPeer cho xuất bản TikTok Gateway | *(tùy chọn)* |
+| `POSTPEER_TIKTOK_ACCOUNT_ID` | Mã định danh tài khoản TikTok kết nối | *(tùy chọn)* |
+| `BRAINS_DIR` | Thư mục lưu trữ Second Brain và Brand Kit Markdown | `brains/` |
 
 ---
 
-## 🔐 Bảo mật
+## 🔒 An toàn & Bảo mật Dữ liệu
 
-- Khi chạy public, **bắt buộc đăng nhập** trước khi dùng bất kỳ chức năng nào (bộ não chạy full quyền trên máy).
-- Tạo admin lần đầu cần **MÃ THIẾT LẬP** (in trong log server) hoặc admin đặt sẵn qua env → chống kẻ chỉ-có-URL chiếm tài khoản.
-- **Rate-limit** đăng nhập (khoá tạm sau nhiều lần sai), mật khẩu ≥ 8 ký tự, cookie `secure` khi HTTPS, session hết hạn 30 ngày.
-- **Chặn CSRF và DNS-rebinding**: mọi request ghi có Origin lạ đều bị từ chối.
-- **Khoá bí mật được mã hoá** trong `settings.json` (API key, token OAuth, token bot Telegram, token backup) bằng khoá riêng của máy ở `JAVIS_STATE_DIR/.secret_key`.
-- **Plugin do bạn cài mặc định bị chặn** - phải tự bật `JAVIS_ENABLE_USER_PLUGINS=true` vì chúng chạy code Python thật trong tiến trình server.
-- Truy cập từ xa nên qua **HTTPS** (Hostinger `*.hstgr.cloud` hoặc Cloudflare Tunnel) - đừng phơi cổng thô.
+- **Không rò rỉ khóa bí mật:** Toàn bộ token Facebook, API key PostPeer và biến môi trường nhạy cảm đều được lưu trong vault an toàn, không bao giờ commit vào Git.
+- **Phòng chống tấn công Web:** Mặc định tích hợp bộ lọc chống tấn công CSRF, DNS-rebinding và giới hạn tần suất đăng nhập (Rate-limiting).
+- **Fail-Closed RBAC:** Tất cả các endpoint nghiệp vụ `/ops/*` đều bắt buộc xác thực phiên và kiểm tra quyền hạn trước khi trả dữ liệu.
 
 ---
 
-## 🔄 Cập nhật
+## 🧪 Kiểm thử Tự động (Automated Testing)
+
+Hệ thống được bảo vệ bởi bộ kiểm thử tự động toàn diện chạy trên GitHub Actions CI:
 
 ```bash
-# Trên máy bạn (sau khi sửa code): đẩy lên GitHub
-git add -A && git commit -m "..." && git push     # → CI tự build image mới lên GHCR
+# Kiểm thử toàn bộ endpoint và phân quyền backend
+python -m pytest tests/python -k "not test_browser"
 
-# Trên VPS: kéo bản mới
-cd javis && ./update.sh          # tự pull image + restart (dữ liệu trong volume KHÔNG mất)
-```
+# Kiểm thử route độc lập
+python tests/python/test_ops_routes.py
+python tests/python/test_ops_rbac.py
+python tests/python/test_landing.py
 
-Trong app: mở **Cập nhật** (nhóm Hệ thống) → **⬆ Cập nhật ngay** nếu môi trường hỗ trợ, có thanh tiến trình và nút lùi bản khi bản mới hỏng.
-
-## 🌐 Truy cập từ xa (VPS không phải Hostinger)
-
-```bash
-docker compose --profile tunnel up -d
-docker compose logs tunnel | grep trycloudflare   # → URL https://xxx.trycloudflare.com
+# Build kiểm tra giao diện Ops Dashboard
+cd ops && npm run build
 ```
 
 ---
 
-## 🏗️ Kiến trúc
+## 📜 Bản quyền & Ghi công (Attribution & License)
 
-```
-Trình duyệt (voice + đồ thị) ─┐                        ┌→ Claude Agent SDK   (gói Claude)
-Telegram ─────────────────────┤→ FastAPI (server/) ────┼→ Codex CLI          (gói ChatGPT)
-Zalo Agent MCP ──────────────┤          │             └→ OpenRouter / OpenAI / Gemini / Anthropic API
-                              │          ├→ MCP Hub  (kho Kết nối dùng chung cho MỌI engine)
-                              └──────────┴→ Second Brain (vault markdown: Memory + Wiki + Sources)
-```
-- **Backend:** Python FastAPI trong `server/`.
-  - Bộ não & engine: `claude_sdk_engine.py` (engine Claude, qua Claude Agent SDK), `claude_cli.py` (factory + auth cho Claude/Codex), `engine.py` (năm engine API kèm vòng gọi tool MCP), `aux_engine.py` (chọn engine cho việc nền + chuỗi dự phòng khi engine chết).
-  - Công cụ: `mcp_hub.py`, `mcp_store.py`, `mcp_client.py`, `mcp_catalog.py`, `plugins_host.py`, `oauth_mcp.py`.
-  - Việc nền: `self_improve.py` (việc định kỳ), `reminders.py` (nhắc hẹn), `tasks.py` + `task_store.py` (Kanban), `learn.py` (tự học).
-  - Dữ liệu: `sessions.py`, `compaction.py`, `git_brain.py`, `media_gc.py`, `usage_index.py` + `usage_store.py`.
-  - Kênh: `telegram_bot.py`, `channel_context.py`; Zalo đi qua MCP Hub.
-  - Nền tảng: `main.py`, `routes/` (domain, graph), `config.py`, `web_security.py`, `secrets_store.py`.
-- **Frontend:** HTML/CSS/JS thuần (`dashboard/`) - không framework, nhẹ cho VPS.
-- **Second Brain:** vault markdown trong `brains/<tên brain>/` - bộ nhớ sống + Wiki tích luỹ.
+Dự án phát hành dưới giấy phép mã nguồn mở **MIT License**:
 
----
+- **Nền tảng Tác tử Lõi (Core Agentic Engine & MCP Hub):**  
+  Kế thừa từ dự án [Javis OS](https://github.com/blogminhquy/javis-os)  
+  Copyright (c) 2026 Nguyễn Minh Quý (blogminhquy)
 
-## 🩺 Khắc phục sự cố
+- **Lớp Nghiệp vụ & Vận hành Sèo Trum (Social Hub, TikTok Automation, Fanpage Care CRM, Ops RBAC Portal):**  
+  Copyright (c) 2026 Nhóm phát triển Sèo Trum (`ROYCE-8425/Auto_social`)
 
-| Hiện tượng | Cách xử lý |
-|---|---|
-| Sửa code mà không thấy đổi | Đã đổi `.py`? **Khởi động lại server** (Windows: `stop-javis.bat` → `start-javis.vbs`). Đổi giao diện? **Ctrl+Shift+R**. |
-| Port 7777 bị giữ, bản mới không lên | Kill tiến trình cũ TRƯỚC (`stop-javis.bat`, hoặc `taskkill /F /PID <pid>`), rồi start lại. |
-| Hostinger không pull được image | Để package GHCR = **Public**; đợi GitHub Action build xong (tab Actions). |
-| Mở app báo cần MÃ THIẾT LẬP | App terminal (trong container): `cat /data/state/.setup_token`. Trên host: `docker compose logs javis \| grep "SETUP TOKEN"`. Hoặc đặt env `JAVIS_ADMIN_PASSWORD` để khỏi cần mã. |
-| Bộ não báo chưa đăng nhập | Vào **Models**, thẻ nhà cung cấp tương ứng, bấm đăng nhập. Hoặc chạy 1 lần `claude auth login --claudeai` (Docker: trong App terminal). |
-| Ảnh cũ trong hội thoại hiện ô xám | Đúng thiết kế: `attachments/` là vùng cache, hết hạn 30 ngày hoặc 300MB. Xem [Khắc phục sự cố](docs/17-khac-phuc-su-co.md). |
-
----
-
-## 📂 Cấu trúc thư mục
-
-```
-javis-os/
-├── server/              # Backend FastAPI (engine, kết nối, việc nền, kênh, bộ nhớ…)
-│   └── routes/          # Route tách riêng (tên miền, đồ thị)
-├── dashboard/           # Frontend (voice, đồ thị, console, studio, usage)
-│   └── i18n/            # Từ điển chữ trên giao diện, mỗi ngôn ngữ 1 file JSON
-├── brains/              # MỌI second brain (brain mặc định: brains/Brain Default)
-├── system/              # Đi kèm app: plugin bundled, skill hệ thống, kho kết nối mẫu
-├── tests/               # Bộ test Python
-├── website/             # Trang giới thiệu
-├── docs/                # Hướng dẫn sử dụng chi tiết (27 trang + mục lục; bản tiếng Anh ở docs/en/)
-├── Dockerfile           # Image: python + Node + Claude CLI
-├── docker-compose.yml   # Production (pull image GHCR) - VPS thường, vào bằng http://<ip>:7777
-├── docker-compose.hostinger.yml  # Cho Hostinger: tên miền + HTTPS qua Traefik (đặt DOMAIN_NAME)
-├── docker-compose.https.yml      # Auto-HTTPS bằng Caddy cho VPS thường (kèm file trên)
-├── install.sh           # Cài native Linux/macOS
-├── update.sh            # Cập nhật trên VPS
-├── env.example          # Mẫu biến môi trường
-├── VERSION · CHANGELOG.md
-├── QUICKSTART.md        # Bắt đầu nhanh (QUICKSTART.en.md: bản tiếng Anh)
-├── DEPLOY.md            # Hướng dẫn deploy chi tiết
-└── CLAUDE.md            # "System prompt" + quy ước cho AI agent
-```
-
----
-
-## 🙏 Cảm hứng & ghi nhận
-
-- **Bộ não:** [Claude Code](https://claude.com/claude-code) và [Claude Agent SDK](https://docs.claude.com/en/api/agent-sdk/overview) (Anthropic), [Codex CLI](https://developers.openai.com/codex/cli) (OpenAI), cùng API của [OpenRouter](https://openrouter.ai), OpenAI, [Google Gemini](https://ai.google.dev), Anthropic và [Groq](https://groq.com).
-- **Chuẩn công cụ:** [Model Context Protocol](https://modelcontextprotocol.io) - toàn bộ kho Kết nối của Javis chạy trên chuẩn này.
-- Pattern Second Brain + Bullet Journal số hoá.
-
----
-
-## 📄 Giấy phép
-
-Mã nguồn mở theo giấy phép **MIT** - dùng, sửa, phân phối tự do, chỉ cần giữ dòng ghi công. Xem [LICENSE](LICENSE).
-
----
-
-## ☕ Ủng hộ Javis OS
-
-Javis OS mã nguồn mở, dùng miễn phí, và mình vẫn đang một mình vừa code vừa gánh chi phí server chạy thử mỗi ngày. Nếu Javis đang giúp được gì cho công việc hay cuộc sống của bạn, một chút ủng hộ sẽ giúp mình có thêm thời gian ngồi sửa bug, viết tính năng mới, thay vì lo tiền server.
-
-Không bắt buộc, không đổi lấy quyền lợi gì cả - đơn giản là một lời cảm ơn gửi bằng tiền cho người đang âm thầm code buổi tối.
-
-- 🏦 **MB Bank**: `6636966369`
-- 📱 **Ví MoMo**: `0372752740`
-- 🌍 **PayPal**: [paypal.me/quy01](https://paypal.me/quy01)
-
-Không tiện donate cũng không sao - dùng Javis, góp ý, hay gửi một Pull Request cũng đã là ủng hộ rồi.
+Xem chi tiết điều khoản cấp phép tại [LICENSE](LICENSE) và [NOTICE.md](NOTICE.md).
 
 ---
 
 <div align="center">
 
-Made with ☕ by **[Minh Quý](https://minhquy.vn)** · Repo: `github.com/blogminhquy/javis-os`
+**SÈO TRUM — Đồng hành cùng doanh nghiệp SME làm chủ kỷ nguyên tự động hóa AI.**  
+Mọi đóng góp, báo lỗi (issue) và Pull Request đều được hoan nghênh trên [GitHub Repository](https://github.com/ROYCE-8425/Auto_social).
 
 </div>

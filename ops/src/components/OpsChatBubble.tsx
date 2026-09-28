@@ -42,7 +42,7 @@ export const OpsChatBubble: React.FC = () => {
       {
         id: 'welcome',
         sender: 'assistant',
-        text: 'Chào bạn! Tôi là trợ lý ca trực Javis Ops. Tôi hỗ trợ tra cứu nhanh số lượng nháp chờ duyệt, thông tin Brand Kit trong scope, hotline cơ sở và hướng dẫn vận hành takeover.',
+        text: 'Chào bạn! Tôi là trợ lý ca trực Sèo Trum Ops. Tôi hỗ trợ tra cứu nhanh số lượng nháp chờ duyệt, thông tin Brand Kit trong scope, hotline cơ sở và hướng dẫn vận hành takeover.',
         citations: ['docs/28-cham-soc-fanpage.md'],
         usedStats: true,
         timestamp: Date.now(),
@@ -120,7 +120,7 @@ export const OpsChatBubble: React.FC = () => {
       const errorMsg: ChatMessage = {
         id: 'b_err_' + Date.now(),
         sender: 'assistant',
-        text: err?.message || 'Không thể kết nối với máy chủ Javis Ops.',
+        text: err?.message || 'Không thể kết nối với máy chủ Sèo Trum Ops.',
         timestamp: Date.now(),
       }
       setMessages((prev) => [...prev, errorMsg])

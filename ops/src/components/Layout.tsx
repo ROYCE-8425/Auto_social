@@ -113,14 +113,14 @@ export const Layout: React.FC<LayoutProps> = ({ currentTab, onSelectTab, childre
             {/* Logo & Title */}
             <div className="flex items-center space-x-2.5">
               <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white font-black text-lg shadow-sm shadow-blue-200">
-                JO
+                ST
               </div>
               <div>
                 <div className="flex items-center space-x-1.5">
-                  <span className="font-black text-slate-900 text-base tracking-tight">JAVIS OPS</span>
+                  <span className="font-black text-slate-900 text-base tracking-tight">SÈO TRUM OPS</span>
                 </div>
                 <p className="text-[11px] text-slate-400 font-medium hidden sm:block">
-                  Operations &amp; Customer Care Center
+                  Operations &amp; Social Care Center
                 </p>
               </div>
             </div>

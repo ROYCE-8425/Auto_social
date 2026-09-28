@@ -289,7 +289,7 @@ export const Trends: React.FC = () => {
   const counterHooks = radar?.actionable_counter_hooks || [
     'Đăng 100 bài mỗi ngày để làm gì nếu không biết bài nào mang về đơn hàng thực tế?',
     'Đừng để chatbot trả lời ngô nghê làm mất khách sỉ tiềm năng — Đây là cách AI chấm điểm Lead tự động.',
-    'Nhân viên quên gọi lại khách sau 2 giờ? Xem Javis Ops tự động phân loại và báo động ngay.',
+    'Nhân viên quên gọi lại khách sau 2 giờ? Xem Sèo Trum tự động phân loại và báo động ngay.',
   ]
 
   // Calculate ops stats

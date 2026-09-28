@@ -36,13 +36,13 @@ export const Login: React.FC = () => {
         {/* Brand logo */}
         <div className="text-center">
           <div className="inline-flex w-16 h-16 rounded-2xl bg-gradient-to-tr from-saoviet-600 to-saoviet-400 items-center justify-center text-white font-black text-3xl shadow-xl shadow-saoviet-500/20 mb-4">
-            JO
+            ST
           </div>
           <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-            JAVIS OPS
+            SÈO TRUM OPS
           </h2>
           <p className="mt-2 text-sm text-slate-400">
-            Hệ thống Vận hành CSKH & Quản lý Fanpage
+            Hệ thống Vận hành CSKH &amp; Tự động hóa Đa kênh
           </p>
         </div>
 

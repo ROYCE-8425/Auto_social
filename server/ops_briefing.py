@@ -87,7 +87,7 @@ def get_daily_briefing(brand: Optional[str] = None) -> Dict[str, Any]:
 
     # Văn bản định dạng bắn qua Telegram/Zalo cho Sếp
     formatted_telegram_text = (
-        f"☀️ BẢN TIN ĐIỀU HÀNH SÁNG NAY - JAVIS OPS\n"
+        f"☀️ BẢN TIN ĐIỀU HÀNH SÁNG NAY - SÈO TRUM OPS\n"
         f"📅 Ngày: {today_str} ({hour_str})\n\n"
         f"📊 TỔNG QUAN 24H QUA:\n"
         f"• Lượt phản hồi khách: {replies_24h} lượt\n"

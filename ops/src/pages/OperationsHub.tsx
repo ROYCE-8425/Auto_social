@@ -340,7 +340,7 @@ const modulesData: HubModuleItem[] = [
       },
       {
         id: 'rec_306',
-        name: 'Nâng cấp Hạ tầng VPS Javis Ops 2.0',
+        name: 'Nâng cấp Hạ tầng VPS Sèo Trum Ops 2.0',
         target: 'Tối ưu tốc độ tải và bảo mật dữ liệu',
         aiStatus: 'AI đã chạy script sao lưu SQLite, dọn dẹp log và kiểm thử tải',
         updated: '3 ngày trước',

@@ -70,7 +70,7 @@ def _check_prohibited_intent(message: str) -> Optional[dict[str, Any]]:
             return {
                 "ok": True,
                 "reply": (
-                    "Tôi là trợ lý ca CSKH Javis Ops và không có quyền can thiệp hệ thống, lấy token, "
+                    "Tôi là trợ lý ca CSKH Sèo Trum Ops và không có quyền can thiệp hệ thống, lấy token, "
                     "chạy lệnh terminal hoặc xóa Fanpage. Mọi thao tác buồng lái xin vui lòng liên hệ trực tiếp Chủ máy."
                 ),
                 "citations": [],
@@ -253,7 +253,7 @@ async def answer_ops_qa(
 
     # Xây dựng System Prompt cho LLM
     system_prompt = (
-        f"Bạn là trợ lý ca CSKH Javis Ops. Nhiệm vụ của bạn là hỗ trợ nhân viên trực ca tra cứu thông tin nhanh.\n"
+        f"Bạn là trợ lý ca CSKH Sèo Trum Ops. Nhiệm vụ của bạn là hỗ trợ nhân viên trực ca tra cứu thông tin nhanh.\n"
         f"Phạm vi thương hiệu đang chọn: {scope_label}.\n\n"
         "QUY TẮC BẮT BUỘC:\n"
         "1. CHỈ dùng số liệu và thông tin có trong Context bên dưới. CẤM BỊA SỐ LIỆU, SỐ ĐIỆN THOẠI HOẶC GIÁ TIỀN.\n"
@@ -338,7 +338,7 @@ async def answer_ops_qa(
         reply = f"Tìm thấy thông tin khách hàng trong hệ thống:\n" + "\n".join(c_info)
     else:
         reply = (
-            f"Chào bạn, tôi là trợ lý ca CSKH Javis Ops ({scope_label}). "
+            f"Chào bạn, tôi là trợ lý ca CSKH Sèo Trum Ops ({scope_label}). "
             f"Hiện tại có {total_pending} nháp chờ duyệt trên Hộp thư. "
             f"Hotline hỗ trợ của kit là {primary_hotline}. Bạn cần kiểm tra số liệu nháp, thông tin khách hàng hay hướng dẫn ca làm việc nào?"
         )

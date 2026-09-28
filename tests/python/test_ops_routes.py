@@ -35,7 +35,7 @@ def test_ops_page_served(client):
     c, _ = client
     resp = c.get("/ops")
     assert resp.status_code == 200
-    assert "Javis Ops" in resp.text or "<div id=\"root\">" in resp.text
+    assert "SÈO TRUM" in resp.text or "Javis Ops" in resp.text or "<div id=\"root\">" in resp.text
 
 
 def test_ops_login_and_logout(client):

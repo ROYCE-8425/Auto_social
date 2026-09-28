@@ -1,6 +1,6 @@
 # 🎤 BỘ NỘI DUNG SLIDE THUYẾT TRÌNH (PRESENTATION DECK)
-## CUỘC THI MÃ NGUỒN MỞ — DỰ ÁN JAVIS OPS
-**Nền tảng Vận hành Mạng Xã Hội Đa Kênh & Chăm Sóc Khách Hàng Tự Động Hóa cho Doanh Nghiệp SME**
+## CUỘC THI MÃ NGUỒN MỞ — DỰ ÁN SÈO TRUM (AUTO SOCIAL AI)
+**Nền tảng Tự động hóa Vận hành & Phân phối Nội dung Đa Kênh Cho Doanh Nghiệp SME**
 
 ---
 
@@ -15,14 +15,14 @@
 
 1. **Slide 1:** Bìa bài thuyết trình & Định vị dự án
 2. **Slide 2:** Bối cảnh thị trường & Nỗi đau lớn của doanh nghiệp SME
-3. **Slide 3:** Giải pháp Javis Ops & Triết lý Human-in-the-Loop
+3. **Slide 3:** Giải pháp Sèo Trum & Triết lý Human-in-the-Loop
 4. **Slide 4:** Kiến trúc tổng thể hệ thống (System Architecture)
 5. **Slide 5:** Trụ cột 1 — Trung tâm Phân phối Đa Kênh (Social Channels Hub)
 6. **Slide 6:** Trụ cột 2 — Hộp thư Hợp nhất & Duyệt Nháp 30 Giây (Unified Inbox)
 7. **Slide 7:** Trụ cột 3 — Quản lý Khách hàng CRM & Chấm điểm Lead Nóng
 8. **Slide 8:** Trụ cột 4 — Trung tâm Điều hành & Bảng việc Kanban (Operations Hub)
 9. **Slide 9:** An toàn bảo mật, Phân quyền RBAC & Đa thương hiệu
-10. **Slide 10:** Giá trị Mã nguồn mở & Đóng góp cho Cộng đồng
+10. **Slide 10:** Giá trị Mã nguồn mở & Đóng góp cho Cộng đồng (MIT License)
 11. **Slide 11:** Lộ trình phát triển tương lai (Roadmap)
 12. **Slide 12:** Kết luận, Demo thực tế & Kêu gọi hành động (Call to Action)
 13. **Phụ lục (Appendix):** Bảng so sánh giải pháp & Kịch bản trả lời phản biện Ban giám khảo (Q&A)
@@ -36,19 +36,19 @@
 ### SLIDE 1: BÌA BÀI THUYẾT TRÌNH (TITLE SLIDE)
 
 #### 📌 Nội dung hiển thị trên Slide:
-- **Tên dự án:** **JAVIS OPS (Auto Social)**
-- **Phụ đề:** Nền Tảng Vận Hành Mạng Xã Hội Đa Kênh & Chăm Sóc Khách Hàng Tự Động Hóa Cho Doanh Nghiệp SME
+- **Tên dự án:** **SÈO TRUM (Auto Social AI)**
+- **Phụ đề:** Nền Tảng Tự Động Hóa Vận Hành Mạng Xã Hội Đa Kênh & Chăm Sóc Khách Hàng Cho Doanh Nghiệp SME
 - **Tiêu chuẩn:** Open-Source Software (Giấy phép MIT) · Self-Hosted & Privacy-First
 - **Đội ngũ phát triển / Tác giả:** ROYCE-8425
 - **Công nghệ chính:** Python 3.12 · FastAPI · React 18 · SQLite WAL · Docker
 
 #### 🎨 Gợi ý thiết kế PowerPoint:
-- Nền xanh đen công nghệ hiện đại (`#0f172a`), điểm xuyết ánh sáng cyan/indigo.
-- Logo Javis Ops nổi bật ở trung tâm với 4 huy hiệu vector: Facebook, TikTok, Instagram, YouTube.
+- Nền xanh đen công nghệ hiện đại (`#0f172a`), điểm xuyết ánh sáng lục bảo/cyan (`#10b981`, `#06b6d4`).
+- Logo SÈO TRUM nổi bật ở trung tâm với 4 huy hiệu vector: Facebook, TikTok, Instagram, YouTube.
 - Font chữ hiện đại không chân: *Montserrat* hoặc *Be Vietnam Pro*.
 
 #### 🗣️ Lời thoại gợi ý (Speaker Notes - ~30 giây):
-> *"Kính thưa Ban giám khảo và toàn thể hội thi, hôm nay tôi vinh dự mang đến giải pháp **Javis Ops** — một nền tảng vận hành mạng xã hội và chăm sóc khách hàng đa kênh tự động hóa, mã nguồn mở 100% dành cho các doanh nghiệp vừa và nhỏ (SME). Trong bối cảnh bùng nổ thương mại số, Javis Ops sinh ra để giải phóng các chủ doanh nghiệp khỏi những tác vụ vận hành thủ công lặp lại mỗi ngày."*
+> *"Kính thưa Ban giám khảo và toàn thể hội thi, hôm nay tôi vinh dự mang đến giải pháp **Sèo Trum (Auto Social AI)** — một nền tảng vận hành mạng xã hội và chăm sóc khách hàng đa kênh tự động hóa, mã nguồn mở 100% dành cho các doanh nghiệp vừa và nhỏ (SME). Trong bối cảnh bùng nổ thương mại số, Sèo Trum sinh ra để giải phóng các chủ doanh nghiệp khỏi những tác vụ vận hành thủ công lặp lại mỗi ngày."*
 
 ---
 
@@ -66,11 +66,11 @@
 - Đưa vào số liệu nổi bật: `60% khách bỏ đi nếu chờ quá 15 phút` và `Đắt đỏ nếu dùng SaaS đóng`.
 
 #### 🗣️ Lời thoại gợi ý (Speaker Notes - ~45 giây):
-> *"Đối với các chủ doanh nghiệp SME, mạng xã hội là huyết mạch kinh doanh. Tuy nhiên, họ đang đối mặt với 3 nghịch lý: Một là nhân viên không thể túc trực 24/7 để trả lời tin nhắn, bình luận; khách hàng chờ quá lâu sẽ sang đối thủ. Hai là nếu để AI tự do trả lời, rủi ro ảo giác và cam kết sai học phí, giá cả là rất lớn. Và ba là các công cụ SaaS hiện nay thu phí rất đắt, tính phí theo từng page và giữ dữ liệu của doanh nghiệp. Javis Ops ra đời để giải quyết triệt để cả 3 bài toán trên."*
+> *"Đối với các chủ doanh nghiệp SME, mạng xã hội là huyết mạch kinh doanh. Tuy nhiên, họ đang đối mặt với 3 nghịch lý: Một là nhân viên không thể túc trực 24/7 để trả lời tin nhắn, bình luận; khách hàng chờ quá lâu sẽ sang đối thủ. Hai là nếu để AI tự do trả lời, rủi ro ảo giác và cam kết sai học phí, giá cả là rất lớn. Và ba là các công cụ SaaS hiện nay thu phí rất đắt, tính phí theo từng page và giữ dữ liệu của doanh nghiệp. Sèo Trum ra đời để giải quyết triệt để cả 3 bài toán trên."*
 
 ---
 
-### SLIDE 3: GIẢI PHÁP JAVIS OPS & TRIẾT LÝ HUMAN-IN-THE-LOOP
+### SLIDE 3: GIẢI PHÁP SÈO TRUM & TRIẾT LÝ HUMAN-IN-THE-LOOP
 
 #### 📌 Nội dung hiển thị trên Slide:
 - **Tầm nhìn:** *"Tự động hóa sức mạnh AI kết hợp sự chuẩn mực và thấu cảm của con người."*
@@ -87,7 +87,7 @@
 - Màu xanh lá (`#10b981`) thể hiện sự an toàn, bảo đảm.
 
 #### 🗣️ Lời thoại gợi ý (Speaker Notes - ~45 giây):
-> *"Điểm cốt lõi của Javis Ops không phải là thay thế con người bằng AI một cách mù quáng, mà là mô hình **Human-in-the-Loop**. AI đảm nhận 80% công việc mệt mỏi nhất: đọc hàng ngàn tin nhắn, phân loại xem khách hỏi giá, hỏi tư vấn hay khiếu nại, bắt số điện thoại và soạn sẵn câu trả lời theo đúng bộ nhận diện thương hiệu. Nhân viên chỉ cần 1-click phê duyệt trước khi gửi. Mô hình này vừa tăng tốc độ trả lời lên gấp 5 lần, vừa đảm bảo an toàn tuyệt đối cho thương hiệu."*
+> *"Điểm cốt lõi của Sèo Trum không phải là thay thế con người bằng AI một cách mù quáng, mà là mô hình **Human-in-the-Loop**. AI đảm nhận 80% công việc mệt mỏi nhất: đọc hàng ngàn tin nhắn, phân loại xem khách hỏi giá, hỏi tư vấn hay khiếu nại, bắt số điện thoại và soạn sẵn câu trả lời theo đúng bộ nhận diện thương hiệu. Nhân viên chỉ cần 1-click phê duyệt trước khi gửi. Mô hình này vừa tăng tốc độ trả lời lên gấp 5 lần, vừa đảm bảo an toàn tuyệt đối cho thương hiệu."*
 
 ---
 
@@ -99,7 +99,7 @@
   2. **Tầng Lõi Điều Phối & AI Engine (Core & Agent Runtime):** FastAPI xử lý bất đồng bộ, hàng đợi SQLite WAL chống nghẽn, bộ trích xuất số điện thoại Regex, Rules-first Intent Classifier, Brand Kit Resolver.
   3. **Tầng Giao Diện & Vận Hành (Presentation Layer):**
      - `/`: Landing Page công chúng.
-     - `/ops`: Bàn làm việc CSKH & Quản lý (Vite + React 18, Tailwind CSS, Lucide Vector Icons).
+     - `/ops`: Bàn làm việc CSKH & Quản lý Sèo Trum Ops (Vite + React 18, Tailwind CSS, Lucide Vector Icons).
      - `/app`: Buồng lái kỹ thuật dành riêng cho Chủ máy (Owner).
 
 #### 🎨 Gợi ý thiết kế PowerPoint:
@@ -107,7 +107,7 @@
 - Đính kèm các icon công nghệ: Python, FastAPI, React, SQLite, Docker, Meta, TikTok.
 
 #### 🗣️ Lời thoại gợi ý (Speaker Notes - ~45 giây):
-> *"Về mặt kiến trúc, Javis Ops được thiết kế theo nguyên tắc phân tầng độc lập. Tầng dưới cùng là các Gateway kết nối API chính thống tới Facebook, TikTok, Instagram và YouTube. Tầng trung tâm viết bằng Python FastAPI và SQLite WAL bất đồng bộ, chịu trách nhiệm lưu trữ sự kiện, trích xuất dữ liệu và điều phối nháp. Tầng trên cùng là Single Page Application cực kỳ tối ưu, tách bạch giữa cổng vận hành `/ops` cho nhân viên và buồng lái `/app` cho chủ máy."*
+> *"Về mặt kiến trúc, Sèo Trum được thiết kế theo nguyên tắc phân tầng độc lập. Tầng dưới cùng là các Gateway kết nối API chính thống tới Facebook, TikTok, Instagram và YouTube. Tầng trung tâm viết bằng Python FastAPI và SQLite WAL bất đồng bộ, chịu trách nhiệm lưu trữ sự kiện, trích xuất dữ liệu và điều phối nháp. Tầng trên cùng là Single Page Application cực kỳ tối ưu, tách bạch giữa cổng vận hành `/ops` cho nhân viên và buồng lái `/app` cho chủ máy."*
 
 ---
 
@@ -129,7 +129,7 @@
 - Làm nổi bật 4 thẻ bài với logo sắc nét của Facebook, TikTok, Instagram, YouTube.
 
 #### 🗣️ Lời thoại gợi ý (Speaker Notes - ~45 giây):
-> *"Trụ cột đầu tiên là **Trung tâm Phân phối Đa Kênh**. Thay vì dàn trải 9-10 kênh rời rạc, Javis Ops tập trung vào 'Bộ Tứ Quyền Lực': Facebook, TikTok, Instagram và YouTube. Nhờ ma trận 1 Nội dung $\rightarrow$ 4 Kênh, chỉ một video ngắn hoặc một album ảnh được tạo ra, hệ thống sẽ tự động điều phối, gắn âm thanh hot và đăng đồng thời lên cả 4 nền tảng, giúp doanh nghiệp bao phủ 95% khách hàng tiềm năng với chi phí sản xuất tối thiểu."*
+> *"Trụ cột đầu tiên là **Trung tâm Phân phối Đa Kênh**. Thay vì dàn trải 9-10 kênh rời rạc, Sèo Trum tập trung vào 'Bộ Tứ Quyền Lực': Facebook, TikTok, Instagram và YouTube. Nhờ ma trận 1 Nội dung $\rightarrow$ 4 Kênh, chỉ một video ngắn hoặc một album ảnh được tạo ra, hệ thống sẽ tự động điều phối, gắn âm thanh hot và đăng đồng thời lên cả 4 nền tảng, giúp doanh nghiệp bao phủ 95% khách hàng tiềm năng với chi phí sản xuất tối thiểu."*
 
 ---
 
@@ -213,16 +213,16 @@
 - Biểu tượng chiếc khiên bảo mật công nghệ.
 
 #### 🗣️ Lời thoại gợi ý (Speaker Notes - ~45 giây):
-> *"Một dự án mã nguồn mở triển khai thực tế phải đặt bảo mật lên hàng đầu. Javis Ops tích hợp hệ thống phân quyền RBAC 3 lớp nghiêm ngặt. Nhân viên CSKH chỉ được thao tác trong phạm vi công việc của họ ở `/ops`, nếu cố tình truy cập vào buồng lái kỹ thuật `/app` sẽ bị chặn đứng bằng mã lỗi 403 từ tầng server. Ngoài ra, cơ chế Brand Kit Markdown cho phép một doanh nghiệp vận hành cùng lúc nhiều thương hiệu độc lập mà không lo rò rỉ dữ liệu chéo."*
+> *"Một dự án mã nguồn mở triển khai thực tế phải đặt bảo mật lên hàng đầu. Sèo Trum tích hợp hệ thống phân quyền RBAC 3 lớp nghiêm ngặt. Nhân viên CSKH chỉ được thao tác trong phạm vi công việc của họ ở `/ops`, nếu cố tình truy cập vào buồng lái kỹ thuật `/app` sẽ bị chặn đứng bằng mã lỗi 403 từ tầng server. Ngoài ra, cơ chế Brand Kit Markdown cho phép một doanh nghiệp vận hành cùng lúc nhiều thương hiệu độc lập mà không lo rò rỉ dữ liệu chéo."*
 
 ---
 
-### SLIDE 10: GIÁ TRỊ MÃ NGUỒN MỞ & ĐÓNG GÓP CHO CỘNG ĐỒNG
+### SLIDE 10: GIÁ TRỊ MÃ NGUỒN MỞ & ĐÓNG GÓP CHO CỘNG ĐỒNG (MIT LICENSE)
 
 #### 📌 Nội dung hiển thị trên Slide:
 - **Kế thừa & Nâng tầm trên Javis OS (MIT License):**
-  - Tôn trọng bản quyền tác giả gốc (Nguyễn Minh Quý - blogminhquy) và tuân thủ tuyệt đối quy chuẩn [NOTICE.md](NOTICE.md).
-  - **Phần đóng góp mới độc quyền:** Toàn bộ phân hệ Vận hành Javis Ops, Hộp thư duyệt nháp, CRM trích xuất SĐT, Cổng kết nối TikTok PostPeer, và Trung tâm Đa kênh.
+  - Tôn trọng bản quyền tác giả gốc (Nguyễn Minh Quý - blogminhquy) và tuân thủ tuyệt đối quy chuẩn [NOTICE.md](NOTICE.md) và [LICENSE](LICENSE).
+  - **Phần đóng góp mới độc quyền:** Toàn bộ phân hệ Vận hành Sèo Trum Ops (`/ops`), Hộp thư duyệt nháp Human-in-the-Loop, CRM trích xuất SĐT, Cổng kết nối TikTok PostPeer Gateway, và Trung tâm Đa kênh 4 nền tảng.
 - **Quy chuẩn Kỹ thuật Open Source Quốc Tế:**
   - Tự động hóa CI/CD bằng GitHub Actions: Kiểm thử tự động cả Backend (Python pytest) và Frontend (Vite build).
   - Không phụ thuộc dịch vụ trả phí bên ngoài: Tự host 100% bằng Docker trên bất kỳ VPS nào (chỉ cần RAM 2GB).
@@ -233,7 +233,7 @@
 - Ảnh chụp màn hình quy trình CI/CD GitHub Actions xanh rực rỡ (All checks passed).
 
 #### 🗣️ Lời thoại gợi ý (Speaker Notes - ~45 giây):
-> *"Thưa Ban giám khảo, tinh thần mã nguồn mở là giá trị cốt lõi của Javis Ops. Chúng tôi kế thừa nền tảng Javis OS theo giấy phép MIT và đóng góp lại cho cộng đồng một giải pháp hoàn chỉnh cho doanh nghiệp SME. Bất kỳ ai cũng có thể kéo repo về, chạy đúng một lệnh Docker Compose trên VPS giá rẻ là có ngay một hệ sinh thái vận hành đa kênh chuyên nghiệp mà không mất một đồng phí thuê phần mềm hàng tháng. Dự án tuân thủ quy chuẩn CI/CD quốc tế, kiểm thử tự động toàn diện và minh bạch 100%."*
+> *"Thưa Ban giám khảo, tinh thần mã nguồn mở là giá trị cốt lõi của Sèo Trum. Chúng tôi kế thừa nền tảng Javis OS theo giấy phép MIT và đóng góp lại cho cộng đồng một giải pháp hoàn chỉnh cho doanh nghiệp SME. Bất kỳ ai cũng có thể kéo repo về, chạy đúng một lệnh Docker Compose trên VPS giá rẻ là có ngay một hệ sinh thái vận hành đa kênh chuyên nghiệp mà không mất một đồng phí thuê phần mềm hàng tháng. Dự án tuân thủ quy chuẩn CI/CD quốc tế, kiểm thử tự động toàn diện và minh bạch 100%."*
 
 ---
 
@@ -257,14 +257,14 @@
 - Các mốc có icon trạng thái rõ ràng (Done / In Progress / Future).
 
 #### 🗣️ Lời thoại gợi ý (Speaker Notes - ~30 giây):
-> *"Hiện tại, Javis Ops đã chạy ổn định và chứng minh hiệu quả thực tế trên các thương hiệu đang hoạt động. Trong lộ trình sắp tới, chúng tôi sẽ mở rộng tích hợp Zalo OA, Shopee Chat và phát triển tính năng Voice AI tự động gọi xác nhận đơn cho Lead nóng, hướng tới một nền tảng vận hành tự chủ toàn diện nhất cho doanh nghiệp Việt."*
+> *"Hiện tại, Sèo Trum đã chạy ổn định và chứng minh hiệu quả thực tế trên các thương hiệu đang hoạt động. Trong lộ trình sắp tới, chúng tôi sẽ mở rộng tích hợp Zalo OA, Shopee Chat và phát triển tính năng Voice AI tự động gọi xác nhận đơn cho Lead nóng, hướng tới một nền tảng vận hành tự chủ toàn diện nhất cho doanh nghiệp Việt."*
 
 ---
 
 ### SLIDE 12: TỔNG KẾT & KÊU GỌI HÀNH ĐỘNG (CALL TO ACTION)
 
 #### 📌 Nội dung hiển thị trên Slide:
-- **3 Cam Kết Của Javis Ops:**
+- **3 Cam Kết Của Sèo Trum:**
   1. **Mã nguồn mở thực thụ:** Tự do tùy biến, tự do triển khai, không phí ẩn.
   2. **An toàn thương hiệu:** Con người làm chủ công nghệ, không phó mặc cho AI.
   3. **Hiệu quả tức thì:** Tiết kiệm hàng chục triệu chi phí nhân sự và bản quyền phần mềm mỗi tháng.
@@ -279,7 +279,7 @@
 - Thông tin liên hệ và lời cảm ơn trang trọng.
 
 #### 🗣️ Lời thoại gợi ý (Speaker Notes - ~30 giây):
-> *"Tóm lại, Javis Ops mang lại cho doanh nghiệp SME một vũ khí vận hành đa kênh mạnh mẽ, tiết kiệm và an toàn tuyệt đối. Mọi tính năng vừa trình bày đều đang chạy thực tế trên máy chủ demo và mã nguồn đã sẵn sàng trên GitHub để quý ban giám khảo kiểm tra. Tôi xin chân thành cảm ơn và rất mong nhận được những câu hỏi góp ý từ Ban giám khảo!"*
+> *"Tóm lại, Sèo Trum mang lại cho doanh nghiệp SME một vũ khí vận hành đa kênh mạnh mẽ, tiết kiệm và an toàn tuyệt đối. Mọi tính năng vừa trình bày đều đang chạy thực tế trên máy chủ demo và mã nguồn đã sẵn sàng trên GitHub để quý ban giám khảo kiểm tra. Tôi xin chân thành cảm ơn và rất mong nhận được những câu hỏi góp ý từ Ban giám khảo!"*
 
 ---
 
@@ -287,7 +287,7 @@
 
 ### 📊 Bảng so sánh giải pháp (Dùng khi Ban giám khảo hỏi về đối thủ):
 
-| Tiêu chí | Javis Ops (Mã Nguồn Mở) | Chatbot truyền thống / thả nổi | Nền tảng SaaS đóng (Pancake, ManyChat...) |
+| Tiêu chí | Sèo Trum (Mã Nguồn Mở) | Chatbot truyền thống / thả nổi | Nền tảng SaaS đóng (Pancake, ManyChat...) |
 |---|:---:|:---:|:---:|
 | **Chi phí bản quyền** | **0 VNĐ (Mã nguồn mở MIT)** | 0 - 500k/tháng | 1.000.000đ - 5.000.000đ/tháng |
 | **Quyền sở hữu dữ liệu** | **100% thuộc doanh nghiệp (Self-hosted)** | Phụ thuộc bên thứ ba | Dữ liệu nằm trên máy chủ nhà cung cấp |
@@ -304,10 +304,10 @@
 > **💡 Trả lời:** *"Trong thương mại, phát ngôn của fanpage chính là uy tín thương hiệu. Nếu để AI tự trả lời 100%, chỉ cần 1 lần AI báo sai giá, nhầm chương trình bảo hành hay hứa hẹn bậy bạ là doanh nghiệp gặp khủng hoảng truyền thông ngay. Do đó, mô hình Human-in-the-Loop là sự cân bằng tối ưu: AI giảm 80% công việc soạn thảo văn bản, còn con người chỉ mất 2 giây bấm duyệt. Tốc độ vẫn nhanh dưới 30 giây mà độ an toàn là 100%."*
 
 #### ❓ Câu hỏi 2: *"Dự án của bạn làm thế nào để đảm bảo không bị Meta hay TikTok khóa tài khoản vì spam API?"*
-> **💡 Trả lời:** *"Javis Ops tuân thủ tuyệt đối chính sách của các nền tảng: Với Meta, hệ thống sử dụng Meta Graph API v20 chính thức có phân quyền trang hợp lệ, đồng thời áp dụng cơ chế giãn cách thời gian (rate-limiting) và cửa sổ takeover khi có tương tác người dùng. Với TikTok, chúng tôi sử dụng PostPeer API Gateway chính thống, xuất bản video dọc đúng chuẩn định dạng và gắn mã định danh rõ ràng, hoàn toàn không sử dụng phương pháp crawl lậu hay giả lập trình duyệt rủi ro."*
+> **💡 Trả lời:** *"Sèo Trum tuân thủ tuyệt đối chính sách của các nền tảng: Với Meta, hệ thống sử dụng Meta Graph API v20 chính thức có phân quyền trang hợp lệ, đồng thời áp dụng cơ chế giãn cách thời gian (rate-limiting) và cửa sổ takeover khi có tương tác người dùng. Với TikTok, chúng tôi sử dụng PostPeer API Gateway chính thống, xuất bản video dọc đúng chuẩn định dạng và gắn mã định danh rõ ràng, hoàn toàn không sử dụng phương pháp crawl lậu hay giả lập trình duyệt rủi ro."*
 
 #### ❓ Câu hỏi 3: *"Dự án này dựa trên Javis OS gốc của Nguyễn Minh Quý, vậy phần đóng góp mới của nhóm bạn là gì?"*
-> **💡 Trả lời:** *"Chúng tôi tôn trọng và ghi công đầy đủ tác giả Nguyễn Minh Quý trong file NOTICE.md và LICENSE. Javis OS gốc là một hạt nhân AI cá nhân. Phần đóng góp mới độc quyền của chúng tôi chiếm hơn 70% giá trị ứng dụng thực tế hiện tại, bao gồm: Toàn bộ bảng điều khiển vận hành Javis Ops (`/ops`), hệ thống Hộp thư duyệt nháp Human-in-the-Loop, công cụ trích xuất SĐT và CRM Lead nóng, Cổng xuất bản TikTok Video/Carousel, Trung tâm phân phối Đa kênh 4 nền tảng và cơ chế phân quyền RBAC bảo vệ doanh nghiệp."*
+> **💡 Trả lời:** *"Chúng tôi tôn trọng và ghi công đầy đủ tác giả Nguyễn Minh Quý trong file NOTICE.md và LICENSE theo đúng tinh thần MIT License. Javis OS gốc là một nền tảng tác tử AI cá nhân. Phần đóng góp mới độc quyền của chúng tôi chiếm toàn bộ giá trị ứng dụng thực tế hiện tại, bao gồm: Toàn bộ bảng điều khiển vận hành Sèo Trum Ops (`/ops`), hệ thống Hộp thư duyệt nháp Human-in-the-Loop, công cụ trích xuất SĐT và CRM Lead nóng, Cổng xuất bản TikTok Video/Carousel, Trung tâm phân phối Đa kênh 4 nền tảng và cơ chế phân quyền RBAC bảo vệ doanh nghiệp."*
 
 #### ❓ Câu hỏi 4: *"Làm sao doanh nghiệp không rành kỹ thuật có thể cài đặt được hệ thống này?"*
 > **💡 Trả lời:** *"Chúng tôi đã đóng gói toàn bộ hệ thống vào Docker Compose. Một doanh nghiệp chỉ cần thuê một VPS cơ bản giá 100.000đ/tháng, chạy duy nhất một dòng lệnh `docker compose up -d` là toàn bộ cơ sở dữ liệu, backend và frontend tự động khởi chạy. Chúng tôi cũng cung cấp sẵn file tài liệu hướng dẫn tiếng Việt từng bước (Quickstart Guide) và file mẫu cấu hình `page_tokens.example.json` để người dùng điền thông tin là chạy được ngay."*

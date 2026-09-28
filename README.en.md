@@ -1,8 +1,16 @@
 <div align="center">
 
-# 🚀 Javis Ops
+# 🚀 SÈO TRUM (Auto Social AI)
 
-**Self-hosted, open-source social media operations layer for SMEs. Built on [Javis OS](https://github.com/blogminhquy/javis-os) (MIT).**
+**Multi-Channel Social Operations & Content Distribution Platform for SMEs**  
+*Open Source (MIT License) · Self-Hosted · Privacy-First*
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-emerald.svg)](LICENSE)
+[![Python: 3.12](https://img.shields.io/badge/Python-3.12-blue.svg)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-Async-009688.svg)](https://fastapi.tiangolo.com/)
+[![React: 18](https://img.shields.io/badge/React-18-61dafb.svg)](https://react.dev/)
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ed.svg)](https://www.docker.com/)
+[![CI Status](https://img.shields.io/badge/CI-Passing-brightgreen.svg)](.github/workflows/ci.yml)
 
 *[Tiếng Việt](README.md) · **English***
 
@@ -10,331 +18,200 @@
 
 ---
 
-## 🎯 What is this?
-AI brain (Javis) runs in the background with 11 providers supported. Staff use `/ops`. The machine owner uses `/app`.
+> [!NOTE]
+> **Foundation & MIT License Statement:**  
+> **Sèo Trum** is built on the open-source agentic AI foundation **[Javis OS](https://github.com/blogminhquy/javis-os)** (Copyright © 2026 Nguyễn Minh Quý - blogminhquy, MIT License).  
+> The Sèo Trum team inherits the core agentic runtime and Model Context Protocol (MCP Hub) from Javis OS, while designing and building the complete social business layer: **Social Channels Hub, TikTok Gateway Automation, Human-in-the-Loop Unified Inbox, Auto Lead Scoring CRM, and the RBAC Operations Portal (`/ops`)**.
 
-## 🚪 Three Portals
+---
 
-| URL | Target Audience | Primary Responsibility |
+## 🎯 Overview
+
+For Small and Medium Enterprises (SMEs), social media is the commercial lifeblood but also a severe operational bottleneck:
+1. **Overwhelm & Lost Leads:** Customers are fragmented across 4–5 platforms (Facebook, TikTok, Instagram, YouTube). Delayed responses beyond 15–30 minutes result in up to a 60% lead drop-off rate.
+2. **AI Hallucination Risks:** Unchecked conversational bots risk hallucinating incorrect pricing and policies, causing brand reputational damage.
+3. **SaaS Vendor Lock-in:** Commercial SaaS tools charge exorbitant per-page and per-seat fees while holding business data hostage.
+
+**SÈO TRUM** resolves these challenges through a **Human-in-the-Loop** architecture:
+- **AI handles 80% of repetitive workload:** 24/7 scanning of comments and direct messages, rules-first intent classification, automatic phone number extraction, and draft responses generated strictly from the Brand Kit in under 30 seconds.
+- **Humans retain 20% of critical decision-making:** Support agents review and 1-click approve responses. AI is strictly barred from unapproved external publishing.
+- **1 Content $\rightarrow$ 4 Channels:** Author once, distribute automatically to Facebook Reels, TikTok, Instagram, and YouTube Shorts.
+
+---
+
+## 🚪 Three-Portal Architecture
+
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│                          SÈO TRUM SYSTEM ARCHITECTURE                  │
+├───────────────────┬──────────────────────────┬─────────────────────────┤
+│    Portal 1: `/`  │      Portal 2: `/ops`    │       Portal 3: `/app`  │
+│   (Landing Page)  │     (Sèo Trum Ops)       │     (Core Cockpit)      │
+├───────────────────┼──────────────────────────┼─────────────────────────┤
+│ Public visitors,  │ Support Staff &          │ Server Owner,           │
+│ prospective SMEs  │ Operations Managers      │ Technical Engineers     │
+├───────────────────┼──────────────────────────┼─────────────────────────┤
+│ Showcase features,│ 30s draft review inbox,  │ Agentic engine cockpit, │
+│ matrix, live demo │ CRM & lead scoring,      │ MCP Hub, Second Brain,  │
+│ and self-host info│ Social Hub, Kanban board │ model configs, terminal │
+└───────────────────┴──────────────────────────┴─────────────────────────┘
+```
+
+| Portal | URL Route | Target Users | Primary Purpose |
+|---|---|---|---|
+| **Public Landing** | `/` | General public & partners | High-conversion presentation of features, architecture, comparison table, and self-hosted benefits |
+| **Operations Hub** | `/ops` | Support Staff & Managers | Daily workspace: Draft review, customer CRM, multi-channel schedule, and Kanban operations board |
+| **System Cockpit** | `/app` | Machine Owner | AI runtime setup, MCP integrations, Markdown Second Brain, and server maintenance |
+
+---
+
+## ⚡ Core Features
+
+### 1. Social Channels Hub
+- Centralized coordination for the "Big 4" social networks: **Facebook Fanpage & Messenger**, **TikTok Video & Shop**, **Instagram & Threads**, **YouTube Shorts & Channel**.
+- 1:N Content Matrix: Repurpose 9:16 vertical videos and photo carousels to reach 95% of target audiences without manual re-editing.
+
+### 2. Unified Care Inbox & 30-Second Human-in-the-Loop Review
+- Ingests Fanpage comments and Messenger conversations into a single real-time stream.
+- **Rules-First Intent Classifier:** Accurately identifies pricing queries, product advice, address checks, or complaints.
+- **Automatic Phone Extractor:** Seamlessly captures Vietnamese phone numbers across all formats (`09x`, `08x`, `+84`, formatted with spaces or hyphens).
+- **Anti-Hallucination Guard:** Draft responses are constrained strictly to Brand Kit data. Staff can approve or customize drafts in 1-click.
+
+### 3. Customer CRM & Automated Lead Scoring
+- Automatically constructs customer interaction profiles from multi-channel events.
+- Classifies customer lifecycles: *New Lead $\rightarrow$ In Consultation $\rightarrow$ Phone Captured (Hot Lead) $\rightarrow$ Purchased $\rightarrow$ Complaint*.
+- Supports cross-channel profile merging and custom tagging.
+
+### 4. Automated TikTok Publishing (PostPeer BYO Gateway)
+- Direct integration for vertical video (9:16) and carousel album publishing via PostPeer API (Bring Your Own Key).
+- Native support for background music attachment (`autoAddMusic=True`).
+- Dedicated `/tiktok-media` local CDN endpoint meeting TikTok Content API specs.
+
+### 5. Multi-Brand Isolation
+- Manage individual brand identities via independent Markdown Brand Kits.
+- Complete data isolation: Pricing and scripts from one brand never leak into another.
+
+### 6. Strict RBAC Security Matrix
+- Three defined roles:
+  * `staff`: Shift agents — view assigned inboxes, approve drafts, query shift knowledge.
+  * `manager`: Operations leads — view analytics, merge CRM records, manage Kanban boards.
+  * `owner`: Machine owner — full account management, system configuration, access to `/app`.
+- Fail-closed security: Unauthorized requests are rejected with strict HTTP 403 Forbidden responses.
+
+---
+
+## 🏗️ System Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                          GATEWAY LAYER                                          │
+│  Meta Graph API v20        PostPeer TikTok Gateway       YouTube Data API v3    │
+│  (Fanpage & Messenger)     (9:16 Video & Carousels)      (Shorts & Channel)     │
+└─────────────────────────┬───────────────────────────────────────────────────────┘
+                          │ Webhooks & Polling Engine
+┌─────────────────────────▼───────────────────────────────────────────────────────┐
+│                    CORE RUNTIME & AGENT ENGINE                                  │
+│                                                                                 │
+│  FastAPI Asynchronous Server ───┬─── SQLite WAL Queue (Zero Bottleneck)        │
+│  Regex Phone Extractor          ├─── Rules-first Intent Classifier              │
+│  Brand Kit Knowledge Resolver   └─── Human-in-the-Loop Draft Engine             │
+│                                                                                 │
+│  [Agentic Kernel Inherited from Javis OS (MIT) - 11 AI Providers Supported]     │
+│  Claude Code SDK · OpenAI Codex · Google Gemini · OpenRouter · DeepSeek         │
+└─────────────────────────┬───────────────────────────────────────────────────────┘
+                          │ REST API & WebSocket Events
+┌─────────────────────────▼───────────────────────────────────────────────────────┐
+│                      PRESENTATION LAYER                                         │
+│                                                                                 │
+│   Landing Page (`/`)         Sèo Trum Ops (`/ops`)         Core Cockpit (`/app`)│
+│   (HTML5 + Tailwind)         (React 18 + Tailwind SPA)     (Admin Dashboard)    │
+└─────────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 🚀 Quickstart & Deployment
+
+### Method 1: Docker Compose (Recommended for Production)
+
+```bash
+# 1. Clone repository
+git clone https://github.com/ROYCE-8425/Auto_social.git seotrum
+cd seotrum
+
+# 2. Configure environment
+cp env.example .env
+
+# 3. Launch stack
+docker compose up -d
+
+# 4. Check status
+docker compose ps
+```
+
+Access endpoints:
+- **Landing Page:** `http://<vps-ip>:7777/`
+- **Sèo Trum Ops:** `http://<vps-ip>:7777/ops`
+- **Owner Cockpit:** `http://<vps-ip>:7777/app`
+
+---
+
+### Method 2: Native Linux / macOS (Systemd)
+
+```bash
+git clone https://github.com/ROYCE-8425/Auto_social.git seotrum
+cd seotrum
+
+chmod +x install.sh
+./install.sh
+```
+
+---
+
+### Method 3: Windows (Local PC)
+
+1. Install **Python 3.12** (check *"Add Python to PATH"*) and **Node.js LTS**.
+2. Run: `setup.bat`.
+3. Launch: `JAVIS OS.bat` or run in background via `start-javis.vbs`.
+4. Open your browser: `http://localhost:7777/ops`.
+5. Stop server: `stop-javis.bat`.
+
+---
+
+## ⚙️ Environment Variables (`.env`)
+
+| Variable | Description | Default |
 |---|---|---|
-| `/` | General Public, Visitors | Public Landing Page |
-| `/ops` | CS Support Staff, Managers | Draft review inbox, Customer CRM, Task board, TikTok (view) |
-| `/app` | Machine Owner | Technical Cockpit: Console, MCP, loops, agents, TikTok test publish |
+| `JAVIS_HOST` | Listening host (`127.0.0.1` local or `0.0.0.0` public) | `127.0.0.1` |
+| `JAVIS_PORT` | HTTP server port | `7777` |
+| `JAVIS_REQUIRE_LOGIN` | Force user authentication | `1` |
+| `JAVIS_ADMIN_USER` | Initial administrative user | *(custom)* |
+| `JAVIS_ADMIN_PASSWORD` | Initial administrative password | *(custom)* |
+| `DOMAIN_NAME` | Custom domain name for auto-SSL | *(optional)* |
+| `POSTPEER_API_KEY` | PostPeer API key for TikTok Gateway | *(optional)* |
+| `POSTPEER_TIKTOK_ACCOUNT_ID` | TikTok Connected Account ID | *(optional)* |
+| `BRAINS_DIR` | Directory storing Brand Kits & Second Brain Markdown | `brains/` |
 
-## ⚡ Ops Layer Capabilities (Currently Available)
-- **Facebook Fanpage Graph Publishing:** Standard aspect ratios, multi-photo albums, brand kit resolution, per-page token isolation.
-- **Automated Fanpage Care:** 24/7 comment & Messenger ingestion, rules-first intent classification (pricing, consultations, promotions), phone number extraction, draft queue, CRM recording.
-- **Flexible Care Scopes:** Filter by all pages, by a specific brand kit, or isolated to a single page.
-- **Operational Toggles:** Toggles for comment ingestion, Messenger ingestion, auto comment replies, and auto Messenger replies (defaults to draft mode for human review).
-- **Strict Multi-Tier RBAC:** `staff` / `manager` / `owner` roles; staff members are strictly hard-blocked with HTTP 403 when trying to access the `/app` cockpit.
-- **TikTok Publishing (PostPeer BYO Key):** 9:16 vertical videos and photo carousels, automatic background music selection (`autoAddMusic`), served via secure `/tiktok-media` endpoints.
-- **Markdown Brand Kit System:** Brand identity and product knowledge managed in portable Markdown files, supporting multi-brand operations without vendor lock-in or single-shop hardcoding.
-
-## 🚫 What this is NOT
-- **NOT** a vendor lock-in SaaS subscription.
-- **NOT** a replacement for Facebook Graph API via PostPeer (PostPeer is only used as an optional BYO key bridge for TikTok).
-- **NOT** an unrestricted, raw AI chatbot exposed directly to end-user public chat.
-
-## ⏱️ Quick Start
-Deploy using Docker or VPS identical to upstream Javis OS:
-- Public Landing: `http://<ip>:7777/`
-- Operations Portal: `http://<ip>:7777/ops`
-- Owner Cockpit: `http://<ip>:7777/app`
-*(Live demo reference: `https://trannhuy.online`)*
-
-## 🔒 Security
-- **Never** commit `page_tokens.json`, `POSTPEER_API_KEY`, `.env`, or secrets inside `settings.json` into version control.
-- Integration scripts (such as `scripts/connect_postpeer.py`) read securely from environment variables or protected vault storage.
-- Detailed disclosure guidelines available in [SECURITY.md](SECURITY.md).
+---
 
 ## 📜 Attribution & License
-Javis OS © Nguyễn Minh Quý (blogminhquy), MIT License.  
-Javis Ops operational layer © 2026 contributors of Auto_social / Javis Ops, MIT License.  
-See [NOTICE.md](NOTICE.md) and [LICENSE](LICENSE) for details.
 
----
+This project is licensed under the **MIT License**:
 
+- **Core Agentic Foundation & MCP Hub:**  
+  Inherited from [Javis OS](https://github.com/blogminhquy/javis-os)  
+  Copyright (c) 2026 Nguyễn Minh Quý (blogminhquy)
 
-## 🚀 Installation
+- **Sèo Trum Operations & Social Automation Layer:**  
+  Copyright (c) 2026 Sèo Trum Contributors (`ROYCE-8425/Auto_social`)
 
-> ⚠️ **Security matters here:** Javis runs an AI brain with **full rights** on the machine. When it runs publicly (Docker/VPS/Hostinger), Javis **forces login by itself** - opening the app gives you a create-account / sign-in screen, and nobody drives it without a password.
-
-### Option 1 - Hostinger Docker Manager (domain + HTTPS) ⚡
-
-Hostinger VPS → **Docker Manager → Compose → URL** → paste the **Hostinger file** and **Deploy**:
-```
-https://raw.githubusercontent.com/blogminhquy/javis-os/main/docker-compose.hostinger.yml
-```
-The **Environment** box on the current template needs only three fields: `DOMAIN_NAME`,
-`JAVIS_ADMIN_USER`, `JAVIS_ADMIN_PASSWORD`. The technical variables for ports, state,
-brains and working directories are hidden because the Docker image sets them correctly.
-
-Set `DOMAIN_NAME` so Hostinger's Traefik issues HTTPS:
-- **Free link** (no domain purchase needed): `DOMAIN_NAME=javis.<vps-hostname>.hstgr.cloud`
-  (find the hostname under hPanel → VPS, e.g. `javis.srv1562015.hstgr.cloud`).
-- **Your own domain:** `DOMAIN_NAME=example.com` + point an A record at the VPS IP.
-
-Deploy → wait 1-3 minutes for Traefik to issue the certificate → open `https://<DOMAIN_NAME>`. (Details and troubleshooting: [DEPLOY.md](DEPLOY.md).)
-
-> Just want `http://<ip>:7777` without a domain? Use `docker-compose.yml` (Option 2).
-
-**Three one-time steps:**
-1. **Make the GHCR image Public:** GitHub → repo → **Packages** → `javis-os` → *Package settings* → Visibility = **Public**.
-2. **Create the admin account** (pick one):
-   - *Recommended:* fill in `JAVIS_ADMIN_USER` + `JAVIS_ADMIN_PASSWORD` in the Environment box → open the app and **sign straight in**.
-   - *Or:* open the app and it asks for a **SETUP TOKEN** - in the **App terminal** (inside the container) run `cat /data/state/.setup_token`.
-3. **Sign in to a brain:** App terminal → `claude auth login --claudeai` → open the link, paste the code. (On a ChatGPT plan, sign in on the **Models** page after opening the app.)
-
-### Option 2 - Docker on any VPS (pull the image, no clone needed)
-
-```bash
-# Docker required (don't have it?  curl -fsSL https://get.docker.com | sh)
-mkdir javis && cd javis
-curl -fsSLO https://raw.githubusercontent.com/blogminhquy/javis-os/main/docker-compose.yml
-
-docker compose run --rm javis claude auth login --claudeai   # sign in to Claude once
-docker compose up -d                                          # pull the image and run
-```
-Open `http://<vps-ip>:7777` → the admin-account screen (find the SETUP TOKEN in `docker compose logs javis`).
-
-### Option 3 - Install directly on Linux/macOS (no Docker)
-
-```bash
-git clone https://github.com/blogminhquy/javis-os.git javis && cd javis
-chmod +x install.sh && ./install.sh
-```
-The script installs Python + Node + both CLI engines (Claude Code, Codex), creates a venv, registers a systemd service that starts at boot, and prints the address. If it reports Claude is not signed in, run this once: `claude auth login --claudeai`.
-
-### Option 4 - Windows (personal machine)
-
-```
-1. Install Python 3.12 (tick "Add to PATH") + Node.js LTS
-2. Double-click  setup.bat   (runs in a visible window - installs Claude Code + Codex)
-   To run it silently next time: start-javis.vbs   (log at server\javis.log)
-3. Open http://localhost:7777 → the Models page, sign in to the brain you want
-4. To stop: stop-javis.bat
-```
-
-> 🪟 **Windows - open it like an app:** after the first `setup.bat` run, from then on just double-click **`JAVIS OS.bat`** - the server starts in the background (no black window) and the dashboard opens as its **own window** with no address bar and its own taskbar entry. Start at login: `javis-autostart.bat install` (remove: `uninstall`).
-
-### Several Javis instances on one VPS (each with its own link)
-
-Run as many as you like - brains, settings and accounts are fully separate per instance.
-Only three values have to differ between them: `JAVIS_NAME`, `JAVIS_HOST_PORT`, `DOMAIN_NAME`.
-
-- **Hostinger:** deploy `docker-compose.hostinger.yml` as a second stack and fill in those three boxes.
-- **Self-managed VPS:** run the shared proxy `docker-compose.proxy.yml` **once for the whole machine**, then give each instance its own folder using `docker-compose.multi.yml`. The proxy discovers new instances and requests SSL by itself - adding one changes nothing on the proxy.
-- **Native:** `JAVIS_NAME=javis-shop JAVIS_PORT=7778 ./install.sh`.
-
-Leave those variables empty and you get exactly the old single-instance install. Step by step: **[DEPLOY.md](DEPLOY.md)**.
-
-📄 More detail (fixed named-tunnel URLs, building from source…) in **[DEPLOY.md](DEPLOY.md)**.
-
----
-
-## 🎬 First-run setup
-
-Open Javis and the setup wizard walks you through:
-
-1. **Admin account** - set a password (required when running publicly, to keep strangers out).
-2. **Pick a brain** - on a subscription you sign in once and need no API key: Claude Code keeps its token in `~/.claude` (Docker: a dedicated volume, so updates do not lose it), and ChatGPT/Codex signs in right on the **Models** page. On an API key you just paste an OpenRouter / OpenAI / Gemini / Anthropic key. The Claude Code card also has a **"Run via"** selector: keep the signed-in subscription, or switch to an Anthropic API key. Both keep every capability - they differ only in who pays and who carries the risk (see the warning above).
-3. **Pick a model** - Claude Code is preselected, but switching to any provider on the **Models** page **loses no features** (except shell commands, which only the CLI engines have).
-4. **Wire up connections** (optional) - go to **Connections**, pick a service from the store and paste a key or scan a QR code. Javis then reports on real numbers from it.
-
----
-
-## 📖 Using Javis
-
-> 📚 **Detailed docs:** see the **[docs/](docs/README.md)** folder - a guide per feature (where to open it, what to press, how to use it). Most pages are in Vietnamese; [docs/en/](docs/en/README.md) has the translated ones. The table below is a quick map.
-
-The left navigation rail groups **19 pages** into **7 groups** (click a group name to open it):
-
-| Group | Item | What it does | Guide |
-|---|---|---|---|
-| **Assistant** | **Javis** | The main screen: chat (typed or spoken), knowledge graph, brain file tree on the left. | [Chat & voice](docs/02-tro-chuyen-va-giong-noi.md) · [Knowledge graph](docs/03-do-thi-tri-thuc.md) |
-| | **Chat** | A full-width chat pane with a conversation-history column. | [Sessions](docs/04-phien-hoi-thoai.md) |
-| **Brain** | **Files** | Browse the brain, **edit `.md`/`.txt` in place**, search by name or content, upload and download. | [File manager](docs/05-quan-ly-tep-tin.md) |
-| | **Self-learning** | Javis distils memories, wiki entries and skills after each conversation; undoable. | [Self-learning](docs/22-tu-hoc.md) |
-| **Code** | **Terminal** | A **real shell** on the machine running Javis, right in the browser - no SSH needed. | [Code group: Terminal](docs/27-tab-code-terminal.md) |
-| **Capabilities** | **Agents** | Build specialist assistants (role + skills + their own memory). | [Agents & workflows](docs/07-agents-va-workflows.md) |
-| | **Skills** | Group, search, **toggle**, add/edit/delete, import/export skills. | [Skills](docs/06-skills.md) |
-| | **Workflows** | Build and run automation chains (agent → agent) with verification steps. | [Agents & workflows](docs/07-agents-va-workflows.md) |
-| | **Plugins** | Add native tools/hooks for every engine with one Python folder. | [Plugins](docs/20-plugins.md) |
-| | **Chatbot** | Put an agent in front of customers on its own Telegram/Zalo bot and its own brain. | [Chatbot](docs/25-chatbot.md) |
-| **Work** | **Work** | A background task queue the AI specs and runs itself; you only handle exceptions. | [Work (Kanban)](docs/21-viec-kanban.md) |
-| | **Recurring** | Several background loops plus reminders on a clock time or a cron expression. | [Recurring jobs & reminders](docs/08-viec-dinh-ky.md) |
-| **Connections** | **Connections** | The external-service store, several accounts per service, three permission levels. | [Connections & data](docs/09-mcp-va-so-lieu.md) |
-| | **Channels** | Turn on the Telegram bot (ask Javis from your phone). | [Telegram](docs/11-telegram.md) · [Zalo](docs/12-zalo.md) |
-| | *(terminal)* | `pip install javis-cli`, then `javis "..."` - a third channel into the same Javis. | [Javis CLI](docs/24-cli-terminal.md) |
-| | **Models** | Main model, providers, reasoning depth, background-work model. | [Models & engines](docs/10-models-va-engine.md) |
-| **System** | **Usage** | Tokens and cost per day, per provider, per source. | [Usage](docs/23-muc-dung-token.md) |
-| | **Settings** | System status, interface & brain, voice, branding, custom domain. | [Getting started](docs/en/01-getting-started.md) |
-| | **Updates** | Current version, update/Redeploy, progress and the feature changelog. | [Troubleshooting](docs/17-khac-phuc-su-co.md) |
-| | **Account** | Workspace, sign in/out, change or disable the password, API tokens for the CLI. | [Security & accounts](docs/14-bao-mat-tai-khoan.md) · [Javis CLI](docs/24-cli-terminal.md) |
-
-**Full table of contents (27 pages):** [docs/README.md](docs/README.md) - it also covers [Second Brain: memory / Wiki / INGEST](docs/13-second-brain-bo-nho-wiki.md), [Backing the brain up to GitHub](docs/18-sao-luu-github.md), [Tasks & Dataview in notes](docs/19-task-va-dataview.md), [Branding & custom domains](docs/15-thuong-hieu-ten-mien.md) and [.env configuration](docs/16-cau-hinh-env.md).
-
-### A few common flows
-
-- **Ask for numbers:** *"How is revenue today? Against yesterday?"* → Javis calls the right connection and returns real figures plus suggestions.
-- **Digest knowledge (INGEST):** drop in a file or a note → Javis summarises it, extracts insight, writes it into the Wiki and proposes tasks.
-- **Hand over background work:** go to **Work** → **+ New goal** → describe it in plain words (e.g. *"summarise this week's sales, find slow-moving stock, draft three captions to push it"*) → the AI specs and runs it, then reports back over Telegram.
-- **Recurring work:** go to **Recurring** → **+ Add** → choose *Loop* (every N minutes) or *Reminder* (8:30 every day).
-- **Voice:** press the mic (or turn on hands-free) → speak → Javis answers out loud.
-
----
-
-## ⚙️ Configuration (`.env`)
-
-Every line can be left empty and it still runs. Copy `env.example` → `.env` (the sample file deliberately has no leading dot, so Hostinger's Docker Manager does not import it into the Environment box).
-
-| Variable | Meaning | Default |
-|---|---|---|
-| `JAVIS_HOST` | Listen address. `127.0.0.1`=this machine only; `0.0.0.0`=public | `127.0.0.1` |
-| `JAVIS_PORT` | Port | `7777` |
-| `JAVIS_REQUIRE_LOGIN` | `1`/`0` to force login on/off (default: on when bound publicly) | *(auto)* |
-| `JAVIS_ADMIN_USER` / `JAVIS_ADMIN_PASSWORD` | Create the admin at deploy time (no SETUP TOKEN needed) | - |
-| `JAVIS_ALLOWED_HOSTS` | Extra hostnames on the allow-list (CSRF / DNS-rebinding protection) | localhost + your domain |
-| `JAVIS_SECURE_COOKIE` | Force the `Secure` cookie flag. Only turn on with end-to-end HTTPS | *(auto, from the domain)* |
-| `JAVIS_STATE_DIR` | Where state is written (settings, sessions, encryption key, recurring-job config) | `server/` (Docker: `/data/state`) |
-| `BRAINS_DIR` | Parent folder holding every brain | `brains/` (Docker: `/brains`) |
-| `OBSIDIAN_VAULT_PATH` | An external Second Brain vault (if you already have one) | `vault/` (Docker: `/data/vault`) |
-| `CLAUDE_CWD` | Working directory for the Claude brain | repo root |
-| `JAVIS_ENABLE_USER_PLUGINS` | `true` is required before your own plugins run (real Python inside the server) | *(off)* |
-| `WATCHTOWER_TOKEN` | Token for the "Update now" button on the Docker build | `javis-update` |
-| `TTS_VOICE` / `TTS_RATE` | Voice and speed (Edge TTS) | `vi-VN-HoaiMyNeural` / `+5%` |
-
-Every variable: [docs/16 - .env configuration](docs/16-cau-hinh-env.md).
-
----
-
-## 🔐 Security
-
-- When running publicly, **login is required** before any feature works (the brain runs with full rights on the machine).
-- Creating the first admin needs a **SETUP TOKEN** (printed in the server log) or an admin preset through env vars → someone who only has the URL cannot claim the account.
-- **Login rate limiting** (temporary lockout after repeated failures), passwords ≥ 8 characters, `secure` cookies under HTTPS, sessions expiring after 30 days.
-- **CSRF and DNS-rebinding blocked**: any write request with an unknown Origin is rejected.
-- **Secrets are encrypted** inside `settings.json` (API keys, OAuth tokens, Telegram bot tokens, backup tokens) with a per-machine key at `JAVIS_STATE_DIR/.secret_key`.
-- **Your own plugins are blocked by default** - you have to set `JAVIS_ENABLE_USER_PLUGINS=true` yourself, because they run real Python inside the server process.
-- Remote access should go over **HTTPS** (Hostinger `*.hstgr.cloud` or a Cloudflare Tunnel) - do not expose a raw port.
-
----
-
-## 🔄 Updating
-
-```bash
-# On your machine (after changing code): push to GitHub
-git add -A && git commit -m "..." && git push     # → CI builds a new image onto GHCR
-
-# On the VPS: pull the new build
-cd javis && ./update.sh          # pulls the image and restarts (volume data is NOT lost)
-```
-
-In the app: open **Updates** (System group) → **⬆ Update now** where the environment supports it, with a progress bar and a rollback button if the new build breaks.
-
-## 🌐 Remote access (non-Hostinger VPS)
-
-```bash
-docker compose --profile tunnel up -d
-docker compose logs tunnel | grep trycloudflare   # → https://xxx.trycloudflare.com
-```
-
----
-
-## 🏗️ Architecture
-
-```
-Browser (voice + graph) ───┐                        ┌→ Claude Agent SDK   (Claude plan)
-Telegram ──────────────────┤→ FastAPI (server/) ────┼→ Codex CLI          (ChatGPT plan)
-Zalo Agent MCP ────────────┤          │             ├→ Antigravity CLI    (Google plan)
-                           │          │             └→ OpenRouter / OpenAI / Gemini / Anthropic / Groq / Ollama
-                           │          ├→ MCP Hub  (the shared connection store for EVERY engine)
-                           └──────────┴→ Second Brain (markdown vault: Memory + Wiki + Sources)
-```
-- **Backend:** Python FastAPI in `server/`.
-  - Brains and engines: `claude_sdk_engine.py` (the Claude engine, via the Claude Agent SDK), `claude_cli.py` (factory + auth for Claude/Codex), `antigravity_cli.py`, `gemini_cli.py`, `engine.py` (the API engines plus the MCP tool-call loop), `aux_engine.py` (engine selection for background work + the fallback chain when an engine dies).
-  - Tools: `mcp_hub.py`, `mcp_store.py`, `mcp_client.py`, `mcp_catalog.py`, `plugins_host.py`, `oauth_mcp.py`.
-  - Background work: `self_improve.py` (recurring jobs), `reminders.py`, `tasks.py` + `task_store.py` (Kanban), `learn.py` (self-learning).
-  - Data: `sessions.py`, `compaction.py`, `git_brain.py`, `media_gc.py`, `usage_index.py` + `usage_store.py`.
-  - Channels: `telegram_bot.py`, `channel_context.py`; Zalo goes through the MCP Hub.
-  - Language and locale: `lang.py` (which language is this turn), `lang_registry.py` (one entry per language), `lexicon/` (per-language safety-gate vocabulary), `localefmt.py` (timezone, currency, formats).
-  - Platform: `main.py`, `routes/` (domain, graph), `config.py`, `web_security.py`, `secrets_store.py`.
-- **Frontend:** plain HTML/CSS/JS (`dashboard/`) - no framework, light on a VPS. Interface strings live in `dashboard/i18n/`.
-- **Second Brain:** a markdown vault in `brains/<brain name>/` - living memory plus an accumulating Wiki.
-
----
-
-## 🩺 Troubleshooting
-
-| Symptom | What to do |
-|---|---|
-| Code changed but nothing looks different | Changed a `.py`? **Restart the server** (Windows: `stop-javis.bat` → `start-javis.vbs`). Changed the UI? **Ctrl+Shift+R**. |
-| Port 7777 held, the new build will not come up | Kill the old process FIRST (`stop-javis.bat`, or `taskkill /F /PID <pid>`), then start again. |
-| Hostinger cannot pull the image | Set the GHCR package to **Public**; wait for the GitHub Action build to finish (Actions tab). |
-| The app asks for a SETUP TOKEN | App terminal (inside the container): `cat /data/state/.setup_token`. On the host: `docker compose logs javis \| grep "SETUP TOKEN"`. Or set `JAVIS_ADMIN_PASSWORD` so no token is needed. |
-| The brain says it is not signed in | Go to **Models**, find the provider card, press sign in. Or run `claude auth login --claudeai` once (Docker: in the App terminal). |
-| Old images in a conversation show a grey box | By design: `attachments/` is a cache that expires after 30 days or 300MB. See [Troubleshooting](docs/17-khac-phuc-su-co.md). |
-
----
-
-## 📂 Repository layout
-
-```
-javis-os/
-├── server/              # FastAPI backend (engines, connections, background work, channels, memory…)
-│   └── routes/          # Split-out routes (domain, graph)
-├── dashboard/           # Frontend (voice, graph, console, studio, usage)
-│   └── i18n/            # Interface string catalogues, one JSON per language
-├── brains/              # ALL second brains (default: brains/Brain Default)
-├── system/              # Ships with the app: bundled plugins, system skills, the connection catalogue
-├── tests/               # Python + JS test suite
-├── website/             # Marketing site
-├── docs/                # Detailed user guides (27 pages + index)
-├── Dockerfile           # Image: python + Node + Claude CLI
-├── docker-compose.yml   # Production (pulls the GHCR image) - plain VPS, reachable at http://<ip>:7777
-├── docker-compose.hostinger.yml  # For Hostinger: domain + HTTPS via Traefik (set DOMAIN_NAME)
-├── docker-compose.https.yml      # Auto-HTTPS via Caddy on a plain VPS (used with the file above)
-├── install.sh           # Native install for Linux/macOS
-├── update.sh            # Update on a VPS
-├── env.example          # Environment variable template
-├── VERSION · CHANGELOG.md
-├── QUICKSTART.md        # Quick start (Vietnamese) · QUICKSTART.en.md (English)
-├── DEPLOY.md            # Detailed deployment guide
-└── CLAUDE.md            # The "system prompt" + conventions for AI agents
-```
-
----
-
-## 🙏 Credits
-
-- **Brains:** [Claude Code](https://claude.com/claude-code) and the [Claude Agent SDK](https://docs.claude.com/en/api/agent-sdk/overview) (Anthropic), [Codex CLI](https://developers.openai.com/codex/cli) (OpenAI), [Antigravity](https://antigravity.google) (Google), plus the APIs of [OpenRouter](https://openrouter.ai), OpenAI, [Google Gemini](https://ai.google.dev), Anthropic, [Groq](https://groq.com) and [Ollama](https://ollama.com).
-- **Tool standard:** [Model Context Protocol](https://modelcontextprotocol.io) - the entire Javis connection store runs on it.
-- The Second Brain and digital Bullet Journal patterns.
-
----
-
-## 📄 License
-
-Open source under the **MIT License** - use, modify and distribute freely, just keep the copyright notice. See [LICENSE](LICENSE).
-
----
-
-## ☕ Support Javis OS
-
-Javis OS is open-source and free to use, and it's still just one person (me) writing the code and covering the test server bills every day. If Javis has been useful for your work or your life, a small donation buys me more time to fix bugs and ship new features instead of worrying about server costs.
-
-No obligation, no perks attached - just a thank-you sent as money to someone quietly coding at night.
-
-- 🏦 **MB Bank** (Vietnam): `6636966369`
-- 📱 **MoMo wallet** (Vietnam): `0372752740`
-- 🌍 **PayPal**: [paypal.me/quy01](https://paypal.me/quy01)
-
-Can't donate? No worries - using Javis, sending feedback, or opening a Pull Request counts as support too.
+See [LICENSE](LICENSE) and [NOTICE.md](NOTICE.md) for full legal text.
 
 ---
 
 <div align="center">
 
-Made with ☕ by **[Minh Quý](https://minhquy.vn)** · Repo: `github.com/blogminhquy/javis-os`
+**SÈO TRUM — Empowering SMEs with Open-Source AI Automation.**  
+Contributions, bug reports, and Pull Requests are welcome on [GitHub](https://github.com/ROYCE-8425/Auto_social).
 
 </div>

@@ -118,14 +118,14 @@ const strategicChannels: SocialChannelItem[] = [
   {
     id: 'youtube',
     name: 'YouTube Shorts & Channel',
-    handle: '@JavisOpsVN',
+    handle: '@SeoTrumVN',
     subname: 'Cột trụ Video chuẩn & SEO',
     icon: '▶',
     colorBg: 'bg-red-600',
     colorText: 'text-white',
     status: 'connected',
     statusLabel: 'Google API v3 Ready',
-    connectedAccount: 'Javis Ops Official Channel',
+    connectedAccount: 'Sèo Trum Official Channel',
     apiGateway: 'Google YouTube Data API v3',
     metrics24h: {
       posts: 1,
