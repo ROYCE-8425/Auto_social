@@ -2,7 +2,7 @@
 
 > Tự sinh từ file - ĐỪNG sửa tay. Chỉ mục mọi năng lực của Javis trong brain này để bất kỳ AI/engine đọc 1 chỗ là hiểu Javis làm được gì. Song song `wiki/index.md` (tri thức).
 
-**Tổng quan:** 2 agents · 19 skills · 2 workflows (0 bật) · 4 loops (0 bật) · 14 plugins (13 chạy)
+**Tổng quan:** 2 agents · 20 skills · 2 workflows (0 bật) · 4 loops (0 bật) · 14 plugins (13 chạy)
 
 ## Agents
 - **Biên tập Facebook** (`bien-tap-facebook`) - Tạo 1 ảnh AI độc quyền mới 100%, soạn caption đúng brand kit và đăng lên Fanpage Facebook. · model gpt-5.5 · skills: dang-bai-facebook, viet-bai-facebook
@@ -18,6 +18,7 @@
 - **Notes** (`notes`) - Lưu tin nhắn hiện tại nguyên văn vào sources/ (kèm ảnh), tự chưng cất lên wiki nếu note đáng.
 - **Query Wiki** (`query-wiki`) - Khai thác tri thức trong Second Brain: tổng hợp, so sánh, giả thuyết. Trả lời có trích dẫn.
 - **Kiểm tra lại năng lực của chính mình** (`verify-own-capabilities`) - Khi không chắc về một năng lực (vd: tạo ảnh), hãy kiểm tra danh sách tool/plugin đang hoạt động thay vì khẳng định là không có.
+- **Xây chức năng doanh nghiệp** (`xay-chuc-nang-doanh-nghiep`) - Biến yêu cầu nghiệp vụ công ty thành chức năng thật: phân tích, sửa code, kiểm thử và báo bằng chứng.
 ### Content
 - **Soạn nháp tương tác Fanpage** (`soan-nhap-tuong-tac`) - Soạn nháp câu trả lời comment hoặc tin nhắn khi chat trực tiếp trong /app: đúng brand kit, đúng giọng điệu, chỉ gửi thật khi người dùng xác nhận. Không thay thế Care poller.
 - **Viết bài Facebook** (`viet-bai-facebook`) - Skill viết caption Facebook cho hệ thống Sao Việt: rõ người học, rõ việc làm được, giọng tự nhiên, không văn mẫu AI, tối ưu đọc lướt trên di động.

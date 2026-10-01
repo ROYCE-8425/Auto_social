@@ -351,9 +351,10 @@ async def answer_ops_qa(
         except Exception:
             found_tasks = []
 
-    # 11. Hướng dẫn vận hành (Takeover, Duyệt nháp)
-    takeover_asked = "takeover" in msg_low or "nhận lại" in msg_low or "tranh lời" in msg_low
-    drafts_asked = "nháp" in msg_low or "nhap" in msg_low or "hôm nay" in msg_low or "thống kê" in msg_low or "tình hình" in msg_low or "briefing" in msg_low
+    # 11. Hướng dẫn vận hành (Takeover, Duyệt nháp, Tổng quan)
+    takeover_asked = any(w in msg_low for w in ("takeover", "nhận lại", "tranh lời", "tiếp quản", "can thiệp", "dừng ai", "dừng bot", "nhường lời", "ai trực"))
+    drafts_asked = any(w in msg_low for w in ("nháp", "nhap", "hôm nay", "thống kê", "tình hình", "briefing", "tổng hợp", "tong hop", "báo cáo", "bao cao", "tổng quan", "tong quan"))
+
 
     citations = []
     if pages:
@@ -468,8 +469,39 @@ async def answer_ops_qa(
         pass
 
     # 13. Deterministic Rules-First Fallback khi không có LLM / timeout / offline
+    # 13. Deterministic Rules-First Fallback khi không có LLM / timeout / offline
     reply = ""
-    if found_products:
+    # Ưu tiên 1: Tra cứu vận đơn GHN / Đơn hàng cụ thể
+    if found_shipment or (order_asked and found_orders and not found_products):
+        s_lines = ["Thông tin đơn hàng & vận chuyển GHN:"]
+        if found_shipment:
+            s_lines.append(f"• Mã vận đơn: {found_shipment.get('tracking_code')} (Đơn vị: GHN)")
+            s_lines.append(f"• Trạng thái: {found_shipment.get('status')} | Phí ship: {_fmt_price(found_shipment.get('fee', 0))} | COD: {_fmt_price(found_shipment.get('cod_amount', 0))}")
+        for o in found_orders[:2]:
+            cname = o.get("customer_name") or "Khách"
+            cphone = mask_phone(o.get("customer_phone") or "")
+            s_lines.append(f"• Đơn [{o.get('id')}]: Khách {cname} ({cphone}) - Tổng: {_fmt_price(o.get('total_amount', 0))} - Trạng thái: {o.get('status')}")
+        reply = "\n".join(s_lines)
+    # Ưu tiên 2: Cơ chế Human Takeover (Tiếp quản ca trực)
+    elif takeover_asked:
+        reply = (
+            "Takeover là cơ chế tạm dừng AI khi nhân viên can thiệp chat thủ công với khách: Khi bạn hoặc nhân sự nhắn tin trên Messenger/Inbox, "
+            "Javis sẽ tự động lùi lại và tạm dừng phản hồi tự động trong 24 giờ để tránh tranh lời nhân viên.\n\n"
+            "Khi bạn tư vấn xong và muốn AI trực tiếp tục, hãy vào tab **Hộp thư & Nháp** trên /ops và bấm nút **'Javis nhận lại'** (Release Takeover)."
+        )
+    # Ưu tiên 3: Kho văn bản, Hợp đồng & Quy trình SOP
+    elif doc_asked and (doc_stats or found_docs):
+        d_lines = [f"Tình hình Kho văn bản & Pháp lý ({scope_label}):"]
+        if doc_stats:
+            d_lines.append(f"• Tổng số văn bản: {doc_stats.get('total', 0)} | Chờ phê duyệt: {doc_stats.get('pending_approval', 0)} | Sắp hết hạn trong 30 ngày: {doc_stats.get('expiring_soon', 0)} | Hợp đồng cần ký: {doc_stats.get('missing_signature', 0)}")
+        if found_docs:
+            d_lines.append("\nTài liệu liên quan trong kho:")
+            for d in found_docs[:3]:
+                d_lines.append(f"• [{d.get('id')}] {d.get('title')} ({d.get('category')} - Trạng thái: {d.get('approval_status')})")
+        d_lines.append("\nVui lòng vào tab **Kho văn bản** trên /ops để xem chi tiết hoặc ký duyệt.")
+        reply = "\n".join(d_lines)
+    # Ưu tiên 4: Sản phẩm & Bảng giá
+    elif found_products:
         p_lines = [f"Bảng giá niêm yết trong hệ thống Ops Hub ({scope_label}):"]
         for p in found_products[:5]:
             p_lines.append(f"• [{p.get('sku')}] {p.get('name')}: {_fmt_price(p.get('price', 0))} (Tồn kho: {p.get('stock')})")
@@ -481,45 +513,44 @@ async def answer_ops_qa(
             f"Bạn vui lòng hướng dẫn khách nhắn tin inbox hoặc liên hệ Hotline/Zalo {primary_hotline} để được tư vấn chính xác, "
             f"tránh tự báo giá sai nhé."
         )
-    elif found_shipment or (order_asked and found_orders):
-        s_lines = ["Thông tin đơn hàng & vận chuyển GHN:"]
-        if found_shipment:
-            s_lines.append(f"• Mã vận đơn: {found_shipment.get('tracking_code')} (Đơn vị: GHN)")
-            s_lines.append(f"• Trạng thái: {found_shipment.get('status')} | Phí ship: {_fmt_price(found_shipment.get('fee', 0))} | COD: {_fmt_price(found_shipment.get('cod_amount', 0))}")
-        for o in found_orders[:2]:
-            cname = o.get("customer_name") or "Khách"
-            cphone = mask_phone(o.get("customer_phone") or "")
-            s_lines.append(f"• Đơn [{o.get('id')}]: Khách {cname} ({cphone}) - Tổng: {_fmt_price(o.get('total_amount', 0))} - Trạng thái: {o.get('status')}")
-        reply = "\n".join(s_lines)
-    elif doc_asked and doc_stats:
-        reply = (
-            f"Tình hình Kho văn bản Ops Hub:\n"
-            f"• Tổng số văn bản: {doc_stats.get('total', 0)}\n"
-            f"• Văn bản chờ phê duyệt: {doc_stats.get('pending_approval', 0)}\n"
-            f"• Văn bản sắp hết hạn trong 30 ngày: {doc_stats.get('expiring_soon', 0)}\n"
-            f"• Hợp đồng cần ký: {doc_stats.get('missing_signature', 0)}\n"
-            f"Vui lòng vào tab **Kho văn bản** trên /ops để xem chi tiết và ký duyệt."
-        )
+    # Ưu tiên 5: Việc ca trực & Cứu lead
     elif task_asked and found_tasks:
         t_lines = [f"Nhiệm vụ ca trực Kanban cần chú ý ({len(found_tasks)} việc):"]
         for t in found_tasks[:5]:
             t_lines.append(f"• [{t.get('id')}] {t.get('title')} (Khách: {t.get('customer')}, Gấp: {'Có' if t.get('isUrgent') else 'Không'})")
         t_lines.append("Bạn hãy kiểm tra tab **Việc ca trực** trên /ops để xử lý nhé.")
         reply = "\n".join(t_lines)
-    elif takeover_asked:
-        reply = (
-            "Takeover là cơ chế tạm dừng AI: Khi bạn hoặc nhân sự can thiệp chat thủ công với khách trên Messenger, "
-            "Javis sẽ tự động ngưng trả lời trong 24h để không tranh lời nhân viên. "
-            "Khi bạn xử lý xong và muốn AI trực tiếp tục, hãy vào tab **Hộp thư & Nháp** và bấm nút **'Javis nhận lại'** (Release Takeover)."
-        )
+    # Ưu tiên 6: Báo cáo tổng hợp điều hành ca trực hôm nay
     elif drafts_asked:
-        reply = (
-            f"Tình hình ca trực {scope_label} hôm nay:\n"
-            f"• Hộp thư CSKH: {total_pending} nháp chờ duyệt ({pending_cmt_count} bình luận, {pending_msg_count} tin nhắn).\n"
-            f"• Tương tác 24h: {care_stats.get('events_24h', 0)} lượt | Khách mới (Leads): {care_stats.get('leads_24h', 0)}.\n"
-            f"• Hotline kit: {primary_hotline}.\n"
-            f"Bạn hãy mở tab **Hộp thư & Nháp** để kiểm tra và duyệt gửi nhé!"
-        )
+        sum_lines = [
+            f"Tình hình ca trực {scope_label} hôm nay:",
+            f"• Hộp thư CSKH: {total_pending} nháp chờ duyệt ({pending_cmt_count} bình luận, {pending_msg_count} tin nhắn).",
+            f"• Tương tác 24h: {care_stats.get('events_24h', 0)} lượt | Khách mới (Leads): {care_stats.get('leads_24h', 0)}.",
+        ]
+        if ops_order_store:
+            try:
+                orders = ops_order_store.list_orders(limit=20)
+                shipping_cnt = sum(1 for o in orders if o.get("status") == "shipping")
+                delivered_cnt = sum(1 for o in orders if o.get("status") == "delivered")
+                sum_lines.append(f"• Đơn hàng & GHN: {len(orders)} đơn ({shipping_cnt} đang giao, {delivered_cnt} đã giao).")
+            except Exception:
+                pass
+        if ops_documents_store:
+            try:
+                ds = ops_documents_store.get_stats()
+                sum_lines.append(f"• Kho văn bản: {ds.get('pending_approval', 0)} cần duyệt | {ds.get('expiring_soon', 0)} sắp hết hạn 30 ngày.")
+            except Exception:
+                pass
+        if ops_tasks_store:
+            try:
+                tasks = ops_tasks_store.load_tasks()
+                urg_cnt = sum(1 for t in tasks if t.get("isUrgent") and t.get("columnId") != "done")
+                sum_lines.append(f"• Việc ca trực: {urg_cnt} việc gấp cần xử lý.")
+            except Exception:
+                pass
+        sum_lines.append(f"• Hotline kit: {primary_hotline}.")
+        sum_lines.append("Bạn hãy mở các tab tương ứng trên /ops để kiểm tra và xử lý nhé!")
+        reply = "\n".join(sum_lines)
     elif customer_matches:
         c_info = []
         for cm in customer_matches:
@@ -531,6 +562,7 @@ async def answer_ops_qa(
             f"Hiện tại có {total_pending} nháp chờ duyệt trên Hộp thư. "
             f"Hotline hỗ trợ của kit là {primary_hotline}. Bạn cần kiểm tra bảng giá, vận đơn GHN, kho văn bản hay nhiệm vụ ca trực?"
         )
+
 
     return {
         "ok": True,
