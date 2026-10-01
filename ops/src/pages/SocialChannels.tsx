@@ -33,6 +33,7 @@ import {
   FacebookPostItem,
 } from '../lib/api'
 import { useAuth } from '../lib/auth'
+import { useCareScope } from '../lib/scope'
 
 export interface UnifiedPublishPostItem {
   id: string
@@ -48,6 +49,7 @@ export interface UnifiedPublishPostItem {
 
 export const PublishingPage: React.FC = () => {
   const { role } = useAuth()
+  const { scope, scopeBrand } = useCareScope()
   const [selectedChannelFilter, setSelectedChannelFilter] = useState<string>('all')
   const [tiktokData, setTiktokData] = useState<TikTokStatusResponse | null>(null)
   const [facebookData, setFacebookData] = useState<FacebookStatusResponse | null>(null)
@@ -102,11 +104,13 @@ export const PublishingPage: React.FC = () => {
     // 1. TikTok posts
     ;(tiktokData?.recent_posts || []).forEach((p, idx) => {
       const postpeerId = p.postpeer_id || `tt_${idx}`
+      const b = (p.brand || '').toLowerCase()
+      const brandName = b === 'bsn' ? 'Game Giá Rẻ BSN' : (b === 'saoviet' ? 'Sao Việt' : (p.brand ? p.brand.toUpperCase() : 'TikTok'))
       list.push({
         id: postpeerId,
         channel: 'tiktok',
         datetime: p.datetime || '',
-        brand: p.brand ? p.brand.toUpperCase() : (p.kit ? p.kit.replace('.md', '') : 'TikTok'),
+        brand: brandName,
         caption: p.caption || '',
         format: p.photos_count ? `Carousel (${p.photos_count} ảnh)` : 'Video ngắn',
         status: p.status === 'published' ? `Đã đăng (#${postpeerId.slice(0, 8)})` : (p.status || 'Đã xuất bản'),
@@ -118,11 +122,13 @@ export const PublishingPage: React.FC = () => {
     // 2. Facebook posts
     ;(facebookData?.recent_posts || []).forEach((p) => {
       const pidSuffix = p.id.split('_').pop() || p.id
+      const b = (p.brand || '').toLowerCase()
+      const brandName = p.page_name || (b === 'bsn' ? 'Game Giá Rẻ BSN' : (b === 'saoviet' ? 'Sao Việt' : 'Facebook Fanpage'))
       list.push({
         id: p.id,
         channel: 'facebook',
         datetime: p.datetime || p.created_time || '',
-        brand: p.page_name || (p.brand ? p.brand.toUpperCase() : 'Facebook Fanpage'),
+        brand: brandName,
         caption: p.caption || '',
         format: p.format || 'Bài viết kèm ảnh',
         status: `Đã đăng (#${pidSuffix.slice(0, 8)})`,
@@ -135,13 +141,26 @@ export const PublishingPage: React.FC = () => {
     return list
   }, [tiktokData, facebookData])
 
-  const filteredPosts = useMemo(() => {
-    if (selectedChannelFilter === 'all') return realPosts
-    return realPosts.filter((p) => p.channel === selectedChannelFilter)
-  }, [realPosts, selectedChannelFilter])
+  // Lọc theo Brand Scope (Toàn bộ / Game BSN / Sao Việt)
+  const scopedPosts = useMemo(() => {
+    if (scope === 'brand' && scopeBrand) {
+      return realPosts.filter((p) => {
+        const b = p.brand.toLowerCase()
+        if (scopeBrand === 'bsn') return b.includes('bsn') || b.includes('game')
+        if (scopeBrand === 'saoviet') return b.includes('sao') || b.includes('royce') || b.includes('việt')
+        return true
+      })
+    }
+    return realPosts
+  }, [realPosts, scope, scopeBrand])
 
-  const fbCount = useMemo(() => realPosts.filter((p) => p.channel === 'facebook').length, [realPosts])
-  const ttCount = useMemo(() => realPosts.filter((p) => p.channel === 'tiktok').length, [realPosts])
+  const filteredPosts = useMemo(() => {
+    if (selectedChannelFilter === 'all') return scopedPosts
+    return scopedPosts.filter((p) => p.channel === selectedChannelFilter)
+  }, [scopedPosts, selectedChannelFilter])
+
+  const fbCount = useMemo(() => scopedPosts.filter((p) => p.channel === 'facebook').length, [scopedPosts])
+  const ttCount = useMemo(() => scopedPosts.filter((p) => p.channel === 'tiktok').length, [scopedPosts])
 
   return (
     <div className="space-y-6 animate-fade-in pb-12">
@@ -331,7 +350,7 @@ export const PublishingPage: React.FC = () => {
           {/* Filter channel tabs */}
           <div className="flex flex-wrap items-center gap-1 bg-slate-100 p-1 rounded-xl text-xs font-semibold">
             {[
-              { id: 'all', label: 'Tất cả (thật)', count: realPosts.length, icon: null },
+              { id: 'all', label: 'Tất cả (thật)', count: scopedPosts.length, icon: null },
               { id: 'facebook', label: 'Facebook', count: fbCount, icon: <FacebookIcon className="w-3.5 h-3.5 text-[#1877F2]" /> },
               { id: 'tiktok', label: 'TikTok', count: ttCount, icon: <TikTokIcon className="w-3.5 h-3.5" colored /> },
               { id: 'instagram', label: 'Instagram', count: 0, icon: <InstagramIcon className="w-3.5 h-3.5 text-[#E60064]" /> },

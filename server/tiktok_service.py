@@ -531,6 +531,9 @@ def post_photos_to_tiktok(
     privacy_level = kit_data.get("privacy_level") or "PUBLIC_TO_EVERYONE"
     payload = {
         "content": final_caption.strip(),
+        "autoAddMusic": bool(auto_add_music),
+        "accountId": target_acc,
+        "urls": public_urls,
         "platforms": [{
             "platform": "tiktok",
             "accountId": target_acc,

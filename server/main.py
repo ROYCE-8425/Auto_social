@@ -3469,10 +3469,49 @@ async def fetch_facebook_recent_posts(limit_per_page: int = 5, force: bool = Fal
                     pass
 
     all_posts.sort(key=lambda x: str(x.get("created_time") or ""), reverse=True)
+    fb_log = default_brain / "Javis" / "facebook-posts.jsonl"
     if all_posts:
         _FB_POSTS_CACHE["ts"] = now
         _FB_POSTS_CACHE["posts"] = all_posts
-    return all_posts
+        try:
+            fb_log.parent.mkdir(parents=True, exist_ok=True)
+            existing_ids = set()
+            existing_lines = []
+            if fb_log.is_file():
+                for l in fb_log.read_text(encoding="utf-8").splitlines():
+                    if l.strip():
+                        try:
+                            item = json.loads(l)
+                            existing_ids.add(str(item.get("id")))
+                            existing_lines.append(l.strip())
+                        except Exception:
+                            pass
+            new_lines = [json.dumps(p, ensure_ascii=False) for p in all_posts if str(p.get("id")) not in existing_ids]
+            if new_lines:
+                fb_log.write_text("\n".join(existing_lines + new_lines) + "\n", encoding="utf-8")
+        except Exception:
+            pass
+        return all_posts
+
+    # Fallback to persistent facebook-posts.jsonl if Graph API is empty or expired
+    if fb_log.is_file():
+        try:
+            stored = []
+            for l in fb_log.read_text(encoding="utf-8").splitlines():
+                if l.strip():
+                    try:
+                        stored.append(json.loads(l))
+                    except Exception:
+                        pass
+            if stored:
+                stored.sort(key=lambda x: str(x.get("created_time") or x.get("datetime") or ""), reverse=True)
+                _FB_POSTS_CACHE["ts"] = now
+                _FB_POSTS_CACHE["posts"] = stored
+                return stored
+        except Exception:
+            pass
+
+    return []
 
 
 async def _get_facebook_status():
