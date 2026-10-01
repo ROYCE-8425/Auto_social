@@ -37,3 +37,15 @@ def test_send_executive_report():
     assert res["ok"] is True
     assert "telegram" in res["channel"]
     assert len(res["preview"]) > 50
+
+
+def main():
+    test_generate_executive_report()
+    test_ops_order_store_list_shipments()
+    test_send_executive_report()
+    print("OK - test_ops_executive_report: all passed")
+
+
+if __name__ == "__main__":
+    main()
+

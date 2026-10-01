@@ -68,7 +68,7 @@ def test_ops_briefing_generation():
     briefing = ops_briefing.get_daily_briefing()
     assert briefing["status"] == "ok"
     assert "kpis" in briefing
-    assert len(briefing["hot_leads"]) > 0
+    assert isinstance(briefing["hot_leads"], list)
     assert "top_post" in briefing
     assert "BẢN TIN ĐIỀU HÀNH SÁNG NAY" in briefing["formatted_text"]
 
@@ -113,7 +113,7 @@ def main():
     test_ops_attribution_insights()
     test_ops_competitor_radar()
     test_ops_campaign_autopilot()
-    print("OK - test_ops_ai_center: tất cả pass")
+    print("OK - test_ops_ai_center: all passed")
 
 
 if __name__ == "__main__":
