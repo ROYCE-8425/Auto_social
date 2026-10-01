@@ -386,10 +386,11 @@ class GHNProvider(BaseShippingProvider):
 
     def parse_webhook(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         """Chuẩn hóa GHN Webhook Payload:
-        Trường GHN gửi: OrderCode, Status, Time, Description, Type, Fee, CodAmount.
+        Hỗ trợ toàn bộ 12 sự kiện trên GHN Developer (switch_status, update_cod, fee, warehouse, shipper, pod...).
         """
-        raw_status = str(payload.get("Status") or payload.get("status") or "").strip().lower()
-        tracking_code = str(payload.get("OrderCode") or payload.get("order_code") or "").strip()
+        src = payload.get("data") if isinstance(payload.get("data"), dict) else payload
+        raw_status = str(src.get("Status") or src.get("status") or src.get("Type") or "").strip().lower()
+        tracking_code = str(src.get("OrderCode") or src.get("order_code") or src.get("orderCode") or "").strip()
 
         # Map GHN status to Ops status
         mapping = {
@@ -406,7 +407,16 @@ class GHNProvider(BaseShippingProvider):
             "lost": "failed",
         }
         normalized_status = mapping.get(raw_status, "shipping")
-        description = payload.get("Description") or payload.get("description") or f"GHN cập nhật trạng thái: {raw_status}"
+        description = src.get("Description") or src.get("description") or f"GHN cập nhật: {raw_status}"
+
+        # Bổ sung dữ liệu: kho, shipper, pod
+        wh = src.get("Warehouse") or src.get("warehouse") or src.get("CurrentWarehouse") or ""
+        shipper_name = src.get("ShipperName") or src.get("shipper_name") or ""
+        shipper_phone = src.get("ShipperPhone") or src.get("shipper_phone") or ""
+        location_parts = [wh]
+        if shipper_name or shipper_phone:
+            location_parts.append(f"Shipper: {shipper_name} ({shipper_phone})".strip())
+        location = " - ".join([p for p in location_parts if p])
 
         return {
             "provider": "ghn",
@@ -414,7 +424,7 @@ class GHNProvider(BaseShippingProvider):
             "status": normalized_status,
             "raw_status": raw_status,
             "description": description,
-            "location": payload.get("Warehouse") or payload.get("location") or "",
+            "location": location,
             "raw_payload": payload,
         }
 
