@@ -212,7 +212,7 @@ app.add_middleware(CORSMiddleware,
 
 # Đường dẫn KHÔNG cần đăng nhập. CHỈ các auth endpoint công khai (status/login/setup) -
 # KHÔNG để cả prefix /auth public vì /auth/disable, /auth/logout phải yêu cầu đăng nhập.
-_AUTH_PUBLIC_PREFIX = ("/static", "/health", "/ops/assets", "/tiktok-media", "/api/modules", "/ops/modules", "/api/documents", "/ops/documents", "/ops/hub")
+_AUTH_PUBLIC_PREFIX = ("/static", "/health", "/ops/assets", "/tiktok-media", "/api/modules", "/ops/modules")
 # /brand-logo: hiện trên màn đăng nhập (trước session). /tls-check: Caddy gọi (không đăng nhập được).
 _AUTH_PUBLIC_EXACT = ("/", "/chao", "/app", "/favicon.ico", "/auth/status", "/auth/login", "/auth/setup",
                       "/brand-logo", "/logo.png", "/tls-check",
@@ -270,10 +270,18 @@ async def _auth_guard(request: Request, call_next):
     if path == "/ops" or path.startswith("/ops/"):
         if path in ("/ops/auth/login", "/ops/auth/logout") or path.startswith("/ops/assets"):
             return await call_next(request)
-        # Trang UI frontend (/ops, /ops/inbox, /ops/customers, etc.) và /ops/me: cho phép gọi tự do
-        if not path.startswith(("/ops/users", "/ops/qa", "/ops/rbac/permissions")):
+        # Trang UI frontend (/ops, /ops/inbox, /ops/customers, etc.) cho phép gọi tự do.
+        # Các API có dữ liệu vận hành nhạy cảm phải đi qua ops session + RBAC.
+        protected_ops_prefixes = (
+            "/ops/users",
+            "/ops/qa",
+            "/ops/rbac/permissions",
+            "/ops/documents",
+            "/ops/hub",
+        )
+        if not path.startswith(protected_ops_prefixes):
             return await call_next(request)
-        # Endpoint API /ops/me, /ops/users hoặc /ops/qa: kiểm tra phiên đăng nhập & RBAC
+        # Endpoint API nhạy cảm: kiểm tra phiên đăng nhập & RBAC
         if not ops_user:
             return JSONResponse({"error": "unauthorized", "auth_required": True}, status_code=401)
         allowed, reason = ops_rbac.check_access_permission(ops_user, path, request.method)
@@ -8901,6 +8909,25 @@ async def ops_create_shipment_api(request: Request, order_id: str):
         return JSONResponse({"error": str(ve)}, status_code=400)
     except Exception as exc:
         return JSONResponse({"error": f"Lỗi tạo vận đơn: {exc}"}, status_code=500)
+
+
+@app.post("/ops/orders/{order_id}/sync-shipment")
+async def ops_sync_shipment_api(request: Request, order_id: str):
+    """Chủ động kiểm tra trạng thái vận đơn GHN và cập nhật vào đơn hàng."""
+    user = ops_rbac.get_current_ops_user(request)
+    if not user:
+        return JSONResponse({"error": "Chưa đăng nhập Ops"}, status_code=401)
+    actor = user.get("username") or user.get("role") or "staff"
+    try:
+        res = ops_orders.sync_shipment_status(order_id, actor=actor)
+        if not res.get("ok"):
+            status_code = 400 if res.get("status") in ("missing_tracking", "not_configured", "unsupported_provider") else 502
+            return JSONResponse(res, status_code=status_code)
+        return res
+    except ValueError as ve:
+        return JSONResponse({"error": str(ve)}, status_code=400)
+    except Exception as exc:
+        return JSONResponse({"error": f"Lỗi kiểm tra trạng thái vận đơn: {exc}"}, status_code=500)
 
 
 @app.post("/ops/orders/{order_id}/cancel")

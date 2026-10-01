@@ -644,6 +644,13 @@ export const api = {
         body: JSON.stringify({ provider }),
       }
     ),
+  syncShipmentStatus: (id: string) =>
+    request<{ ok: boolean; tracking?: any; shipment?: OpsShipment; order?: OpsOrder; error?: string; status?: string }>(
+      `/ops/orders/${encodeURIComponent(id)}/sync-shipment`,
+      {
+        method: 'POST',
+      }
+    ),
   cancelOrder: (id: string, reason?: string) =>
     request<{ ok: boolean; order: OpsOrder; shipment_cancelled?: any }>(`/ops/orders/${encodeURIComponent(id)}/cancel`, {
       method: 'POST',

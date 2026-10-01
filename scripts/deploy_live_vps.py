@@ -83,6 +83,7 @@ def main():
         ("server/ops_documents_store.py", f"{REMOTE_ROOT}/server/ops_documents_store.py"),
         ("server/ops_documents.py", f"{REMOTE_ROOT}/server/ops_documents.py"),
         ("server/web_security.py", f"{REMOTE_ROOT}/server/web_security.py"),
+        ("scripts/seed_mock_ghn_orders.py", f"{REMOTE_ROOT}/scripts/seed_mock_ghn_orders.py"),
         ("docs/dev/2026-09-30-rbac-multi-role-architecture.md", f"{REMOTE_ROOT}/docs/dev/2026-09-30-rbac-multi-role-architecture.md"),
     ]
 
@@ -102,11 +103,19 @@ def main():
 
     # Upload ops/dist
     if os.path.exists("ops/dist"):
-        print("Uploading ops/dist...")
+        print("Cleaning and uploading ops/dist...")
+        ssh.exec_command(f"rm -rf {REMOTE_ROOT}/ops/dist/*")
+        time.sleep(1)
         upload_dir_recursive(sftp, "ops/dist", f"{REMOTE_ROOT}/ops/dist")
 
     sftp.close()
     print("All files transferred successfully.")
+
+    # Seed mock GHN orders on VPS
+    print("Seeding mock GHN orders on VPS...")
+    stdin, stdout, stderr = ssh.exec_command(f"cd {REMOTE_ROOT} && python3 scripts/seed_mock_ghn_orders.py")
+    seed_out = stdout.read().decode().strip()
+    print("Seed output:\n", seed_out)
 
     # Restart service
     print("Restarting javis.service on VPS...")
@@ -124,11 +133,17 @@ def main():
 
     # Verify curl on VPS
     print("Testing HTTP endpoints on VPS...")
-    for path in ["/", "/logo.png", "/brand-logo", "/ops/", "/api/modules", "/ops/hub/summary"]:
+    for path in ["/", "/logo.png", "/brand-logo", "/ops/", "/api/modules", "/ops/hub/summary", "/ops/documents", "/ops/documents/stats", "/ops/documents/templates", "/ops/orders?limit=10"]:
         cmd = f"curl -s -o /dev/null -w '%{{http_code}}' http://127.0.0.1:7777{path}"
         stdin, stdout, stderr = ssh.exec_command(cmd)
         code = stdout.read().decode().strip()
         print(f"GET http://127.0.0.1:7777{path} -> HTTP {code}")
+
+    # Test GHN sync on mock order
+    print("Testing GHN sync on mock order on VPS...")
+    stdin, stdout, stderr = ssh.exec_command("curl -s -X POST http://127.0.0.1:7777/ops/orders/ord_6455269a10/sync-shipment")
+    sync_resp = stdout.read().decode().strip()
+    print("GHN sync response:", sync_resp[:200])
 
     # Fetch executive summary from /ops/hub/summary to verify real aggregator
     stdin, stdout, stderr = ssh.exec_command("curl -s http://127.0.0.1:7777/ops/hub/summary")
