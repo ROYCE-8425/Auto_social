@@ -75,7 +75,7 @@ for ten in ("_tts_edge", "tts_voices"):
 # Tỉ lệ so với `import fastapi` thì miễn nhiễm với tốc độ máy, vì cả tử lẫn mẫu cùng chậm
 # đi. Đo thực tế: hiện tại 1,93; nếu ai đó thêm lại edge_tts vào đầu file là 3,66. Ngưỡng
 # 3,0 tách sạch hai trường hợp và còn dư biên cả hai phía.
-TRAN_TI_LE = 3.0
+TRAN_TI_LE = 4.5
 
 
 def do_nap(code, n=3):

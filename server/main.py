@@ -3275,8 +3275,7 @@ async def connect_catalog():
             "strict": bool(cfgmod.read_settings().get("mcp", {}).get("strict")), "hub": _hub_enabled()}
 
 
-@app.get("/connect/facebook/pages")
-async def connect_facebook_pages():
+async def _get_facebook_pages():
     """Fanpage đã tick lúc OAuth hoặc nạp Page Access Token — gộp MỌI kết nối. Không lộ page token."""
     by_id = {}
     last_err = ""
@@ -3384,6 +3383,11 @@ async def connect_facebook_pages():
     return {"ok": True, "pages": pages}
 
 
+@app.get("/connect/facebook/pages")
+async def connect_facebook_pages():
+    return await _get_facebook_pages()
+
+
 _FB_POSTS_CACHE = {"ts": 0, "posts": []}
 
 
@@ -3471,10 +3475,9 @@ async def fetch_facebook_recent_posts(limit_per_page: int = 5, force: bool = Fal
     return all_posts
 
 
-@app.get("/connect/facebook/status")
-async def connect_facebook_status():
+async def _get_facebook_status():
     """Trạng thái kết nối Facebook Pages: pages list, permissions, fanpage_care, last poll, recent posts."""
-    pages_res = await connect_facebook_pages()
+    pages_res = await _get_facebook_pages()
     pages = pages_res.get("pages", []) if isinstance(pages_res, dict) else []
     error = pages_res.get("error") if isinstance(pages_res, dict) and not pages else None
 
@@ -3525,6 +3528,11 @@ async def connect_facebook_status():
     }
 
 
+@app.get("/connect/facebook/status")
+async def connect_facebook_status():
+    return await _get_facebook_status()
+
+
 @app.get("/connect/facebook/posts")
 async def connect_facebook_posts(limit: int = 10):
     """Danh sách bài viết đã xuất bản thực tế từ các Fanpage Facebook đã kết nối."""
@@ -3535,7 +3543,7 @@ async def connect_facebook_posts(limit: int = 10):
 @app.get("/ops/channels/status")
 async def ops_channels_status(request: Request):
     """Tổng hợp trạng thái toàn bộ các kênh connector thật cho Ops Dashboard."""
-    fb_status = await connect_facebook_status()
+    fb_status = await _get_facebook_status()
 
     brain = cfgmod.read_settings().get("fanpage_care", {}).get("brain", "Brain Default")
     vault = _brain_root(brain)
