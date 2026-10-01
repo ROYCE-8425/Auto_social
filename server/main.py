@@ -212,7 +212,7 @@ app.add_middleware(CORSMiddleware,
 
 # Đường dẫn KHÔNG cần đăng nhập. CHỈ các auth endpoint công khai (status/login/setup) -
 # KHÔNG để cả prefix /auth public vì /auth/disable, /auth/logout phải yêu cầu đăng nhập.
-_AUTH_PUBLIC_PREFIX = ("/static", "/health", "/ops/assets", "/tiktok-media", "/api/modules", "/ops/modules")
+_AUTH_PUBLIC_PREFIX = ("/static", "/health", "/ops/assets", "/assets", "/tiktok-media", "/api/modules", "/ops/modules")
 # /brand-logo: hiện trên màn đăng nhập (trước session). /tls-check: Caddy gọi (không đăng nhập được).
 _AUTH_PUBLIC_EXACT = ("/", "/chao", "/app", "/favicon.ico", "/auth/status", "/auth/login", "/auth/setup",
                       "/brand-logo", "/logo.png", "/tls-check",
@@ -353,6 +353,10 @@ app.mount("/static", StaticFiles(directory=str(DASHBOARD_PATH)), name="static")
 OPS_DIST_PATH = Path(__file__).parent.parent / "ops" / "dist"
 if (OPS_DIST_PATH / "assets").exists():
     app.mount("/ops/assets", StaticFiles(directory=str(OPS_DIST_PATH / "assets")), name="ops_assets")
+
+WEBSITE_ASSETS_PATH = Path(__file__).parent.parent / "website" / "assets"
+if WEBSITE_ASSETS_PATH.exists():
+    app.mount("/assets", StaticFiles(directory=str(WEBSITE_ASSETS_PATH)), name="website_assets")
 
 
 @app.middleware("http")

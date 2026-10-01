@@ -1287,7 +1287,7 @@
             class="wide-shot"
             src="/assets/inbox-dashboard.png"
             alt="Sèo Trum Ops unified inbox dashboard"
-            loading="lazy"
+            loading="eager"
             onload="this.closest('.wide-preview').classList.add('has-shot')"
             onerror="this.remove()"
           />
@@ -1485,6 +1485,11 @@ docker compose up -d
         });
       });
     }
+    document.querySelectorAll('.product-shot, .wide-shot').forEach((img) => {
+      if (img.complete && img.naturalWidth > 0) {
+        img.closest('.product-frame, .wide-preview')?.classList.add('has-shot');
+      }
+    });
   </script>
 </body>
 </html>
