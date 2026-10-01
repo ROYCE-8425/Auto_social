@@ -42,10 +42,18 @@ jobs:
           PYTHONPATH: server:.
         run: |
           status=0
+          failed_tests=()
           for f in tests/python/test_*.py; do
             echo "==== $(basename "$f") ===="
-            python "$f" || status=1
+            if ! python "$f"; then
+              echo "::error file=$f::Test failed: $f"
+              failed_tests+=("$f")
+              status=1
+            fi
           done
+          if [ $status -ne 0 ]; then
+            echo "The following tests failed: ${failed_tests[*]}"
+          fi
           exit $status
 
   frontend-test:

@@ -1,0 +1,13 @@
+name: Bộ công cụ Điều hành Ops Hub
+slug: ops-tools
+version: 1.0.0
+description: Cung cấp các công cụ tra cứu cơ sở dữ liệu vận hành Social Commerce Ops Hub cho Javis và mọi mô hình AI (Claude Code, Codex, OpenRouter, Gemini, Grok) - bao gồm Bảng giá & Sản phẩm, Kho văn bản & Hợp đồng, Vận đơn GHN & Đơn hàng, và Tổng quan điều hành hôm nay.
+author: Javis (bundled)
+enabled: true
+min_mode: readonly
+tools:
+  - ops_catalog_query
+  - ops_document_query
+  - ops_order_tracking
+  - ops_today_summary
+hooks: []

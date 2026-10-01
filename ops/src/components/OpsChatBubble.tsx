@@ -50,7 +50,7 @@ export const OpsChatBubble: React.FC = () => {
     ]
   })
 
-  const { scope, scopeBrand, scopePageId, eligiblePages } = useCareScope()
+  const { scope, scopeBrand, scopePageId, eligiblePages, setScope } = useCareScope()
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   // Lưu lịch sử vào localStorage
@@ -71,13 +71,13 @@ export const OpsChatBubble: React.FC = () => {
 
   const scopeLabel = React.useMemo(() => {
     if (scope === 'brand') {
-      return scopeBrand === 'bsn' ? 'Nhóm Game BSN' : 'Nhóm Royce Shop'
+      return scopeBrand === 'bsn' ? 'Game Giá Rẻ BSN' : 'Royce Shop / Sao Việt'
     }
     if (scope === 'page' && scopePageId) {
       const p = eligiblePages.find((item) => (item.page_id || item.id) === scopePageId)
       return p ? p.name : 'Fanpage đã chọn'
     }
-    return 'Tất cả trang'
+    return 'Toàn bộ dự án (Tất cả thương hiệu)'
   }, [scope, scopeBrand, scopePageId, eligiblePages])
 
   const handleSend = async (textToSend?: string) => {
@@ -134,7 +134,7 @@ export const OpsChatBubble: React.FC = () => {
       {
         id: 'welcome_fresh',
         sender: 'assistant',
-        text: `Đã làm mới cuộc trò chuyện. Phạm vi hiện tại: ${scopeLabel}. Bạn cần kiểm tra nháp ca trực hay thông tin nào?`,
+        text: `Đã làm mới cuộc trò chuyện. Phạm vi: ${scopeLabel}.\nTôi hỗ trợ tra cứu số lượng nháp, đơn hàng, Brand Kit và kịch bản chốt đơn. Bạn cần thông tin gì?`,
         citations: ['docs/28-cham-soc-fanpage.md'],
         usedStats: true,
         timestamp: Date.now(),
@@ -148,12 +148,31 @@ export const OpsChatBubble: React.FC = () => {
     }
   }
 
-  const quickPrompts = [
-    'Hôm nay bao nhiêu nháp comment / IB?',
-    'Takeover là gì, bấm nút nào?',
-    'Hotline & địa chỉ trong kit này',
-    'Khách check ib là ai?',
-  ]
+  const quickPrompts = React.useMemo(() => {
+    if (scope === 'brand' && scopeBrand === 'bsn') {
+      return [
+        'Nháp BSN hôm nay?',
+        'Bảng giá Game BSN?',
+        'Hotline Game BSN',
+        'Khách check ib là ai?',
+      ]
+    }
+    if (scope === 'brand' && (scopeBrand === 'saoviet' || scopeBrand === 'royce')) {
+      return [
+        'Nháp Royce Shop hôm nay?',
+        'Sản phẩm Royce Shop?',
+        'Hotline Royce Shop',
+        'Khách check ib là ai?',
+      ]
+    }
+    return [
+      'Tổng số nháp ca hôm nay?',
+      'Hotline các thương hiệu?',
+      'Bảng giá Game BSN?',
+      'Sản phẩm Royce Shop?',
+      'Khách check ib là ai?',
+    ]
+  }, [scope, scopeBrand])
 
   return (
     <>
@@ -170,7 +189,7 @@ export const OpsChatBubble: React.FC = () => {
 
       {/* Floating Chat Modal Panel */}
       {isOpen && (
-        <div className="fixed bottom-20 md:bottom-20 right-4 sm:right-6 z-50 w-[94vw] sm:w-[390px] h-[540px] max-h-[82vh] bg-white rounded-2xl shadow-2xl border border-slate-200/90 flex flex-col overflow-hidden animate-in slide-in-from-bottom-5 duration-200">
+        <div className="fixed bottom-20 md:bottom-20 right-4 sm:right-6 z-50 w-[94vw] sm:w-[410px] h-[560px] max-h-[82vh] bg-white rounded-2xl shadow-2xl border border-slate-200/90 flex flex-col overflow-hidden animate-in slide-in-from-bottom-5 duration-200">
           {/* Header */}
           <div className="bg-slate-900 text-white px-4 py-3 flex items-center justify-between flex-shrink-0 shadow-sm">
             <div className="flex items-center space-x-2.5">
@@ -186,7 +205,7 @@ export const OpsChatBubble: React.FC = () => {
                 </div>
                 <div className="text-[11px] text-slate-400 mt-0.5 flex items-center space-x-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
-                  <span className="truncate max-w-[170px]">{scopeLabel}</span>
+                  <span className="truncate max-w-[190px]">{scopeLabel}</span>
                 </div>
               </div>
             </div>
@@ -211,8 +230,48 @@ export const OpsChatBubble: React.FC = () => {
             </div>
           </div>
 
+          {/* Quick Scope Selector Inside Chat Header */}
+          <div className="bg-slate-800 px-3 py-1.5 flex items-center justify-between text-[11px] border-b border-slate-700/80 shrink-0">
+            <span className="text-slate-400 font-medium">Phạm vi:</span>
+            <div className="flex items-center space-x-1">
+              <button
+                type="button"
+                onClick={() => setScope('all')}
+                className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-all cursor-pointer ${
+                  scope === 'all'
+                    ? 'bg-blue-600 text-white shadow-xs'
+                    : 'text-slate-300 hover:text-white hover:bg-slate-700'
+                }`}
+              >
+                Toàn dự án
+              </button>
+              <button
+                type="button"
+                onClick={() => setScope('brand', 'bsn')}
+                className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-all cursor-pointer ${
+                  scope === 'brand' && scopeBrand === 'bsn'
+                    ? 'bg-blue-600 text-white shadow-xs'
+                    : 'text-slate-300 hover:text-white hover:bg-slate-700'
+                }`}
+              >
+                Game BSN
+              </button>
+              <button
+                type="button"
+                onClick={() => setScope('brand', 'saoviet')}
+                className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-all cursor-pointer ${
+                  scope === 'brand' && (scopeBrand === 'saoviet' || scopeBrand === 'royce')
+                    ? 'bg-blue-600 text-white shadow-xs'
+                    : 'text-slate-300 hover:text-white hover:bg-slate-700'
+                }`}
+              >
+                Royce Shop
+              </button>
+            </div>
+          </div>
+
           {/* 1-Line Safety Disclaimer Banner */}
-          <div className="bg-amber-50 border-b border-amber-200/80 px-3 py-1.5 text-[11px] text-amber-800 flex items-center space-x-1.5 flex-shrink-0">
+          <div className="bg-amber-50 border-b border-amber-200/80 px-3 py-1 text-[11px] text-amber-800 flex items-center space-x-1.5 flex-shrink-0">
             <ShieldAlert className="w-3.5 h-3.5 text-amber-600 flex-shrink-0" />
             <span className="leading-tight font-medium">
               Chỉ hỏi đáp ca làm. Gửi Facebook: nút trên Hộp thư.
@@ -264,7 +323,7 @@ export const OpsChatBubble: React.FC = () => {
             })}
 
             {loading && (
-              <div className="flex items-center space-x-2 text-slate-500 bg-white border border-slate-200 rounded-2xl rounded-bl-xs px-3.5 py-2.5 max-w-[70%]">
+              <div className="flex items-center space-x-2 text-slate-500 bg-white border border-slate-200 rounded-2xl rounded-bl-xs px-3.5 py-2.5 max-w-[68%]">
                 <div className="flex space-x-1">
                   <div className="w-1.5 h-1.5 rounded-full bg-saoviet-500 animate-bounce" />
                   <div
@@ -311,7 +370,11 @@ export const OpsChatBubble: React.FC = () => {
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Nháp BSN hôm nay? Khách check ib là ai?..."
+              placeholder={
+                scope === 'all'
+                  ? "Hỏi Javis: Nháp hôm nay, hotline cơ sở, bảng giá sản phẩm..."
+                  : `Hỏi Javis (${scopeLabel}): nháp, sản phẩm, kịch bản...`
+              }
               disabled={loading}
               className="flex-1 bg-slate-100 text-slate-900 placeholder:text-slate-400 text-xs px-3.5 py-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-saoviet-500 border border-transparent disabled:opacity-50"
             />

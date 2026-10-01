@@ -1,0 +1,251 @@
+[
+  {
+    "id": "rescue_1",
+    "title": "Cứu khách dừng phản hồi 24h: Tặng voucher giảm 10%",
+    "customer": "Hoàng Anh Tuấn",
+    "tag": "Cứu lead 24h",
+    "tagColor": "rose",
+    "time": "24 giờ trước",
+    "isUrgent": true,
+    "columnId": "todo",
+    "leadScore": 88,
+    "rescueStage": "24h",
+    "approvalRisk": "medium",
+    "assignee": {
+      "code": "NV",
+      "name": "Nguyễn Văn An",
+      "username": "nv_an",
+      "bg": "bg-slate-800 text-white"
+    },
+    "created_at": 1790645842.8235679
+  },
+  {
+    "id": "task_1",
+    "title": "Hỗ trợ cài đặt game cho khách",
+    "customer": "Nguyễn Văn An",
+    "tag": "Hỗ trợ kỹ thuật",
+    "tagColor": "slate",
+    "time": "Hôm nay",
+    "isUrgent": true,
+    "columnId": "todo",
+    "leadScore": 70,
+    "approvalRisk": "low",
+    "assignee": {
+      "code": "NV",
+      "name": "Nguyễn Văn An",
+      "username": "nv_an",
+      "bg": "bg-slate-800 text-white"
+    },
+    "created_at": 1790725042.823569
+  },
+  {
+    "id": "task_2",
+    "title": "Gửi bảng giá cho khách",
+    "customer": "Trần Thị Mai",
+    "tag": "Tư vấn",
+    "tagColor": "amber",
+    "time": "Hôm nay",
+    "isUrgent": true,
+    "columnId": "todo",
+    "assignee": {
+      "code": "LT",
+      "name": "Lê Thảo",
+      "username": "nv_thao",
+      "bg": "bg-blue-800 text-white"
+    },
+    "created_at": 1790721442.8235698
+  },
+  {
+    "id": "task_3",
+    "title": "Kiểm tra đơn hàng lỗi",
+    "customer": "#DHT2345",
+    "tag": "Đơn hàng",
+    "tagColor": "rose",
+    "time": "Hôm nay",
+    "isUrgent": true,
+    "columnId": "todo",
+    "assignee": {
+      "code": "NV",
+      "name": "Nguyễn Văn An",
+      "username": "nv_an",
+      "bg": "bg-slate-800 text-white"
+    },
+    "created_at": 1790728642.8235703
+  },
+  {
+    "id": "task_4",
+    "title": "Khách báo lỗi không vào game",
+    "customer": "Lê Hoàng Nam",
+    "tag": "Khiếu nại",
+    "tagColor": "orange",
+    "time": "2 giờ trước",
+    "isUrgent": true,
+    "columnId": "in_progress",
+    "assignee": {
+      "code": "TH",
+      "name": "Trần Hùng",
+      "username": "nv_hung",
+      "bg": "bg-slate-800 text-white"
+    },
+    "created_at": 1790725042.8235707
+  },
+  {
+    "id": "task_5",
+    "title": "Tư vấn gói nâng cấp",
+    "customer": "Phạm Minh Tú",
+    "tag": "Tư vấn",
+    "tagColor": "amber",
+    "time": "3 giờ trước",
+    "isUrgent": false,
+    "columnId": "in_progress",
+    "assignee": {
+      "code": "NV",
+      "name": "Nguyễn Văn An",
+      "username": "nv_an",
+      "bg": "bg-slate-800 text-white"
+    },
+    "created_at": 1790721442.823572
+  },
+  {
+    "id": "task_6",
+    "title": "Liên hệ lại khách chưa phản hồi",
+    "customer": "Đỗ Quang Huy",
+    "tag": "Follow up",
+    "tagColor": "blue",
+    "time": "4 giờ trước",
+    "isUrgent": false,
+    "columnId": "in_progress",
+    "assignee": {
+      "code": "LT",
+      "name": "Lê Thảo",
+      "username": "nv_thao",
+      "bg": "bg-blue-800 text-white"
+    },
+    "created_at": 1790717842.8235722
+  },
+  {
+    "id": "rescue_2",
+    "title": "Cứu khách dừng phản hồi 3 ngày: Gửi case study doanh nghiệp SME",
+    "customer": "Vũ Minh Tú",
+    "tag": "Cứu lead 3d",
+    "tagColor": "rose",
+    "time": "3 ngày trước",
+    "isUrgent": true,
+    "columnId": "waiting",
+    "leadScore": 72,
+    "rescueStage": "3d",
+    "approvalRisk": "low",
+    "assignee": {
+      "code": "TM",
+      "name": "Trần Minh",
+      "username": "nv_minh",
+      "bg": "bg-blue-800 text-white"
+    },
+    "created_at": 1790473042.8235726
+  },
+  {
+    "id": "rescue_3",
+    "title": "Cứu khách dừng phản hồi 7 ngày: Đề xuất gói dùng thử miễn phí 14 ngày",
+    "customer": "Phạm Lan Anh",
+    "tag": "Cứu lead 7d",
+    "tagColor": "rose",
+    "time": "7 ngày trước",
+    "isUrgent": true,
+    "columnId": "waiting",
+    "leadScore": 61,
+    "rescueStage": "7d",
+    "approvalRisk": "high",
+    "assignee": {
+      "code": "LT",
+      "name": "Lê Tuấn (QL)",
+      "username": "ql_tuan",
+      "bg": "bg-blue-800 text-white"
+    },
+    "created_at": 1790127442.8235736
+  },
+  {
+    "id": "task_7",
+    "title": "Chờ khách gửi thông tin",
+    "customer": "Nguyễn Thảo Vy",
+    "tag": "Chờ khách",
+    "tagColor": "amber",
+    "time": "1 ngày trước",
+    "isUrgent": false,
+    "columnId": "waiting",
+    "assignee": {
+      "code": "NV",
+      "name": "Nguyễn Văn An",
+      "username": "nv_an",
+      "bg": "bg-slate-800 text-white"
+    },
+    "created_at": 1790645842.8235738
+  },
+  {
+    "id": "task_8",
+    "title": "Đã gửi hướng dẫn, chờ test",
+    "customer": "Trần Gia Bảo",
+    "tag": "Chờ khách",
+    "tagColor": "amber",
+    "time": "1 ngày trước",
+    "isUrgent": false,
+    "columnId": "waiting",
+    "assignee": {
+      "code": "TM",
+      "name": "Trần Minh",
+      "username": "nv_minh",
+      "bg": "bg-blue-800 text-white"
+    },
+    "created_at": 1790645842.823574
+  },
+  {
+    "id": "task_9",
+    "title": "Đã cài đặt thành công",
+    "customer": "Bùi Minh Khoa",
+    "tag": "Hoàn tất",
+    "tagColor": "emerald",
+    "time": "Hôm qua",
+    "isUrgent": false,
+    "columnId": "done",
+    "assignee": {
+      "code": "NV",
+      "name": "Nguyễn Văn An",
+      "username": "nv_an",
+      "bg": "bg-slate-800 text-white"
+    },
+    "created_at": 1790645842.8235745
+  },
+  {
+    "id": "task_10",
+    "title": "Đã gửi key game",
+    "customer": "Vũ Thị Hằng",
+    "tag": "Hoàn tất",
+    "tagColor": "emerald",
+    "time": "Hôm qua",
+    "isUrgent": false,
+    "columnId": "done",
+    "assignee": {
+      "code": "LT",
+      "name": "Lê Thảo",
+      "username": "nv_thao",
+      "bg": "bg-blue-800 text-white"
+    },
+    "created_at": 1790645842.8235748
+  },
+  {
+    "id": "task_11",
+    "title": "Đã xử lý khiếu nại",
+    "customer": "Phạm Quốc Đạt",
+    "tag": "Hoàn tất",
+    "tagColor": "emerald",
+    "time": "20/04",
+    "isUrgent": false,
+    "columnId": "done",
+    "assignee": {
+      "code": "NV",
+      "name": "Nguyễn Văn An",
+      "username": "nv_an",
+      "bg": "bg-slate-800 text-white"
+    },
+    "created_at": 1790559442.823575
+  }
+]

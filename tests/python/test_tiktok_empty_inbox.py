@@ -29,7 +29,7 @@ def test_inbox_ui_empty_state_copy():
 def main():
     test_tiktok_empty_events_in_store()
     test_inbox_ui_empty_state_copy()
-    print("OK - test_tiktok_empty_inbox: tất cả pass")
+    print("OK - test_tiktok_empty_inbox: tat ca pass")
 
 
 if __name__ == "__main__":

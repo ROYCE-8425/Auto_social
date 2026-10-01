@@ -111,7 +111,7 @@ def policy_allows(
     if act == "messenger_reply":
         if m == "full":
             return True, "allowed_messenger_reply"
-        if m == "auto" and class_name in ("faq", "lead"):
+        if m == "auto" and class_name in ("faq", "lead", "sales_automation"):
             return True, "allowed_messenger_faq_lead_auto"
         return False, "messenger_reply_requires_auto_faq_or_full"
 

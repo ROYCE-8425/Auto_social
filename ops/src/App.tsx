@@ -10,20 +10,25 @@ import { Trends } from './pages/Trends'
 import { AuditLog } from './pages/AuditLog'
 import { UsersPage } from './pages/Users'
 import { TikTokPage } from './pages/TikTok'
-import { SocialChannelsPage } from './pages/SocialChannels'
+import { PublishingPage, SocialChannelsPage } from './pages/Publishing'
+import { SettingsPage } from './pages/Settings'
 import { OperationsHub } from './pages/OperationsHub'
+import { OrdersPage } from './pages/Orders'
+import { DocumentsPage } from './pages/Documents'
+import { ProductCatalogSettings } from './components/ProductCatalogSettings'
+import { AutomationRulesSettings } from './components/AutomationRulesSettings'
 import { CareScopeProvider } from './lib/scope'
 
 export const App: React.FC = () => {
   const { user, isLoading } = useAuth()
   const [currentTab, setCurrentTab] = useState<string>('overview')
 
-  // Handle URL hash changes (e.g. #inbox, #customers, #tiktok, #hub, #channels)
+  // Handle URL hash changes (e.g. #/inbox, #/orders, #/tasks, etc.)
   useEffect(() => {
     const handleHash = () => {
-      const raw = window.location.hash.replace('#', '')
+      const raw = window.location.hash.replace(/^#\/?/, '')
       const tab = raw.split('?')[0]
-      if (['overview', 'inbox', 'customers', 'tasks', 'hub', 'trends', 'audit', 'users', 'tiktok', 'channels'].includes(tab)) {
+      if (['overview', 'inbox', 'orders', 'customers', 'products', 'automation', 'tasks', 'hub', 'documents', 'trends', 'audit', 'users', 'tiktok', 'channels', 'publishing', 'settings'].includes(tab)) {
         setCurrentTab(tab)
       }
     }
@@ -34,7 +39,7 @@ export const App: React.FC = () => {
 
   const handleSelectTab = (tab: string) => {
     setCurrentTab(tab)
-    window.location.hash = tab
+    window.location.hash = `#/${tab}`
   }
 
   if (isLoading) {
@@ -58,13 +63,26 @@ export const App: React.FC = () => {
       <Layout currentTab={currentTab} onSelectTab={handleSelectTab}>
         {currentTab === 'overview' && <Overview onNavigate={handleSelectTab} />}
         {currentTab === 'inbox' && <Inbox />}
+        {currentTab === 'orders' && <OrdersPage />}
         {currentTab === 'customers' && <Customers />}
+        {currentTab === 'products' && (
+          <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-2xs animate-fade-in">
+            <ProductCatalogSettings />
+          </div>
+        )}
+        {currentTab === 'automation' && (
+          <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-2xs animate-fade-in">
+            <AutomationRulesSettings />
+          </div>
+        )}
         {currentTab === 'tasks' && <Tasks />}
-        {currentTab === 'hub' && <OperationsHub />}
+        {currentTab === 'hub' && <OperationsHub onNavigate={handleSelectTab} />}
+        {currentTab === 'documents' && <DocumentsPage />}
         {currentTab === 'trends' && <Trends />}
-        {(currentTab === 'tiktok' || currentTab === 'channels') && <SocialChannelsPage />}
+        {(currentTab === 'publishing' || currentTab === 'tiktok' || currentTab === 'channels') && <PublishingPage />}
         {currentTab === 'audit' && <AuditLog />}
         {currentTab === 'users' && <UsersPage />}
+        {currentTab === 'settings' && <SettingsPage />}
       </Layout>
     </CareScopeProvider>
   )

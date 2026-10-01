@@ -2,7 +2,7 @@
 
 > Tự sinh từ file - ĐỪNG sửa tay. Chỉ mục mọi năng lực của Javis trong brain này để bất kỳ AI/engine đọc 1 chỗ là hiểu Javis làm được gì. Song song `wiki/index.md` (tri thức).
 
-**Tổng quan:** 2 agents · 19 skills · 2 workflows (0 bật) · 4 loops (0 bật) · 13 plugins (12 chạy)
+**Tổng quan:** 2 agents · 20 skills · 2 workflows (0 bật) · 4 loops (0 bật) · 14 plugins (13 chạy)
 
 ## Agents
 - **Biên tập Facebook** (`bien-tap-facebook`) - Tạo 1 ảnh AI độc quyền mới 100%, soạn caption đúng brand kit và đăng lên Fanpage Facebook. · model gpt-5.5 · skills: dang-bai-facebook, viet-bai-facebook
@@ -18,6 +18,7 @@
 - **Notes** (`notes`) - Lưu tin nhắn hiện tại nguyên văn vào sources/ (kèm ảnh), tự chưng cất lên wiki nếu note đáng.
 - **Query Wiki** (`query-wiki`) - Khai thác tri thức trong Second Brain: tổng hợp, so sánh, giả thuyết. Trả lời có trích dẫn.
 - **Kiểm tra lại năng lực của chính mình** (`verify-own-capabilities`) - Khi không chắc về một năng lực (vd: tạo ảnh), hãy kiểm tra danh sách tool/plugin đang hoạt động thay vì khẳng định là không có.
+- **Xây chức năng doanh nghiệp** (`xay-chuc-nang-doanh-nghiep`) - Biến yêu cầu nghiệp vụ công ty thành chức năng thật: phân tích, sửa code, kiểm thử và báo bằng chứng.
 ### Content
 - **Soạn nháp tương tác Fanpage** (`soan-nhap-tuong-tac`) - Soạn nháp câu trả lời comment hoặc tin nhắn khi chat trực tiếp trong /app: đúng brand kit, đúng giọng điệu, chỉ gửi thật khi người dùng xác nhận. Không thay thế Care poller.
 - **Viết bài Facebook** (`viet-bai-facebook`) - Skill viết caption Facebook cho hệ thống Sao Việt: rõ người học, rõ việc làm được, giọng tự nhiên, không văn mẫu AI, tối ưu đọc lướt trên di động.
@@ -54,6 +55,7 @@
 - **Giao việc Kanban** (`javis-task`) - bundled/chạy · tools: javis_task · Giao một việc nền vào hàng đợi Kanban và xem việc đang chạy tới đâu, ngay từ chat. Trước tool này chỉ engine chạy được lệnh máy (Claude Code, Codex) mới giao việc được, vì đường duy nhất là curl POST /kanban/task - năm engine API đứng ngoài.
 - **Meta Ads (Graph API)** (`meta-ads-graph`) - bundled/chạy · tools: meta_ads_accounts, meta_ads_insights, meta_ads_campaigns, meta_ads_get · Đọc số liệu quảng cáo Facebook/Instagram (tài khoản ads, chiến dịch, hiệu suất) qua Graph API, dùng token của kết nối "Meta Ads (tự tạo app)". CHỈ ĐỌC, không tiêu tiền.
 - **Facebook Trang (Graph API)** (`meta-pages-graph`) - bundled/chạy · tools: fb_pages_list, fb_page_posts, fb_page_comments, fb_page_inbox_comments, fb_page_post, fb_page_photo, fb_page_album, fb_page_video, fb_page_edit, fb_page_delete, fb_page_reply, fb_page_comment_hide, fb_page_comment_like, fb_page_comment_delete, fb_conversations, fb_conversation_thread, fb_message_send · Quản lý Trang/Fanpage Facebook qua Graph API - liệt kê Trang, đọc bài và bình luận (chỉ đọc), đăng bài/ảnh/video/album, sửa chữ, xoá bài và trả lời bình luận (toàn quyền). Dùng token của kết nối "Facebook Trang (tự tạo app)".
+- **Bộ công cụ Điều hành Ops Hub** (`ops-tools`) - bundled/chạy · tools: ops_catalog_query, ops_document_query, ops_order_tracking, ops_today_summary · Cung cấp các công cụ tra cứu cơ sở dữ liệu vận hành Social Commerce Ops Hub cho Javis và mọi mô hình AI (Claude Code, Codex, OpenRouter, Gemini, Grok) - bao gồm Bảng giá & Sản phẩm, Kho văn bản & Hợp đồng, Vận đơn GHN & Đơn hàng, và Tổng quan điều hành hôm nay.
 - **TikTok (PostPeer)** (`postpeer-tiktok`) - bundled/chạy · tools: postpeer_accounts, postpeer_tiktok_creator, postpeer_post_get, postpeer_tiktok_post, postpeer_tiktok_photos · Đăng video lên TikTok tự động qua PostPeer API. Hỗ trợ lấy danh sách tài khoản, creator info, đăng video 9:16 kèm caption và theo dõi bài đăng. Dùng token của kết nối "postpeer".
 - **Nhật ký dùng tool** (`tool-audit`) - bundled/tắt · tools: javis_tool_stats · hooks: post_tool_call · Đếm số lần MỖI tool được engine gọi (qua hook post_tool_call) và cho xem thống kê tool hay dùng. Đây là ví dụ minh hoạ cơ chế HOOK của plugin. Mặc định TẮT - bật qua POST /plugins/toggle (slug=tool-audit) để thử.
 - **Đọc video YouTube** (`youtube-read`) - bundled/chạy · tools: javis_youtube_read · Đọc lời thoại (phụ đề) của video YouTube từ link để tóm tắt. Tự đổi qua 6 kiểu trình phát rồi tới yt-dlp khi YouTube chặn máy chủ. Không cần đăng nhập, không cần API key.

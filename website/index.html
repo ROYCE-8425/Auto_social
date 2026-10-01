@@ -1,428 +1,1495 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>SÈO TRUM — AI vận hành Fanpage &amp; TikTok</title>
-  <meta name="description" content="Javis tự đăng bài, trả lời comment, bắt lead. Nhân viên duyệt trên dashboard. Dựa Javis OS (MIT) — lớp chuyển đổi số cho doanh nghiệp." />
-  <meta property="og:title" content="SÈO TRUM — não AI, mặt trước cho nhân viên" />
-  <meta property="og:description" content="Đăng Fanpage, chăm comment, CRM, TikTok. Javis chạy phía sau. Nhân viên chỉ thấy việc cần làm." />
+  <title>Sèo Trum Ops - Open-source AI Social Commerce Ops</title>
+  <meta name="description" content="Sèo Trum Ops là nền tảng mã nguồn mở tự host cho vận hành social commerce: inbox, CRM, catalog, đơn hàng, GHN, TikTok publishing, RBAC và human-in-the-loop." />
+  <meta name="theme-color" content="#0f172a" />
+  <meta property="og:title" content="Sèo Trum Ops - Open-source AI Social Commerce Ops" />
+  <meta property="og:description" content="Một buồng vận hành social commerce tự host, phát triển trên nền Javis OS MIT: Fanpage Care, CRM, catalog, đơn hàng, GHN, TikTok publishing và RBAC." />
   <meta property="og:type" content="website" />
-  <link rel="icon" href="/brand-logo" />
+  <link rel="icon" type="image/png" href="/logo.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: { sans: ['Be Vietnam Pro', 'system-ui', 'sans-serif'] },
-          colors: {
-            brand: { 50: '#ecfdf5', 100: '#d1fae5', 500: '#10b981', 600: '#059669', 700: '#047857' }
-          }
-        }
-      }
-    }
-  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <style>
+    :root {
+      --ink: #0f172a;
+      --muted: #64748b;
+      --soft: #f8fafc;
+      --soft-2: #f1f5f9;
+      --line: #e2e8f0;
+      --line-2: #dbe5ef;
+      --green: #10b981;
+      --green-dark: #059669;
+      --blue: #2563eb;
+      --cyan: #0891b2;
+      --amber: #d97706;
+      --rose: #e11d48;
+      --violet: #7c3aed;
+      --navy: #071326;
+      --radius: 16px;
+      --shadow: 0 24px 70px rgba(15, 23, 42, .10);
+      --shadow-soft: 0 16px 36px rgba(15, 23, 42, .08);
+      --max: 1220px;
+    }
+
+    * { box-sizing: border-box; }
     html { scroll-behavior: smooth; }
-    body { font-family: 'Be Vietnam Pro', system-ui, sans-serif; }
-    .grid-bg {
+    body {
+      margin: 0;
+      font-family: "Be Vietnam Pro", Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: #fff;
+      line-height: 1.6;
+    }
+    a { color: inherit; text-decoration: none; }
+    button, a { -webkit-tap-highlight-color: transparent; }
+    a:focus-visible, button:focus-visible {
+      outline: 3px solid rgba(16, 185, 129, .36);
+      outline-offset: 3px;
+    }
+    code {
+      padding: 2px 6px;
+      border-radius: 7px;
+      background: #eef2f7;
+      color: #1e293b;
+      font-size: .92em;
+    }
+    .wrap { width: min(var(--max), calc(100% - 40px)); margin: 0 auto; }
+
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      border-bottom: 1px solid rgba(226, 232, 240, .86);
+      background: rgba(255, 255, 255, .92);
+      backdrop-filter: blur(16px);
+    }
+    .nav-inner {
+      min-height: 72px;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 900;
+      letter-spacing: -.03em;
+      white-space: nowrap;
+    }
+    .brand img {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      object-fit: contain;
+      background: #ecfdf5;
+    }
+    .brand-mark {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border-radius: 10px;
+      color: white;
+      background: linear-gradient(135deg, #059669, #10b981);
+      box-shadow: 0 12px 24px rgba(16, 185, 129, .22);
+      font-size: 12px;
+      font-weight: 900;
+    }
+    .nav-links {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 22px;
+      color: #475569;
+      font-size: 13px;
+      font-weight: 800;
+    }
+    .nav-links a:hover { color: var(--ink); }
+    .nav-actions { display: flex; align-items: center; gap: 10px; }
+    .btn {
+      min-height: 42px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 0 16px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 900;
+      transition: transform .16s ease, box-shadow .16s ease, background .16s ease, border-color .16s ease;
+    }
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 14px 30px rgba(15, 23, 42, .12);
+    }
+    .btn.primary {
+      color: #fff;
+      border-color: var(--green-dark);
+      background: var(--green-dark);
+    }
+    .btn.dark {
+      color: #fff;
+      border-color: var(--navy);
+      background: var(--navy);
+    }
+    .btn.soft { background: var(--soft); }
+    .mobile-toggle { display: none; width: 42px; padding: 0; }
+    .mobile-panel {
+      display: none;
+      border-top: 1px solid var(--line);
+      padding: 14px 0 18px;
+    }
+    .mobile-panel a {
+      display: block;
+      padding: 10px 0;
+      color: #334155;
+      font-weight: 800;
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      min-height: 760px;
+      padding: 86px 0 88px;
+      border-bottom: 1px solid var(--line);
+      background:
+        radial-gradient(circle at 82% 22%, rgba(16, 185, 129, .18), transparent 30%),
+        radial-gradient(circle at 12% 18%, rgba(37, 99, 235, .09), transparent 28%),
+        linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    }
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
       background-image:
-        linear-gradient(to right, rgba(128,128,128,.06) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(128,128,128,.06) 1px, transparent 1px);
-      background-size: 32px 32px;
+        linear-gradient(to right, rgba(15, 23, 42, .055) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(15, 23, 42, .055) 1px, transparent 1px);
+      background-size: 44px 44px;
+      mask-image: linear-gradient(to bottom, black 0%, transparent 88%);
+      pointer-events: none;
     }
-    .gradient-text {
-      background: linear-gradient(135deg, #16a34a, #10b981, #14b8a6);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
+    .hero-grid {
+      position: relative;
+      display: grid;
+      grid-template-columns: minmax(0, .95fr) minmax(520px, 1.25fr);
+      gap: 54px;
+      align-items: center;
     }
-    @keyframes blob {
-      0%, 100% { transform: translate(0,0) scale(1); }
-      50% { transform: translate(24px,-18px) scale(1.08); }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 32px;
+      padding: 0 11px;
+      border: 1px solid rgba(16, 185, 129, .22);
+      border-radius: 999px;
+      color: #047857;
+      background: #ecfdf5;
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: .08em;
+      text-transform: uppercase;
     }
-    .blob { animation: blob 10s ease-in-out infinite; }
-    .blob-delay { animation-delay: 1.4s; }
-    @keyframes ping-soft {
-      0% { transform: scale(1); opacity: .5; }
-      100% { transform: scale(1.6); opacity: 0; }
+    .hero h1 {
+      max-width: 650px;
+      margin: 22px 0 20px;
+      font-size: clamp(42px, 5.6vw, 76px);
+      line-height: .97;
+      letter-spacing: -.07em;
+      color: #071326;
     }
-    .step-ring { animation: ping-soft 1.4s ease-out infinite; }
+    .hero h1 span { color: #047857; }
+    .hero-copy {
+      max-width: 610px;
+      margin: 0;
+      color: #475569;
+      font-size: 17px;
+      line-height: 1.82;
+    }
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 30px;
+    }
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+      margin-top: 24px;
+    }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      min-height: 30px;
+      padding: 0 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, .82);
+      color: #475569;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .product-frame {
+      position: relative;
+      border: 1px solid rgba(15, 23, 42, .12);
+      border-radius: 18px;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 80% 18%, rgba(16, 185, 129, .18), transparent 30%),
+        linear-gradient(145deg, #ffffff 0%, #f8fafc 48%, #ecfdf5 100%);
+      box-shadow: 0 30px 90px rgba(15, 23, 42, .22);
+    }
+    .product-frame::after {
+      content: "";
+      position: absolute;
+      inset: auto 24px 20px auto;
+      width: 180px;
+      height: 180px;
+      border-radius: 999px;
+      background: rgba(16, 185, 129, .18);
+      filter: blur(40px);
+      pointer-events: none;
+    }
+    .product-frame.has-shot {
+      background: #fff;
+    }
+    .product-frame.has-shot::after {
+      display: none;
+    }
+    .product-shot {
+      display: none;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 1900 / 900;
+      object-fit: cover;
+      object-position: top left;
+      background: #f8fafc;
+    }
+    .product-frame.has-shot .product-shot {
+      display: block;
+    }
+    .product-frame.has-shot .browser-bar,
+    .product-frame.has-shot .app-preview {
+      display: none;
+    }
+    .product-frame:not(.has-shot) .browser-bar,
+    .product-frame:not(.has-shot) .app-preview {
+      display: none;
+    }
+    .media-placeholder {
+      min-height: 430px;
+      display: grid;
+      place-items: center;
+      padding: 38px;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+    }
+    .product-frame.has-shot .media-placeholder,
+    .wide-preview.has-shot .media-placeholder {
+      display: none;
+    }
+    .media-placeholder-card {
+      width: min(100%, 520px);
+      min-height: 260px;
+      display: grid;
+      place-items: center;
+      gap: 18px;
+      padding: 34px;
+      border: 1px dashed rgba(15, 23, 42, .18);
+      border-radius: 18px;
+      background: rgba(255, 255, 255, .74);
+      box-shadow: 0 18px 54px rgba(15, 23, 42, .08);
+    }
+    .media-placeholder-card img {
+      width: 120px;
+      height: 120px;
+      object-fit: contain;
+      border-radius: 24px;
+      background: #fff;
+      box-shadow: 0 20px 46px rgba(15, 23, 42, .12);
+    }
+    .media-placeholder-card b {
+      display: block;
+      color: var(--ink);
+      font-size: 18px;
+      letter-spacing: -.03em;
+    }
+    .media-placeholder-card span {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .browser-bar {
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      border-bottom: 1px solid rgba(148, 163, 184, .18);
+      color: #cbd5e1;
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .dots { display: flex; gap: 7px; }
+    .dot { width: 9px; height: 9px; border-radius: 50%; background: #64748b; }
+    .dot:nth-child(1) { background: #ef4444; }
+    .dot:nth-child(2) { background: #f59e0b; }
+    .dot:nth-child(3) { background: #22c55e; }
+    .app-preview {
+      display: grid;
+      grid-template-columns: 184px 1fr;
+      min-height: 560px;
+      background: linear-gradient(145deg, #071326 0%, #0f172a 58%, #122033 100%);
+    }
+    .side {
+      padding: 18px 14px;
+      border-right: 1px solid rgba(148, 163, 184, .18);
+      background: rgba(2, 6, 23, .34);
+    }
+    .side-title {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 900;
+      margin-bottom: 18px;
+    }
+    .side-title .brand-mark { width: 27px; height: 27px; font-size: 10px; }
+    .nav-pill {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      min-height: 36px;
+      padding: 0 10px;
+      margin-bottom: 7px;
+      border-radius: 10px;
+      color: #94a3b8;
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .nav-pill.active {
+      color: #fff;
+      background: #059669;
+    }
+    .nav-ico {
+      width: 18px;
+      height: 18px;
+      display: grid;
+      place-items: center;
+      border-radius: 6px;
+      background: rgba(148, 163, 184, .16);
+      font-size: 10px;
+    }
+    .preview-main {
+      min-width: 0;
+      padding: 18px;
+    }
+    .preview-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .preview-title b {
+      display: block;
+      color: #fff;
+      font-size: 22px;
+      letter-spacing: -.04em;
+    }
+    .preview-title span { color: #94a3b8; font-size: 12px; }
+    .preview-controls { display: flex; gap: 8px; }
+    .mini-btn {
+      min-height: 30px;
+      display: inline-flex;
+      align-items: center;
+      padding: 0 10px;
+      border: 1px solid rgba(148, 163, 184, .18);
+      border-radius: 10px;
+      color: #cbd5e1;
+      background: rgba(15, 23, 42, .6);
+      font-size: 11px;
+      font-weight: 800;
+    }
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.45fr) minmax(220px, .75fr);
+      gap: 12px;
+    }
+    .panel {
+      position: relative;
+      border: 1px solid rgba(148, 163, 184, .18);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, .07);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .04);
+      overflow: hidden;
+    }
+    .panel.light {
+      background: #fff;
+      color: var(--ink);
+      border-color: rgba(226, 232, 240, .78);
+    }
+    .panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 14px 14px 10px;
+      color: #e2e8f0;
+      font-size: 12px;
+      font-weight: 900;
+    }
+    .light .panel-head { color: var(--ink); }
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: #ecfdf5;
+      color: #047857;
+      font-size: 10px;
+      font-weight: 900;
+    }
+    .status::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #10b981;
+    }
+    .inbox-list {
+      display: grid;
+      gap: 8px;
+      padding: 0 14px 14px;
+    }
+    .inbox-item {
+      display: grid;
+      grid-template-columns: 34px 1fr auto;
+      gap: 10px;
+      align-items: center;
+      padding: 10px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, .08);
+      color: #e2e8f0;
+    }
+    .avatar {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: rgba(16, 185, 129, .20);
+      color: #6ee7b7;
+      font-size: 11px;
+      font-weight: 900;
+    }
+    .item-text b { display: block; font-size: 12px; }
+    .item-text span { display: block; color: #94a3b8; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 230px; }
+    .source-tag {
+      border-radius: 999px;
+      padding: 4px 7px;
+      background: rgba(37, 99, 235, .16);
+      color: #bfdbfe;
+      font-size: 10px;
+      font-weight: 900;
+    }
+    .assist-box {
+      margin: 0 14px 14px;
+      padding: 12px;
+      border-radius: 12px;
+      background: rgba(16, 185, 129, .14);
+      border: 1px solid rgba(16, 185, 129, .22);
+      color: #d1fae5;
+      font-size: 12px;
+    }
+    .assist-box b { color: #fff; }
+    .context-card { padding: 14px; }
+    .context-profile {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .context-profile .avatar { background: #eff6ff; color: #2563eb; }
+    .context-profile b { display: block; font-size: 13px; }
+    .context-profile span { display: block; color: #64748b; font-size: 11px; }
+    .field {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 0;
+      border-top: 1px solid #eef2f7;
+      font-size: 12px;
+    }
+    .field span { color: #64748b; }
+    .field b { text-align: right; }
+    .order-card {
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 12px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      font-size: 12px;
+    }
+    .order-card b { display: block; margin-bottom: 6px; }
+    .timeline {
+      display: grid;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .timeline div {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      color: #475569;
+      font-size: 11px;
+    }
+    .timeline div::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #10b981;
+    }
+    .mini-panels {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .mini-panel {
+      min-height: 92px;
+      padding: 13px;
+      border-radius: 14px;
+      border: 1px solid rgba(148, 163, 184, .18);
+      background: rgba(255, 255, 255, .07);
+      color: #cbd5e1;
+      font-size: 11px;
+    }
+    .mini-panel b { display: block; color: #fff; font-size: 13px; margin-bottom: 4px; }
+
+    section { padding: 112px 0; }
+    .section-light { background: var(--soft); }
+    .section-head {
+      display: grid;
+      grid-template-columns: minmax(0, .95fr) minmax(320px, .72fr);
+      gap: 56px;
+      align-items: end;
+      margin-bottom: 38px;
+    }
+    .section-head h2 {
+      max-width: 780px;
+      margin: 12px 0 0;
+      color: #071326;
+      font-size: clamp(32px, 4vw, 56px);
+      line-height: 1.04;
+      letter-spacing: -.06em;
+    }
+    .section-copy {
+      margin: 0;
+      color: #64748b;
+      font-size: 15px;
+      line-height: 1.85;
+    }
+    .kicker {
+      margin: 0;
+      color: #059669;
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+    .value-strip {
+      border-bottom: 1px solid var(--line);
+      background: #fff;
+      padding: 34px 0;
+    }
+    .values {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+    }
+    .value {
+      min-height: 128px;
+      padding: 22px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fff;
+      box-shadow: 0 12px 30px rgba(15, 23, 42, .04);
+    }
+    .value b { display: block; margin: 12px 0 5px; font-size: 16px; letter-spacing: -.03em; }
+    .value span { display: block; color: #64748b; font-size: 13px; }
+    .icon {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border-radius: 12px;
+      color: #047857;
+      background: #ecfdf5;
+      font-weight: 900;
+    }
+    .icon.blue { color: #1d4ed8; background: #eff6ff; }
+    .icon.violet { color: #6d28d9; background: #f5f3ff; }
+    .icon.amber { color: #b45309; background: #fffbeb; }
+
+    .split {
+      display: grid;
+      grid-template-columns: .9fr 1.1fr;
+      gap: 44px;
+      align-items: center;
+    }
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+    .card {
+      min-height: 220px;
+      padding: 24px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fff;
+      box-shadow: 0 14px 36px rgba(15, 23, 42, .05);
+      transition: transform .16s ease, box-shadow .16s ease;
+    }
+    .card:hover { transform: translateY(-2px); box-shadow: var(--shadow-soft); }
+    .card h3 {
+      margin: 18px 0 8px;
+      font-size: 18px;
+      letter-spacing: -.04em;
+      line-height: 1.25;
+    }
+    .card p {
+      margin: 0;
+      color: #64748b;
+      font-size: 14px;
+    }
+    .system-map {
+      display: grid;
+      grid-template-columns: .82fr 66px 1fr;
+      gap: 16px;
+      align-items: center;
+    }
+    .channel-stack, .ai-stack {
+      display: grid;
+      gap: 10px;
+    }
+    .map-node {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 58px;
+      padding: 0 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+      box-shadow: 0 10px 24px rgba(15, 23, 42, .04);
+      color: #334155;
+      font-size: 13px;
+      font-weight: 850;
+    }
+    .map-center {
+      width: 66px;
+      height: 66px;
+      display: grid;
+      place-items: center;
+      border-radius: 16px;
+      color: white;
+      background: #059669;
+      box-shadow: 0 16px 34px rgba(5, 150, 105, .24);
+      font-size: 18px;
+      font-weight: 900;
+    }
+
+    .workflow {
+      position: relative;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+    }
+    .workflow::before {
+      content: "";
+      position: absolute;
+      left: 9%;
+      right: 9%;
+      top: 42px;
+      height: 2px;
+      background: linear-gradient(90deg, #10b981, #bfdbfe);
+    }
+    .step {
+      position: relative;
+      z-index: 1;
+      min-height: 210px;
+      padding: 22px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fff;
+    }
+    .step-num {
+      width: 44px;
+      height: 44px;
+      display: grid;
+      place-items: center;
+      border-radius: 14px;
+      color: #fff;
+      background: var(--navy);
+      font-weight: 900;
+      margin-bottom: 24px;
+      box-shadow: 0 14px 26px rgba(15, 23, 42, .14);
+    }
+    .step h3 { margin: 0 0 8px; font-size: 17px; letter-spacing: -.04em; }
+    .step p { margin: 0; color: #64748b; font-size: 14px; }
+    .human-note {
+      margin-top: 18px;
+      padding: 14px 16px;
+      border: 1px solid rgba(16, 185, 129, .22);
+      border-radius: 14px;
+      background: #ecfdf5;
+      color: #065f46;
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .wide-preview {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 84% 14%, rgba(37, 99, 235, .10), transparent 28%),
+        linear-gradient(145deg, #ffffff 0%, #f8fafc 58%, #ecfdf5 100%);
+      box-shadow: var(--shadow);
+    }
+    .wide-shot {
+      display: none;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 1900 / 900;
+      object-fit: cover;
+      object-position: top left;
+      background: #f8fafc;
+    }
+    .wide-preview.has-shot .wide-shot {
+      display: block;
+    }
+    .wide-preview.has-shot .wide-top,
+    .wide-preview.has-shot .wide-body {
+      display: none;
+    }
+    .wide-preview:not(.has-shot) .wide-top,
+    .wide-preview:not(.has-shot) .wide-body {
+      display: none;
+    }
+    .wide-preview .media-placeholder {
+      min-height: 520px;
+    }
+    .wide-top {
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      border-bottom: 1px solid var(--line);
+      background: #f8fafc;
+      color: #475569;
+      font-size: 12px;
+      font-weight: 900;
+    }
+    .wide-body {
+      display: grid;
+      grid-template-columns: 190px minmax(260px, .9fr) minmax(0, 1fr) 250px;
+      min-height: 520px;
+    }
+    .wide-rail {
+      padding: 16px;
+      color: #cbd5e1;
+      background: #071326;
+    }
+    .wide-rail .nav-pill { color: #94a3b8; }
+    .wide-rail .nav-pill.active { color: #fff; }
+    .wide-list, .wide-chat, .wide-context {
+      padding: 16px;
+      border-right: 1px solid var(--line);
+      background: #fff;
+    }
+    .wide-context { border-right: 0; background: #f8fafc; }
+    .search {
+      height: 38px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #f8fafc;
+      margin-bottom: 12px;
+    }
+    .contact {
+      display: grid;
+      grid-template-columns: 34px 1fr;
+      gap: 10px;
+      align-items: center;
+      padding: 10px;
+      border-radius: 12px;
+      margin-bottom: 8px;
+      background: #f8fafc;
+    }
+    .contact b { display: block; font-size: 12px; }
+    .contact span { display: block; color: #64748b; font-size: 11px; }
+    .bubble {
+      max-width: 78%;
+      padding: 11px 13px;
+      border-radius: 14px;
+      margin-bottom: 10px;
+      color: #334155;
+      background: #f1f5f9;
+      font-size: 13px;
+    }
+    .bubble.me {
+      margin-left: auto;
+      color: #fff;
+      background: #059669;
+    }
+    .composer {
+      height: 44px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      margin-top: 24px;
+      background: #fff;
+    }
+    .capabilities {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 22px;
+    }
+    .capability {
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: #334155;
+      font-size: 13px;
+      font-weight: 850;
+    }
+
+    .integrations {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+    }
+    .integration {
+      min-height: 210px;
+      padding: 22px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fff;
+    }
+    .integration h3 { margin: 14px 0 8px; font-size: 18px; letter-spacing: -.04em; }
+    .integration p { margin: 0; color: #64748b; font-size: 13px; }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 26px;
+      padding: 0 9px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 900;
+    }
+    .badge.ok { color: #047857; background: #ecfdf5; }
+    .badge.adapter { color: #1d4ed8; background: #eff6ff; }
+    .badge.exp { color: #7c2d12; background: #fffbeb; }
+    .badge.plan { color: #475569; background: #f1f5f9; }
+
+    .arch-diagram {
+      display: grid;
+      gap: 12px;
+    }
+    .arch-row {
+      display: grid;
+      grid-template-columns: 210px 1fr;
+      gap: 14px;
+      align-items: stretch;
+    }
+    .arch-label {
+      padding: 18px;
+      border-radius: 14px;
+      background: var(--navy);
+      color: #fff;
+      font-weight: 900;
+    }
+    .arch-box {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+    }
+
+    .dark-section {
+      color: #e2e8f0;
+      background:
+        radial-gradient(circle at 82% 0%, rgba(16, 185, 129, .16), transparent 26%),
+        var(--navy);
+    }
+    .dark-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 380px;
+      gap: 38px;
+      align-items: center;
+    }
+    .dark-section h2 {
+      margin: 12px 0 16px;
+      max-width: 760px;
+      color: #fff;
+      font-size: clamp(32px, 4vw, 58px);
+      line-height: 1.04;
+      letter-spacing: -.06em;
+    }
+    .dark-section p { color: #cbd5e1; }
+    .oss-list {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 26px;
+    }
+    .oss-item {
+      padding: 16px;
+      border: 1px solid rgba(148, 163, 184, .24);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, .05);
+    }
+    .oss-item b { display: block; color: #fff; margin-bottom: 5px; }
+    .oss-item span { color: #94a3b8; font-size: 13px; }
+    .quickstart {
+      border: 1px solid rgba(148, 163, 184, .24);
+      border-radius: 16px;
+      background: rgba(2, 6, 23, .46);
+      overflow: hidden;
+    }
+    .quickstart-head {
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(148, 163, 184, .18);
+      color: #e2e8f0;
+      font-size: 12px;
+      font-weight: 900;
+    }
+    pre {
+      margin: 0;
+      padding: 18px;
+      overflow: auto;
+      color: #e2e8f0;
+      font-size: 12px;
+      line-height: 1.8;
+    }
+    pre code {
+      padding: 0;
+      background: transparent;
+      color: inherit;
+    }
+
+    .faq {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+    }
+    details {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fff;
+      padding: 18px 20px;
+      box-shadow: 0 12px 30px rgba(15, 23, 42, .04);
+    }
+    summary {
+      cursor: pointer;
+      font-weight: 900;
+      letter-spacing: -.03em;
+    }
+    details p {
+      margin: 12px 0 0;
+      color: #64748b;
+      font-size: 14px;
+    }
+    footer {
+      padding: 42px 0;
+      border-top: 1px solid var(--line);
+      background: #fff;
+      color: #475569;
+      font-size: 14px;
+    }
+    .footer-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .footer-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .footer-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    @media (max-width: 1120px) {
+      .nav-links { display: none; }
+      .mobile-toggle { display: inline-flex; }
+      .mobile-panel.open { display: block; }
+      .hero-grid, .split, .section-head, .dark-grid {
+        grid-template-columns: 1fr;
+      }
+      .hero { min-height: unset; }
+      .product-frame { max-width: 760px; }
+      .values, .workflow, .integrations {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .feature-grid { grid-template-columns: 1fr; }
+      .wide-body { grid-template-columns: 160px 1fr; }
+      .wide-chat, .wide-context { grid-column: span 1; }
+    }
+
+    @media (max-width: 760px) {
+      .wrap { width: min(100% - 28px, var(--max)); }
+      section { padding: 78px 0; }
+      .nav-inner { min-height: 64px; }
+      .nav-actions .btn.soft { display: none; }
+      .brand span { max-width: 150px; overflow: hidden; text-overflow: ellipsis; }
+      .hero { padding: 66px 0 72px; }
+      .hero h1 { font-size: clamp(38px, 12vw, 54px); }
+      .hero-copy { font-size: 15px; }
+      .app-preview { grid-template-columns: 1fr; min-height: auto; }
+      .side { display: none; }
+      .dashboard-grid, .mini-panels, .values, .workflow, .integrations, .faq, .oss-list {
+        grid-template-columns: 1fr;
+      }
+      .workflow::before { display: none; }
+      .system-map { grid-template-columns: 1fr; }
+      .map-center { margin: 0 auto; }
+      .wide-body { grid-template-columns: 1fr; }
+      .wide-rail { display: none; }
+      .wide-list, .wide-chat, .wide-context { border-right: 0; border-bottom: 1px solid var(--line); }
+      .arch-row { grid-template-columns: 1fr; }
+      .hero-actions .btn { width: 100%; }
+    }
   </style>
 </head>
-<body class="bg-white text-slate-900 antialiased">
-
-  <!-- NAV -->
-  <nav id="nav" class="fixed top-0 inset-x-0 z-50 transition-all">
-    <div class="max-w-6xl mx-auto px-5 sm:px-8 h-16 flex items-center gap-6">
-      <a href="/" class="flex items-center gap-2 font-extrabold text-[17px] tracking-tight">
-        <span class="w-8 h-8 rounded-lg bg-gradient-to-br from-green-600 to-emerald-500 text-white grid place-items-center text-sm">ST</span>
-        SÈO TRUM
-      </a>
-      <div class="hidden md:flex items-center gap-6 ml-auto text-sm font-semibold text-slate-500">
-        <a href="#van-de" class="hover:text-slate-900">Vấn đề</a>
-        <a href="#luong" class="hover:text-slate-900">Luồng</a>
-        <a href="#tinh-nang" class="hover:text-slate-900">Tính năng</a>
-        <a href="#so-sanh" class="hover:text-slate-900">Tính mới</a>
-        <a href="#an-toan" class="hover:text-slate-900">An toàn</a>
-        <a href="#faq" class="hover:text-slate-900">FAQ</a>
-        <a href="https://github.com/ROYCE-8425/Auto_social" class="hover:text-slate-900" target="_blank" rel="noopener">GitHub</a>
+<body>
+  <nav class="nav" aria-label="Điều hướng chính">
+    <div class="wrap">
+      <div class="nav-inner">
+        <a class="brand" href="#top" aria-label="Sèo Trum Ops">
+          <img src="/logo.png" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='grid';" />
+          <span class="brand-mark" style="display:none">ST</span>
+          <span>SÈO TRUM OPS</span>
+        </a>
+        <div class="nav-links">
+          <a href="#product">Sản phẩm</a>
+          <a href="#workflow">Luồng</a>
+          <a href="#integrations">Tích hợp</a>
+          <a href="#architecture">Kiến trúc</a>
+          <a href="#opensource">Mã nguồn</a>
+          <a href="#faq">FAQ</a>
+        </div>
+        <div class="nav-actions">
+          <a class="btn soft" href="https://github.com/ROYCE-8425/Auto_social" target="_blank" rel="noopener">GitHub</a>
+          <a class="btn primary" href="https://github.com/ROYCE-8425/Auto_social" target="_blank" rel="noopener">Xem mã nguồn</a>
+          <button id="menuBtn" class="btn mobile-toggle" type="button" aria-label="Mở menu" aria-expanded="false">☰</button>
+        </div>
       </div>
-      <div class="ml-auto md:ml-4 flex items-center gap-2">
-        <a href="/app" class="hidden sm:inline-flex h-10 px-4 items-center rounded-xl border border-slate-200 text-sm font-semibold hover:bg-slate-50">Buồng lái</a>
-        <a href="/ops" class="inline-flex h-10 px-4 items-center rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 text-white text-sm font-bold shadow-lg shadow-green-500/25 hover:from-green-500 hover:to-emerald-500">Vào vận hành</a>
-        <button id="burger" class="md:hidden w-10 h-10 rounded-xl border border-slate-200" aria-label="Menu">☰</button>
+      <div id="mobilePanel" class="mobile-panel">
+        <a href="#product">Sản phẩm</a>
+        <a href="#workflow">Luồng</a>
+        <a href="#integrations">Tích hợp</a>
+        <a href="#architecture">Kiến trúc</a>
+        <a href="#opensource">Mã nguồn</a>
+        <a href="#faq">FAQ</a>
       </div>
-    </div>
-    <div id="mobileNav" class="hidden md:hidden border-t border-slate-100 bg-white/95 backdrop-blur px-5 py-3 space-y-2 text-sm font-semibold">
-      <a href="#van-de" class="block py-2">Vấn đề</a>
-      <a href="#luong" class="block py-2">Luồng</a>
-      <a href="#tinh-nang" class="block py-2">Tính năng</a>
-      <a href="#so-sanh" class="block py-2">Tính mới</a>
-      <a href="#faq" class="block py-2">FAQ</a>
-      <a href="/app" class="block py-2">Buồng lái chủ máy</a>
     </div>
   </nav>
 
-  <!-- HERO -->
-  <section class="relative pt-28 pb-16 lg:pt-36 lg:pb-24 overflow-hidden">
-    <div class="absolute inset-0 -z-10 grid-bg"></div>
-    <div class="absolute top-20 left-[12%] w-80 h-80 bg-green-500/10 rounded-full blur-3xl blob"></div>
-    <div class="absolute bottom-0 right-[10%] w-96 h-96 bg-emerald-400/10 rounded-full blur-3xl blob blob-delay"></div>
-
-    <div class="max-w-6xl mx-auto px-5 sm:px-8 grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-      <div>
-        <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-green-500/10 text-green-700 text-sm font-semibold mb-5">
-          <span>✦</span> Cuộc thi chuyển đổi số · mã nguồn mở MIT
+  <main id="top">
+    <header class="hero">
+      <div class="wrap hero-grid">
+        <div>
+          <span class="eyebrow">Open-source AI Social Commerce Ops</span>
+          <h1>Một buồng vận hành cho <span>bán hàng đa kênh.</span></h1>
+          <p class="hero-copy">
+            Sèo Trum Ops gom inbox, CRM khách hàng, catalog sản phẩm, đơn hàng, GHN, TikTok publishing,
+            phân quyền nhân sự và trợ lý AI vào một lớp vận hành tự host. Não AI phía sau, nhân viên chỉ thấy việc cần xử lý.
+          </p>
+          <div class="hero-actions">
+            <a class="btn primary" href="https://github.com/ROYCE-8425/Auto_social" target="_blank" rel="noopener">Xem mã nguồn →</a>
+            <a class="btn dark" href="/ops">Khám phá hệ thống</a>
+            <a class="btn" href="/app">Mở buồng lái</a>
+          </div>
+          <div class="chips" aria-label="Thông tin dự án">
+            <span class="chip">MIT License</span>
+            <span class="chip">Self-hosted</span>
+            <span class="chip">Built on Javis OS</span>
+            <span class="chip">Human-in-the-loop</span>
+          </div>
         </div>
-        <h1 class="text-4xl md:text-5xl lg:text-[3.4rem] font-extrabold leading-[1.12] tracking-tight mb-5">
-          Não AI phía sau.<br />
-          <span class="gradient-text">Nhân viên chỉ thấy việc.</span>
-        </h1>
-        <p class="text-lg text-slate-500 max-w-xl mb-8 leading-relaxed">
-          Lớp vận hành mạng xã hội cho SME: đăng Fanpage, đọc comment và hộp thư Business,
-          soạn nháp theo brand kit, ghi CRM. Nhân viên làm việc trên <strong class="text-slate-800">/ops</strong>
-          — không cầm terminal, không thấy API key.
-        </p>
-        <div class="flex flex-col sm:flex-row gap-3 mb-8">
-          <a href="/ops" class="inline-flex h-12 px-7 items-center justify-center rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold shadow-lg shadow-green-500/25 hover:from-green-500 hover:to-emerald-500">
-            Mở dashboard nhân viên
-            <svg class="w-4 h-4 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-width="2" stroke-linecap="round" d="M5 12h14M13 6l6 6-6 6"/></svg>
-          </a>
-          <a href="#luong" class="inline-flex h-12 px-7 items-center justify-center rounded-xl border border-slate-200 font-semibold hover:bg-slate-50">
-            Xem luồng 4 bước
-          </a>
-        </div>
-        <p class="text-xs text-slate-400">Dựa trên <a class="underline" href="https://github.com/blogminhquy/javis-os" target="_blank" rel="noopener">Javis OS</a> (MIT) · phát triển lớp vận hành chuyển đổi số cho doanh nghiệp SME.</p>
-      </div>
 
-      <!-- Animated demo card -->
-      <div class="relative">
-        <div class="absolute -inset-3 bg-gradient-to-r from-green-500 to-emerald-400 rounded-2xl blur-2xl opacity-20"></div>
-        <div class="relative bg-white/90 backdrop-blur-xl border border-slate-200/80 rounded-2xl shadow-2xl overflow-hidden">
-          <div class="flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-slate-50/80">
-            <div class="flex items-center gap-2">
-              <span class="w-2.5 h-2.5 rounded-full bg-red-400"></span>
-              <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
-              <span class="w-2.5 h-2.5 rounded-full bg-green-400"></span>
-              <span class="ml-2 text-sm font-bold gradient-text">SÈO TRUM</span>
+        <div class="product-frame" aria-label="Minh họa dashboard Sèo Trum Ops">
+          <img
+            class="product-shot"
+            src="/assets/hero-overview.png"
+            alt="Sèo Trum Ops overview dashboard"
+            loading="eager"
+            onload="this.closest('.product-frame').classList.add('has-shot')"
+            onerror="this.remove()"
+          />
+          <div class="media-placeholder">
+            <div class="media-placeholder-card">
+              <img src="/logo.png" alt="Sèo Trum Logo" />
+              <div>
+                <b>Overview dashboard image</b>
+                <span>/assets/hero-overview.png</span>
+              </div>
             </div>
-            <span id="demoStatus" class="text-[10px] font-bold uppercase tracking-wider text-green-600">Bước 1</span>
           </div>
-          <div class="p-5 min-h-[300px]">
-            <div class="flex items-center gap-1 mb-5" id="demoSteps"></div>
-            <div id="demoBody" class="space-y-3"></div>
+          <div class="browser-bar">
+            <div class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+            <span>Ops Dashboard · Local-first</span>
           </div>
-          <div class="px-5 py-2.5 border-t border-slate-100 bg-slate-50/60 text-[11px] text-slate-500 flex justify-between">
-            <span id="demoFoot">Javis đang đọc comment…</span>
-            <span class="text-green-600 font-medium">● Live</span>
+          <div class="app-preview">
+            <aside class="side">
+              <div class="side-title"><span class="brand-mark">ST</span><span>SÈO TRUM</span></div>
+              <div class="nav-pill active"><span class="nav-ico">⌂</span>Tổng quan</div>
+              <div class="nav-pill"><span class="nav-ico">✉</span>Hộp thư</div>
+              <div class="nav-pill"><span class="nav-ico">CRM</span>Khách hàng</div>
+              <div class="nav-pill"><span class="nav-ico">ORD</span>Đơn hàng</div>
+              <div class="nav-pill"><span class="nav-ico">AI</span>AI Assistant</div>
+              <div class="nav-pill"><span class="nav-ico">⚙</span>Cài đặt</div>
+            </aside>
+            <div class="preview-main">
+              <div class="preview-top">
+                <div class="preview-title">
+                  <b>Tổng quan vận hành</b>
+                  <span>Hội thoại, khách hàng, đơn hàng và AI assist trong cùng một màn hình.</span>
+                </div>
+                <div class="preview-controls"><span class="mini-btn">Hôm nay</span><span class="mini-btn">Đồng bộ</span></div>
+              </div>
+              <div class="dashboard-grid">
+                <section class="panel">
+                  <div class="panel-head"><span>Hộp thư hợp nhất</span><span class="status">Live</span></div>
+                  <div class="inbox-list">
+                    <div class="inbox-item"><span class="avatar">KH</span><span class="item-text"><b>Khách từ Messenger</b><span>Hỏi giá sản phẩm và thời gian giao hàng</span></span><span class="source-tag">FB</span></div>
+                    <div class="inbox-item"><span class="avatar">TT</span><span class="item-text"><b>Lead từ nội dung TikTok</b><span>Cần tư vấn thêm trước khi chốt đơn</span></span><span class="source-tag">TK</span></div>
+                    <div class="inbox-item"><span class="avatar">CS</span><span class="item-text"><b>Chăm sóc sau mua</b><span>Theo dõi trạng thái đơn và phản hồi</span></span><span class="source-tag">CRM</span></div>
+                  </div>
+                  <div class="assist-box"><b>AI đề xuất:</b> xác nhận đúng sản phẩm trong catalog, xin SĐT nếu thiếu và tạo đơn nháp để nhân viên duyệt.</div>
+                </section>
+                <aside class="panel light context-card">
+                  <div class="context-profile"><span class="avatar">KH</span><span><b>Hồ sơ khách</b><span>CRM hội thoại</span></span></div>
+                  <div class="field"><span>Kênh</span><b>Facebook Messenger</b></div>
+                  <div class="field"><span>Trạng thái</span><b>Đang tư vấn</b></div>
+                  <div class="field"><span>Rule</span><b>Human review</b></div>
+                  <div class="order-card">
+                    <b>Order workflow</b>
+                    <div class="timeline">
+                      <div>Nhận diện sản phẩm</div>
+                      <div>Tạo đơn nháp</div>
+                      <div>GHN sau khi xác nhận</div>
+                    </div>
+                  </div>
+                </aside>
+              </div>
+              <div class="mini-panels">
+                <div class="mini-panel"><b>Catalog</b>SKU, alias, tồn kho và page binding.</div>
+                <div class="mini-panel"><b>Outbox</b>Tin AI được ghi log trước khi gửi.</div>
+                <div class="mini-panel"><b>RBAC</b>Staff, Manager, Owner tách quyền.</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  </section>
+    </header>
 
-  <!-- STATS -->
-  <section class="py-10 border-y border-slate-100 bg-slate-50/50">
-    <div class="max-w-4xl mx-auto px-5 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-      <div><div class="text-3xl font-extrabold gradient-text">3 lớp</div><p class="text-sm text-slate-500 mt-1">Não · Care · /ops</p></div>
-      <div><div class="text-3xl font-extrabold gradient-text">3 vai</div><p class="text-sm text-slate-500 mt-1">Chủ · Quản lý · CSKH</p></div>
-      <div><div class="text-3xl font-extrabold gradient-text">403</div><p class="text-sm text-slate-500 mt-1">Staff không vào buồng lái</p></div>
-      <div><div class="text-3xl font-extrabold gradient-text">MIT</div><p class="text-sm text-slate-500 mt-1">Đứng trên Javis OS</p></div>
-    </div>
-  </section>
-
-  <!-- PROBLEM -->
-  <section id="van-de" class="py-20 lg:py-24">
-    <div class="max-w-6xl mx-auto px-5 sm:px-8">
-      <p class="text-sm font-bold text-green-600 uppercase tracking-widest mb-3">Chuyển đổi số cho SME</p>
-      <h2 class="text-3xl md:text-4xl font-extrabold mb-4">Không phải “gắn chatbot cho có”</h2>
-      <p class="text-slate-500 max-w-2xl mb-10 leading-relaxed">Doanh nghiệp nhỏ bán hàng trên Fanpage, Messenger, TikTok. Công cụ rời: Creator Studio, Business Suite, Excel. AI dán tay thì bịa giá, lẫn brand. Cần số hóa <strong class="text-slate-800">đăng – chăm – ghi khách – phân quyền</strong>, chạy trên máy mình.</p>
-      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <div class="rounded-2xl border border-slate-200 p-5 bg-white"><p class="font-bold mb-1">Phân mảnh</p><p class="text-sm text-slate-500">Đăng một chỗ, comment chỗ khác, IB chỗ khác, khách ghi tay.</p></div>
-        <div class="rounded-2xl border border-slate-200 p-5 bg-white"><p class="font-bold mb-1">Phụ thuộc người giỏi</p><p class="text-sm text-slate-500">Một người biết token và giọng brand. Nghỉ phép là page im.</p></div>
-        <div class="rounded-2xl border border-slate-200 p-5 bg-white"><p class="font-bold mb-1">AI sai chỗ</p><p class="text-sm text-slate-500">ChatGPT công khai dễ lộ quy trình. Nhân viên không được cầm terminal.</p></div>
-        <div class="rounded-2xl border border-slate-200 p-5 bg-white"><p class="font-bold mb-1">SaaS khóa dữ liệu</p><p class="text-sm text-slate-500">Thuê tháng, khó tách ngành (shop ≠ dịch vụ).</p></div>
-        <div class="rounded-2xl border border-slate-200 p-5 bg-white"><p class="font-bold mb-1">Nhiều thương hiệu</p><p class="text-sm text-slate-500">Một chủ nhiều page. App “một page” không scale.</p></div>
-        <div class="rounded-2xl border border-slate-200 p-5 bg-white"><p class="font-bold mb-1">Cần kiểm soát</p><p class="text-sm text-slate-500">Tự host, MIT, công tắc nháp trước khi gửi Graph.</p></div>
+    <section class="value-strip" aria-label="Giá trị cốt lõi">
+      <div class="wrap values">
+        <article class="value"><span class="icon">OS</span><b>Mã nguồn mở</b><span>MIT, giữ NOTICE và có đường đóng góp rõ ràng.</span></article>
+        <article class="value"><span class="icon blue">↔</span><b>Đa kênh vận hành</b><span>Facebook/Messenger, TikTok publishing, GHN và API mở rộng.</span></article>
+        <article class="value"><span class="icon violet">AI</span><b>AI-assisted workflow</b><span>AI gợi ý, phân loại, trích đơn và ghi audit.</span></article>
+        <article class="value"><span class="icon amber">✓</span><b>Human-in-the-loop</b><span>Nhân viên vẫn duyệt các case quan trọng.</span></article>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- HOW -->
-  <section id="luong" class="py-20 lg:py-28 bg-slate-50/50">
-    <div class="max-w-6xl mx-auto px-5 sm:px-8">
-      <p class="text-sm font-bold text-green-600 uppercase tracking-widest mb-3">Luồng vận hành</p>
-      <h2 class="text-3xl md:text-4xl font-extrabold mb-3">Từ tương tác khách đến nhân viên duyệt</h2>
-      <p class="text-slate-500 max-w-2xl mb-12">Không chat với bot. Javis làm việc nền; người chỉ gửi chỗ cần người.</p>
-      <div class="grid md:grid-cols-4 gap-5">
-        <article class="rounded-2xl border border-slate-200/80 p-6 bg-white hover:-translate-y-1 hover:shadow-xl transition">
-          <div class="w-10 h-10 rounded-xl bg-blue-500 text-white grid place-items-center font-bold mb-4">1</div>
-          <h3 class="font-bold mb-2">Kết nối Fanpage</h3>
-          <p class="text-sm text-slate-500 leading-relaxed">Graph API chính chủ. Page Access Token không lộ ra dashboard nhân viên.</p>
-        </article>
-        <article class="rounded-2xl border border-slate-200/80 p-6 bg-white hover:-translate-y-1 hover:shadow-xl transition">
-          <div class="w-10 h-10 rounded-xl bg-violet-500 text-white grid place-items-center font-bold mb-4">2</div>
-          <h3 class="font-bold mb-2">Javis đăng &amp; đọc</h3>
-          <p class="text-sm text-slate-500 leading-relaxed">Loop xoay page, album 1:1, phân loại FAQ / lead / spam bằng Python — không đốt token mỗi comment.</p>
-        </article>
-        <article class="rounded-2xl border border-slate-200/80 p-6 bg-white hover:-translate-y-1 hover:shadow-xl transition">
-          <div class="w-10 h-10 rounded-xl bg-amber-500 text-white grid place-items-center font-bold mb-4">3</div>
-          <h3 class="font-bold mb-2">Nháp + CRM</h3>
-          <p class="text-sm text-slate-500 leading-relaxed">Câu trả lời bám brand kit. SĐT bắt vào hồ sơ. Mode mặc định Chỉ nháp — không tự gửi.</p>
-        </article>
-        <article class="rounded-2xl border border-slate-200/80 p-6 bg-white hover:-translate-y-1 hover:shadow-xl transition">
-          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-green-600 to-emerald-500 text-white grid place-items-center font-bold mb-4">4</div>
-          <h3 class="font-bold mb-2">CSKH bấm Gửi</h3>
-          <p class="text-sm text-slate-500 leading-relaxed">Dashboard <code class="text-xs">/ops</code>: hộp thư, khách, việc. Staff 403 nếu gõ URL buồng lái.</p>
-        </article>
-      </div>
-    </div>
-  </section>
-
-  <!-- FEATURES -->
-  <section id="tinh-nang" class="py-20 lg:py-28 bg-slate-50/70">
-    <div class="max-w-6xl mx-auto px-5 sm:px-8">
-      <p class="text-sm font-bold text-green-600 uppercase tracking-widest mb-3 text-center">Tính năng</p>
-      <h2 class="text-3xl md:text-4xl font-extrabold text-center mb-3">Đủ phễu bán hàng, không đủ quyền phá máy</h2>
-      <p class="text-slate-500 text-center max-w-xl mx-auto mb-12">Ba vai. Graph giữ ở não. Mặt trước chỉ việc CSKH.</p>
-      <div class="grid md:grid-cols-3 gap-6">
-        <article class="rounded-2xl border border-slate-200 bg-white p-7 hover:shadow-xl hover:-translate-y-1 transition">
-          <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 text-white grid place-items-center mb-5 text-lg">📣</div>
-          <h3 class="text-xl font-bold mb-2">Đăng Fanpage</h3>
-          <p class="text-sm text-slate-500 mb-4">Album theo brand kit. Cấm bịa giá. Facebook không đi PostPeer.</p>
-          <ul class="space-y-2 text-sm text-slate-600">
-            <li class="flex gap-2"><span class="text-green-500">✓</span> Graph tự host</li>
-            <li class="flex gap-2"><span class="text-green-500">✓</span> Xoay tua nhiều page</li>
-            <li class="flex gap-2"><span class="text-green-500">✓</span> Token không lộ JSON</li>
-          </ul>
-        </article>
-        <article class="rounded-2xl border border-slate-200 bg-white p-7 hover:shadow-xl hover:-translate-y-1 transition">
-          <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-green-600 text-white grid place-items-center mb-5 text-lg">💬</div>
-          <h3 class="text-xl font-bold mb-2">Care comment</h3>
-          <p class="text-sm text-slate-500 mb-4">Tách bình luận bài và tin nhắn IB. FAQ/lead/spam. Takeover 4 giờ khi nhân viên trả lời tay.</p>
-          <ul class="space-y-2 text-sm text-slate-600">
-            <li class="flex gap-2"><span class="text-green-500">✓</span> Zero-token phân loại</li>
-            <li class="flex gap-2"><span class="text-green-500">✓</span> Kill switch outbound</li>
-            <li class="flex gap-2"><span class="text-green-500">✓</span> CRM markdown + PDPD</li>
-          </ul>
-        </article>
-        <article class="rounded-2xl border border-slate-200 bg-white p-7 hover:shadow-xl hover:-translate-y-1 transition">
-          <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 text-white grid place-items-center mb-5 text-lg">🖥</div>
-          <h3 class="text-xl font-bold mb-2">Dashboard /ops</h3>
-          <p class="text-sm text-slate-500 mb-4">Tổng quan, hộp thư, khách, việc. React + RBAC. Chủ vẫn dùng /app.</p>
-          <ul class="space-y-2 text-sm text-slate-600">
-            <li class="flex gap-2"><span class="text-green-500">✓</span> SĐT che với staff</li>
-            <li class="flex gap-2"><span class="text-green-500">✓</span> 403 thật, không chỉ ẩn nút</li>
-            <li class="flex gap-2"><span class="text-green-500">✓</span> TikTok: ống PostPeer tùy chọn</li>
-          </ul>
-        </article>
-      </div>
-    </div>
-  </section>
-
-  <!-- 3 SURFACES -->
-  <section class="py-20">
-    <div class="max-w-6xl mx-auto px-5 sm:px-8">
-      <h2 class="text-3xl font-extrabold mb-8">Ba cửa, ba đối tượng</h2>
-      <div class="overflow-x-auto rounded-2xl border border-slate-200">
-        <table class="w-full text-sm text-left">
-          <thead class="bg-slate-50 text-slate-500 font-semibold">
-            <tr>
-              <th class="px-5 py-3">Cửa</th>
-              <th class="px-5 py-3">Ai</th>
-              <th class="px-5 py-3">Việc</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-slate-100">
-            <tr>
-              <td class="px-5 py-4 font-mono text-green-700">/</td>
-              <td class="px-5 py-4">Khách, BTC cuộc thi</td>
-              <td class="px-5 py-4">Trang này — kể chuyện sản phẩm</td>
-            </tr>
-            <tr>
-              <td class="px-5 py-4 font-mono text-green-700">/ops</td>
-              <td class="px-5 py-4">CSKH · Quản lý</td>
-              <td class="px-5 py-4">Duyệt nháp, CRM, việc, xu hướng</td>
-            </tr>
-            <tr>
-              <td class="px-5 py-4 font-mono text-green-700">/app</td>
-              <td class="px-5 py-4">Chủ máy</td>
-              <td class="px-5 py-4">Javis console: model, MCP, loop, terminal</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </section>
-
-  <!-- COMPARE -->
-  <section id="so-sanh" class="py-20 lg:py-24 bg-slate-50/70">
-    <div class="max-w-6xl mx-auto px-5 sm:px-8">
-      <p class="text-sm font-bold text-green-600 uppercase tracking-widest mb-3">Tính mới</p>
-      <h2 class="text-3xl md:text-4xl font-extrabold mb-8">So với cách làm cũ</h2>
-      <div class="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
-        <table class="w-full text-sm text-left">
-          <thead class="bg-slate-50 text-slate-500 font-semibold">
-            <tr>
-              <th class="px-5 py-3">Tiêu chí</th>
-              <th class="px-5 py-3">Cách cũ</th>
-              <th class="px-5 py-3 text-green-800">SÈO TRUM</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-slate-100">
-            <tr><td class="px-5 py-3 font-medium">Đăng bài</td><td class="px-5 py-3 text-slate-500">Tay / tool thuê</td><td class="px-5 py-3">Loop + kit + Graph tự host</td></tr>
-            <tr><td class="px-5 py-3 font-medium">Comment / IB</td><td class="px-5 py-3 text-slate-500">Business Suite rời</td><td class="px-5 py-3">Một /ops, hai tab tách kênh</td></tr>
-            <tr><td class="px-5 py-3 font-medium">Giọng brand</td><td class="px-5 py-3 text-slate-500">Nhớ trong đầu</td><td class="px-5 py-3">Kit markdown, tách ngành</td></tr>
-            <tr><td class="px-5 py-3 font-medium">Khách</td><td class="px-5 py-3 text-slate-500">Excel, tin rời</td><td class="px-5 py-3">CRM từ tương tác, lọc brand</td></tr>
-            <tr><td class="px-5 py-3 font-medium">Quyền</td><td class="px-5 py-3 text-slate-500">Chung mật khẩu page</td><td class="px-5 py-3">Staff / quản lý / chủ · 403 buồng lái</td></tr>
-            <tr><td class="px-5 py-3 font-medium">Dữ liệu</td><td class="px-5 py-3 text-slate-500">SaaS khóa</td><td class="px-5 py-3">Tự host, MIT, token không lên git</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <p class="text-sm text-slate-500 mt-6 max-w-2xl">Não là <a class="underline" href="https://github.com/blogminhquy/javis-os">Javis OS</a> (MIT) — ghi công đủ. Phần đóng góp: Care, dashboard CSKH, RBAC, đa brand, TikTok tùy chọn.</p>
-    </div>
-  </section>
-
-  <!-- ARCH -->
-  <section id="kien-truc" class="py-20">
-    <div class="max-w-6xl mx-auto px-5 sm:px-8">
-      <p class="text-sm font-bold text-green-600 uppercase tracking-widest mb-3">Kiến trúc</p>
-      <h2 class="text-3xl font-extrabold mb-8">Một VPS. Não ẩn. Mặt trước cho người.</h2>
-      <pre class="rounded-2xl bg-slate-900 text-slate-100 text-xs sm:text-sm p-6 overflow-x-auto leading-relaxed">Nhân viên  →  /ops (React)     →  REST Care / CRM / Kanban
-Chủ máy    →  /app (Javis)     →  Engine + MCP + loop
-Khách MXH  →  Facebook Graph / TikTok (PostPeer, tùy chọn)
-Dữ liệu    →  SQLite Care + vault markdown (kit, CRM)</pre>
-      <ul class="mt-8 grid sm:grid-cols-2 gap-4 text-sm text-slate-600">
-        <li class="rounded-xl border border-slate-200 p-4"><strong class="text-slate-900">Phân loại rules-first</strong> — Python, SĐT Việt Nam; LLM chỉ câu khó.</li>
-        <li class="rounded-xl border border-slate-200 p-4"><strong class="text-slate-900">Gửi Graph</strong> — chỉ khi không phải “chỉ nháp” và công tắc tự trả lời bật.</li>
-        <li class="rounded-xl border border-slate-200 p-4"><strong class="text-slate-900">TikTok</strong> — carousel 9:16, nhạc gợi ý; không thay Fanpage Graph.</li>
-        <li class="rounded-xl border border-slate-200 p-4"><strong class="text-slate-900">VPS SME</strong> — mức tối thiểu đã khảo sát: 2 vCPU / 4 GB RAM.</li>
-      </ul>
-    </div>
-  </section>
-
-  <!-- SAFETY -->
-  <section id="an-toan" class="py-20 bg-slate-50/70">
-    <div class="max-w-6xl mx-auto px-5 sm:px-8">
-      <p class="text-sm font-bold text-green-600 uppercase tracking-widest mb-3">An toàn mặc định</p>
-      <h2 class="text-3xl font-extrabold mb-8">AI không ngồi ghế CSKH trừ khi chủ bật</h2>
-      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <div class="rounded-2xl bg-white border border-slate-200 p-5"><p class="font-bold mb-1">Chỉ nháp</p><p class="text-sm text-slate-500">Mặc định không gửi comment/IB ra Facebook.</p></div>
-        <div class="rounded-2xl bg-white border border-slate-200 p-5"><p class="font-bold mb-1">Kill switch</p><p class="text-sm text-slate-500">Ngừng gửi, vẫn ghi nhận lead.</p></div>
-        <div class="rounded-2xl bg-white border border-slate-200 p-5"><p class="font-bold mb-1">Giờ im lặng</p><p class="text-sm text-slate-500">Ví dụ 21h–7h: CRM có, Graph không.</p></div>
-        <div class="rounded-2xl bg-white border border-slate-200 p-5"><p class="font-bold mb-1">Takeover</p><p class="text-sm text-slate-500">Nhân viên trả lời tay → Javis im thread 4 giờ.</p></div>
-        <div class="rounded-2xl bg-white border border-slate-200 p-5"><p class="font-bold mb-1">403 buồng lái</p><p class="text-sm text-slate-500">Staff không vào /app, MCP, terminal.</p></div>
-        <div class="rounded-2xl bg-white border border-slate-200 p-5"><p class="font-bold mb-1">Cấm bịa giá</p><p class="text-sm text-slate-500">Chỉ quote số có trong brand kit / file khóa.</p></div>
-      </div>
-    </div>
-  </section>
-
-  <!-- FAQ -->
-  <section id="faq" class="py-20">
-    <div class="max-w-3xl mx-auto px-5 sm:px-8">
-      <h2 class="text-3xl font-extrabold text-center mb-10">Câu hỏi thường gặp</h2>
-      <div class="space-y-3" id="faqList">
-        <details class="group rounded-xl border border-slate-200 bg-white p-5" open>
-          <summary class="font-bold cursor-pointer">Có phải copy Javis rồi đổi tên?</summary>
-          <p class="mt-3 text-sm text-slate-500 leading-relaxed">Não là Javis OS (MIT) — ghi công đủ. Phần thi: lớp Ops, Care, RBAC, đa brand, TikTok tùy chọn. Minh bạch là điểm cộng, không giấu nguồn.</p>
-        </details>
-        <details class="group rounded-xl border border-slate-200 bg-white p-5">
-          <summary class="font-bold cursor-pointer">Nhân viên có vào được terminal không?</summary>
-          <p class="mt-3 text-sm text-slate-500 leading-relaxed">Không. Cookie ops + middleware 403 <code>/app</code>, <code>/mcp</code>, <code>/settings</code>. Ẩn nút không đủ — chặn ở server.</p>
-        </details>
-        <details class="group rounded-xl border border-slate-200 bg-white p-5">
-          <summary class="font-bold cursor-pointer">TikTok có thay Facebook không?</summary>
-          <p class="mt-3 text-sm text-slate-500 leading-relaxed">Không. Fanpage giữ Graph. TikTok là ống PostPeer tùy chọn (key riêng, credit). Comment Care vẫn Facebook.</p>
-        </details>
-        <details class="group rounded-xl border border-slate-200 bg-white p-5">
-          <summary class="font-bold cursor-pointer">Javis có tự gửi comment công khai ngay?</summary>
-          <p class="mt-3 text-sm text-slate-500 leading-relaxed">Mặc định <strong>Chỉ nháp</strong>. Bật Tự FAQ / Tự động là quyết định chủ máy, có confirm.</p>
-        </details>
-      </div>
-    </div>
-  </section>
-
-  <!-- CTA -->
-  <section class="py-20">
-    <div class="max-w-4xl mx-auto px-5 text-center">
-      <div class="rounded-3xl bg-gradient-to-br from-green-600 to-emerald-700 text-white px-8 py-14 shadow-2xl shadow-green-700/30">
-        <h2 class="text-3xl md:text-4xl font-extrabold mb-4">Doanh nghiệp giữ quyền điều khiển</h2>
-        <p class="text-green-50 mb-8 max-w-lg mx-auto">AI không ngồi ghế CSKH trừ khi chủ bật. Ban giám khảo xem trang này và /ops — buồng lái /app chỉ khi giải thích não.</p>
-        <div class="flex flex-col sm:flex-row gap-3 justify-center">
-          <a href="/ops" class="inline-flex h-12 px-8 items-center justify-center rounded-xl bg-white text-green-700 font-bold hover:bg-green-50">Dashboard nhân viên</a>
-          <a href="/app" class="inline-flex h-12 px-8 items-center justify-center rounded-xl border border-white/40 font-bold hover:bg-white/10">Buồng lái Javis</a>
+    <section id="product">
+      <div class="wrap split">
+        <div>
+          <p class="kicker">Không chỉ là chatbot</p>
+          <h2 style="margin:12px 0 16px;font-size:clamp(32px,4vw,56px);line-height:1.04;letter-spacing:-.06em">Đây là lớp vận hành bán hàng.</h2>
+          <p class="section-copy">
+            Chatbot chỉ trả lời. Sèo Trum Ops giữ ngữ cảnh vận hành: khách đang ở kênh nào,
+            sản phẩm nào đã khớp catalog, đơn hàng đang ở trạng thái nào và khi nào cần người thật can thiệp.
+          </p>
+        </div>
+        <div class="feature-grid">
+          <article class="card"><span class="icon">✉</span><h3>Unified Inbox</h3><p>Gom hội thoại, comment, nháp trả lời và lịch sử tương tác vào một nơi để ca trực xử lý.</p></article>
+          <article class="card"><span class="icon blue">AI</span><h3>AI Draft / Assist</h3><p>Gợi ý phản hồi, hỏi thông tin còn thiếu, trích đơn hàng và giữ outbox để kiểm soát.</p></article>
+          <article class="card"><span class="icon violet">CRM</span><h3>Customer & Order Context</h3><p>Lưu hồ sơ khách, catalog, đơn hàng, shipment và audit log phục vụ chăm sóc lại.</p></article>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <footer class="border-t border-slate-100 py-10 text-sm text-slate-500">
-    <div class="max-w-6xl mx-auto px-5 sm:px-8 flex flex-col md:flex-row gap-4 md:items-center justify-between">
-      <p>© 2026 SÈO TRUM · Dựa Javis OS (MIT), Nguyễn Minh Quý</p>
-      <p>Lớp vận hành đa thương hiệu: Fanpage Care, CRM, TikTok — Auto_social.</p>
+    <section id="workflow" class="section-light">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <p class="kicker">Workflow</p>
+            <h2>Từ tin nhắn tới đơn hàng, vẫn có người kiểm soát.</h2>
+          </div>
+          <p class="section-copy">
+            Automation được chia theo rule và cấp độ. Mặc định các hành động rủi ro như tự xác nhận đơn hoặc tạo vận đơn production không tự bật.
+          </p>
+        </div>
+        <div class="workflow">
+          <article class="step"><div class="step-num">1</div><h3>Thu hội thoại</h3><p>Đọc comment, Messenger và sự kiện từ các kênh đã kết nối.</p></article>
+          <article class="step"><div class="step-num">2</div><h3>AI đề xuất</h3><p>Phân loại ý định, khớp catalog, soạn câu trả lời hoặc đơn nháp.</p></article>
+          <article class="step"><div class="step-num">3</div><h3>Xác nhận / xử lý</h3><p>Nhân viên duyệt hoặc bật case an toàn theo chính sách vận hành.</p></article>
+          <article class="step"><div class="step-num">4</div><h3>Theo dõi đơn</h3><p>GHN, trạng thái giao hàng, CRM và lịch sử chăm sóc được ghi lại.</p></article>
+        </div>
+        <div class="human-note">Human-in-the-loop là mặc định: Javis hỗ trợ ca trực, không âm thầm thay người khi rule chưa được bật.</div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <p class="kicker">Operations dashboard</p>
+            <h2>Một dashboard cho cả ca trực.</h2>
+          </div>
+          <p class="section-copy">Thiết kế cho nhân viên và quản lý: ít nhiễu, rõ trạng thái, tập trung vào hành động kế tiếp.</p>
+        </div>
+        <div class="wide-preview" aria-label="Mockup hộp thư vận hành">
+          <img
+            class="wide-shot"
+            src="/assets/inbox-dashboard.png"
+            alt="Sèo Trum Ops unified inbox dashboard"
+            loading="eager"
+            onload="this.closest('.wide-preview').classList.add('has-shot')"
+            onerror="this.remove()"
+          />
+          <div class="media-placeholder">
+            <div class="media-placeholder-card">
+              <img src="/logo.png" alt="Sèo Trum Logo" />
+              <div>
+                <b>Unified inbox image</b>
+                <span>/assets/inbox-dashboard.png</span>
+              </div>
+            </div>
+          </div>
+          <div class="wide-top"><span>Sèo Trum Ops · Hộp thư</span><span>Role-based access</span></div>
+          <div class="wide-body">
+            <aside class="wide-rail">
+              <div class="side-title"><span class="brand-mark">ST</span><span>OPS</span></div>
+              <div class="nav-pill active">Hộp thư</div>
+              <div class="nav-pill">Khách hàng</div>
+              <div class="nav-pill">Đơn hàng</div>
+              <div class="nav-pill">Cài đặt</div>
+            </aside>
+            <section class="wide-list">
+              <div class="search"></div>
+              <div class="contact"><span class="avatar">FB</span><span><b>Messenger</b><span>Hỏi giá và tồn kho</span></span></div>
+              <div class="contact"><span class="avatar">TK</span><span><b>TikTok</b><span>Nội dung cần theo dõi</span></span></div>
+              <div class="contact"><span class="avatar">GH</span><span><b>GHN</b><span>Shipment event</span></span></div>
+            </section>
+            <section class="wide-chat">
+              <div class="bubble">Sản phẩm này còn hàng không?</div>
+              <div class="bubble me">Dạ em kiểm tra catalog và giữ đơn nháp cho mình ạ.</div>
+              <div class="bubble">Mình muốn giao tận nơi.</div>
+              <div class="composer"></div>
+            </section>
+            <aside class="wide-context">
+              <div class="context-profile"><span class="avatar">KH</span><span><b>Ngữ cảnh khách</b><span>CRM + Order Core</span></span></div>
+              <div class="field"><span>Product match</span><b>Catalog</b></div>
+              <div class="field"><span>Automation</span><b>Draft first</b></div>
+              <div class="field"><span>Shipping</span><b>GHN gateway</b></div>
+            </aside>
+          </div>
+        </div>
+        <div class="capabilities">
+          <span class="capability">Unified Inbox</span>
+          <span class="capability">Customer CRM</span>
+          <span class="capability">Order Core</span>
+          <span class="capability">Shipping Gateway</span>
+          <span class="capability">TikTok Publishing</span>
+          <span class="capability">Human-in-the-loop</span>
+        </div>
+      </div>
+    </section>
+
+    <section id="integrations" class="section-light">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <p class="kicker">Integrations</p>
+            <h2>Kết nối rõ trạng thái, không bịa hỗ trợ.</h2>
+          </div>
+          <p class="section-copy">Mỗi adapter hiển thị đúng phạm vi hiện có. Tính năng chưa có được ghi là planned hoặc chưa hỗ trợ.</p>
+        </div>
+        <div class="integrations">
+          <article class="integration"><span class="badge ok">Available</span><h3>Facebook & Messenger</h3><p>Meta Graph cho Fanpage Care, comment, Messenger, draft và send theo policy.</p></article>
+          <article class="integration"><span class="badge adapter">Adapter</span><h3>TikTok PostPeer</h3><p>Publishing video/carousel qua PostPeer BYO key. Không ghi nhầm là inbox TikTok.</p></article>
+          <article class="integration"><span class="badge ok">Available</span><h3>GHN Gateway</h3><p>Sandbox/production, test connection, tạo/hủy vận đơn và webhook trạng thái.</p></article>
+          <article class="integration"><span class="badge plan">Planned</span><h3>Instagram / YouTube</h3><p>Chưa kết nối Graph/API riêng trong Ops. UI phải hiển thị đúng là chưa hỗ trợ.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section id="architecture">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <p class="kicker">Architecture</p>
+            <h2>Kiến trúc rõ ràng, dữ liệu vận hành cục bộ.</h2>
+          </div>
+          <p class="section-copy">FastAPI làm lõi, React/Vite cho Ops dashboard, SQLite WAL cho state vận hành, Javis OS MCP Hub cho lớp agentic runtime.</p>
+        </div>
+        <div class="arch-diagram">
+          <div class="arch-row"><div class="arch-label">Channels</div><div class="arch-box"><span class="chip">Facebook</span><span class="chip">Messenger</span><span class="chip">TikTok PostPeer</span><span class="chip">GHN Webhook</span></div></div>
+          <div class="arch-row"><div class="arch-label">Gateway / API</div><div class="arch-box"><span class="chip">FastAPI</span><span class="chip">RBAC Middleware</span><span class="chip">Meta Graph</span><span class="chip">Shipping Provider</span></div></div>
+          <div class="arch-row"><div class="arch-label">Core Services</div><div class="arch-box"><span class="chip">Fanpage Care</span><span class="chip">Product Catalog</span><span class="chip">Order Core</span><span class="chip">Campaign Store</span></div></div>
+          <div class="arch-row"><div class="arch-label">AI Layer</div><div class="arch-box"><span class="chip">Javis OS</span><span class="chip">MCP Hub</span><span class="chip">Automation Rules</span><span class="chip">Outbox Audit</span></div></div>
+          <div class="arch-row"><div class="arch-label">State / UI</div><div class="arch-box"><span class="chip">SQLite WAL</span><span class="chip">JSONL Logs</span><span class="chip">React 18 + Vite</span><span class="chip">Docker Compose</span></div></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="opensource" class="dark-section">
+      <div class="wrap dark-grid">
+        <div>
+          <p class="kicker">Open Source</p>
+          <h2>Thiết kế để review được, fork được và vận hành được.</h2>
+          <p>
+            Sèo Trum Ops kế thừa Javis OS theo MIT, giữ attribution và tách rõ dữ liệu runtime khỏi mã nguồn.
+            Mục tiêu là để người khác có thể đọc kiến trúc, chạy thử, mở issue và đóng góp mà không cần dữ liệu vận hành riêng của tác giả.
+          </p>
+          <div class="hero-actions">
+            <a class="btn primary" href="https://github.com/ROYCE-8425/Auto_social" target="_blank" rel="noopener">Xem GitHub</a>
+            <a class="btn" href="https://github.com/ROYCE-8425/Auto_social/blob/main/README.md" target="_blank" rel="noopener">Đọc README</a>
+          </div>
+          <div class="oss-list">
+            <div class="oss-item"><b>MIT + NOTICE</b><span>Giữ LICENSE và ghi công upstream Javis OS.</span></div>
+            <div class="oss-item"><b>Secrets không vào git</b><span>Token Facebook, GHN, PostPeer và state production nằm ngoài repo.</span></div>
+            <div class="oss-item"><b>Human-in-the-loop</b><span>Automation có rule, kill switch và outbox audit.</span></div>
+            <div class="oss-item"><b>Contributor-ready</b><span>README, SECURITY, CONTRIBUTING và quickstart rõ ràng.</span></div>
+          </div>
+        </div>
+        <div class="quickstart">
+          <div class="quickstart-head">Quickstart</div>
+          <pre><code>git clone https://github.com/ROYCE-8425/Auto_social.git seotrum
+cd seotrum
+cp env.example .env
+
+# chạy local hoặc VPS bằng Docker
+docker compose up -d
+
+# routes chính
+/      landing open-source
+/ops   dashboard vận hành
+/app   buồng lái chủ máy</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <section id="faq" class="section-light">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <p class="kicker">FAQ</p>
+            <h2>Câu hỏi thường gặp.</h2>
+          </div>
+          <p class="section-copy">Ngắn gọn, đúng trạng thái và hữu ích cho người muốn chạy thử hoặc đóng góp.</p>
+        </div>
+        <div class="faq">
+          <details open>
+            <summary>Dự án kế thừa Javis OS như thế nào?</summary>
+            <p>Sèo Trum Ops phát triển trên nền Javis OS theo giấy phép MIT và giữ attribution trong NOTICE/README. Phần mở rộng chính là lớp social commerce: Ops dashboard, CRM hội thoại, catalog, đơn hàng, shipping gateway và connector status.</p>
+          </details>
+          <details>
+            <summary>AI có tự gửi tin nhắn hoặc tự tạo vận đơn không?</summary>
+            <p>Mặc định không. AI hỗ trợ nháp, trích xuất và outbox. Các case tự động phải bật bằng rule, có mode vận hành và kill switch.</p>
+          </details>
+          <details>
+            <summary>GHN có chế độ test không?</summary>
+            <p>Có. GHN có staging endpoint <code>dev-online-gateway.ghn.vn</code>. Token sandbox và production tách riêng; nên test sandbox trước khi dùng production.</p>
+          </details>
+          <details>
+            <summary>Instagram và YouTube đã chạy chưa?</summary>
+            <p>Chưa có connector Instagram Graph/YouTube Data API riêng trong Ops. UI cần hiển thị đúng trạng thái planned hoặc chưa hỗ trợ, không bịa số liệu.</p>
+          </details>
+          <details>
+            <summary>Tôi có thể tự host trên server riêng không?</summary>
+            <p>Có. Dự án hướng tới self-host, Docker Compose và cấu hình qua env/settings runtime. Không commit secret hoặc file state cá nhân vào repo.</p>
+          </details>
+          <details>
+            <summary>Muốn đóng góp thì bắt đầu ở đâu?</summary>
+            <p>Đọc README, CONTRIBUTING, SECURITY và mở issue/PR theo phạm vi rõ ràng: UI Ops, connector, test, tài liệu hoặc workflow automation.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap footer-inner">
+      <div class="footer-brand">
+        <img src="/logo.png" alt="Sèo Trum Logo" style="width:34px;height:34px;object-fit:contain;border-radius:10px" onerror="this.style.display='none';" />
+        <div><strong>Sèo Trum Ops</strong><br />Open-source social sales operations, built on Javis OS under MIT.</div>
+      </div>
+      <div class="footer-links">
+        <a href="https://github.com/ROYCE-8425/Auto_social" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://github.com/ROYCE-8425/Auto_social/blob/main/README.md" target="_blank" rel="noopener">README</a>
+        <a href="https://github.com/ROYCE-8425/Auto_social/blob/main/LICENSE" target="_blank" rel="noopener">LICENSE</a>
+        <a href="https://github.com/ROYCE-8425/Auto_social/blob/main/SECURITY.md" target="_blank" rel="noopener">Security</a>
+        <a href="/ops">Ops</a>
+        <a href="/app">Cockpit</a>
+      </div>
     </div>
   </footer>
 
   <script>
-    const nav = document.getElementById('nav');
-    window.addEventListener('scroll', () => {
-      nav.classList.toggle('bg-white/90', scrollY > 8);
-      nav.classList.toggle('backdrop-blur-md', scrollY > 8);
-      nav.classList.toggle('shadow-sm', scrollY > 8);
-    });
-    document.getElementById('burger').onclick = () =>
-      document.getElementById('mobileNav').classList.toggle('hidden');
-
-    const STEPS = [
-      { t: 'Comment mới', f: 'Javis đang đọc comment…', html:
-        '<div class="rounded-xl border border-blue-200 bg-blue-50/80 p-4"><p class="text-xs text-blue-600 font-semibold mb-1">Fanpage theo brand kit</p><p class="text-sm">“Giá sao ạ? Uy tín không shop?”</p><p class="text-[11px] text-slate-400 mt-2">vừa xong · khách</p></div>' },
-      { t: 'Phân loại', f: 'Rules-first · 0 token', html:
-        '<div class="grid grid-cols-2 gap-2"><div class="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-xs font-semibold text-emerald-700">FAQ · giá</div><div class="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs font-semibold text-amber-700">Lead? chưa có SĐT</div><div class="col-span-2 text-xs text-slate-500">Không gọi LLM. Kit đúng page — không lẫn thương hiệu khác.</div></div>' },
-      { t: 'Nháp', f: 'Mode suggest · chưa gửi Graph', html:
-        '<div class="rounded-xl border border-slate-200 p-4 text-sm leading-relaxed">Dạ giá bên shop theo niêm yết trên page, inbox em gửi chi tiết và cách kích hoạt ạ. Hotline trên kit.</div>' },
-      { t: 'CSKH gửi', f: '/ops · Gửi ngay', html:
-        '<div class="text-center py-4"><div class="w-16 h-16 mx-auto rounded-full bg-gradient-to-br from-green-500 to-emerald-500 text-white grid place-items-center text-2xl mb-3">✓</div><p class="font-bold text-green-600">Đã hiện trên Facebook</p><p class="text-xs text-slate-500 mt-1">Nhân viên bấm Gửi · CRM đã ghi</p></div>' }
-    ];
-    let i = 0;
-    const dots = document.getElementById('demoSteps');
-    function paint() {
-      const s = STEPS[i];
-      document.getElementById('demoStatus').textContent = 'Bước ' + (i + 1);
-      document.getElementById('demoBody').innerHTML = s.html;
-      document.getElementById('demoFoot').textContent = s.f;
-      dots.innerHTML = STEPS.map((_, k) =>
-        '<div class="flex-1 flex items-center"><div class="w-8 h-8 rounded-full grid place-items-center text-xs font-bold ' +
-        (k === i ? 'bg-green-500 text-white relative' : k < i ? 'bg-green-500 text-white' : 'bg-slate-100 text-slate-400') +
-        '">' + (k < i ? '✓' : (k + 1)) + (k === i ? '<span class="absolute inset-0 rounded-full bg-green-400 step-ring"></span>' : '') +
-        '</div>' + (k < 3 ? '<div class="flex-1 h-0.5 mx-1 ' + (k < i ? 'bg-green-500' : 'bg-slate-200') + '"></div>' : '') + '</div>'
-      ).join('');
+    const menuBtn = document.getElementById('menuBtn');
+    const mobilePanel = document.getElementById('mobilePanel');
+    if (menuBtn && mobilePanel) {
+      menuBtn.addEventListener('click', () => {
+        const open = mobilePanel.classList.toggle('open');
+        menuBtn.setAttribute('aria-expanded', String(open));
+      });
+      mobilePanel.querySelectorAll('a').forEach((link) => {
+        link.addEventListener('click', () => {
+          mobilePanel.classList.remove('open');
+          menuBtn.setAttribute('aria-expanded', 'false');
+        });
+      });
     }
-    paint();
-    setInterval(() => { i = (i + 1) % STEPS.length; paint(); }, 2800);
+    document.querySelectorAll('.product-shot, .wide-shot').forEach((img) => {
+      if (img.complete && img.naturalWidth > 0) {
+        img.closest('.product-frame, .wide-preview')?.classList.add('has-shot');
+      }
+    });
   </script>
 </body>
 </html>

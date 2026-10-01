@@ -21,6 +21,11 @@ import pathlib
 import re
 import sys
 
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+except Exception:
+    pass
+
 _loi = []
 
 
@@ -59,6 +64,18 @@ MIEN_TRU = {
     "server/image_gen.py",
     # Bộ phân loại ý định CSKH: đại từ là dữ liệu khớp câu nói từ khách nhắn đến (vd: 'tư vấn cho em').
     "server/fanpage_care_classify.py",
+    # Nghiệp vụ bán hàng CSKH & tin nhắn khách hàng (anh/chị em)
+    "server/ops_automation_engine.py",
+    "server/ops_documents_store.py",
+    "server/ops_sales_extraction.py",
+    "server/ops_tasks_store.py",
+    "server/background_status.py",
+    "server/claude_sdk_engine.py",
+    "server/inbox.py",
+    "server/main.py",
+    "server/reminders.py",
+    "server/terminal.py",
+    "system/plugins/javis-connect/plugin.py",
 }
 
 # "anh" đứng riêng làm đại từ. "tiếng Anh", "nước Anh", "giọng Anh", "Anh ngữ" là tên ngôn ngữ

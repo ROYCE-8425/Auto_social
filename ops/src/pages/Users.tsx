@@ -9,13 +9,60 @@ import {
   Shield,
   KeyRound,
   UserCheck,
+  Briefcase,
+  HelpCircle,
 } from 'lucide-react'
-import { api, OpsUser } from '../lib/api'
-import { useAuth } from '../lib/auth'
+import { api, OpsUser, OpsRole } from '../lib/api'
+import { useAuth, ROLE_LABELS, ROLE_BADGES } from '../lib/auth'
 import { formatTime } from '../lib/utils'
 
+const ROLE_OPTIONS: { role: OpsRole; title: string; code: string; desc: string }[] = [
+  {
+    role: 'cskh',
+    title: 'Chuyên viên CSKH & Tư vấn',
+    code: 'CSKH',
+    desc: 'Duyệt/sửa nháp phản hồi AI, tiếp quản Messenger, chăm sóc Fanpage, tạo việc handoff, tạo đơn hàng từ chat (SĐT che bảo mật).',
+  },
+  {
+    role: 'sales',
+    title: 'Chuyên viên Kinh doanh',
+    code: 'SALE',
+    desc: 'Quản lý đơn hàng, trích xuất đơn hàng từ hội thoại khách, xác nhận đơn, huỷ đơn kèm lý do, tiếp cận lead tiềm năng.',
+  },
+  {
+    role: 'warehouse',
+    title: 'Nhân viên Kho & Vận chuyển',
+    code: 'KHO',
+    desc: 'Quản lý đóng gói đơn hàng, tạo vận đơn sang GHTK/GHN/ViettelPost, in phiếu gửi hàng, theo dõi hành trình giao nhận.',
+  },
+  {
+    role: 'marketing',
+    title: 'Chuyên viên Marketing & TikTok',
+    code: 'MKT',
+    desc: 'Lên chiến dịch Autopilot Campaigns, xuất bản nội dung TikTok Carousel/Video, xem Radar đối thủ, phân tích Attribution & Trends.',
+  },
+  {
+    role: 'technical',
+    title: 'Kỹ thuật viên Kênh nối',
+    code: 'TECH',
+    desc: 'Kiểm tra trạng thái kết nối các kênh (Facebook, Zalo, Telegram, TikTok), theo dõi webhook, chạy kiểm thử đánh giá chất lượng QA.',
+  },
+  {
+    role: 'manager',
+    title: 'Quản lý vận hành',
+    code: 'MGR',
+    desc: 'Quản lý tổng thể đội ngũ; xem SĐT khách đầy đủ (unmask), gộp/xoá CRM, cấu hình Care (suggest/auto), quét ngay, xem chi phí token AI.',
+  },
+  {
+    role: 'staff',
+    title: 'Nhân viên chung (Mặc định)',
+    code: 'NV',
+    desc: 'Vai trò nhân viên cơ bản (tương thích ngược): Duyệt nháp Care, xem CRM che SĐT, tạo việc handoff, xử lý công việc được giao.',
+  },
+]
+
 export const UsersPage: React.FC = () => {
-  const { role } = useAuth()
+  const { role, getRoleBadge, getRoleLabel } = useAuth()
   const [users, setUsers] = useState<OpsUser[]>([])
   const [loading, setLoading] = useState<boolean>(true)
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false)
@@ -24,7 +71,8 @@ export const UsersPage: React.FC = () => {
   const [username, setUsername] = useState<string>('')
   const [password, setPassword] = useState<string>('')
   const [name, setName] = useState<string>('')
-  const [userRole, setUserRole] = useState<'staff' | 'manager'>('staff')
+  const [userRole, setUserRole] = useState<OpsRole>('cskh')
+  const [userCode, setUserCode] = useState<string>('CSKH')
   const [formError, setFormError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
 
@@ -47,6 +95,14 @@ export const UsersPage: React.FC = () => {
       loadUsers()
     }
   }, [role])
+
+  const handleRoleChange = (newRole: OpsRole) => {
+    setUserRole(newRole)
+    const opt = ROLE_OPTIONS.find((r) => r.role === newRole)
+    if (opt) {
+      setUserCode(opt.code)
+    }
+  }
 
   if (role !== 'owner') {
     return (
@@ -79,13 +135,15 @@ export const UsersPage: React.FC = () => {
         password,
         name: name.trim() || username.trim(),
         role: userRole,
-      })
-      setFeedback({ text: `Đã tạo tài khoản ${username} thành công!`, type: 'success' })
+        code: userCode.trim().toUpperCase(),
+      } as any)
+      setFeedback({ text: `Đã tạo tài khoản ${username} (${ROLE_LABELS[userRole]}) thành công!`, type: 'success' })
       setIsModalOpen(false)
       setUsername('')
       setPassword('')
       setName('')
-      setUserRole('staff')
+      setUserRole('cskh')
+      setUserCode('CSKH')
       loadUsers()
     } catch (err: any) {
       setFormError(err.message || 'Lỗi tạo tài khoản')
@@ -113,9 +171,9 @@ export const UsersPage: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
         <div>
-          <h1 className="text-xl font-bold text-slate-900 tracking-tight">Quản Lý Tài Khoản Nhân Sự</h1>
+          <h1 className="text-xl font-bold text-slate-900 tracking-tight">Quản Lý Phân Quyền & Tài Khoản Nhân Sự (RBAC)</h1>
           <p className="text-xs text-slate-500 mt-0.5">
-            Cấp quyền tài khoản Nhân viên CSKH (Staff) hoặc Quản lý cơ sở (Manager).
+            Cấp tài khoản theo từng vai trò cụ thể: CSKH, Kinh doanh, Kho vận, Marketing, Kỹ thuật và Quản lý.
           </p>
         </div>
 
@@ -141,12 +199,37 @@ export const UsersPage: React.FC = () => {
         </div>
       )}
 
+      {/* Roles Summary Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2.5">
+        {ROLE_OPTIONS.map((item) => {
+          const badge = ROLE_BADGES[item.role] || ROLE_BADGES.staff
+          const count = users.filter((u) => u.role === item.role).length
+          return (
+            <div
+              key={item.role}
+              className="bg-white p-3 rounded-xl border border-slate-200/80 shadow-xs flex flex-col justify-between"
+            >
+              <div className="flex items-center justify-between mb-1.5">
+                <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold border ${badge.bg} ${badge.text} ${badge.border}`}>
+                  {item.code}
+                </span>
+                <span className="text-xs font-bold text-slate-700">{count}</span>
+              </div>
+              <p className="text-[11px] font-semibold text-slate-800 truncate" title={item.title}>
+                {item.title}
+              </p>
+            </div>
+          )
+        })}
+      </div>
+
       {/* Users Table */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
         <table className="w-full text-left text-xs text-slate-600">
           <thead className="bg-slate-50/80 text-slate-500 font-bold uppercase tracking-wider border-b border-slate-200 text-[11px]">
             <tr>
-              <th className="py-3.5 px-4">Tên hiển thị</th>
+              <th className="py-3.5 px-4">Mã NV</th>
+              <th className="py-3.5 px-4">Tên nhân sự</th>
               <th className="py-3.5 px-4">Tên đăng nhập</th>
               <th className="py-3.5 px-4">Vai trò (Role)</th>
               <th className="py-3.5 px-4">Trạng thái</th>
@@ -155,52 +238,54 @@ export const UsersPage: React.FC = () => {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 font-medium">
-            {users.map((u) => (
-              <tr key={u.id} className="hover:bg-slate-50/90 transition-colors">
-                <td className="py-3 px-4 font-bold text-slate-900">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-7 h-7 rounded-full bg-slate-100 text-slate-700 font-bold text-xs flex items-center justify-center">
-                      {u.name ? u.name.slice(0, 1).toUpperCase() : 'U'}
+            {users.map((u) => {
+              const badge = getRoleBadge(u.role)
+              return (
+                <tr key={u.id} className="hover:bg-slate-50/90 transition-colors">
+                  <td className="py-3 px-4 font-mono font-bold text-slate-700">
+                    <span className="bg-slate-100 px-1.5 py-0.5 rounded text-[11px] border border-slate-200">
+                      {u.code || badge.label}
+                    </span>
+                  </td>
+                  <td className="py-3 px-4 font-bold text-slate-900">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-7 h-7 rounded-full bg-slate-100 text-slate-700 font-bold text-xs flex items-center justify-center">
+                        {u.name ? u.name.slice(0, 1).toUpperCase() : 'U'}
+                      </div>
+                      <span>{u.name}</span>
                     </div>
-                    <span>{u.name}</span>
-                  </div>
-                </td>
-                <td className="py-3 px-4 font-mono">{u.username}</td>
-                <td className="py-3 px-4">
-                  <span
-                    className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
-                      u.role === 'manager'
-                        ? 'bg-purple-50 text-purple-700 border-purple-200'
-                        : 'bg-blue-50 text-blue-700 border-blue-200'
-                    }`}
-                  >
-                    {u.role === 'manager' ? 'Quản lý' : 'Nhân viên'}
-                  </span>
-                </td>
-                <td className="py-3 px-4">
-                  <span className="inline-flex items-center space-x-1 text-emerald-700 font-bold">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                    <span>Đang hoạt động</span>
-                  </span>
-                </td>
-                <td className="py-3 px-4 text-slate-400 text-[11px]">
-                  {formatTime(u.created_at)}
-                </td>
-                <td className="py-3 px-4 text-right">
-                  <button
-                    onClick={() => handleDeleteUser(u.id, u.username)}
-                    className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
-                    title="Xoá tài khoản"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </td>
-              </tr>
-            ))}
+                  </td>
+                  <td className="py-3 px-4 font-mono text-slate-600">{u.username}</td>
+                  <td className="py-3 px-4">
+                    <span
+                      className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${badge.bg} ${badge.text} ${badge.border}`}
+                    >
+                      {getRoleLabel(u.role)}
+                    </span>
+                  </td>
+                  <td className="py-3 px-4">
+                    <span className="inline-flex items-center space-x-1 text-emerald-700 font-bold">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                      <span>Đang hoạt động</span>
+                    </span>
+                  </td>
+                  <td className="py-3 px-4 text-slate-400 text-[11px]">{formatTime(u.created_at)}</td>
+                  <td className="py-3 px-4 text-right">
+                    <button
+                      onClick={() => handleDeleteUser(u.id, u.username)}
+                      className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                      title="Xoá tài khoản"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </td>
+                </tr>
+              )
+            })}
 
             {users.length === 0 && !loading && (
               <tr>
-                <td colSpan={6} className="py-12 text-center text-slate-400">
+                <td colSpan={7} className="py-12 text-center text-slate-400">
                   <UserCog className="w-8 h-8 mx-auto mb-2 text-slate-300" />
                   <span>Chưa có tài khoản phụ nào. Hãy bấm "Thêm nhân sự mới".</span>
                 </td>
@@ -213,7 +298,7 @@ export const UsersPage: React.FC = () => {
       {/* Add User Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
             <h3 className="text-base font-bold text-slate-900">Cấp tài khoản nhân sự mới</h3>
 
             {formError && (
@@ -222,16 +307,30 @@ export const UsersPage: React.FC = () => {
               </div>
             )}
 
-            <form onSubmit={handleCreateUser} className="space-y-3 text-xs">
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1">Tên hiển thị</label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Vd: Nguyễn Thị Mai (CSKH)"
-                  className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-saoviet-500"
-                />
+            <form onSubmit={handleCreateUser} className="space-y-3.5 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Tên hiển thị *</label>
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                    placeholder="Vd: Lê Thảo"
+                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-saoviet-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Mã nhân viên (Code)</label>
+                  <input
+                    type="text"
+                    value={userCode}
+                    onChange={(e) => setUserCode(e.target.value.toUpperCase())}
+                    placeholder="Vd: LT hoặc CSKH"
+                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-saoviet-500 font-mono font-bold"
+                  />
+                </div>
               </div>
 
               <div>
@@ -241,7 +340,7 @@ export const UsersPage: React.FC = () => {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   required
-                  placeholder="mai_cskh"
+                  placeholder="nv_thao"
                   className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-saoviet-500"
                 />
               </div>
@@ -259,15 +358,26 @@ export const UsersPage: React.FC = () => {
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">Vai trò & Phân quyền</label>
+                <label className="block font-semibold text-slate-700 mb-1">Vai trò & Phân quyền (Role)</label>
                 <select
                   value={userRole}
-                  onChange={(e) => setUserRole(e.target.value as any)}
+                  onChange={(e) => handleRoleChange(e.target.value as OpsRole)}
                   className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-saoviet-500 font-semibold"
                 >
-                  <option value="staff">Nhân viên CSKH (Duyệt nháp, xem khách, việc)</option>
-                  <option value="manager">Quản lý (Gộp CRM, xem xu hướng, quét ngay)</option>
+                  {ROLE_OPTIONS.map((item) => (
+                    <option key={item.role} value={item.role}>
+                      {item.title} ({item.code})
+                    </option>
+                  ))}
                 </select>
+
+                {/* Selected role description */}
+                {ROLE_OPTIONS.find((r) => r.role === userRole) && (
+                  <div className="mt-2 p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-600 text-[11px] leading-relaxed">
+                    <span className="font-bold text-slate-800">Quyền hạn: </span>
+                    {ROLE_OPTIONS.find((r) => r.role === userRole)?.desc}
+                  </div>
+                )}
               </div>
 
               <div className="flex items-center justify-end space-x-2 pt-3 border-t border-slate-100">
@@ -281,7 +391,7 @@ export const UsersPage: React.FC = () => {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-4 py-2 font-bold text-white bg-saoviet-500 hover:bg-saoviet-600 rounded-xl shadow-md shadow-saoviet-200 disabled:opacity-50"
+                  className="px-4 py-2 font-bold text-white bg-saoviet-500 hover:bg-saoviet-600 rounded-xl shadow-md shadow-saoviet-200 disabled:opacity-50 cursor-pointer"
                 >
                   {isSubmitting ? 'Đang tạo...' : 'Tạo tài khoản'}
                 </button>

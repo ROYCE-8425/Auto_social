@@ -246,3 +246,181 @@ def test_ops_me_authenticated_owner():
         assert data.get("user") is not None
         assert data["user"]["role"] == "owner"
         assert data.get("data_source") == "real"
+
+
+def test_multi_role_creation_and_directory():
+    """Tạo các tài khoản theo các role chuyên biệt và truy cập danh bạ /ops/directory."""
+    roles_to_test = ["cskh", "sales", "warehouse", "marketing", "technical"]
+    created = []
+    for r in roles_to_test:
+        u = ops_rbac.create_user(f"user_{r}", "password123", role=r, name=f"Nhân sự {r.upper()}")
+        assert u["role"] == r
+        assert u["code"] == ops_rbac.ROLES_REGISTRY[r]["code"]
+        assert len(u["permissions"]) > 0
+        created.append(u)
+
+    from fastapi.testclient import TestClient
+    import main
+    tok = ops_rbac.create_session("u_cskh_1", "user_cskh", "cskh", "CSKH Test")
+    with TestClient(main.app, base_url="http://127.0.0.1", cookies={"ops_session": tok}) as client:
+        res_dir = client.get("/ops/directory")
+        assert res_dir.status_code == 200
+        users = res_dir.json().get("users", [])
+        assert len(users) >= len(roles_to_test)
+        usernames = [x["username"] for x in users]
+        for r in roles_to_test:
+            assert f"user_{r}" in usernames
+
+
+def test_rbac_matrix_cskh():
+    """Chuyên viên CSKH:
+    - Được: Duyệt nháp, gửi/bỏ nháp, tiếp quản Messenger, ghi chú CRM, xem đơn hàng, xem danh bạ.
+    - CẤM: Unmask SĐT, gộp/xoá CRM, cấu hình bot Care, quét ngay, tạo vận đơn, xem chi phí token, buồng lái.
+    """
+    cskh = {"id": "u_cskh", "username": "thao_cskh", "role": "cskh"}
+
+    # Được phép:
+    for path, method in [
+        ("/ops/directory", "GET"),
+        ("/ops/inbox", "GET"),
+        ("/fanpage-care/drafts/123/send", "POST"),
+        ("/fanpage-care/drafts/123/reject", "POST"),
+        ("/fanpage-care/handoff", "POST"),
+        ("/fanpage-care/customers", "GET"),
+        ("/ops/orders", "GET"),
+        ("/ops/orders", "POST"),
+    ]:
+        allowed, reason = ops_rbac.check_access_permission(cskh, path, method)
+        assert allowed is True, f"CSKH bị chặn ở {path}: {reason}"
+
+    # Bị cấm:
+    for path, method in [
+        ("/app", "GET"),
+        ("/terminal", "GET"),
+        ("/ops/users", "GET"),
+        ("/usage/summary", "GET"),
+        ("/fanpage-care/customers/merge", "POST"),
+        ("/fanpage-care/settings", "POST"),
+        ("/fanpage-care/poll-now", "POST"),
+        ("/ops/orders/ord_1/create-shipment", "POST"),
+        ("/ops/shipping/settings", "POST"),
+    ]:
+        allowed, reason = ops_rbac.check_access_permission(cskh, path, method)
+        assert allowed is False, f"CSKH lẽ ra PHẢI bị chặn ở {path}"
+
+
+def test_rbac_matrix_warehouse():
+    """Nhân viên Kho vận:
+    - Được: Xem đơn hàng, tạo vận đơn giao hàng (/create-shipment), xem danh bạ.
+    - CẤM: Duyệt nháp Care, huỷ đơn, gộp CRM, sửa bot Care, xem chi phí token, buồng lái.
+    """
+    kho = {"id": "u_kho", "username": "an_kho", "role": "warehouse"}
+
+    # Được phép:
+    for path, method in [
+        ("/ops/directory", "GET"),
+        ("/ops/orders", "GET"),
+        ("/ops/orders/ord_1/create-shipment", "POST"),
+        ("/ops/orders/ord_1/confirm", "POST"),
+    ]:
+        allowed, reason = ops_rbac.check_access_permission(kho, path, method)
+        assert allowed is True, f"Warehouse bị chặn ở {path}: {reason}"
+
+    # Bị cấm:
+    for path, method in [
+        ("/app", "GET"),
+        ("/fanpage-care/drafts/123/send", "POST"),
+        ("/ops/orders/ord_1/cancel", "POST"),
+        ("/fanpage-care/customers/merge", "POST"),
+        ("/usage/summary", "GET"),
+        ("/ops/users", "GET"),
+    ]:
+        allowed, reason = ops_rbac.check_access_permission(kho, path, method)
+        assert allowed is False, f"Warehouse lẽ ra PHẢI bị chặn ở {path}"
+
+
+def test_rbac_matrix_marketing():
+    """Chuyên viên Marketing & TikTok:
+    - Được: Quản lý chiến dịch tiếp thị, xem radar đối thủ, attribution, đăng bài TikTok.
+    - CẤM: Đổi loop/kit account TikTok (chỉ owner), tạo vận đơn, quản trị users, buồng lái.
+    """
+    mkt = {"id": "u_mkt", "username": "lan_mkt", "role": "marketing"}
+
+    # Được phép:
+    for path, method in [
+        ("/ops/campaigns", "GET"),
+        ("/ops/competitor/radar", "GET"),
+        ("/ops/attribution/matrix", "GET"),
+        ("/tiktok/post", "POST"),
+    ]:
+        allowed, reason = ops_rbac.check_access_permission(mkt, path, method)
+        assert allowed is True, f"Marketing bị chặn ở {path}: {reason}"
+
+    # Bị cấm:
+    for path, method in [
+        ("/app", "GET"),
+        ("/tiktok/loop-toggle", "POST"),
+        ("/tiktok/kit-account", "POST"),
+        ("/ops/orders/ord_1/create-shipment", "POST"),
+        ("/ops/users", "GET"),
+        ("/usage/summary", "GET"),
+    ]:
+        allowed, reason = ops_rbac.check_access_permission(mkt, path, method)
+        assert allowed is False, f"Marketing lẽ ra PHẢI bị chặn ở {path}"
+
+
+def test_rbac_permissions_endpoints(monkeypatch):
+    """Kiểm thử API xem danh mục quyền, cấu hình tùy biến và khôi phục mặc định."""
+    from fastapi.testclient import TestClient
+    import main
+
+    tok_owner = ops_rbac.create_session("u_own", "admin", "owner", "Chủ máy")
+    tok_staff = ops_rbac.create_session("u_stf", "nv_01", "staff", "Nhân viên")
+
+    with TestClient(main.app, base_url="http://127.0.0.1") as client:
+        # 1. Staff gọi GET /ops/rbac/permissions -> được phép xem
+        res_get = client.get("/ops/rbac/permissions", cookies={"ops_session": tok_staff})
+        assert res_get.status_code == 200
+        data = res_get.json()
+        assert "roles" in data
+        assert "catalog" in data
+        assert "matrix" in data
+        assert "default_matrix" in data
+        assert len(data["catalog"]) >= 8
+
+        # 2. Staff thử POST thay đổi ma trận -> Bị 403 Forbidden
+        res_post_staff = client.post(
+            "/ops/rbac/permissions",
+            json={"matrix": {"staff": ["*"]}},
+            cookies={"ops_session": tok_staff}
+        )
+        assert res_post_staff.status_code == 403
+
+        # 3. Owner lưu ma trận phân quyền tùy biến
+        custom_matrix = {
+            "staff": ["care:view", "care:reply", "crm:view", "orders:view"],
+            "owner": []  # Cố tình xóa quyền owner để kiểm tra bảo vệ bất biến
+        }
+        res_save = client.post(
+            "/ops/rbac/permissions",
+            json={"matrix": custom_matrix},
+            cookies={"ops_session": tok_owner}
+        )
+        assert res_save.status_code == 200
+        saved_data = res_save.json()
+        assert saved_data["ok"] is True
+        # Bất biến: Owner luôn luôn giữ [*]
+        assert saved_data["matrix"]["owner"] == ["*"]
+        assert "care:view" in saved_data["matrix"]["staff"]
+
+        # 4. Owner khôi phục về mặc định
+        res_reset = client.post(
+            "/ops/rbac/permissions/reset",
+            cookies={"ops_session": tok_owner}
+        )
+        assert res_reset.status_code == 200
+        reset_data = res_reset.json()
+        assert reset_data["ok"] is True
+        assert reset_data["matrix"]["owner"] == ["*"]
+
+

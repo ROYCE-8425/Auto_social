@@ -179,6 +179,21 @@ export const XTwitterIcon: React.FC<{ className?: string }> = ({ className = 'w-
   </svg>
 )
 
+export const XTwitterBadge: React.FC<{ className?: string; size?: 'sm' | 'md' | 'lg' }> = ({
+  className = '',
+  size = 'md',
+}) => {
+  const sizeClass = size === 'sm' ? 'w-6 h-6' : size === 'lg' ? 'w-12 h-12' : 'w-10 h-10'
+  const iconSize = size === 'sm' ? 'w-3.5 h-3.5' : size === 'lg' ? 'w-7 h-7' : 'w-5 h-5'
+  return (
+    <div
+      className={`${sizeClass} rounded-xl bg-black text-white flex items-center justify-center shadow-sm shrink-0 border border-slate-800 ${className}`}
+    >
+      <XTwitterIcon className={iconSize} />
+    </div>
+  )
+}
+
 // ==========================================
 // 8. LINKEDIN
 // ==========================================
@@ -187,6 +202,50 @@ export const LinkedInIcon: React.FC<{ className?: string }> = ({ className = 'w-
     <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" />
   </svg>
 )
+
+export const LinkedInBadge: React.FC<{ className?: string; size?: 'sm' | 'md' | 'lg' }> = ({
+  className = '',
+  size = 'md',
+}) => {
+  const sizeClass = size === 'sm' ? 'w-6 h-6' : size === 'lg' ? 'w-12 h-12' : 'w-10 h-10'
+  const iconSize = size === 'sm' ? 'w-3.5 h-3.5' : size === 'lg' ? 'w-7 h-7' : 'w-5 h-5'
+  return (
+    <div
+      className={`${sizeClass} rounded-xl bg-[#0A66C2] text-white flex items-center justify-center shadow-sm shrink-0 ${className}`}
+    >
+      <LinkedInIcon className={iconSize} />
+    </div>
+  )
+}
+
+// ==========================================
+// 9. ZALO
+// ==========================================
+export const ZaloIcon: React.FC<{ className?: string }> = ({ className = 'w-5 h-5' }) => (
+  <svg viewBox="0 0 48 48" fill="none" className={className}>
+    <path
+      fillRule="evenodd"
+      clipRule="evenodd"
+      d="M24 4C12.954 4 4 12.507 4 23c0 4.116 1.411 7.915 3.823 10.982L6.11 41.69a1.5 1.5 0 001.996 1.79l8.69-3.725C19.16 41.282 21.522 42 24 42c11.046 0 20-8.507 20-19S35.046 4 24 4zm-7.5 13h15a1.5 1.5 0 011.06 2.56L22.12 29.5H31.5a1.5 1.5 0 010 3h-15a1.5 1.5 0 01-1.06-2.56L25.88 20H16.5a1.5 1.5 0 010-3z"
+      fill="currentColor"
+    />
+  </svg>
+)
+
+export const ZaloBadge: React.FC<{ className?: string; size?: 'sm' | 'md' | 'lg' }> = ({
+  className = '',
+  size = 'md',
+}) => {
+  const sizeClass = size === 'sm' ? 'w-6 h-6' : size === 'lg' ? 'w-12 h-12' : 'w-10 h-10'
+  const iconSize = size === 'sm' ? 'w-3.5 h-3.5' : size === 'lg' ? 'w-7 h-7' : 'w-5 h-5'
+  return (
+    <div
+      className={`${sizeClass} rounded-xl bg-[#0068FF] text-white flex items-center justify-center shadow-sm shadow-blue-500/20 shrink-0 ${className}`}
+    >
+      <ZaloIcon className={iconSize} />
+    </div>
+  )
+}
 
 // ==========================================
 // UNIVERSAL PLATFORM BADGE COMPONENT
@@ -197,7 +256,12 @@ export type PlatformType =
   | 'tiktok'
   | 'instagram'
   | 'youtube'
+  | 'twitter'
+  | 'x'
+  | 'x (twitter)'
   | 'threads'
+  | 'zalo'
+  | 'linkedin'
   | 'website'
   | string
 
@@ -206,7 +270,7 @@ export const PlatformBadge: React.FC<{
   size?: 'sm' | 'md' | 'lg'
   className?: string
 }> = ({ platform, size = 'md', className = '' }) => {
-  const norm = platform.toLowerCase()
+  const norm = (platform || '').toLowerCase()
   if (norm.includes('facebook') || norm === 'fb') {
     return <FacebookBadge size={size} className={className} />
   }
@@ -222,8 +286,17 @@ export const PlatformBadge: React.FC<{
   if (norm.includes('youtube') || norm === 'yt') {
     return <YouTubeBadge size={size} className={className} />
   }
+  if (norm.includes('twitter') || norm === 'x' || norm.includes('x (twitter)')) {
+    return <XTwitterBadge size={size} className={className} />
+  }
   if (norm.includes('thread')) {
     return <ThreadsBadge size={size} className={className} />
+  }
+  if (norm.includes('zalo')) {
+    return <ZaloBadge size={size} className={className} />
+  }
+  if (norm.includes('linkedin')) {
+    return <LinkedInBadge size={size} className={className} />
   }
 
   // Fallback web / generic
@@ -244,7 +317,7 @@ export const PlatformPill: React.FC<{ platform: PlatformType; className?: string
   platform,
   className = '',
 }) => {
-  const norm = platform.toLowerCase()
+  const norm = (platform || '').toLowerCase()
   if (norm.includes('facebook') || norm === 'fb') {
     return (
       <span
@@ -278,7 +351,7 @@ export const PlatformPill: React.FC<{ platform: PlatformType; className?: string
   if (norm.includes('instagram') || norm === 'ig') {
     return (
       <span
-        className={`inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200/80 shadow-2xs ${className}`}
+        className={`inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-gradient-to-r from-amber-500/10 via-rose-500/10 to-purple-500/10 text-rose-700 border border-rose-200/80 shadow-2xs ${className}`}
       >
         <InstagramIcon className="w-3.5 h-3.5 text-[#E60064]" />
         <span>Instagram</span>
@@ -295,6 +368,16 @@ export const PlatformPill: React.FC<{ platform: PlatformType; className?: string
       </span>
     )
   }
+  if (norm.includes('twitter') || norm === 'x' || norm.includes('x (twitter)')) {
+    return (
+      <span
+        className={`inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-black text-white shadow-2xs ${className}`}
+      >
+        <XTwitterIcon className="w-3.5 h-3.5" />
+        <span>X (Twitter)</span>
+      </span>
+    )
+  }
   if (norm.includes('thread')) {
     return (
       <span
@@ -302,6 +385,26 @@ export const PlatformPill: React.FC<{ platform: PlatformType; className?: string
       >
         <ThreadsIcon className="w-3.5 h-3.5 text-black" />
         <span>Threads</span>
+      </span>
+    )
+  }
+  if (norm.includes('zalo')) {
+    return (
+      <span
+        className={`inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-blue-50 text-[#0068FF] border border-blue-200/80 shadow-2xs ${className}`}
+      >
+        <ZaloIcon className="w-3.5 h-3.5" />
+        <span>Zalo</span>
+      </span>
+    )
+  }
+  if (norm.includes('linkedin')) {
+    return (
+      <span
+        className={`inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-blue-50 text-[#0A66C2] border border-blue-200/80 shadow-2xs ${className}`}
+      >
+        <LinkedInIcon className="w-3.5 h-3.5" />
+        <span>LinkedIn</span>
       </span>
     )
   }

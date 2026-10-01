@@ -8,6 +8,8 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
+      '/api': 'http://127.0.0.1:7777',
+      '/ops': 'http://127.0.0.1:7777',
       '/fanpage-care': 'http://127.0.0.1:7777',
       '/ops/auth': 'http://127.0.0.1:7777',
       '/ops/me': 'http://127.0.0.1:7777',

@@ -15,6 +15,7 @@ import {
   Plus,
   Calendar,
   ChevronDown,
+  ChevronUp,
   Sparkles,
   Flame,
   Copy,
@@ -105,6 +106,20 @@ export const Overview: React.FC<OverviewProps> = ({ onNavigate }) => {
   const [briefingCopied, setBriefingCopied] = useState<boolean>(false)
   const [isPolling, setIsPolling] = useState<boolean>(false)
   const [pollNotice, setPollNotice] = useState<string | null>(null)
+  const [isBriefingCollapsed, setIsBriefingCollapsed] = useState<boolean>(() => {
+    const saved = localStorage.getItem('ops_briefing_collapsed')
+    return saved !== null ? saved === 'true' : true
+  })
+
+  const toggleBriefing = () => {
+    setIsBriefingCollapsed((prev) => {
+      const next = !prev
+      try {
+        localStorage.setItem('ops_briefing_collapsed', String(next))
+      } catch {}
+      return next
+    })
+  }
 
   const loadData = () => {
     api.getCareState().then((s) => {
@@ -176,54 +191,27 @@ export const Overview: React.FC<OverviewProps> = ({ onNavigate }) => {
     year: 'numeric',
   }).format(new Date())
 
-  const kpis = briefing?.briefing?.kpis || {
+  const kpis = briefing?.briefing?.kpis || (briefing as any)?.kpis || {
     inbox_yesterday: totalEvents,
     new_leads: leadsCount,
-    orders_closed: 8,
-    revenue_vnd: 2800000,
+    orders_closed: 0,
+    revenue_vnd: 0,
   }
-  const topPost = briefing?.briefing?.top_converting_post || (briefing as any)?.top_post || {
-    id: 'post_01',
-    title: 'Game Steam Offline Bản Quyền Ưu Đãi Cực Hot - Game Giá Rẻ BSN',
-    platform: 'facebook',
-    orders: 6,
-    revenue_vnd: 2100000,
-  }
+  const topPost = briefing?.briefing?.top_converting_post || (briefing as any)?.top_post || null
   const hotLeads = (briefing?.briefing?.urgent_hot_leads && briefing.briefing.urgent_hot_leads.length > 0)
     ? briefing.briefing.urgent_hot_leads
     : ((briefing as any)?.hot_leads && (briefing as any).hot_leads.length > 0)
       ? (briefing as any).hot_leads
-      : [
-          {
-            lead_id: 'c_5614cdaca7e7',
-            name: 'Trần Như Ý.',
-            score: 92,
-            intent: 'Hỏi giá game: "giá sao"',
-            next_best_action: 'Nhắn tin báo giá ưu đãi và hướng dẫn cài game',
-            assigned_to: 'CSKH Fanpage',
-            phone: 'Chưa có SĐT',
-          },
-          {
-            lead_id: 'c_a366586ea923',
-            name: 'Lê Hoàng Tiến',
-            score: 88,
-            intent: 'Quan tâm game Palworld bản quyền',
-            next_best_action: 'Gửi link tải & hướng dẫn kích hoạt tài khoản',
-            assigned_to: 'CSKH Fanpage',
-            phone: 'Chưa có SĐT',
-          },
-        ]
-  const warnings = briefing?.briefing?.warnings || [
-    'Hệ thống kết nối Fanpage ổn định, sẵn sàng nhận phản hồi từ khách.',
-  ]
+      : []
+  const warnings = briefing?.briefing?.warnings || []
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-5">
       {/* GREETING & DATE PICKER HEADER */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-black text-slate-900 tracking-tight">
+            <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
               Xin chào, Quản trị viên!
             </h1>
             <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200/60 shadow-2xs">
@@ -231,11 +219,11 @@ export const Overview: React.FC<OverviewProps> = ({ onNavigate }) => {
               AI Ops Center
             </span>
           </div>
-          <p className="text-sm text-slate-500 font-medium mt-0.5">
+          <p className="text-xs text-slate-500 font-medium mt-0.5">
             Dữ liệu tự động đồng bộ từ Fanpage thật: phát hiện việc, phân loại hội thoại và chăm sóc khách hàng.
           </p>
           {pollNotice && (
-            <div className="mt-2 text-xs font-semibold text-blue-600 bg-blue-50 border border-blue-200 px-3 py-1 rounded-lg inline-flex items-center gap-1.5 animate-fade-in">
+            <div className="mt-1.5 text-xs font-semibold text-blue-600 bg-blue-50 border border-blue-200 px-2.5 py-0.5 rounded-lg inline-flex items-center gap-1.5 animate-fade-in">
               <RefreshCw className={`w-3 h-3 ${isPolling ? 'animate-spin' : ''}`} />
               <span>{pollNotice}</span>
             </div>
@@ -248,7 +236,7 @@ export const Overview: React.FC<OverviewProps> = ({ onNavigate }) => {
             type="button"
             onClick={handlePollNow}
             disabled={isPolling}
-            className="flex items-center space-x-1.5 px-3 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-sm shadow-blue-200 disabled:opacity-60 cursor-pointer"
+            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-sm shadow-blue-200 disabled:opacity-60 cursor-pointer"
             title="Kéo bình luận & tin nhắn mới nhất trực tiếp từ Meta Facebook Fanpage"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isPolling ? 'animate-spin' : ''}`} />
@@ -256,235 +244,330 @@ export const Overview: React.FC<OverviewProps> = ({ onNavigate }) => {
           </button>
 
           {/* Date Picker Button Card */}
-          <div className="bg-white border border-slate-200 rounded-xl px-4 py-2 flex items-center gap-3 shadow-2xs">
-            <Calendar className="w-4 h-4 text-slate-500" />
+          <div className="bg-white border border-slate-200 rounded-xl px-3 py-1.5 flex items-center gap-2.5 shadow-2xs">
+            <Calendar className="w-3.5 h-3.5 text-slate-500" />
             <div className="text-left">
-              <div className="text-xs font-bold text-slate-900 leading-tight">Hôm nay</div>
-              <div className="text-xs text-slate-500 font-medium">{todayFormatted}</div>
+              <div className="text-[11px] font-bold text-slate-900 leading-tight">Hôm nay</div>
+              <div className="text-[10px] text-slate-500 font-medium">{todayFormatted}</div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* AI DAILY BRIEFING WIDGET (Pillar 1: Báo cáo sáng 08:00 cho Sếp) */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white p-5 sm:p-6 shadow-xl border border-indigo-900/60">
-        {/* Glow ambient background effects */}
-        <div className="absolute top-0 right-0 -mt-10 -mr-10 w-72 h-72 bg-indigo-500/15 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-1/3 -mb-10 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
-
-        <div className="relative z-10 space-y-5">
-          {/* Header Row */}
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 border-b border-indigo-800/40 pb-4">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-400 to-amber-600 flex items-center justify-center text-slate-950 font-black shadow-lg shadow-amber-500/20">
-                <Sparkles className="w-5 h-5" />
+      {/* AI DAILY BRIEFING WIDGET (Collapsible: Compact Banner vs Detailed Drawer) */}
+      {isBriefingCollapsed ? (
+        /* COMPACT / COLLAPSED MODE */
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-amber-500/10 via-white to-blue-500/10 p-3 sm:p-3.5 shadow-2xs border border-amber-200/80 transition-all animate-fade-in">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+            <div className="flex items-center space-x-2.5 min-w-0">
+              <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center font-bold border border-amber-200 flex-shrink-0 shadow-2xs">
+                <Sparkles className="w-4 h-4" />
               </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h2 className="text-base font-bold tracking-tight text-white">
-                    AI Daily Briefing · Báo cáo điều hành 08:00
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h2 className="text-xs sm:text-sm font-bold tracking-tight text-slate-950 truncate">
+                    AI Daily Briefing · 08:00
                   </h2>
-                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                    Tự động gửi mỗi sáng
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 whitespace-nowrap">
+                    Tự động mỗi sáng
                   </span>
+                  {warnings.length > 0 && (
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 whitespace-nowrap flex items-center gap-1">
+                      <AlertTriangle className="w-3 h-3 text-amber-600" />
+                      Có cảnh báo
+                    </span>
+                  )}
                 </div>
-                <p className="text-xs text-slate-300 mt-0.5">
+                <p className="text-[11px] text-slate-600 truncate mt-0.5 max-w-xl">
                   {briefing?.briefing?.greeting || 'Chào buổi sáng, báo cáo nhanh hiệu quả vận hành và lead nóng cần chốt hôm nay.'}
                 </p>
               </div>
             </div>
 
-            {/* Quick Actions (Send Telegram / Zalo / Copy) */}
-            <div className="flex items-center flex-wrap gap-2">
+            {/* Quick metric pills + Actions + Expand Toggle */}
+            <div className="flex items-center flex-wrap gap-2 flex-shrink-0">
+              <div className="hidden sm:flex items-center gap-2 bg-white/90 border border-slate-200/90 rounded-xl px-2.5 py-1 text-[11px] font-semibold text-slate-700 shadow-2xs">
+                <span>Inbox: <b className="text-slate-900">{kpis.inbox_yesterday}</b></span>
+                <span className="text-slate-300">·</span>
+                <span>Lead: <b className="text-amber-700">{kpis.new_leads}</b></span>
+                <span className="text-slate-300">·</span>
+                <span>Đơn: <b className="text-emerald-700">{kpis.orders_closed}</b></span>
+                <span className="text-slate-300">·</span>
+                <span>Doanh thu: <b className="text-blue-700">{kpis.revenue_vnd.toLocaleString('vi-VN')} đ</b></span>
+              </div>
+
               <button
                 onClick={() => handleSendBriefing('telegram')}
                 disabled={briefingSending !== null}
-                className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-blue-500 hover:bg-blue-600 text-white text-xs font-semibold shadow-md shadow-blue-500/20 transition-all disabled:opacity-50"
+                className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-semibold shadow-xs transition-all disabled:opacity-50"
+                title="Gửi báo cáo qua Telegram"
               >
-                <Send className="w-3.5 h-3.5" />
-                <span>{briefingSending === 'telegram' ? 'Đang gửi...' : 'Gửi Telegram'}</span>
+                <Send className="w-3 h-3" />
+                <span className="hidden md:inline">{briefingSending === 'telegram' ? 'Đang gửi...' : 'Telegram'}</span>
               </button>
 
               <button
                 onClick={() => handleSendBriefing('zalo')}
                 disabled={briefingSending !== null}
-                className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold shadow-md shadow-indigo-600/20 transition-all disabled:opacity-50"
+                className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-[11px] font-semibold shadow-xs transition-all disabled:opacity-50"
+                title="Gửi báo cáo qua Zalo"
               >
-                <Zap className="w-3.5 h-3.5" />
-                <span>{briefingSending === 'zalo' ? 'Đang gửi...' : 'Gửi Zalo'}</span>
+                <Zap className="w-3 h-3" />
+                <span className="hidden md:inline">{briefingSending === 'zalo' ? 'Đang gửi...' : 'Zalo'}</span>
               </button>
 
               <button
                 onClick={handleCopyBriefing}
-                className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-all"
+                className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-xl bg-white hover:bg-slate-50 text-slate-700 text-[11px] font-semibold border border-slate-200 transition-all shadow-2xs"
+                title="Sao chép báo cáo"
               >
-                {briefingCopied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                <span>{briefingCopied ? 'Đã sao chép' : 'Copy'}</span>
+                {briefingCopied ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                <span className="hidden md:inline">{briefingCopied ? 'Đã sao chép' : 'Copy'}</span>
+              </button>
+
+              <button
+                onClick={toggleBriefing}
+                className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 text-xs font-bold border border-amber-300 transition-all cursor-pointer shadow-2xs"
+                title="Mở rộng chi tiết AI Briefing"
+              >
+                <span>Chi tiết ({hotLeads.length} lead)</span>
+                <ChevronDown className="w-3.5 h-3.5" />
               </button>
             </div>
           </div>
-
-          {/* Feedback notice toast if present */}
-          {briefingSentNotice && (
-            <div className="p-2.5 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-200 text-xs font-medium flex items-center gap-2">
-              <Check className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-              <span>{briefingSentNotice}</span>
-            </div>
-          )}
-
-          {/* 4 Gold KPI Highlights */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-            {/* KPI 1 */}
-            <div className="bg-slate-800/60 rounded-xl p-3.5 border border-indigo-900/40">
-              <span className="text-[11px] font-medium text-slate-400 block">Inbox 24h</span>
-              <div className="text-xl sm:text-2xl font-black text-white mt-1">
-                {kpis.inbox_yesterday}
+        </div>
+      ) : (
+        /* EXPANDED DETAILED MODE */
+        <div className="relative overflow-hidden rounded-2xl bg-white text-slate-900 p-4 sm:p-5 shadow-sm border border-slate-200/90 transition-all animate-fade-in">
+          <div className="space-y-4">
+            {/* Header Row */}
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 border-b border-slate-200/80 pb-3">
+              <div className="flex items-center space-x-3">
+                <div className="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center font-black border border-amber-200 shadow-2xs">
+                  <Sparkles className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-base font-bold tracking-tight text-slate-950">
+                      AI Daily Briefing · Báo cáo điều hành 08:00
+                    </h2>
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      Tự động gửi mỗi sáng
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-600 mt-0.5">
+                    {briefing?.briefing?.greeting || 'Chào buổi sáng, báo cáo nhanh hiệu quả vận hành và lead nóng cần chốt hôm nay.'}
+                  </p>
+                </div>
               </div>
-              <span className="text-[11px] text-emerald-400 font-semibold mt-0.5 flex items-center gap-1">
-                <TrendingUp className="w-3 h-3" />
-                Tương tác tích cực
-              </span>
-            </div>
 
-            {/* KPI 2 */}
-            <div className="bg-slate-800/60 rounded-xl p-3.5 border border-indigo-900/40">
-              <span className="text-[11px] font-medium text-slate-400 block">Lead mới</span>
-              <div className="text-xl sm:text-2xl font-black text-amber-300 mt-1">
-                {kpis.new_leads}
+              {/* Quick Actions + Collapse Button */}
+              <div className="flex items-center flex-wrap gap-2">
+                <button
+                  onClick={() => handleSendBriefing('telegram')}
+                  disabled={briefingSending !== null}
+                  className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-sm transition-all disabled:opacity-50"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                  <span>{briefingSending === 'telegram' ? 'Đang gửi...' : 'Gửi Telegram'}</span>
+                </button>
+
+                <button
+                  onClick={() => handleSendBriefing('zalo')}
+                  disabled={briefingSending !== null}
+                  className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-xs font-semibold shadow-sm transition-all disabled:opacity-50"
+                >
+                  <Zap className="w-3.5 h-3.5" />
+                  <span>{briefingSending === 'zalo' ? 'Đang gửi...' : 'Gửi Zalo'}</span>
+                </button>
+
+                <button
+                  onClick={handleCopyBriefing}
+                  className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold border border-slate-200 transition-all shadow-2xs"
+                >
+                  {briefingCopied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                  <span>{briefingCopied ? 'Đã sao chép' : 'Copy'}</span>
+                </button>
+
+                <button
+                  onClick={toggleBriefing}
+                  className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold border border-slate-300 transition-all cursor-pointer shadow-2xs"
+                  title="Thu gọn AI Briefing"
+                >
+                  <span>Thu gọn</span>
+                  <ChevronUp className="w-3.5 h-3.5" />
+                </button>
               </div>
-              <span className="text-[11px] text-amber-300/80 font-semibold mt-0.5 flex items-center gap-1">
-                <Flame className="w-3 h-3" />
-                Đủ điều kiện tư vấn
-              </span>
             </div>
 
-            {/* KPI 3 */}
-            <div className="bg-slate-800/60 rounded-xl p-3.5 border border-indigo-900/40">
-              <span className="text-[11px] font-medium text-slate-400 block">Đơn chốt thành công</span>
-              <div className="text-xl sm:text-2xl font-black text-emerald-400 mt-1">
-                {kpis.orders_closed}
+            {/* Feedback notice toast if present */}
+            {briefingSentNotice && (
+              <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-medium flex items-center gap-2">
+                <Check className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                <span>{briefingSentNotice}</span>
               </div>
-              <span className="text-[11px] text-emerald-400/80 font-semibold mt-0.5">
-                Tỷ lệ chốt: 53.6%
-              </span>
-            </div>
+            )}
 
-            {/* KPI 4 */}
-            <div className="bg-slate-800/60 rounded-xl p-3.5 border border-indigo-900/40">
-              <span className="text-[11px] font-medium text-slate-400 block">Doanh thu ghi nhận</span>
-              <div className="text-xl sm:text-2xl font-black text-white mt-1">
-                {kpis.revenue_vnd.toLocaleString('vi-VN')} đ
+            {/* 4 Gold KPI Highlights */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+              <div className="bg-slate-50 rounded-xl p-3 border border-slate-200/80">
+                <span className="text-[11px] font-medium text-slate-500 block">Inbox 24h</span>
+                <div className="text-xl font-black text-slate-950 mt-1">
+                  {kpis.inbox_yesterday}
+                </div>
+                <span className="text-[11px] text-emerald-700 font-semibold mt-0.5 flex items-center gap-1">
+                  <TrendingUp className="w-3 h-3" />
+                  Tương tác tích cực
+                </span>
               </div>
-              <span className="text-[11px] text-indigo-300 font-semibold mt-0.5">
-                Từ phễu đa kênh
-              </span>
-            </div>
-          </div>
 
-          {/* 2-Column Detail Block (Top Post Attribution & Hot Leads with Next Best Action) */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 pt-1">
-            {/* Left: Top Converting Content & Bottleneck Warning */}
-            <div className="space-y-3">
-              {/* Top Converting Content Card */}
-              <div className="bg-slate-800/50 rounded-xl p-4 border border-indigo-900/40">
+              <div className="bg-amber-50 rounded-xl p-3 border border-amber-200/80">
+                <span className="text-[11px] font-medium text-amber-800 block">Lead mới</span>
+                <div className="text-xl font-black text-amber-700 mt-1">
+                  {kpis.new_leads}
+                </div>
+                <span className="text-[11px] text-amber-700 font-semibold mt-0.5 flex items-center gap-1">
+                  <Flame className="w-3 h-3" />
+                  Đủ điều kiện tư vấn
+                </span>
+              </div>
+
+              <div className="bg-emerald-50 rounded-xl p-3 border border-emerald-200/80">
+                <span className="text-[11px] font-medium text-emerald-800 block">Đơn chốt thành công</span>
+                <div className="text-xl font-black text-emerald-700 mt-1">
+                  {kpis.orders_closed}
+                </div>
+                <span className="text-[11px] text-emerald-700 font-semibold mt-0.5">
+                  Tỷ lệ chốt: 53.6%
+                </span>
+              </div>
+
+              <div className="bg-sky-50 rounded-xl p-3 border border-sky-200/80">
+                <span className="text-[11px] font-medium text-sky-800 block">Doanh thu ghi nhận</span>
+                <div className="text-xl font-black text-slate-950 mt-1">
+                  {kpis.revenue_vnd.toLocaleString('vi-VN')} đ
+                </div>
+                <span className="text-[11px] text-sky-700 font-semibold mt-0.5">
+                  Từ phễu đa kênh
+                </span>
+              </div>
+            </div>
+
+            {/* 2-Column Detail Block */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 pt-1">
+              {/* Left: Top Converting Content & Bottleneck Warning */}
+              <div className="space-y-3">
+                <div className="bg-slate-50 rounded-xl p-3.5 border border-slate-200/80">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center space-x-2">
+                      <Award className="w-4 h-4 text-amber-600" />
+                      <span className="text-xs font-bold text-slate-900">
+                        Nội dung tạo doanh thu cao nhất hôm qua
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => onNavigate('trends')}
+                      className="text-[11px] font-semibold text-blue-600 hover:text-blue-700 flex items-center space-x-1"
+                    >
+                      <span>Xem ma trận</span>
+                      <ArrowRight className="w-3 h-3" />
+                    </button>
+                  </div>
+                  {topPost && topPost.title ? (
+                    <div className="p-2.5 rounded-lg bg-white border border-slate-200">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-slate-950 line-clamp-1">{topPost.title}</span>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200 uppercase ml-2 flex-shrink-0">
+                          {topPost.platform || 'Nội dung'}
+                        </span>
+                      </div>
+                      <div className="mt-1.5 flex items-center justify-between text-xs text-slate-600">
+                        <span>Đã tạo: <strong className="text-emerald-700">{topPost.orders || 0} đơn</strong></span>
+                        <span>Doanh thu: <strong className="text-slate-950">{(topPost.revenue_vnd || 0).toLocaleString('vi-VN')} đ</strong></span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="p-3.5 rounded-lg bg-white border border-dashed border-slate-300 text-center">
+                      <p className="text-xs text-slate-500">Chưa có bài đăng nào tạo doanh thu hoặc dữ liệu chuyển đổi.</p>
+                    </div>
+                  )}
+                </div>
+
+                {warnings.length > 0 && (
+                  <div className="bg-amber-50 rounded-xl p-3 border border-amber-200 flex items-start gap-2.5">
+                    <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                    <div className="text-xs text-amber-900">
+                      <span className="font-bold block mb-0.5">Cảnh báo điểm nghẽn chuyển đổi:</span>
+                      <p className="text-amber-800 leading-relaxed">{warnings[0]}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Right: Urgent Hot Leads - Scrollable Container */}
+              <div className="bg-slate-50 rounded-xl p-3.5 border border-slate-200/80 flex flex-col">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center space-x-2">
-                    <Award className="w-4 h-4 text-amber-400" />
-                    <span className="text-xs font-bold text-slate-200">
-                      Nội dung tạo doanh thu cao nhất hôm qua
+                    <Flame className="w-4 h-4 text-rose-600" />
+                    <span className="text-xs font-bold text-slate-900">
+                      Lead nóng cần ưu tiên xử lý sáng nay ({hotLeads.length})
                     </span>
                   </div>
                   <button
-                    onClick={() => onNavigate('trends')}
-                    className="text-[11px] font-semibold text-indigo-300 hover:text-indigo-200 flex items-center space-x-1"
+                    onClick={() => onNavigate('inbox')}
+                    className="text-[11px] font-semibold text-blue-600 hover:text-blue-700 flex items-center space-x-1"
                   >
-                    <span>Xem ma trận</span>
+                    <span>Mở Inbox</span>
                     <ArrowRight className="w-3 h-3" />
                   </button>
                 </div>
-                <div className="p-3 rounded-lg bg-slate-900/60 border border-slate-700/50">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-white line-clamp-1">{topPost.title}</span>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-pink-500/20 text-pink-300 uppercase ml-2 flex-shrink-0">
-                      {topPost.platform}
-                    </span>
-                  </div>
-                  <div className="mt-2 flex items-center justify-between text-xs text-slate-300">
-                    <span>Đã tạo: <strong className="text-emerald-400">{topPost.orders} đơn</strong></span>
-                    <span>Doanh thu: <strong className="text-white">{topPost.revenue_vnd.toLocaleString('vi-VN')} đ</strong></span>
-                  </div>
-                </div>
-              </div>
 
-              {/* Warnings / Bottlenecks */}
-              {warnings.length > 0 && (
-                <div className="bg-amber-950/40 rounded-xl p-3.5 border border-amber-800/40 flex items-start gap-2.5">
-                  <AlertTriangle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
-                  <div className="text-xs text-amber-200">
-                    <span className="font-bold block mb-0.5">Cảnh báo điểm nghẽn chuyển đổi:</span>
-                    <p className="text-amber-200/90 leading-relaxed">{warnings[0]}</p>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Right: Urgent Hot Leads & Next Best Action */}
-            <div className="bg-slate-800/50 rounded-xl p-4 border border-indigo-900/40">
-              <div className="flex items-center justify-between mb-2.5">
-                <div className="flex items-center space-x-2">
-                  <Flame className="w-4 h-4 text-rose-400" />
-                  <span className="text-xs font-bold text-slate-200">
-                    Lead nóng cần ưu tiên xử lý sáng nay
-                  </span>
-                </div>
-                <button
-                  onClick={() => onNavigate('inbox')}
-                  className="text-[11px] font-semibold text-indigo-300 hover:text-indigo-200 flex items-center space-x-1"
-                >
-                  <span>Mở Inbox</span>
-                  <ArrowRight className="w-3 h-3" />
-                </button>
-              </div>
-
-              <div className="space-y-2">
-                {hotLeads.map((hl: any) => (
-                  <div
-                    key={hl.lead_id}
-                    onClick={() => onNavigate('inbox')}
-                    className="p-3 rounded-lg bg-slate-900/60 border border-slate-700/50 hover:border-indigo-500/50 transition-all cursor-pointer group"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <span className="text-xs font-bold text-white group-hover:text-indigo-300 transition-colors">
-                          {hl.name}
-                        </span>
-                        {hl.phone && (
-                          <span className="text-[11px] text-slate-400 font-mono flex items-center gap-1">
-                            <PhoneCall className="w-3 h-3 text-slate-500" />
-                            {hl.phone}
+                <div className="max-h-64 overflow-y-auto pr-1 space-y-2">
+                  {hotLeads.length > 0 ? (
+                    hotLeads.map((hl: any) => (
+                      <div
+                        key={hl.lead_id || hl.id}
+                        onClick={() => onNavigate('inbox')}
+                        className="p-2.5 rounded-lg bg-white border border-slate-200 hover:border-rose-300 hover:shadow-xs transition-all cursor-pointer group"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2">
+                            <span className="text-xs font-bold text-slate-950 group-hover:text-rose-700 transition-colors">
+                              {hl.name}
+                            </span>
+                            {hl.phone && (
+                              <span className="text-[11px] text-slate-500 font-mono flex items-center gap-1">
+                                <PhoneCall className="w-3 h-3 text-slate-400" />
+                                {hl.phone}
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200 flex items-center gap-1">
+                            <Flame className="w-2.5 h-2.5" />
+                            {hl.score}đ · Hot
                           </span>
-                        )}
-                      </div>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/40 flex items-center gap-1">
-                        <Flame className="w-2.5 h-2.5" />
-                        {hl.score}đ · Hot
-                      </span>
-                    </div>
+                        </div>
 
-                    <div className="mt-1.5 flex items-start gap-1.5 text-xs text-amber-200/90 bg-amber-500/10 p-2 rounded border border-amber-500/20">
-                      <Zap className="w-3.5 h-3.5 text-amber-400 flex-shrink-0 mt-0.5" />
-                      <div>
-                        <span className="font-semibold text-amber-300 block text-[11px]">Hành động kế tiếp:</span>
-                        <p className="text-[11px] text-slate-200 leading-snug">{hl.next_best_action}</p>
+                        <div className="mt-1 flex items-start gap-1.5 text-[11px] text-amber-900 bg-amber-50 px-2 py-1 rounded border border-amber-200">
+                          <Zap className="w-3 h-3 text-amber-600 flex-shrink-0 mt-0.5" />
+                          <div>
+                            <span className="font-semibold text-amber-800">Hành động: </span>
+                            <span className="text-slate-700">{hl.next_best_action || hl.action}</span>
+                          </div>
+                        </div>
                       </div>
+                    ))
+                  ) : (
+                    <div className="p-4 rounded-lg bg-white border border-dashed border-slate-300 text-center py-6">
+                      <p className="text-xs text-slate-500">Chưa có lead nóng mới cần ưu tiên xử lý hôm nay.</p>
                     </div>
-                  </div>
-                ))}
+                  )}
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* ROW 1: 6 KPI METRIC CARDS */}
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">

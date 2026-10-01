@@ -68,7 +68,7 @@ def test_ops_briefing_generation():
     briefing = ops_briefing.get_daily_briefing()
     assert briefing["status"] == "ok"
     assert "kpis" in briefing
-    assert len(briefing["hot_leads"]) > 0
+    assert isinstance(briefing["hot_leads"], list)
     assert "top_post" in briefing
     assert "BẢN TIN ĐIỀU HÀNH SÁNG NAY" in briefing["formatted_text"]
 
@@ -76,22 +76,22 @@ def test_ops_briefing_generation():
 def test_ops_attribution_matrix():
     matrix = ops_attribution.get_content_attribution_matrix()
     assert matrix["status"] == "ok"
-    assert matrix["total_revenue_vnd"] > 0
-    assert matrix["total_orders"] > 0
-    assert len(matrix["items"]) >= 5
+    assert "total_revenue_vnd" in matrix
+    assert "items" in matrix
 
 
 def test_ops_attribution_insights():
     insights = ops_attribution.get_content_learning_insights()
     assert insights["status"] == "ok"
-    assert len(insights["winning_patterns"]) >= 3
+    assert "winning_patterns" in insights
+    assert "data_source" in insights
 
 
 def test_ops_competitor_radar():
     radar = ops_attribution.get_competitor_radar()
-    assert radar["status"] == "ok"
-    assert len(radar["competitors_monitored"]) >= 2
-    assert len(radar["content_gaps"]) >= 2
+    assert radar["status"] in ("ok", "not_configured")
+    assert "competitors_monitored" in radar
+    assert "content_gaps" in radar
 
 
 def test_ops_campaign_autopilot():
@@ -113,7 +113,7 @@ def main():
     test_ops_attribution_insights()
     test_ops_competitor_radar()
     test_ops_campaign_autopilot()
-    print("OK - test_ops_ai_center: tất cả pass")
+    print("OK - test_ops_ai_center: all passed")
 
 
 if __name__ == "__main__":

@@ -20,6 +20,30 @@ from brand_kit import detect_brand_from_kit, parse_brand_kit_channels, load_all_
 import fanpage_care_store as store
 from fanpage_care_ground import address_short, sanitize_kit
 
+try:
+    import ops_order_store
+except Exception:
+    ops_order_store = None
+
+try:
+    import ops_documents_store
+except Exception:
+    ops_documents_store = None
+
+try:
+    import ops_tasks_store
+except Exception:
+    ops_tasks_store = None
+
+
+def _fmt_price(num: Any) -> str:
+    try:
+        val = float(num)
+        return f"{val:,.0f} đ".replace(",", ".")
+    except Exception:
+        return str(num)
+
+
 _RATE_LIMITS: dict[str, list[float]] = {}
 _RATE_LIMIT_WINDOW = 600.0  # 10 phút (600 giây)
 _RATE_LIMIT_MAX = 20        # Tối đa 20 câu
@@ -238,30 +262,126 @@ async def answer_ops_qa(
         except Exception:
             pass
 
-    # 7. Check if price was asked
-    price_asked = any(w in msg_low for w in ("giá", "gia", "học phí", "hoc phi", "chi phí", "chi phi", "bao nhiêu tiền", "bao nhieu tien"))
+    # 7. Tra cứu Sản phẩm & Bảng giá (ops_order_store)
+    price_asked = any(w in msg_low for w in ("giá", "gia", "học phí", "hoc phi", "chi phí", "chi phi", "bao nhiêu tiền", "bao nhieu tien", "báo giá", "bao gia"))
+    prod_asked = price_asked or any(w in msg_low for w in ("khóa học", "khoa hoc", "sản phẩm", "san pham", "mặt hàng", "mat hang", "sku", "bàn phím", "chuột", "sách", "game"))
+    found_products = []
+    if prod_asked and ops_order_store:
+        try:
+            clean_prod_q = re.sub(r"(hỏi|tìm|xem|báo giá|bao gia|giá|học phí|hoc phi|chi phí|chi phi|bao nhiêu|bao nhieu|tiền|tien|khoá học|khoa hoc|sản phẩm|san pham|mặt hàng|mat hang|cho mình|với ạ|\?|:)", " ", msg_low).strip()
+            if clean_prod_q and len(clean_prod_q) >= 2:
+                found_products = ops_order_store.search_products(clean_prod_q)
+            if not found_products:
+                all_prods = ops_order_store.list_products(active_only=True)
+                # Lọc nhẹ nếu có từ khóa
+                if clean_prod_q:
+                    words = [w for w in clean_prod_q.split() if len(w) >= 2]
+                    found_products = [p for p in all_prods if any(w in p["name"].lower() or w in p["sku"].lower() for w in words)]
+                if not found_products and (price_asked or "bảng giá" in msg_low or "danh mục" in msg_low):
+                    found_products = all_prods[:6]
+        except Exception:
+            found_products = []
 
-    # 8. Hướng dẫn vận hành (Takeover, Duyệt nháp)
-    takeover_asked = "takeover" in msg_low or "nhận lại" in msg_low or "tranh lời" in msg_low
-    drafts_asked = "nháp" in msg_low or "nhap" in msg_low or "hôm nay" in msg_low or "thống kê" in msg_low or "tình hình" in msg_low
+    # 8. Tra cứu Kho văn bản, Hợp đồng & SOP (ops_documents_store)
+    doc_asked = any(w in msg_low for w in ("văn bản", "van ban", "hợp đồng", "hop dong", "sop", "tài liệu", "tai lieu", "hết hạn", "het han", "chờ duyệt", "cho duyet", "quy trình", "quy trinh", "biểu mẫu", "bieu mau", "template", "nda"))
+    doc_stats = {}
+    found_docs = []
+    if doc_asked and ops_documents_store:
+        try:
+            doc_stats = ops_documents_store.get_stats()
+            # Lọc tài liệu theo ý định
+            cat_filter = None
+            if "hợp đồng" in msg_low or "hop dong" in msg_low:
+                cat_filter = "contract"
+            elif "sop" in msg_low or "quy trình" in msg_low:
+                cat_filter = "sop"
+            elif "biểu mẫu" in msg_low or "template" in msg_low:
+                cat_filter = "template"
+
+            status_filter = "pending" if ("chờ duyệt" in msg_low or "chưa duyệt" in msg_low) else None
+            res_docs = ops_documents_store.list_documents(category=cat_filter, approval_status=status_filter, limit=10)
+            all_list = res_docs.get("documents", []) if isinstance(res_docs, dict) else []
+            if "hết hạn" in msg_low:
+                now_ts = time.time()
+                found_docs = [d for d in all_list if d.get("expires_at") and float(d["expires_at"]) <= now_ts + 30 * 86400]
+            else:
+                found_docs = all_list[:5]
+        except Exception:
+            doc_stats = {}
+            found_docs = []
+
+    # 9. Tra cứu Đơn hàng & Vận đơn GHN (ops_order_store)
+    order_asked = any(w in msg_low for w in ("đơn", "don", "vận đơn", "van don", "ghn", "tracking", "giao hàng", "giao hang", "ship", "ord_")) or "ghnmock" in msg_low
+    found_shipment = None
+    found_orders = []
+    if order_asked and ops_order_store:
+        try:
+            m_ghn = re.search(r"(GHNMOCK-[A-Za-z0-9-]+|[A-Z0-9]{8,15})", message)
+            m_ord = re.search(r"(ord_[a-z0-9]+)", message, re.I)
+            if m_ghn:
+                t_code = m_ghn.group(1).strip()
+                found_shipment = ops_order_store.get_shipment_by_tracking(t_code)
+                if found_shipment and found_shipment.get("order_id"):
+                    ord_obj = ops_order_store.get_order(found_shipment["order_id"])
+                    if ord_obj:
+                        found_orders.append(ord_obj)
+            elif m_ord:
+                ord_obj = ops_order_store.get_order(m_ord.group(1).strip())
+                if ord_obj:
+                    found_orders.append(ord_obj)
+            else:
+                clean_ord_q = re.sub(r"(hỏi|tìm|xem|đơn hàng|don hang|vận đơn|van don|ghn|ship|trạng thái|trang thai|\?|:)", " ", msg_low).strip()
+                if clean_ord_q and len(clean_ord_q) >= 2:
+                    found_orders = ops_order_store.list_orders(search=clean_ord_q, limit=3)
+                else:
+                    found_orders = ops_order_store.list_orders(limit=3)
+        except Exception:
+            found_shipment = None
+            found_orders = []
+
+    # 10. Tra cứu Việc ca trực & Cứu lead Kanban (ops_tasks_store)
+    task_asked = any(w in msg_low for w in ("việc", "viec", "nhiệm vụ", "nhiem vu", "task", "kanban", "cần làm", "can lam", "gấp", "gap", "cứu lead", "cuu lead"))
+    found_tasks = []
+    if task_asked and ops_tasks_store:
+        try:
+            all_tasks = ops_tasks_store.load_tasks()
+            found_tasks = [t for t in all_tasks if (t.get("isUrgent") or "rescue" in str(t.get("id", ""))) and t.get("columnId") != "done"]
+            if not found_tasks:
+                found_tasks = all_tasks[:5]
+        except Exception:
+            found_tasks = []
+
+    # 11. Hướng dẫn vận hành (Takeover, Duyệt nháp, Tổng quan)
+    takeover_asked = any(w in msg_low for w in ("takeover", "nhận lại", "tranh lời", "tiếp quản", "can thiệp", "dừng ai", "dừng bot", "nhường lời", "ai trực"))
+    drafts_asked = any(w in msg_low for w in ("nháp", "nhap", "hôm nay", "thống kê", "tình hình", "briefing", "tổng hợp", "tong hop", "báo cáo", "bao cao", "tổng quan", "tong quan"))
+
 
     citations = []
     if pages:
         citations.append(pages[0]["kit_file"])
     if takeover_asked:
         citations.append("docs/28-cham-soc-fanpage.md")
+    if found_products:
+        citations.append("facts/ops_business_catalog.md")
+    if doc_asked or found_docs:
+        citations.append("facts/ops_documents_vault.md")
+    if order_asked or found_shipment or found_orders:
+        citations.append("facts/ops_shipping_and_operations.md")
 
     # Xây dựng System Prompt cho LLM
     system_prompt = (
-        f"Bạn là trợ lý ca CSKH Sèo Trum Ops. Nhiệm vụ của bạn là hỗ trợ nhân viên trực ca tra cứu thông tin nhanh.\n"
+        f"Bạn là trợ lý ca CSKH Sèo Trum Ops Hub. Nhiệm vụ của bạn là hỗ trợ nhân viên trực ca tra cứu thông tin nhanh.\n"
         f"Phạm vi thương hiệu đang chọn: {scope_label}.\n\n"
         "QUY TẮC BẮT BUỘC:\n"
         "1. CHỈ dùng số liệu và thông tin có trong Context bên dưới. CẤM BỊA SỐ LIỆU, SỐ ĐIỆN THOẠI HOẶC GIÁ TIỀN.\n"
-        "2. Nếu nhân viên hỏi giá / học phí mà trong Brand Kit không có con số cụ thể cho mặt hàng/khoá học đó, "
-        f"bạn BẮT BUỘC từ chối bịa giá và dặn nhân viên hướng dẫn khách inbox hoặc liên hệ Hotline {primary_hotline}.\n"
-        "3. Tuyệt đối không gửi tin nhắn Facebook hộ; hướng dẫn nhân viên bấm nút 'Gửi' trên Hộp thư.\n"
-        "4. Tuyệt đối không cung cấp token, mật khẩu hoặc hướng dẫn vào buồng lái /app.\n"
-        "5. Định dạng đầu ra BẮT BUỘC là 1 JSON object duy nhất:\n"
+        "2. Nếu hỏi giá/sản phẩm: Báo giá niêm yết chính xác từ bảng giá trong Context. Nếu mặt hàng không có trong Context và Brand Kit, "
+        f"từ chối bịa giá và dặn nhân viên hướng dẫn khách inbox hoặc liên hệ Hotline {primary_hotline}.\n"
+        "3. Nếu tra cứu đơn hàng / vận đơn GHN: Báo rõ mã vận đơn, trạng thái giao hàng, tiền COD và kiện hàng.\n"
+        "4. Nếu hỏi về kho văn bản: Báo số lượng văn bản, các tài liệu cần phê duyệt hoặc sắp hết hạn.\n"
+        "5. Nếu hỏi về ca trực / việc cần làm: Báo các việc gấp và khách dừng tương tác cần cứu lead.\n"
+        "6. Tuyệt đối không gửi tin nhắn Facebook hộ; hướng dẫn nhân viên bấm nút 'Gửi' trên Hộp thư.\n"
+        "7. Tuyệt đối không cung cấp token, mật khẩu hoặc hướng dẫn vào buồng lái /app.\n"
+        "8. Định dạng đầu ra BẮT BUỘC là 1 JSON object duy nhất:\n"
         '{\n  "reply": "Nội dung trả lời nhân viên ngắn gọn, lịch sự, đúng trọng tâm",\n  "citations": ["tên_file.md"],\n  "used_stats": true/false\n}'
     )
 
@@ -276,6 +396,44 @@ async def answer_ops_qa(
         "=== BRAND KIT TRONG PHẠM VI ===",
         "\n".join(kit_summaries),
     ]
+
+    if found_products:
+        context_lines.append("=== BẢNG GIÁ & SẢN PHẨM NIÊM YẾT (DATABASE OPS HUB) ===")
+        for p in found_products[:8]:
+            context_lines.append(f"- [{p.get('sku')}] {p.get('name')}: {_fmt_price(p.get('price', 0))} (Danh mục: {p.get('category')}, Tồn kho: {p.get('stock')})")
+        context_lines.append("")
+
+    if doc_stats:
+        context_lines.append("=== KHO VĂN BẢN & PHÁP LÝ (OPS HUB) ===")
+        context_lines.append(f"- Tổng số văn bản: {doc_stats.get('total', 0)}")
+        context_lines.append(f"- Cần phê duyệt: {doc_stats.get('pending_approval', 0)}")
+        context_lines.append(f"- Sắp hết hạn trong 30 ngày: {doc_stats.get('expiring_soon', 0)}")
+        context_lines.append(f"- Hợp đồng cần ký: {doc_stats.get('missing_signature', 0)}")
+        if found_docs:
+            for d in found_docs:
+                context_lines.append(f"  • [{d.get('id')}] {d.get('title')} ({d.get('category')}) - Trạng thái: {d.get('approval_status')}")
+        context_lines.append("")
+
+    if found_shipment or found_orders:
+        context_lines.append("=== THÔNG TIN ĐƠN HÀNG & GIAO VẬN GHN ===")
+        if found_shipment:
+            context_lines.append(
+                f"- Vận đơn GHN: {found_shipment.get('tracking_code')} | Trạng thái: {found_shipment.get('status')} | "
+                f"Phí ship: {_fmt_price(found_shipment.get('fee', 0))} | COD: {_fmt_price(found_shipment.get('cod_amount', 0))}"
+            )
+        for o in found_orders:
+            cname = o.get("customer_name") or "Khách"
+            cphone = mask_phone(o.get("customer_phone") or "")
+            tot = _fmt_price(o.get("total_amount", 0))
+            items_str = ", ".join(f"{it.get('name')} x{it.get('quantity')}" for it in (o.get("items") or []))
+            context_lines.append(f"- Đơn {o.get('id')}: Khách {cname} ({cphone}) - {tot} - Trạng thái: {o.get('status')} - Món: {items_str or 'N/A'}")
+        context_lines.append("")
+
+    if found_tasks:
+        context_lines.append("=== VIỆC CA TRỰC KANBAN ===")
+        for t in found_tasks[:5]:
+            context_lines.append(f"- [{t.get('id')}] {t.get('title')} (Khách: {t.get('customer')}, Gấp: {t.get('isUrgent')})")
+        context_lines.append("")
 
     if customer_matches:
         context_lines.append("=== THÔNG TIN KHÁCH HÀNG TÌM THẤY ===")
@@ -294,8 +452,8 @@ async def answer_ops_qa(
 
     user_prompt = f"--- CONTEXT ---\n" + "\n".join(context_lines) + f"\n\nCâu hỏi của nhân viên trực ca: {message}"
 
-    # 9. Gọi aux_engine.complete_json (với timeout 20s, tools=[])
-    used_stats = drafts_asked or "hôm nay" in msg_low
+    # 12. Gọi aux_engine.complete_json (với timeout 20s, tools=[])
+    used_stats = drafts_asked or "hôm nay" in msg_low or doc_asked or order_asked or task_asked or prod_asked
     try:
         llm_res = await aux_engine.complete_json(system_prompt, user_prompt, timeout_s=20)
         if isinstance(llm_res, dict) and not llm_res.get("refuse") and llm_res.get("reply"):
@@ -310,27 +468,89 @@ async def answer_ops_qa(
     except Exception:
         pass
 
-    # 10. Deterministic Rules-First Fallback khi không có LLM / timeout / offline
+    # 13. Deterministic Rules-First Fallback khi không có LLM / timeout / offline
+    # 13. Deterministic Rules-First Fallback khi không có LLM / timeout / offline
     reply = ""
-    if price_asked and not has_any_price_info:
+    # Ưu tiên 1: Tra cứu vận đơn GHN / Đơn hàng cụ thể
+    if found_shipment or (order_asked and found_orders and not found_products):
+        s_lines = ["Thông tin đơn hàng & vận chuyển GHN:"]
+        if found_shipment:
+            s_lines.append(f"• Mã vận đơn: {found_shipment.get('tracking_code')} (Đơn vị: GHN)")
+            s_lines.append(f"• Trạng thái: {found_shipment.get('status')} | Phí ship: {_fmt_price(found_shipment.get('fee', 0))} | COD: {_fmt_price(found_shipment.get('cod_amount', 0))}")
+        for o in found_orders[:2]:
+            cname = o.get("customer_name") or "Khách"
+            cphone = mask_phone(o.get("customer_phone") or "")
+            s_lines.append(f"• Đơn [{o.get('id')}]: Khách {cname} ({cphone}) - Tổng: {_fmt_price(o.get('total_amount', 0))} - Trạng thái: {o.get('status')}")
+        reply = "\n".join(s_lines)
+    # Ưu tiên 2: Cơ chế Human Takeover (Tiếp quản ca trực)
+    elif takeover_asked:
         reply = (
-            f"Trong tài liệu Brand Kit của {scope_label} hiện tại không có bảng giá hoặc mức học phí cụ thể. "
+            "Takeover là cơ chế tạm dừng AI khi nhân viên can thiệp chat thủ công với khách: Khi bạn hoặc nhân sự nhắn tin trên Messenger/Inbox, "
+            "Javis sẽ tự động lùi lại và tạm dừng phản hồi tự động trong 24 giờ để tránh tranh lời nhân viên.\n\n"
+            "Khi bạn tư vấn xong và muốn AI trực tiếp tục, hãy vào tab **Hộp thư & Nháp** trên /ops và bấm nút **'Javis nhận lại'** (Release Takeover)."
+        )
+    # Ưu tiên 3: Kho văn bản, Hợp đồng & Quy trình SOP
+    elif doc_asked and (doc_stats or found_docs):
+        d_lines = [f"Tình hình Kho văn bản & Pháp lý ({scope_label}):"]
+        if doc_stats:
+            d_lines.append(f"• Tổng số văn bản: {doc_stats.get('total', 0)} | Chờ phê duyệt: {doc_stats.get('pending_approval', 0)} | Sắp hết hạn trong 30 ngày: {doc_stats.get('expiring_soon', 0)} | Hợp đồng cần ký: {doc_stats.get('missing_signature', 0)}")
+        if found_docs:
+            d_lines.append("\nTài liệu liên quan trong kho:")
+            for d in found_docs[:3]:
+                d_lines.append(f"• [{d.get('id')}] {d.get('title')} ({d.get('category')} - Trạng thái: {d.get('approval_status')})")
+        d_lines.append("\nVui lòng vào tab **Kho văn bản** trên /ops để xem chi tiết hoặc ký duyệt.")
+        reply = "\n".join(d_lines)
+    # Ưu tiên 4: Sản phẩm & Bảng giá
+    elif found_products:
+        p_lines = [f"Bảng giá niêm yết trong hệ thống Ops Hub ({scope_label}):"]
+        for p in found_products[:5]:
+            p_lines.append(f"• [{p.get('sku')}] {p.get('name')}: {_fmt_price(p.get('price', 0))} (Tồn kho: {p.get('stock')})")
+        p_lines.append(f"\nNếu cần tư vấn cấu hình hoặc chính sách ưu đãi riêng, xin liên hệ Hotline/Zalo {primary_hotline}.")
+        reply = "\n".join(p_lines)
+    elif price_asked and not has_any_price_info:
+        reply = (
+            f"Trong tài liệu Brand Kit của {scope_label} hiện tại không có bảng giá hoặc mức học phí cụ thể cho mặt hàng này. "
             f"Bạn vui lòng hướng dẫn khách nhắn tin inbox hoặc liên hệ Hotline/Zalo {primary_hotline} để được tư vấn chính xác, "
             f"tránh tự báo giá sai nhé."
         )
-    elif takeover_asked:
-        reply = (
-            "Takeover là cơ chế tạm dừng AI: Khi bạn hoặc nhân sự can thiệp chat thủ công với khách trên Messenger, "
-            "Javis sẽ tự động ngưng trả lời trong 24h để không tranh lời nhân viên. "
-            "Khi bạn xử lý xong và muốn AI trực tiếp tục, hãy vào tab **Hộp thư & Nháp** và bấm nút **'Javis nhận lại'** (Release Takeover)."
-        )
+    # Ưu tiên 5: Việc ca trực & Cứu lead
+    elif task_asked and found_tasks:
+        t_lines = [f"Nhiệm vụ ca trực Kanban cần chú ý ({len(found_tasks)} việc):"]
+        for t in found_tasks[:5]:
+            t_lines.append(f"• [{t.get('id')}] {t.get('title')} (Khách: {t.get('customer')}, Gấp: {'Có' if t.get('isUrgent') else 'Không'})")
+        t_lines.append("Bạn hãy kiểm tra tab **Việc ca trực** trên /ops để xử lý nhé.")
+        reply = "\n".join(t_lines)
+    # Ưu tiên 6: Báo cáo tổng hợp điều hành ca trực hôm nay
     elif drafts_asked:
-        reply = (
-            f"Tình hình ca trực {scope_label} hôm nay: Hiện có {total_pending} nháp đang chờ duyệt "
-            f"({pending_cmt_count} nháp bình luận, {pending_msg_count} nháp tin nhắn Messenger). "
-            f"Trong 24h qua có {care_stats.get('events_24h', 0)} lượt tương tác và {care_stats.get('leads_24h', 0)} khách để lại thông tin. "
-            f"Bạn hãy mở tab **Hộp thư & Nháp** để kiểm tra và bấm nút **Gửi** nhé!"
-        )
+        sum_lines = [
+            f"Tình hình ca trực {scope_label} hôm nay:",
+            f"• Hộp thư CSKH: {total_pending} nháp chờ duyệt ({pending_cmt_count} bình luận, {pending_msg_count} tin nhắn).",
+            f"• Tương tác 24h: {care_stats.get('events_24h', 0)} lượt | Khách mới (Leads): {care_stats.get('leads_24h', 0)}.",
+        ]
+        if ops_order_store:
+            try:
+                orders = ops_order_store.list_orders(limit=20)
+                shipping_cnt = sum(1 for o in orders if o.get("status") == "shipping")
+                delivered_cnt = sum(1 for o in orders if o.get("status") == "delivered")
+                sum_lines.append(f"• Đơn hàng & GHN: {len(orders)} đơn ({shipping_cnt} đang giao, {delivered_cnt} đã giao).")
+            except Exception:
+                pass
+        if ops_documents_store:
+            try:
+                ds = ops_documents_store.get_stats()
+                sum_lines.append(f"• Kho văn bản: {ds.get('pending_approval', 0)} cần duyệt | {ds.get('expiring_soon', 0)} sắp hết hạn 30 ngày.")
+            except Exception:
+                pass
+        if ops_tasks_store:
+            try:
+                tasks = ops_tasks_store.load_tasks()
+                urg_cnt = sum(1 for t in tasks if t.get("isUrgent") and t.get("columnId") != "done")
+                sum_lines.append(f"• Việc ca trực: {urg_cnt} việc gấp cần xử lý.")
+            except Exception:
+                pass
+        sum_lines.append(f"• Hotline kit: {primary_hotline}.")
+        sum_lines.append("Bạn hãy mở các tab tương ứng trên /ops để kiểm tra và xử lý nhé!")
+        reply = "\n".join(sum_lines)
     elif customer_matches:
         c_info = []
         for cm in customer_matches:
@@ -340,8 +560,9 @@ async def answer_ops_qa(
         reply = (
             f"Chào bạn, tôi là trợ lý ca CSKH Sèo Trum Ops ({scope_label}). "
             f"Hiện tại có {total_pending} nháp chờ duyệt trên Hộp thư. "
-            f"Hotline hỗ trợ của kit là {primary_hotline}. Bạn cần kiểm tra số liệu nháp, thông tin khách hàng hay hướng dẫn ca làm việc nào?"
+            f"Hotline hỗ trợ của kit là {primary_hotline}. Bạn cần kiểm tra bảng giá, vận đơn GHN, kho văn bản hay nhiệm vụ ca trực?"
         )
+
 
     return {
         "ok": True,
@@ -349,3 +570,4 @@ async def answer_ops_qa(
         "citations": citations,
         "used_stats": used_stats,
     }
+

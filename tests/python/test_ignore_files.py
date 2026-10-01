@@ -144,8 +144,9 @@ check("không artifact chạy nào vừa không track vừa không ignore"
 # ---------------------------------------------------------------- 5. Không có gì NHẠY CẢM bị track
 theo_doi = subprocess.run(["git", "ls-files"], cwd=ROOT, capture_output=True, text=True).stdout
 xau = [f for f in theo_doi.split("\n")
-       if f.endswith((".secret_key", ".hub_token", "conversations.db", "settings.json"))
-       or f in ("server/mcp_servers.json", ".env")]
+       if f.endswith((".secret_key", ".hub_token", "conversations.db"))
+       or f in ("server/mcp_servers.json", ".env", "settings.json", "server/settings.json")
+       or (f.endswith("/settings.json") and not f.endswith("ops_shipping_settings.json"))]
 check("không file bí mật nào đang bị git theo dõi" + (f" ({xau})" if xau else ""), not xau)
 
 # ---------------------------------------------------------------- 6. Mã nguồn cần thiết KHÔNG bị loại

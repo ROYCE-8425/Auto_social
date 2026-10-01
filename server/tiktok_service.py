@@ -45,78 +45,22 @@ def _find_loop_file(vault_root: Path) -> Path:
     return candidates[0]
 
 
+import postpeer_service
+
+
 def get_postpeer_connection() -> dict[str, Any]:
-    """Lấy thông tin connection postpeer từ mcp_store, ẩn access key."""
-    try:
-        import mcp_store
-        conns = mcp_store.list_connections()
-        c = next((x for x in conns if x.get("connector_id") == "postpeer"), None)
-        if not c:
-            return {"connected": False, "perm": "readonly", "masked_key": "", "connection_id": ""}
-        
-        secrets = mcp_store.connection_secrets(c["id"]) or {}
-        key = (secrets.get("postpeer_key") or "").strip()
-        masked = f"...{key[-4:]}" if len(key) >= 4 else ("***" if key else "")
-        return {
-            "connected": bool(key),
-            "perm": c.get("perm") or "readonly",
-            "masked_key": masked,
-            "connection_id": c.get("id") or "",
-            "label": c.get("label") or "TikTok PostPeer",
-        }
-    except Exception as e:
-        return {"connected": False, "perm": "readonly", "masked_key": "", "error": str(e)}
+    """Lấy thông tin connection postpeer từ postpeer_service, ẩn access key."""
+    return postpeer_service.get_postpeer_connection()
 
 
 def get_postpeer_token() -> Optional[str]:
-    """Lấy token thật phục vụ gọi PostPeer API."""
-    try:
-        import mcp_store
-        for c in mcp_store.list_connections():
-            if c.get("connector_id") == "postpeer":
-                secrets = mcp_store.connection_secrets(c["id"]) or {}
-                token = (secrets.get("postpeer_key") or "").strip()
-                if token:
-                    return token
-    except Exception:
-        pass
-    return None
+    """Lấy token thật phục vụ gọi PostPeer API từ postpeer_service."""
+    return postpeer_service.get_postpeer_token()
 
 
 def fetch_postpeer_accounts_sync() -> list[dict[str, Any]]:
     """Gọi PostPeer API lấy danh sách tài khoản đã kết nối OAuth (đồng bộ)."""
-    token = get_postpeer_token()
-    if not token:
-        return []
-    import requests
-    headers = {
-        "x-access-key": token,
-        "Authorization": f"Bearer {token}",
-        "Accept": "application/json",
-    }
-    for u in [f"{BASE_POSTPEER}/connect/integrations", f"{BASE_POSTPEER}/integrations"]:
-        try:
-            r = requests.get(u, headers=headers, timeout=10)
-            if r.status_code == 200:
-                data = r.json()
-                items = data.get("integrations") or data.get("data") or data
-                if isinstance(items, list):
-                    out = []
-                    for it in items:
-                        if isinstance(it, dict):
-                            acc_id = str(it.get("accountId") or it.get("id") or "")
-                            uname = str(it.get("username") or it.get("name") or "")
-                            out.append({
-                                "id": acc_id,
-                                "name": uname or acc_id,
-                                "username": uname or acc_id,
-                                "platform": str(it.get("platform") or "tiktok").lower(),
-                                "status": str(it.get("status") or "active"),
-                            })
-                    return out
-        except Exception:
-            continue
-    return []
+    return postpeer_service.fetch_postpeer_accounts_sync()
 
 
 async def fetch_postpeer_accounts() -> list[dict[str, Any]]:
@@ -531,6 +475,9 @@ def post_photos_to_tiktok(
     privacy_level = kit_data.get("privacy_level") or "PUBLIC_TO_EVERYONE"
     payload = {
         "content": final_caption.strip(),
+        "autoAddMusic": bool(auto_add_music),
+        "accountId": target_acc,
+        "urls": public_urls,
         "platforms": [{
             "platform": "tiktok",
             "accountId": target_acc,

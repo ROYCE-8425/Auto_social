@@ -1009,6 +1009,7 @@ def customer_behavior(crm_id: str, db_path: Path | str | None = None) -> dict[st
         "phones": json.loads((cust["phones"] if cust else None) or "[]") if cust else [],
         "campus": (cust["campus"] if cust else "") or "",
         "course_interest": (cust["course_interest"] if cust else "") or "",
+        "events": events[:50],
     }
 
 

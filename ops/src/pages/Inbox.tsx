@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import {
   MessageSquare,
   Send,
@@ -38,11 +38,16 @@ import {
   Layers,
   Compass,
   RefreshCw,
+  ShoppingBag,
+  User,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react'
 import { api, CareConversation, CareDraft, CareEvent, CareState, CareStats } from '../lib/api'
 import { useAuth } from '../lib/auth'
 import { useCareScope } from '../lib/scope'
 import { FacebookIcon, MessengerIcon, TikTokIcon } from '../components/BrandIcons'
+import { OrderInboxPanel } from '../components/OrderInboxPanel'
 
 export interface ConversationItem {
   id: string
@@ -61,6 +66,11 @@ export interface ConversationItem {
   firstInteraction: string
   pageName: string
   status: 'lead_hot' | 'interested' | 'purchased' | 'care_needed'
+  pending_draft?: {
+    id: number
+    proposed: string
+    created_ts?: number
+  } | null
   leadScore?: {
     score: number
     tier: 'hot' | 'warm' | 'cold'
@@ -86,6 +96,7 @@ export interface ConversationItem {
     sender: 'customer' | 'bot' | 'staff'
     text: string
     time: string
+    created_ts?: number
   }[]
 }
 
@@ -98,9 +109,27 @@ export const Inbox: React.FC = () => {
   const [selectedConvId, setSelectedConvId] = useState<string>('')
   const [inputText, setInputText] = useState('')
   const [isTakeover, setIsTakeover] = useState(false)
+  const [rightPanelTab, setRightPanelTab] = useState<'orders' | 'crm' | 'drafts'>('orders')
+  const [draftSearchQuery, setDraftSearchQuery] = useState('')
+  const [draftTypeFilter, setDraftTypeFilter] = useState<'all' | 'comment' | 'message'>('all')
   const [copySuccess, setCopySuccess] = useState<string | null>(null)
   const [conversationsList, setConversationsList] = useState<ConversationItem[]>([])
+  const [activeThreadMessages, setActiveThreadMessages] = useState<
+    Array<{
+      id: string
+      sender: 'customer' | 'bot' | 'staff'
+      text: string
+      time: string
+      created_ts?: number
+    }>
+  >([])
+  const [isLoadingThread, setIsLoadingThread] = useState<boolean>(false)
+  const [isSending, setIsSending] = useState<boolean>(false)
+  const [isNbaExpanded, setIsNbaExpanded] = useState<boolean>(false)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
+  const [processingDraftId, setProcessingDraftId] = useState<number | null>(null)
+  const [isAddingTag, setIsAddingTag] = useState(false)
+  const [newTagInput, setNewTagInput] = useState('')
 
   const showToast = (msg: string) => {
     setToastMessage(msg)
@@ -141,6 +170,7 @@ export const Inbox: React.FC = () => {
             time: timeStr,
             hasUnreadDot: Boolean(c.is_unreplied),
             unreadCount: c.is_unreplied ? 1 : undefined,
+            pending_draft: c.pending_draft || null,
             tags: c.is_unreplied
               ? [{ text: 'Cần hỗ trợ', color: 'amber' as const }]
               : [{ text: 'Đã trả lời', color: 'green' as const }],
@@ -172,7 +202,24 @@ export const Inbox: React.FC = () => {
             ],
           }
         })
-        setConversationsList(mapped)
+
+        // Merge preserves existing loaded message history and custom tags/status
+        setConversationsList((prev) => {
+          const prevMap = new Map(prev.map((c) => [c.id, c]))
+          return mapped.map((item) => {
+            const existing = prevMap.get(item.id)
+            if (existing) {
+              return {
+                ...item,
+                status: existing.status || item.status,
+                tags: existing.tags?.length ? existing.tags : item.tags,
+                messages: existing.messages && existing.messages.length > 1 ? existing.messages : item.messages,
+              }
+            }
+            return item
+          })
+        })
+
         setSelectedConvId((prev) => {
           if (prev && mapped.some((m) => m.id === prev)) return prev
           return mapped[0]?.id || ''
@@ -200,35 +247,87 @@ export const Inbox: React.FC = () => {
     loadInboxData()
   }, [scope, scopeBrand, scopePageId])
 
-  // Tải chi tiết lịch sử tin nhắn thật khi chọn hội thoại
-  useEffect(() => {
-    if (!selectedConvId) return
-    const parts = selectedConvId.split('_')
-    if (parts.length >= 2 && parts[0] !== 'conv') {
+  // Tải chi tiết lịch sử tin nhắn thật & poll liên tục khi đang mở hội thoại
+  const loadActiveThread = useCallback(async (convId: string, isBackground = false) => {
+    if (!convId) return
+    const parts = convId.split('_')
+    if (parts.length >= 2 && parts[0] !== 'conv' && !convId.startsWith('cmt_')) {
       const pageId = parts[0]
       const psid = parts.slice(1).join('_')
-      api.getConversationThread(pageId, psid).then((res) => {
+      if (!isBackground) setIsLoadingThread(true)
+      try {
+        const res = await api.getConversationThread(pageId, psid)
         if (res?.ok && res.events && res.events.length > 0) {
           const sortedEvents = [...res.events].sort((a, b) => (a.created_ts || 0) - (b.created_ts || 0))
           const threadMsgs = sortedEvents.map((ev, i) => {
-            const isBot = ev.kind === 'echo' || ev.from_name === 'Javis AI' || ev.class === 'auto_reply'
-            const isStaff = ev.from_name === 'Nhân viên Fanpage'
+            const isBot = ev.kind === 'echo' && (ev.from_name === 'Javis AI' || ev.class === 'auto_reply')
+            const isStaff = (ev.kind === 'echo' || ev.from_name === 'Nhân viên Fanpage' || ev.class === 'manual_reply') && !isBot
             return {
-              id: `ev_${ev.id || i}`,
+              id: `ev_${ev.id || i}_${ev.created_ts || i}`,
               sender: isBot ? ('bot' as const) : (isStaff ? ('staff' as const) : ('customer' as const)),
-              text: ev.body,
+              text: ev.body || '',
               time: ev.created_ts
                 ? new Date(ev.created_ts * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                 : '',
+              created_ts: ev.created_ts,
             }
           })
+
+          setActiveThreadMessages((prev) => {
+            // Keep pending optimistic messages that haven't appeared in threadMsgs yet
+            const pendingOptimistic = prev.filter(
+              (p) => p.id.startsWith('m_opt_') && !threadMsgs.some((m) => m.text === p.text)
+            )
+            const merged = [...threadMsgs, ...pendingOptimistic]
+            if (JSON.stringify(prev) !== JSON.stringify(merged)) {
+              return merged
+            }
+            return prev
+          })
+
+          // Cache back to conversationsList
           setConversationsList((prev) =>
-            prev.map((c) => (c.id === selectedConvId ? { ...c, messages: threadMsgs } : c))
+            prev.map((c) => (c.id === convId ? { ...c, messages: threadMsgs } : c))
           )
         }
-      }).catch(() => {})
+      } catch (err) {
+        console.error('Lỗi khi tải luồng hội thoại:', err)
+      } finally {
+        if (!isBackground) setIsLoadingThread(false)
+      }
+    } else if (convId.startsWith('cmt_')) {
+      const eventId = convId.replace('cmt_', '')
+      const targetEvent = rawEvents.find((e) => String(e.id) === eventId)
+      if (targetEvent) {
+        const timeStr = targetEvent.created_ts
+          ? new Date(targetEvent.created_ts * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          : 'Vừa xong'
+        setActiveThreadMessages([
+          {
+            id: `cmt_msg_${targetEvent.id}`,
+            sender: 'customer',
+            text: targetEvent.body || 'Bình luận trên bài viết',
+            time: timeStr,
+            created_ts: targetEvent.created_ts,
+          },
+        ])
+      }
+      setIsLoadingThread(false)
     }
-  }, [selectedConvId])
+  }, [rawEvents])
+
+  // Polling thread liên tục mỗi 3.5s để cập nhật tin nhắn mới tự động
+  useEffect(() => {
+    if (!selectedConvId) {
+      setActiveThreadMessages([])
+      return
+    }
+    loadActiveThread(selectedConvId, false)
+    const timer = setInterval(() => {
+      loadActiveThread(selectedConvId, true)
+    }, 3500)
+    return () => clearInterval(timer)
+  }, [selectedConvId, loadActiveThread])
 
   // List of comment conversations from real events
   const commentConversations: ConversationItem[] = rawEvents
@@ -312,53 +411,258 @@ export const Inbox: React.FC = () => {
   }
 
   const handleSendMessage = async () => {
-    if (!inputText.trim() || !currentConv) return
+    if (!inputText.trim() || !currentConv || isSending) return
     const textToSend = inputText.trim()
-    const newMsg = {
-      id: `m_${Date.now()}`,
+    const now = new Date()
+    const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    const nowTs = Math.floor(now.getTime() / 1000)
+
+    const optimisticMsg = {
+      id: `m_opt_${Date.now()}`,
       sender: 'staff' as const,
       text: textToSend,
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      time: timeStr,
+      created_ts: nowTs,
     }
 
+    // 1. Gắn ngay vào activeThreadMessages để UI cập nhật tức thì
+    setActiveThreadMessages((prev) => [...prev, optimisticMsg])
+    setInputText('')
+    setIsSending(true)
+
+    // 2. Cập nhật snippet ở danh sách hội thoại
     setConversationsList((prev) =>
       prev.map((c) => {
         if (c.id === currentConv.id) {
           return {
             ...c,
-            message: newMsg.text,
-            time: newMsg.time,
-            messages: [...c.messages, newMsg],
+            message: textToSend,
+            time: timeStr,
+            hasUnreadDot: false,
           }
         }
         return c
       })
     )
-    setInputText('')
 
-    // Gửi trực tiếp qua Facebook Messenger nếu có page_id & psid
+    // 3. Gửi trực tiếp qua Facebook Messenger nếu có page_id & psid
     const parts = currentConv.id.split('_')
-    if (parts.length >= 2 && parts[0] !== 'conv') {
+    if (parts.length >= 2 && parts[0] !== 'conv' && !currentConv.id.startsWith('cmt_')) {
       const pageId = parts[0]
       const psid = parts.slice(1).join('_')
       try {
-        await api.sendDirectMessage(pageId, psid, textToSend)
-        showToast('Đã gửi tin nhắn qua Facebook Messenger')
-      } catch (err) {
+        const res = await api.sendDirectMessage(pageId, psid, textToSend)
+        if (res?.ok === false) {
+          showToast(`Lỗi gửi qua Facebook: ${res.error || 'Thất bại'}`)
+        } else {
+          showToast('Đã gửi tin nhắn qua Facebook Messenger')
+        }
+      } catch (err: any) {
         console.error('Lỗi gửi tin nhắn trực tiếp qua Messenger:', err)
-        showToast('Lỗi gửi tin nhắn qua Messenger')
+        showToast(`Lỗi gửi tin nhắn: ${err?.message || 'Lỗi mạng'}`)
+      } finally {
+        setIsSending(false)
+        // Đồng bộ lại thread từ Fanpage Care để lấy bản ghi echo thật
+        setTimeout(() => {
+          loadActiveThread(currentConv.id, true)
+        }, 600)
       }
+    } else {
+      setIsSending(false)
+      showToast('Đã lưu phản hồi')
     }
   }
 
-  // Scroll messages to bottom
+  const handleSendDraft = async (draftId: number) => {
+    setProcessingDraftId(draftId)
+    try {
+      const res = await api.sendDraft(draftId)
+      if (res?.ok) {
+        showToast('Đã duyệt và gửi nháp phản hồi thành công!')
+        loadInboxData()
+        if (currentConv) {
+          setTimeout(() => loadActiveThread(currentConv.id, true), 800)
+        }
+      } else {
+        showToast(`Gửi nháp thất bại: ${res?.error || 'Lỗi hệ thống'}`)
+      }
+    } catch (err: any) {
+      showToast(`Lỗi gửi nháp: ${err?.message || 'Lỗi mạng'}`)
+    } finally {
+      setProcessingDraftId(null)
+    }
+  }
+
+  const handleRejectDraft = async (draftId: number) => {
+    setProcessingDraftId(draftId)
+    try {
+      const res = await api.rejectDraft(draftId)
+      if (res?.ok) {
+        showToast('Đã từ chối nháp phản hồi')
+        loadInboxData()
+      } else {
+        showToast('Không thể từ chối nháp')
+      }
+    } catch (err: any) {
+      showToast(`Lỗi từ chối nháp: ${err?.message || 'Lỗi mạng'}`)
+    } finally {
+      setProcessingDraftId(null)
+    }
+  }
+
+  const handleToggleTakeover = async () => {
+    if (!currentConv) return
+    const parts = currentConv.id.split('_')
+    if (parts.length >= 2 && parts[0] !== 'conv' && parts[0] !== 'cmt') {
+      const pageId = parts[0]
+      const psid = parts.slice(1).join('_')
+      if (isTakeover) {
+        try {
+          await api.releaseTakeover(pageId, psid)
+          setIsTakeover(false)
+          showToast('Đã nhả quyền takeover — Javis AI tiếp tục hỗ trợ tự động')
+        } catch (err: any) {
+          showToast(`Lỗi khi nhả takeover: ${err?.message || 'Lỗi kết nối'}`)
+        }
+      } else {
+        setIsTakeover(true)
+        showToast('Đã kích hoạt takeover — tạm dừng phản hồi bot cho hội thoại này')
+      }
+    } else {
+      setIsTakeover(!isTakeover)
+      showToast(isTakeover ? 'Đã tắt takeover' : 'Đã bật takeover cho hội thoại này')
+    }
+  }
+
+  const handleHandoffTask = async () => {
+    if (!currentConv) return
+    try {
+      const res = await api.handoffToStaff({
+        title: `Hỗ trợ khách hàng: ${currentConv.name}`,
+        intent: currentConv.message || 'Hội thoại cần nhân viên xử lý từ Fanpage Care',
+        priority: currentConv.status === 'care_needed' || currentConv.status === 'lead_hot' ? 1 : 2,
+        comment_id: currentConv.id,
+      })
+      if (res?.ok) {
+        showToast(`Đã tạo nhiệm vụ #${res.task_id || ''} trên Kanban thành công!`)
+      } else {
+        showToast('Đã tạo việc trên Kanban thành công!')
+      }
+    } catch (err: any) {
+      showToast(`Lỗi tạo việc: ${err?.message || 'Không thể tạo task'}`)
+    }
+  }
+
+  const handleCallCustomer = () => {
+    if (!currentConv) return
+    if (!currentConv.phone || currentConv.phone === 'Chưa có SĐT' || currentConv.phone === 'Chưa có') {
+      showToast('Khách hàng chưa để lại số điện thoại')
+      return
+    }
+    if (currentConv.phone.includes('*')) {
+      showToast('Số điện thoại được bảo mật theo chính sách phân quyền')
+      return
+    }
+    window.open(`tel:${currentConv.phone.replace(/\s+/g, '')}`)
+  }
+
+  const handleAddTag = () => {
+    if (!newTagInput.trim() || !currentConv) return
+    const tagText = newTagInput.trim()
+    setConversationsList((prev) =>
+      prev.map((c) => {
+        if (c.id === currentConv.id) {
+          return {
+            ...c,
+            tags: [...c.tags, { text: tagText, color: 'blue' }],
+          }
+        }
+        return c
+      })
+    )
+    setNewTagInput('')
+    setIsAddingTag(false)
+    showToast(`Đã thêm thẻ "${tagText}" thành công`)
+  }
+
+  const displayMessages = activeThreadMessages.length > 0
+    ? activeThreadMessages
+    : (currentConv?.messages || [])
+
+  // Tự động cuộn tin nhắn xuống dưới cùng khi có tin nhắn mới hoặc đổi hội thoại
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [currentConv?.messages])
+  }, [displayMessages.length, selectedConvId])
 
+  const pendingDrafts = careDrafts.filter((d) => d.status === 'pending')
   const pendingCommentDrafts = careStats?.pending_comment_drafts ?? 0
   const pendingMessageDrafts = careStats?.pending_message_drafts ?? 0
   const sentTodayCount = careStats?.replies_24h ?? 0
+
+  // Nháp AI dành riêng cho cuộc trò chuyện hiện tại (nếu có)
+  const currentConvDraft = useMemo(() => {
+    if (!currentConv) return null
+    if (currentConv.pending_draft && currentConv.pending_draft.proposed) {
+      return {
+        id: currentConv.pending_draft.id,
+        proposed: currentConv.pending_draft.proposed,
+        from_name: currentConv.name,
+        target_id: currentConv.fbId,
+        source_body: currentConv.message,
+      }
+    }
+    const psid = currentConv.id.includes('_')
+      ? currentConv.id.split('_').slice(1).join('_')
+      : currentConv.fbId
+    const found = pendingDrafts.find(
+      (d) =>
+        (d.target_id && (d.target_id === psid || d.target_id === currentConv.fbId)) ||
+        (d.from_id && (d.from_id === psid || d.from_id === currentConv.fbId)) ||
+        (d.from_name && currentConv.name && d.from_name.toLowerCase().trim() === currentConv.name.toLowerCase().trim())
+    )
+    return found || null
+  }, [currentConv, pendingDrafts])
+
+  // Danh sách nháp lọc cho Cột 3
+  const filteredDrafts = useMemo(() => {
+    return pendingDrafts.filter((draft) => {
+      if (draftTypeFilter === 'comment' && draft.event_kind !== 'comment') return false
+      if (draftTypeFilter === 'message' && draft.event_kind === 'comment') return false
+      if (!draftSearchQuery.trim()) return true
+      const q = draftSearchQuery.toLowerCase()
+      return (
+        (draft.from_name && draft.from_name.toLowerCase().includes(q)) ||
+        (draft.source_body && draft.source_body.toLowerCase().includes(q)) ||
+        (draft.proposed && draft.proposed.toLowerCase().includes(q)) ||
+        (draft.target_id && draft.target_id.includes(q))
+      )
+    })
+  }, [pendingDrafts, draftTypeFilter, draftSearchQuery])
+
+  const handleSelectDraftConversation = (draft: CareDraft) => {
+    const psid = draft.target_id || draft.from_id
+    const match = conversationsList.find(
+      (c) =>
+        (psid && (c.id.includes(psid) || c.fbId === psid)) ||
+        (draft.from_name && c.name.toLowerCase().trim() === draft.from_name.toLowerCase().trim())
+    )
+    if (match) {
+      setActiveChannel('messenger')
+      setSelectedConvId(match.id)
+    } else if (draft.event_kind === 'comment') {
+      setActiveChannel('comments')
+      const matchCmt = commentConversations.find(
+        (c) =>
+          (draft.event_id && c.id.includes(String(draft.event_id))) ||
+          (draft.from_name && c.name.toLowerCase().trim() === draft.from_name.toLowerCase().trim())
+      )
+      if (matchCmt) {
+        setSelectedConvId(matchCmt.id)
+      }
+    }
+    setInputText(draft.proposed)
+    showToast(`Đã mở nháp cho ${draft.from_name || 'khách hàng'} vào ô soạn thảo`)
+  }
 
   const tagColorMap = {
     red: 'bg-rose-50 text-rose-600 border border-rose-200',
@@ -413,9 +717,9 @@ export const Inbox: React.FC = () => {
       </div>
 
       {/* MAIN 3-COLUMN LAYOUT */}
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 items-stretch h-[calc(100vh-140px)] min-h-[660px]">
         {/* ================= COLUMN 1: HỘP THƯ TẬP TRUNG (3 cols) ================= */}
-        <div className="xl:col-span-3 bg-white border border-slate-200/80 rounded-2xl p-4 shadow-2xs flex flex-col h-[820px]">
+        <div className="xl:col-span-3 bg-white border border-slate-200/80 rounded-2xl p-3.5 shadow-2xs flex flex-col h-full overflow-hidden">
           {/* Card Top Title & Action */}
           <div className="flex items-center justify-between pb-2 border-b border-slate-100">
             <h2 className="text-base font-bold text-slate-900">Hộp thư tập trung</h2>
@@ -540,7 +844,7 @@ export const Inbox: React.FC = () => {
           </div>
 
           {/* Conversations scrollable list */}
-          <div className="flex-1 overflow-y-auto space-y-1 pr-1 divide-y divide-slate-50">
+          <div className="flex-1 min-h-0 overflow-y-auto space-y-1 pr-1 divide-y divide-slate-50">
             {activeChannel === 'tiktok' ? (
               <div className="p-8 text-center text-slate-500">
                 <TikTokIcon className="w-10 h-10 mx-auto mb-3" colored />
@@ -554,16 +858,17 @@ export const Inbox: React.FC = () => {
             ) : filteredConversations.length === 0 ? (
               <div className="p-8 text-center text-slate-400 text-xs">
                 <MessageSquare className="w-8 h-8 mx-auto mb-2 text-slate-300" />
-                <p className="font-semibold text-slate-600 mb-1">Chưa có hội thoại nào</p>
-                <p className="text-slate-400 text-[11px] mb-3">Nhấn Đồng bộ để kéo tin nhắn và bình luận mới nhất từ Facebook Fanpage.</p>
+                <p className="font-semibold text-slate-600 mb-1">
+                  Chưa có hội thoại/nháp. Hãy kết nối Facebook Pages hoặc bấm Quét ngay.
+                </p>
                 <button
                   type="button"
                   onClick={handlePollNow}
                   disabled={isPolling}
-                  className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs transition-colors"
+                  className="mt-2 inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
                 >
                   <RefreshCw className={`w-3.5 h-3.5 ${isPolling ? 'animate-spin' : ''}`} />
-                  <span>{isPolling ? 'Đang đồng bộ...' : 'Đồng bộ ngay'}</span>
+                  <span>{isPolling ? 'Đang quét...' : 'Quét ngay'}</span>
                 </button>
               </div>
             ) : (
@@ -643,8 +948,8 @@ export const Inbox: React.FC = () => {
           </div>
         </div>
 
-        {/* ================= COLUMN 2: HỘI THOẠI & NHÁP TRẢ LỜI (6 cols) ================= */}
-        <div className="xl:col-span-6 bg-white border border-slate-200/80 rounded-2xl p-5 shadow-2xs flex flex-col justify-between h-[820px]">
+        {/* ================= COLUMN 2: HỘI THOẠI & TIN NHẮN (6 cols) ================= */}
+        <div className="xl:col-span-6 bg-white border border-slate-200/80 rounded-2xl p-4 shadow-2xs flex flex-col h-full overflow-hidden">
           {activeChannel === 'tiktok' ? (
             <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
               <TikTokIcon className="w-14 h-14 mb-4" colored />
@@ -661,445 +966,380 @@ export const Inbox: React.FC = () => {
               <MessageSquare className="w-14 h-14 mb-4 text-slate-300" />
               <h3 className="text-base font-bold text-slate-900">Chưa có hội thoại được chọn</h3>
               <p className="text-xs text-slate-500 mt-1 max-w-md">
-                Vui lòng chọn một khách hàng từ danh sách bên trái hoặc nhấn &quot;Đồng bộ ngay&quot; để lấy dữ liệu mới nhất từ Fanpage.
+                Chưa có hội thoại/nháp. Hãy kết nối Facebook Pages hoặc bấm Quét ngay.
               </p>
               <button
                 type="button"
                 onClick={handlePollNow}
                 disabled={isPolling}
-                className="mt-4 inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs transition-colors"
+                className="mt-4 inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${isPolling ? 'animate-spin' : ''}`} />
-                <span>{isPolling ? 'Đang kéo tin nhắn...' : 'Đồng bộ Fanpage ngay'}</span>
+                <span>{isPolling ? 'Đang quét...' : 'Quét ngay'}</span>
               </button>
             </div>
           ) : (
             <>
               {/* Chat Header */}
-          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-            {/* Left: Customer Info */}
-            <div className="flex items-center space-x-3">
-              <div className="relative">
-                <img
-                  src={currentConv.avatar}
-                  alt={currentConv.name}
-                  className="w-10 h-10 rounded-full object-cover ring-2 ring-white shadow-2xs"
-                />
-                <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white" />
-              </div>
-              <div>
-                <div className="flex items-center space-x-2">
-                  <h3 className="text-sm font-bold text-slate-900 leading-tight">{currentConv.name}</h3>
-                  <span className="px-2 py-0.5 rounded bg-rose-50 text-rose-600 border border-rose-200 text-[10px] font-semibold">
-                    Lead nóng
-                  </span>
-                  <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-600 border border-blue-200 text-[10px] font-semibold">
-                    Khách mới
-                  </span>
-                </div>
-                <div className="flex items-center space-x-1.5 text-[11px] text-slate-400 font-medium mt-0.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                  <span>Đang hoạt động</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Right: Actions */}
-            <div className="flex items-center space-x-2">
-              <div className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-200/70 text-blue-600 text-xs font-semibold">
-                <Bot className="w-3.5 h-3.5 text-blue-600" />
-                <span>Bot đang hỗ trợ</span>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsTakeover(!isTakeover)}
-                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all shadow-2xs ${
-                  isTakeover
-                    ? 'bg-rose-50 text-rose-700 border-rose-300'
-                    : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
-                }`}
-              >
-                <Ban className="w-3.5 h-3.5 text-slate-600" />
-                <span>{isTakeover ? 'Đang takeover' : 'Takeover'}</span>
-              </button>
-
-              <button
-                type="button"
-                className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors ml-1"
-                title="Tìm kiếm"
-              >
-                <Search className="w-4 h-4" />
-              </button>
-              <button
-                type="button"
-                className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
-                title="Thẻ tag"
-              >
-                <Tag className="w-4 h-4" />
-              </button>
-              <button
-                type="button"
-                className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
-                title="Tùy chọn khác"
-              >
-                <MoreVertical className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-
-          {/* Chat Messages Body */}
-          <div className="flex-1 overflow-y-auto space-y-4 py-4 px-1">
-            {currentConv.messages.map((msg) => {
-              const isUser = msg.sender === 'customer'
-              return (
-                <div
-                  key={msg.id}
-                  className={`flex items-start space-x-2.5 ${isUser ? '' : 'flex-row-reverse space-x-reverse'}`}
-                >
-                  {/* Avatar */}
-                  {isUser ? (
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100 flex-shrink-0">
+                {/* Left: Customer Info */}
+                <div className="flex items-center space-x-3">
+                  <div className="relative">
                     <img
                       src={currentConv.avatar}
                       alt={currentConv.name}
-                      className="w-8 h-8 rounded-full object-cover flex-shrink-0 mt-0.5"
+                      className="w-10 h-10 rounded-full object-cover ring-2 ring-white shadow-2xs"
                     />
-                  ) : (
-                    <div className="w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center flex-shrink-0 shadow-xs mt-0.5">
-                      JO
-                    </div>
-                  )}
-
-                  {/* Message Bubble */}
-                  <div className={`max-w-[72%] ${isUser ? '' : 'text-right'}`}>
-                    <div
-                      className={`inline-block px-4 py-2.5 text-xs text-slate-800 leading-relaxed rounded-2xl text-left whitespace-pre-line ${
-                        isUser
-                          ? 'bg-slate-100 rounded-tl-sm'
-                          : 'bg-blue-100/70 border border-blue-200/50 rounded-tr-sm'
-                      }`}
-                    >
-                      {msg.text}
-                    </div>
-                    <div
-                      className={`flex items-center space-x-1 text-[10px] text-slate-400 font-medium mt-1 ${
-                        isUser ? 'justify-start' : 'justify-end'
-                      }`}
-                    >
-                      <span>{msg.time}</span>
-                      {!isUser && <CheckCheck className="w-3.5 h-3.5 text-blue-600 inline" />}
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
-            <div ref={messagesEndRef} />
-          </div>
-
-          {/* Javis AI Next Best Action Card (Pillar 3: Chỉ rõ hành động kế tiếp) */}
-          {currentConv.leadScore && (
-            <div className="bg-gradient-to-r from-indigo-50/90 via-blue-50/70 to-slate-50 border border-indigo-200/90 rounded-2xl p-3.5 my-2 shadow-2xs">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center space-x-2">
-                  <div className="w-6 h-6 rounded-lg bg-indigo-600 text-white flex items-center justify-center shadow-xs">
-                    <Compass className="w-3.5 h-3.5" />
+                    <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white" />
                   </div>
                   <div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-bold text-slate-900">Next Best Action · Hành động tối ưu kế tiếp</span>
-                      <span
-                        className={`px-2 py-0.2 rounded-full text-[10px] font-bold inline-flex items-center gap-1 ${
-                          currentConv.leadScore.tier === 'hot'
-                            ? 'bg-rose-100 text-rose-700 border border-rose-200'
-                            : 'bg-amber-100 text-amber-700 border border-amber-200'
-                        }`}
-                      >
-                        <Flame className="w-2.5 h-2.5" />
-                        {currentConv.leadScore.score}đ · {currentConv.leadScore.tier === 'hot' ? 'Hot Lead' : 'Warm'}
+                    <div className="flex items-center space-x-2">
+                      <h3 className="text-sm font-bold text-slate-900 leading-tight">{currentConv.name}</h3>
+                      <span className="px-2 py-0.5 rounded bg-rose-50 text-rose-600 border border-rose-200 text-[10px] font-semibold">
+                        Lead nóng
                       </span>
+                      <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-600 border border-blue-200 text-[10px] font-semibold">
+                        Khách mới
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-1.5 text-[11px] text-slate-400 font-medium mt-0.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                      <span>Đang hoạt động · {currentConv.pageName}</span>
                     </div>
                   </div>
                 </div>
-                <span className="text-[10px] font-bold text-indigo-700 bg-indigo-100/70 px-2 py-0.5 rounded-full border border-indigo-200/60">
-                  Ưu tiên cao
-                </span>
-              </div>
 
-              <div className="bg-white/95 p-3 rounded-xl border border-indigo-100 space-y-1.5">
-                <p className="text-xs font-bold text-slate-900 leading-snug">
-                  {currentConv.leadScore.nextBestAction}
-                </p>
-                <p className="text-[11px] text-slate-500 italic leading-tight">
-                  Lý do AI đề xuất: {currentConv.leadScore.reason}
-                </p>
-                <div className="flex items-center justify-between pt-1.5 border-t border-slate-100 gap-2">
-                  <span className="text-[11px] text-slate-600 truncate">
-                    Kịch bản mẫu: &quot;{currentConv.leadScore.suggestedScript}&quot;
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => handleApplyDraft(currentConv.leadScore!.suggestedScript)}
-                    className="inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold transition-all shadow-xs flex-shrink-0"
-                  >
-                    <Zap className="w-3 h-3" />
-                    <span>Áp dụng kịch bản</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Javis AI Draft Suggestions Card */}
-          <div className="bg-slate-50/90 border border-indigo-100/90 rounded-2xl p-3.5 my-2">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center space-x-1.5">
-                <Sparkles className="w-4 h-4 text-purple-600" />
-                <span className="text-xs font-bold text-slate-900">Javis đề xuất nháp</span>
-                <span className="text-[11px] text-slate-400 font-normal">
-                  · Phân loại 3 cấp độ an toàn (Human-in-the-Loop)
-                </span>
-              </div>
-              <div className="flex items-center space-x-1 text-[11px] text-slate-500 font-medium">
-                <span>Độ chính xác cao từ AI</span>
-                <Info className="w-3.5 h-3.5 text-slate-400" />
-              </div>
-            </div>
-
-            {/* 3 Side-by-side Draft Cards with Human Approval Badges */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
-              {/* Draft 1: Low Risk (Tự động FAQ) */}
-              <div className="bg-white p-3 rounded-xl border border-slate-200/80 shadow-2xs flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center justify-between gap-1 mb-1.5">
-                    <span className="text-[10px] font-bold text-emerald-600 flex items-center space-x-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                      <span>96% phù hợp</span>
-                    </span>
-                    <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-1.5 py-0.2 rounded inline-flex items-center gap-0.5">
-                      <ShieldCheck className="w-2.5 h-2.5 text-emerald-600" />
-                      Tự động FAQ
-                    </span>
+                {/* Right: Actions */}
+                <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-200/70 text-blue-600 text-xs font-semibold">
+                    <Bot className="w-3.5 h-3.5 text-blue-600" />
+                    <span>Bot đang hỗ trợ</span>
                   </div>
-                  <h4 className="text-xs font-bold text-slate-900 line-clamp-1 leading-tight">
-                    Xác nhận đơn hàng + thông tin giao hàng
-                  </h4>
-                  <p className="text-[11px] text-slate-500 line-clamp-2 mt-1 leading-tight">
-                    Dạ em đã ghi nhận thông tin của chị... Em sẽ tạo đơn ngay và gửi chị...
-                  </p>
-                </div>
-                <div className="flex items-center space-x-1.5 mt-3 pt-2 border-t border-slate-100">
                   <button
                     type="button"
-                    onClick={() =>
-                      handleApplyDraft(
-                        'Dạ em đã ghi nhận thông tin của chị Hoa (Màu be, size M). Em sẽ tạo đơn ngay và gửi chị xác nhận nhé!'
-                      )
-                    }
-                    className="flex-1 py-1.5 px-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-lg shadow-2xs transition-colors text-center"
+                    onClick={handleToggleTakeover}
+                    className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all shadow-2xs cursor-pointer ${
+                      isTakeover
+                        ? 'bg-rose-50 text-rose-700 border-rose-300'
+                        : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
+                    }`}
                   >
-                    Dùng nháp
+                    <Ban className="w-3.5 h-3.5 text-slate-600" />
+                    <span>{isTakeover ? 'Đang takeover' : 'Takeover'}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors ml-1"
+                    title="Tìm kiếm"
+                  >
+                    <Search className="w-4 h-4" />
                   </button>
                   <button
                     type="button"
-                    onClick={() =>
-                      handleApplyDraft(
-                        'Dạ em đã ghi nhận thông tin của chị Hoa (Màu be, size M). Chị cho em xin số điện thoại và địa chỉ nhận hàng cụ thể ở Hà Nội để em tạo đơn nhé ạ!'
-                      )
-                    }
-                    className="py-1.5 px-2.5 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs rounded-lg border border-slate-200 transition-colors"
+                    className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+                    title="Thẻ tag"
                   >
-                    Chỉnh sửa
+                    <Tag className="w-4 h-4" />
+                  </button>
+                  <button
+                    type="button"
+                    className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+                    title="Tùy chọn khác"
+                  >
+                    <MoreVertical className="w-4 h-4" />
                   </button>
                 </div>
               </div>
 
-              {/* Draft 2: Medium Risk (Nhân viên duyệt) */}
-              <div className="bg-white p-3 rounded-xl border border-slate-200/80 shadow-2xs flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center justify-between gap-1 mb-1.5">
-                    <span className="text-[10px] font-bold text-teal-600 flex items-center space-x-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-teal-500" />
-                      <span>89% phù hợp</span>
-                    </span>
-                    <span className="text-[9px] font-bold text-amber-700 bg-amber-50 border border-amber-200/80 px-1.5 py-0.2 rounded inline-flex items-center gap-0.5">
-                      <ShieldAlert className="w-2.5 h-2.5 text-amber-600" />
-                      Nhân viên duyệt
-                    </span>
+              {/* Chat Messages Stream (Chiếm trọn không gian trọng tâm) */}
+              <div className="flex-1 min-h-0 overflow-y-auto space-y-3.5 py-3 px-1.5">
+                {isLoadingThread && displayMessages.length === 0 ? (
+                  <div className="flex items-center justify-center h-full text-slate-400 text-xs gap-2">
+                    <RefreshCw className="w-4 h-4 animate-spin text-blue-500" />
+                    <span>Đang tải tin nhắn...</span>
                   </div>
-                  <h4 className="text-xs font-bold text-slate-900 line-clamp-1 leading-tight">
-                    Tư vấn thêm sản phẩm liên quan
-                  </h4>
-                  <p className="text-[11px] text-slate-500 line-clamp-2 mt-1 leading-tight">
-                    Ngoài sản phẩm này, bên em còn có... Chị có thể tham khảo thêm ạ...
-                  </p>
-                </div>
-                <div className="flex items-center space-x-1.5 mt-3 pt-2 border-t border-slate-100">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      handleApplyDraft(
-                        'Ngoài sản phẩm này, bên em còn có mẫu áo khoác cùng bộ phối rất hợp với màu be ạ. Chị có muốn em gửi hình tham khảo thêm không ạ?'
-                      )
-                    }
-                    className="flex-1 py-1.5 px-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-lg shadow-2xs transition-colors text-center"
-                  >
-                    Dùng nháp
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      handleApplyDraft(
-                        'Bên em đang có chương trình mua kèm phụ kiện giảm thêm 15% đó ạ!'
-                      )
-                    }
-                    className="py-1.5 px-2.5 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs rounded-lg border border-slate-200 transition-colors"
-                  >
-                    Chỉnh sửa
-                  </button>
-                </div>
-              </div>
-
-              {/* Draft 3: High Risk (Quản lý duyệt) */}
-              <div className="bg-white p-3 rounded-xl border border-slate-200/80 shadow-2xs flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center justify-between gap-1 mb-1.5">
-                    <span className="text-[10px] font-bold text-blue-600 flex items-center space-x-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                      <span>78% phù hợp</span>
-                    </span>
-                    <span className="text-[9px] font-bold text-rose-700 bg-rose-50 border border-rose-200/80 px-1.5 py-0.2 rounded inline-flex items-center gap-0.5">
-                      <ShieldAlert className="w-2.5 h-2.5 text-rose-600" />
-                      Quản lý duyệt
-                    </span>
+                ) : displayMessages.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-full text-slate-400 text-xs py-12">
+                    <MessageSquare className="w-8 h-8 text-slate-300 mb-2" />
+                    <span>Chưa có tin nhắn trong hội thoại này</span>
                   </div>
-                  <h4 className="text-xs font-bold text-slate-900 line-clamp-1 leading-tight">
-                    Chăm sóc sau bán hàng
-                  </h4>
-                  <p className="text-[11px] text-slate-500 line-clamp-2 mt-1 leading-tight">
-                    Cảm ơn chị đã quan tâm đến sản phẩm... Nếu cần hỗ trợ thêm chị cứ nhắn...
-                  </p>
-                </div>
-                <div className="flex items-center space-x-1.5 mt-3 pt-2 border-t border-slate-100">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      handleApplyDraft(
-                        'Cảm ơn chị đã quan tâm đến sản phẩm bên em! Nếu cần hỗ trợ thêm thông tin gì về size số chị cứ nhắn em nhé!'
-                      )
-                    }
-                    className="flex-1 py-1.5 px-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-lg shadow-2xs transition-colors text-center"
-                  >
-                    Dùng nháp
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      handleApplyDraft(
-                        'Dạ chúc chị một ngày tốt lành ạ!'
-                      )
-                    }
-                    className="py-1.5 px-2.5 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs rounded-lg border border-slate-200 transition-colors"
-                  >
-                    Chỉnh sửa
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
+                ) : (
+                  displayMessages.map((msg) => {
+                    const isUser = msg.sender === 'customer'
+                    const isBot = msg.sender === 'bot'
+                    const isStaff = msg.sender === 'staff'
 
-          {/* Bottom Message Input Box */}
-          <div className="border border-slate-200 rounded-2xl p-2.5 bg-white shadow-2xs">
-            <textarea
-              rows={2}
-              value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault()
-                  handleSendMessage()
-                }
-              }}
-              placeholder="Nhập tin nhắn... (Shift + Enter để xuống dòng)"
-              className="w-full text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none resize-none px-1 py-0.5"
-            />
-            {/* Action Bar */}
-            <div className="flex items-center justify-between pt-2 border-t border-slate-100 mt-1">
-              {/* Left Icons */}
-              <div className="flex items-center space-x-1 text-slate-400">
-                <button
-                  type="button"
-                  className="p-1.5 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
-                  title="Đính kèm tệp"
-                >
-                  <Paperclip className="w-4 h-4" />
-                </button>
-                <button
-                  type="button"
-                  className="p-1.5 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
-                  title="Gửi ảnh"
-                >
-                  <ImageIcon className="w-4 h-4" />
-                </button>
-                <button
-                  type="button"
-                  className="p-1.5 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
-                  title="Emoji"
-                >
-                  <Smile className="w-4 h-4" />
-                </button>
-                <button
-                  type="button"
-                  className="p-1.5 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
-                  title="Mẫu câu nhanh"
-                >
-                  <FileText className="w-4 h-4" />
-                </button>
-                <button
-                  type="button"
-                  className="px-2 py-1 text-xs font-bold hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
-                  title="Lệnh nhanh"
-                >
-                  /
-                </button>
+                    return (
+                      <div
+                        key={msg.id}
+                        className={`flex items-start space-x-2.5 ${isUser ? '' : 'flex-row-reverse space-x-reverse'}`}
+                      >
+                        {/* Avatar */}
+                        {isUser ? (
+                          <img
+                            src={currentConv.avatar}
+                            alt={currentConv.name}
+                            className="w-8 h-8 rounded-full object-cover flex-shrink-0 mt-0.5"
+                          />
+                        ) : isBot ? (
+                          <div
+                            className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-bold text-xs flex items-center justify-center flex-shrink-0 shadow-xs mt-0.5"
+                            title="Javis AI tự động"
+                          >
+                            <Bot className="w-4 h-4" />
+                          </div>
+                        ) : (
+                          <div
+                            className="w-8 h-8 rounded-full bg-emerald-600 text-white font-bold text-[11px] flex items-center justify-center flex-shrink-0 shadow-xs mt-0.5"
+                            title="Nhân viên shop"
+                          >
+                            NV
+                          </div>
+                        )}
+
+                        {/* Message Bubble */}
+                        <div className={`max-w-[72%] ${isUser ? '' : 'text-right'}`}>
+                          {!isUser && (
+                            <div className="text-[10px] font-semibold text-slate-400 mb-0.5">
+                              {isBot ? '🤖 Javis AI (Tự động)' : 'Nhân viên Fanpage'}
+                            </div>
+                          )}
+                          <div
+                            className={`inline-block px-4 py-2.5 text-xs leading-relaxed rounded-2xl text-left whitespace-pre-line ${
+                              isUser
+                                ? 'bg-slate-100 rounded-tl-sm text-slate-800'
+                                : isBot
+                                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-medium rounded-tr-sm shadow-xs'
+                                : 'bg-emerald-600 text-white font-medium rounded-tr-sm shadow-xs'
+                            }`}
+                          >
+                            {msg.text}
+                          </div>
+                          <div
+                            className={`flex items-center space-x-1 text-[10px] text-slate-400 font-medium mt-1 ${
+                              isUser ? 'justify-start' : 'justify-end'
+                            }`}
+                          >
+                            <span>{msg.time}</span>
+                            {!isUser && (
+                              <CheckCheck
+                                className={`w-3.5 h-3.5 inline ${isBot ? 'text-indigo-400' : 'text-emerald-600'}`}
+                              />
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })
+                )}
+                <div ref={messagesEndRef} />
               </div>
 
-              {/* Right Send & Save draft Buttons */}
-              <div className="flex items-center space-x-2">
-                <button
-                  type="button"
-                  onClick={() => showToast('Đã lưu nháp tin nhắn vào bộ nhớ đệm')}
-                  className="px-3 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-colors"
-                >
-                  Lưu nháp
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSendMessage}
-                  className="flex items-center space-x-1.5 px-4 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-sm shadow-blue-500/20"
-                >
-                  <Send className="w-3.5 h-3.5" />
-                  <span>Gửi</span>
-                </button>
+              {/* Javis AI Next Best Action Card (Compact & Tinh gọn) */}
+              {currentConv.leadScore && (
+                <div className="bg-gradient-to-r from-indigo-50/95 via-blue-50/80 to-slate-50 border border-indigo-200/80 rounded-xl p-2.5 my-1.5 shadow-2xs flex-shrink-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center space-x-2 min-w-0">
+                      <div className="w-5 h-5 rounded-md bg-indigo-600 text-white flex items-center justify-center shadow-xs flex-shrink-0">
+                        <Compass className="w-3 h-3" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="text-[11px] font-bold text-slate-900">Next Best Action:</span>
+                          <span className="text-xs font-semibold text-indigo-950 truncate max-w-xs">
+                            {currentConv.leadScore.nextBestAction}
+                          </span>
+                          <span
+                            className={`px-1.5 py-0.2 rounded-full text-[9px] font-bold inline-flex items-center gap-0.5 ${
+                              currentConv.leadScore.tier === 'hot'
+                                ? 'bg-rose-100 text-rose-700 border border-rose-200'
+                                : 'bg-amber-100 text-amber-700 border border-amber-200'
+                            }`}
+                          >
+                            <Flame className="w-2.5 h-2.5" />
+                            {currentConv.leadScore.score}đ
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => handleApplyDraft(currentConv.leadScore!.suggestedScript)}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold transition-all shadow-xs cursor-pointer"
+                      >
+                        <Zap className="w-3 h-3" />
+                        <span>Áp dụng kịch bản</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setIsNbaExpanded(!isNbaExpanded)}
+                        className="p-1 text-slate-400 hover:text-slate-600 rounded cursor-pointer"
+                        title={isNbaExpanded ? 'Thu gọn' : 'Xem lý do'}
+                      >
+                        {isNbaExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                      </button>
+                    </div>
+                  </div>
+                  {isNbaExpanded && (
+                    <div className="mt-2 pt-2 border-t border-indigo-100 text-[11px] text-slate-600 bg-white/80 p-2 rounded-lg">
+                      <p className="italic mb-1"><span className="font-semibold text-slate-700">Lý do:</span> {currentConv.leadScore.reason}</p>
+                      <p className="text-slate-800"><span className="font-semibold text-slate-700">Kịch bản:</span> &quot;{currentConv.leadScore.suggestedScript}&quot;</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Javis AI Gợi ý phản hồi cho riêng khách hàng này (Contextual Draft Banner) */}
+              {currentConvDraft && (
+                <div className="bg-gradient-to-r from-purple-50/95 via-indigo-50/90 to-blue-50/95 border border-purple-200/90 rounded-xl p-2.5 mb-2 shadow-2xs animate-fade-in flex items-center justify-between gap-3 flex-shrink-0">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div className="w-6 h-6 rounded-lg bg-purple-600 text-white flex items-center justify-center flex-shrink-0 shadow-xs">
+                      <Sparkles className="w-3.5 h-3.5" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[11px] font-bold text-purple-900">Javis đề xuất trả lời:</span>
+                        <span className="text-[9px] font-bold text-amber-700 bg-amber-100/80 px-1.5 py-0.2 rounded-full border border-amber-200/60 flex items-center gap-0.5">
+                          <Clock className="w-2.5 h-2.5 text-amber-600" /> Chờ duyệt
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-700 font-medium truncate mt-0.5" title={currentConvDraft.proposed}>
+                        &quot;{currentConvDraft.proposed}&quot;
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5 flex-shrink-0">
+                    <button
+                      type="button"
+                      disabled={processingDraftId === currentConvDraft.id}
+                      onClick={() => handleSendDraft(currentConvDraft.id)}
+                      className="px-2.5 py-1 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white font-bold text-xs rounded-lg shadow-2xs transition-colors cursor-pointer"
+                    >
+                      {processingDraftId === currentConvDraft.id ? 'Đang gửi...' : 'Duyệt gửi'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleApplyDraft(currentConvDraft.proposed)}
+                      className="px-2 py-1 bg-white hover:bg-slate-100 text-slate-700 font-semibold text-xs rounded-lg border border-slate-200 transition-colors cursor-pointer"
+                      title="Đưa vào ô soạn thảo để chỉnh sửa"
+                    >
+                      Sửa
+                    </button>
+                    <button
+                      type="button"
+                      disabled={processingDraftId === currentConvDraft.id}
+                      onClick={() => handleRejectDraft(currentConvDraft.id)}
+                      className="px-2 py-1 bg-white hover:bg-rose-50 text-rose-600 font-semibold text-xs rounded-lg border border-slate-200 transition-colors cursor-pointer"
+                      title="Từ chối nháp này"
+                    >
+                      Bỏ
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Bottom Message Input Box */}
+              <div className="border border-slate-200 rounded-2xl p-2.5 bg-white shadow-2xs flex-shrink-0">
+                <textarea
+                  rows={2}
+                  value={inputText}
+                  onChange={(e) => setInputText(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault()
+                      handleSendMessage()
+                    }
+                  }}
+                  placeholder="Nhập tin nhắn... (Shift + Enter để xuống dòng)"
+                  className="w-full text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none resize-none px-1 py-0.5"
+                />
+                {/* Action Bar */}
+                <div className="flex items-center justify-between pt-2 border-t border-slate-100 mt-1">
+                  {/* Left Icons */}
+                  <div className="flex items-center space-x-1 text-slate-400">
+                    <button
+                      type="button"
+                      className="p-1.5 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+                      title="Đính kèm tệp"
+                    >
+                      <Paperclip className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      className="p-1.5 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+                      title="Gửi ảnh"
+                    >
+                      <ImageIcon className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      className="p-1.5 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+                      title="Emoji"
+                    >
+                      <Smile className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      className="p-1.5 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+                      title="Mẫu câu nhanh"
+                    >
+                      <FileText className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      className="px-2 py-1 text-xs font-bold hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+                      title="Lệnh nhanh"
+                    >
+                      /
+                    </button>
+                  </div>
+
+                  {/* Right Send & Save draft Buttons */}
+                  <div className="flex items-center space-x-2">
+                    <button
+                      type="button"
+                      onClick={() => showToast('Đã lưu nháp tin nhắn vào bộ nhớ đệm')}
+                      className="px-3 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-colors cursor-pointer"
+                    >
+                      Lưu nháp
+                    </button>
+                    <button
+                      type="button"
+                      disabled={isSending || !inputText.trim()}
+                      onClick={handleSendMessage}
+                      className="flex items-center space-x-1.5 px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-bold transition-all shadow-sm shadow-emerald-600/20 cursor-pointer"
+                    >
+                      {isSending ? (
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <Send className="w-3.5 h-3.5" />
+                      )}
+                      <span>{isSending ? 'Đang gửi...' : 'Gửi'}</span>
+                    </button>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
             </>
           )}
         </div>
 
         {/* ================= COLUMN 3: NHÁP CHỜ DUYỆT & MINI CRM (3 cols) ================= */}
-        <div className="xl:col-span-3 space-y-5">
+        <div className="xl:col-span-3 flex flex-col gap-3.5 h-full overflow-hidden">
           {/* Card 1: Nháp chờ duyệt hôm nay */}
-          <div className="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-2xs">
-            <div className="flex items-center justify-between mb-3">
+          <div className="bg-white border border-slate-200/80 rounded-2xl p-3 shadow-2xs flex-shrink-0">
+            <div className="flex items-center justify-between mb-2">
               <div className="flex items-center space-x-1.5">
                 <Clock className="w-4 h-4 text-blue-600" />
                 <h3 className="text-xs font-bold text-slate-900">Nháp chờ duyệt hôm nay</h3>
               </div>
               <button
                 type="button"
-                className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center space-x-0.5"
+                onClick={() => setRightPanelTab('drafts')}
+                className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center space-x-0.5 cursor-pointer"
               >
-                <span>Xem tất cả</span>
+                <span>Xem tất cả ({pendingDrafts.length})</span>
                 <ArrowRight className="w-3 h-3" />
               </button>
             </div>
@@ -1107,59 +1347,241 @@ export const Inbox: React.FC = () => {
             {/* 3 Mini KPI Boxes */}
             <div className="grid grid-cols-3 gap-2">
               {/* Box 1: Nháp bình luận */}
-              <div className="bg-slate-50/70 border border-slate-100 rounded-xl p-2.5 flex flex-col justify-between">
-                <div className="w-7 h-7 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center mb-1">
-                  <MessageSquare className="w-3.5 h-3.5" />
+              <button
+                type="button"
+                onClick={() => {
+                  setRightPanelTab('drafts')
+                  setDraftTypeFilter('comment')
+                }}
+                className="bg-slate-50/70 hover:bg-purple-50/50 border border-slate-100 hover:border-purple-200 rounded-xl p-2 flex flex-col justify-between text-left transition-colors cursor-pointer"
+              >
+                <div className="w-6 h-6 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center mb-1">
+                  <MessageSquare className="w-3 h-3" />
                 </div>
-                <span className="text-[11px] text-slate-500 font-medium">Nháp bình luận</span>
-                <div className="text-lg font-black text-slate-900 mt-0.5">{pendingCommentDrafts}</div>
-              </div>
+                <span className="text-[10px] text-slate-500 font-medium">Bình luận</span>
+                <div className="text-base font-black text-slate-900 mt-0.5">{pendingCommentDrafts}</div>
+              </button>
 
               {/* Box 2: Nháp IB */}
-              <div className="bg-slate-50/70 border border-slate-100 rounded-xl p-2.5 flex flex-col justify-between">
-                <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center mb-1">
-                  <Send className="w-3.5 h-3.5" />
+              <button
+                type="button"
+                onClick={() => {
+                  setRightPanelTab('drafts')
+                  setDraftTypeFilter('message')
+                }}
+                className="bg-slate-50/70 hover:bg-blue-50/50 border border-slate-100 hover:border-blue-200 rounded-xl p-2 flex flex-col justify-between text-left transition-colors cursor-pointer"
+              >
+                <div className="w-6 h-6 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center mb-1">
+                  <Send className="w-3 h-3" />
                 </div>
-                <span className="text-[11px] text-slate-500 font-medium">Nháp IB</span>
-                <div className="text-lg font-black text-slate-900 mt-0.5">{pendingMessageDrafts}</div>
-              </div>
+                <span className="text-[10px] text-slate-500 font-medium">Nháp IB</span>
+                <div className="text-base font-black text-slate-900 mt-0.5">{pendingMessageDrafts}</div>
+              </button>
 
               {/* Box 3: Đã gửi */}
-              <div className="bg-slate-50/70 border border-slate-100 rounded-xl p-2.5 flex flex-col justify-between">
-                <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center mb-1">
+              <div className="bg-slate-50/70 border border-slate-100 rounded-xl p-2 flex flex-col justify-between">
+                <div className="w-6 h-6 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center mb-1">
                   <CheckCircle2 className="w-3.5 h-3.5" />
                 </div>
-                <span className="text-[11px] text-slate-500 font-medium">Đã gửi</span>
-                <div className="text-lg font-black text-slate-900 mt-0.5">{sentTodayCount}</div>
+                <span className="text-[10px] text-slate-500 font-medium">Đã gửi</span>
+                <div className="text-base font-black text-slate-900 mt-0.5">{sentTodayCount}</div>
               </div>
             </div>
           </div>
 
-          {/* Card 2: Mini CRM */}
-          <div className="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-2xs space-y-4">
-            {/* Header */}
-            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-              <h3 className="text-base font-bold text-slate-900">Mini CRM</h3>
-              {currentConv && (
+          {/* Card 2: Social Commerce Order & Mini CRM & Drafts */}
+          <div className="bg-white border border-slate-200/80 rounded-2xl p-3.5 shadow-2xs flex-1 min-h-0 flex flex-col overflow-hidden">
+            {/* Header Switcher: 3 tabs */}
+            <div className="flex items-center justify-between pb-2.5 border-b border-slate-100 flex-shrink-0">
+              <div className="flex items-center space-x-1 bg-slate-100 p-0.5 rounded-xl text-xs font-semibold w-full">
                 <button
                   type="button"
-                  className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center space-x-0.5"
+                  onClick={() => setRightPanelTab('orders')}
+                  className={`flex-1 flex items-center justify-center space-x-1 py-1 px-1.5 rounded-lg transition-all cursor-pointer ${
+                    rightPanelTab === 'orders'
+                      ? 'bg-white text-blue-600 shadow-2xs font-bold'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
                 >
-                  <span>Xem hồ sơ đầy đủ</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
+                  <ShoppingBag className="w-3 h-3" />
+                  <span className="truncate">Đơn hàng</span>
                 </button>
-              )}
+                <button
+                  type="button"
+                  onClick={() => setRightPanelTab('crm')}
+                  className={`flex-1 flex items-center justify-center space-x-1 py-1 px-1.5 rounded-lg transition-all cursor-pointer ${
+                    rightPanelTab === 'crm'
+                      ? 'bg-white text-slate-900 shadow-2xs font-bold'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <User className="w-3 h-3" />
+                  <span className="truncate">Hồ sơ CRM</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRightPanelTab('drafts')}
+                  className={`flex-1 flex items-center justify-center space-x-1 py-1 px-1.5 rounded-lg transition-all cursor-pointer ${
+                    rightPanelTab === 'drafts'
+                      ? 'bg-white text-purple-600 shadow-2xs font-bold'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <Sparkles className="w-3 h-3 text-purple-600" />
+                  <span className="truncate">Nháp AI ({pendingDrafts.length})</span>
+                </button>
+              </div>
             </div>
 
-            {!currentConv ? (
-              <div className="py-8 text-center text-slate-400 text-xs">
-                <FileText className="w-8 h-8 mx-auto mb-2 text-slate-300" />
-                <p className="font-semibold text-slate-600 mb-1">Chưa chọn khách hàng</p>
-                <p className="text-slate-400 text-[11px]">Chọn một hội thoại để xem thông tin chi tiết và gắn nhãn CRM.</p>
-              </div>
-            ) : (
-            <>
-            {/* Customer Header Avatar & Name */}
+            <div className="flex-1 min-h-0 overflow-y-auto pt-2.5">
+              {rightPanelTab === 'drafts' ? (
+                <div className="space-y-3">
+                  {/* Filter pills & search for drafts */}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setDraftTypeFilter('all')}
+                        className={`px-2 py-0.5 rounded-md text-[11px] font-semibold transition-colors cursor-pointer ${
+                          draftTypeFilter === 'all'
+                            ? 'bg-purple-100 text-purple-700 font-bold'
+                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                        }`}
+                      >
+                        Tất cả ({pendingDrafts.length})
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setDraftTypeFilter('message')}
+                        className={`px-2 py-0.5 rounded-md text-[11px] font-semibold transition-colors cursor-pointer ${
+                          draftTypeFilter === 'message'
+                            ? 'bg-blue-100 text-blue-700 font-bold'
+                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                        }`}
+                      >
+                        Tin nhắn ({pendingMessageDrafts})
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setDraftTypeFilter('comment')}
+                        className={`px-2 py-0.5 rounded-md text-[11px] font-semibold transition-colors cursor-pointer ${
+                          draftTypeFilter === 'comment'
+                            ? 'bg-purple-100 text-purple-700 font-bold'
+                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                        }`}
+                      >
+                        Bình luận ({pendingCommentDrafts})
+                      </button>
+                    </div>
+                    <input
+                      type="text"
+                      value={draftSearchQuery}
+                      onChange={(e) => setDraftSearchQuery(e.target.value)}
+                      placeholder="Tìm theo tên khách, nội dung..."
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                    />
+                  </div>
+
+                  {/* Drafts list */}
+                  {filteredDrafts.length === 0 ? (
+                    <div className="py-8 text-center text-slate-400 text-xs">
+                      <CheckCircle2 className="w-8 h-8 mx-auto mb-2 text-emerald-400" />
+                      <p className="font-semibold text-slate-600 mb-1">Không có nháp cần duyệt</p>
+                      <p className="text-slate-400 text-[11px]">Tất cả phản hồi đã được xử lý hoặc chưa có tương tác mới.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2.5">
+                      {filteredDrafts.map((draft) => (
+                        <div
+                          key={draft.id}
+                          className="bg-white p-3 rounded-xl border border-slate-200 hover:border-purple-300 shadow-2xs transition-all space-y-2"
+                        >
+                          <div className="flex items-center justify-between gap-1">
+                            <span className="text-[10px] font-bold text-blue-600 flex items-center space-x-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                              <span>{draft.event_kind === 'comment' ? 'Bình luận' : 'Tin nhắn'}</span>
+                            </span>
+                            <span className="text-[9px] font-bold text-amber-700 bg-amber-50 border border-amber-200/80 px-1.5 py-0.2 rounded inline-flex items-center gap-0.5">
+                              <Clock className="w-2.5 h-2.5 text-amber-600" />
+                              Chờ duyệt
+                            </span>
+                          </div>
+                          <h4 className="text-xs font-bold text-slate-900 leading-tight">
+                            {draft.from_name ? `Gửi cho: ${draft.from_name}` : `Mục tiêu: ${draft.target_id}`}
+                          </h4>
+                          {draft.source_body && (
+                            <p className="text-[10px] text-slate-500 italic bg-slate-50 p-1.5 rounded border border-slate-100 line-clamp-2">
+                              Khách: &quot;{draft.source_body}&quot;
+                            </p>
+                          )}
+                          <p className="text-xs text-slate-700 leading-snug font-medium bg-purple-50/50 p-2 rounded-lg border border-purple-100">
+                            {draft.proposed}
+                          </p>
+                          <div className="flex items-center space-x-1.5 pt-1">
+                            <button
+                              type="button"
+                              disabled={processingDraftId === draft.id}
+                              onClick={() => handleSendDraft(draft.id)}
+                              className="flex-1 py-1 px-2 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white font-semibold text-xs rounded-lg shadow-2xs transition-colors text-center cursor-pointer"
+                            >
+                              {processingDraftId === draft.id ? 'Đang gửi...' : 'Duyệt gửi'}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleSelectDraftConversation(draft)}
+                              className="py-1 px-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-lg transition-colors cursor-pointer"
+                              title="Mở hội thoại và đưa vào ô nhập tin nhắn"
+                            >
+                              Sửa
+                            </button>
+                            <button
+                              type="button"
+                              disabled={processingDraftId === draft.id}
+                              onClick={() => handleRejectDraft(draft.id)}
+                              className="py-1 px-2 bg-white hover:bg-rose-50 text-rose-600 hover:border-rose-200 font-semibold text-xs rounded-lg border border-slate-200 transition-colors cursor-pointer"
+                              title="Từ chối nháp này"
+                            >
+                              Bỏ
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : rightPanelTab === 'orders' ? (
+                !currentConv ? (
+                  <div className="py-8 text-center text-slate-400 text-xs">
+                    <ShoppingBag className="w-8 h-8 mx-auto mb-2 text-slate-300" />
+                    <p className="font-semibold text-slate-600 mb-1">Chưa có khách hàng được chọn</p>
+                    <p className="text-slate-400 text-[11px]">Vui lòng chọn một cuộc trò chuyện để xem hoặc tạo đơn hàng.</p>
+                  </div>
+                ) : (
+                  <OrderInboxPanel
+                    crmId={currentConv.fbId || currentConv.id}
+                    threadId={currentConv.id}
+                    customerName={currentConv.name}
+                    pageId={currentConv.id.includes('_') ? currentConv.id.split('_')[0] : (scopePageId || undefined)}
+                    messages={displayMessages.map((m) => ({
+                      body: m.text,
+                      sender: m.sender,
+                    }))}
+                    onInsertMessageToDraft={(suggestedText) => {
+                      setInputText(suggestedText)
+                      showToast('Đã đưa câu hỏi bổ sung vào ô soạn thảo chat!')
+                    }}
+                    onToast={showToast}
+                  />
+                )
+              ) : !currentConv ? (
+                <div className="py-8 text-center text-slate-400 text-xs">
+                  <User className="w-8 h-8 mx-auto mb-2 text-slate-300" />
+                  <p className="font-semibold text-slate-600 mb-1">Chưa có khách hàng được chọn</p>
+                  <p className="text-slate-400 text-[11px]">Vui lòng chọn một cuộc trò chuyện để xem hồ sơ CRM.</p>
+                </div>
+              ) : (
+                <>
+                {/* Customer Header Avatar & Name */}
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2.5">
                 <div className="relative">
@@ -1206,15 +1628,22 @@ export const Inbox: React.FC = () => {
                 <div className="flex items-center space-x-2">
                   <Phone className="w-3.5 h-3.5 text-slate-400" />
                   <span className="font-medium text-slate-800">{currentConv.phone}</span>
+                  {currentConv.phone.includes('*') && (
+                    <span className="px-1.5 py-0.2 rounded bg-amber-50 text-amber-600 border border-amber-200 text-[10px] font-semibold">
+                      Đã che
+                    </span>
+                  )}
                 </div>
-                <button
-                  type="button"
-                  onClick={() => handleCopy(currentConv.phone, 'SĐT')}
-                  className="text-slate-400 hover:text-blue-600 p-1"
-                  title="Sao chép"
-                >
-                  <Copy className="w-3.5 h-3.5" />
-                </button>
+                {!currentConv.phone.includes('*') && currentConv.phone !== 'Chưa có SĐT' && (
+                  <button
+                    type="button"
+                    onClick={() => handleCopy(currentConv.phone, 'SĐT')}
+                    className="text-slate-400 hover:text-blue-600 p-1 cursor-pointer"
+                    title="Sao chép"
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                  </button>
+                )}
               </div>
 
               <div className="flex items-center justify-between">
@@ -1264,28 +1693,38 @@ export const Inbox: React.FC = () => {
                 <span className="text-xs font-bold text-slate-800">Thẻ tag</span>
                 <button
                   type="button"
-                  onClick={() => {
-                    const newTag = prompt('Nhập tên tag mới:')
-                    if (newTag?.trim()) {
-                      setConversationsList((prev) =>
-                        prev.map((c) => {
-                          if (c.id === currentConv.id) {
-                            return {
-                              ...c,
-                              tags: [...c.tags, { text: newTag.trim(), color: 'blue' }],
-                            }
-                          }
-                          return c
-                        })
-                      )
-                    }
-                  }}
-                  className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center space-x-0.5"
+                  onClick={() => setIsAddingTag(!isAddingTag)}
+                  className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center space-x-0.5 cursor-pointer"
                 >
                   <Plus className="w-3 h-3" />
-                  <span>Thêm tag</span>
+                  <span>{isAddingTag ? 'Đóng' : 'Thêm tag'}</span>
                 </button>
               </div>
+              {isAddingTag && (
+                <div className="flex items-center gap-1.5 mb-2">
+                  <input
+                    type="text"
+                    value={newTagInput}
+                    onChange={(e) => setNewTagInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                        handleAddTag()
+                      }
+                    }}
+                    placeholder="Nhập tên thẻ tag..."
+                    className="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    autoFocus
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddTag}
+                    className="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg cursor-pointer"
+                  >
+                    Lưu
+                  </button>
+                </div>
+              )}
               <div className="flex flex-wrap gap-1.5">
                 {(currentConv.crmTags || currentConv.tags).map((t, idx) => (
                   <span
@@ -1473,8 +1912,9 @@ export const Inbox: React.FC = () => {
             <div className="grid grid-cols-4 gap-1.5 pt-2 border-t border-slate-100">
               <button
                 type="button"
-                onClick={() => showToast('Đã tạo việc trên Kanban thành công!')}
-                className="flex items-center justify-center space-x-1 py-2 px-1 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-[11px] font-semibold transition-colors shadow-2xs"
+                onClick={handleHandoffTask}
+                className="flex items-center justify-center space-x-1 py-2 px-1 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-[11px] font-semibold transition-colors shadow-2xs cursor-pointer"
+                title="Tạo việc chăm sóc khách hàng vào Kanban thật qua api.handoffToStaff"
               >
                 <Briefcase className="w-3.5 h-3.5 text-blue-600" />
                 <span>Tạo việc</span>
@@ -1482,8 +1922,9 @@ export const Inbox: React.FC = () => {
 
               <button
                 type="button"
-                onClick={() => window.open(`tel:${currentConv.phone}`)}
-                className="flex items-center justify-center space-x-1 py-2 px-1 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-[11px] font-semibold transition-colors shadow-2xs"
+                onClick={handleCallCustomer}
+                className="flex items-center justify-center space-x-1 py-2 px-1 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-[11px] font-semibold transition-colors shadow-2xs cursor-pointer"
+                title="Gọi khách (kiểm tra bảo mật số điện thoại)"
               >
                 <Phone className="w-3.5 h-3.5 text-blue-600" />
                 <span>Gọi khách</span>
@@ -1492,7 +1933,7 @@ export const Inbox: React.FC = () => {
               <button
                 type="button"
                 onClick={() => showToast('Đã cập nhật nhãn phân loại khách hàng')}
-                className="flex items-center justify-center space-x-1 py-2 px-1 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-[11px] font-semibold transition-colors shadow-2xs"
+                className="flex items-center justify-center space-x-1 py-2 px-1 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-[11px] font-semibold transition-colors shadow-2xs cursor-pointer"
               >
                 <Tag className="w-3.5 h-3.5 text-blue-600" />
                 <span>Gắn tag</span>
@@ -1501,10 +1942,22 @@ export const Inbox: React.FC = () => {
               <button
                 type="button"
                 onClick={() => showToast('Đã đồng bộ thông tin khách hàng sang CRM!')}
-                className="flex items-center justify-center space-x-1 py-2 px-1 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-[11px] font-semibold transition-colors shadow-2xs"
+                className="flex items-center justify-center space-x-1 py-2 px-1 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-[11px] font-semibold transition-colors shadow-2xs cursor-pointer"
               >
                 <Share2 className="w-3.5 h-3.5 text-blue-600" />
                 <span>Xuất CRM</span>
+              </button>
+            </div>
+
+            {/* Primary CTA: Tạo đơn hàng */}
+            <div className="pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setRightPanelTab('orders')}
+                className="w-full flex items-center justify-center space-x-2 py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-sm shadow-emerald-600/20 cursor-pointer"
+              >
+                <ShoppingBag className="w-4 h-4" />
+                <span>Tạo đơn hàng</span>
               </button>
             </div>
             </>
@@ -1512,6 +1965,7 @@ export const Inbox: React.FC = () => {
           </div>
         </div>
       </div>
+    </div>
 
       {toastMessage && (
         <div className="fixed bottom-6 right-6 z-50 bg-slate-900 text-white px-4 py-2.5 rounded-xl shadow-lg text-xs font-semibold flex items-center space-x-2 animate-bounce">

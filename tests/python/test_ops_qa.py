@@ -207,3 +207,75 @@ def test_ops_qa_rate_limit():
     d21 = r21.json()
     assert d21.get("ok") is False
     assert "20 câu" in d21.get("error", "") or "giới hạn" in d21.get("reply", "")
+
+
+def test_ops_qa_product_pricing_grounding():
+    """Tra cứu giá sản phẩm/khóa học -> Javis trả chính xác giá và SKU từ ops_order_store."""
+    c, _ = _create_staff_client()
+    resp = c.post("/ops/qa", json={"message": "Khóa học Tin học văn phòng MOS giá bao nhiêu?"})
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data.get("ok") is True
+    reply = data.get("reply", "")
+    assert "SKU-MOS-01" in reply or "590.000" in reply
+    assert any("ops_business_catalog.md" in cite for cite in data.get("citations", []))
+
+
+def test_ops_qa_documents_vault_grounding():
+    """Hỏi về văn bản hoặc hợp đồng sắp hết hạn -> Javis trả số liệu từ ops_documents_store."""
+    c, _ = _create_staff_client()
+    resp = c.post("/ops/qa", json={"message": "Có văn bản hay hợp đồng nào sắp hết hạn trong 30 ngày không?"})
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data.get("ok") is True
+    reply = data.get("reply", "")
+    assert "Kho văn bản" in reply
+    assert any("ops_documents_vault.md" in cite for cite in data.get("citations", []))
+
+
+def test_ops_qa_shipping_ghn_grounding():
+    """Tra cứu mã vận đơn GHN -> Javis trả trạng thái giao hàng, COD và che SĐT."""
+    c, _ = _create_staff_client()
+    resp = c.post("/ops/qa", json={"message": "Kiểm tra mã vận đơn GHNMOCK-HCM-001 giùm tôi"})
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data.get("ok") is True
+    reply = data.get("reply", "")
+    assert "GHNMOCK-HCM-001" in reply
+    assert "GHN" in reply
+    assert "shipping" in reply or "Đang giao" in reply
+    assert any("ops_shipping_and_operations.md" in cite for cite in data.get("citations", []))
+
+
+def test_ops_bundled_plugin_tools():
+    """Kiểm tra plugin ops-tools được nạp vào MCP Hub và thực thi thành công."""
+    import plugins_host
+    specs, route = plugins_host.plugin_tools()
+    ops_tools = [s for s in specs if s["name"].startswith("ops_")]
+    names = [s["name"] for s in ops_tools]
+    assert "ops_catalog_query" in names
+    assert "ops_document_query" in names
+    assert "ops_order_tracking" in names
+    assert "ops_today_summary" in names
+
+    import asyncio
+    async def _test_exec():
+        # 1. Catalog query
+        cat_out = await route["ops_catalog_query"]["call"]({"keyword": "tin học"})
+        assert "MOS" in cat_out or "SKU-MOS-01" in cat_out
+
+        # 2. Document query
+        doc_out = await route["ops_document_query"]["call"]({"action": "stats"})
+        assert "KHO VĂN BẢN" in doc_out
+
+        # 3. Order tracking
+        track_out = await route["ops_order_tracking"]["call"]({"tracking_code": "GHNMOCK-HCM-001"})
+        assert "GHNMOCK-HCM-001" in track_out
+        assert "shipping" in track_out
+
+        # 4. Today summary
+        sum_out = await route["ops_today_summary"]["call"]({})
+        assert "BÁO CÁO TỔNG QUAN" in sum_out
+
+    asyncio.run(_test_exec())
+
