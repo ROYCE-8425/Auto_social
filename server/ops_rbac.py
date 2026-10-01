@@ -186,7 +186,7 @@ DEFAULT_ROLE_PERMISSIONS: Dict[str, List[str]] = {
         "directory:view",
     ],
     "cskh": [
-        "care:view", "care:reply", "care:poll_now",
+        "care:view", "care:reply",
         "crm:view", "crm:edit",
         "orders:view", "orders:create_edit",
         "shipping:view",
@@ -223,7 +223,7 @@ DEFAULT_ROLE_PERMISSIONS: Dict[str, List[str]] = {
         "directory:view",
     ],
     "staff": [
-        "care:view", "care:reply", "care:poll_now",
+        "care:view", "care:reply",
         "crm:view", "crm:edit",
         "orders:view", "orders:create_edit",
         "shipping:view",
@@ -697,7 +697,7 @@ def check_access_permission(user: Optional[dict], path: str, method: str, payloa
         return False, f"Tài khoản {role} không có quyền thay đổi cài đặt Care"
 
     if path == "/fanpage-care/poll-now":
-        if user_has_permission(user, "care:poll_now") or user_has_permission(user, "care:view"):
+        if user_has_permission(user, "care:poll_now"):
             return True, None
         return False, f"Tài khoản {role} không có quyền kích hoạt quét bình luận"
 
