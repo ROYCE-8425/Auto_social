@@ -380,6 +380,70 @@ def seed_demo_documents(db_path: Path | str | None = None) -> None:
 # CRUD & Query Operations
 # ============================================================
 
+def _format_document_dict(d: Dict[str, Any]) -> Dict[str, Any]:
+    """Chuẩn hóa cấu trúc tài liệu đồng bộ giữa SQLite và giao diện Ops Frontend."""
+    now = time.time()
+    day_secs = 86400
+    expires_at = d.get("expires_at")
+
+    # 1. Code & Filename
+    filename = d.get("file_name") or d.get("filename") or ""
+    code = d.get("code")
+    if not code:
+        if filename and "." in filename:
+            code = filename.rsplit(".", 1)[0]
+        else:
+            code = str(d.get("id") or "").upper().replace("_", "-")
+
+    # 2. Status normalization
+    raw_status = d.get("approval_status") or "draft"
+    if raw_status in ("pending_approval", "pending"):
+        approval_status = "pending"
+    else:
+        approval_status = raw_status
+
+    # 3. Expiry date calculation
+    is_expiring_soon = False
+    is_expired = False
+    expiry_date_str = None
+    if expires_at:
+        is_expired = float(expires_at) < now
+        is_expiring_soon = (not is_expired) and (float(expires_at) - now <= 30 * day_secs)
+        expiry_date_str = time.strftime("%Y-%m-%d", time.localtime(float(expires_at)))
+
+    # 4. Owner name mapping
+    owner_id = d.get("owner_id") or "staff"
+    owner_name = owner_id
+    if owner_id == "ql_tuan":
+        owner_name = "Lê Tuấn (Quản lý)"
+    elif owner_id == "nv_thao":
+        owner_name = "Lê Thảo (CSKH)"
+    elif owner_id == "nv_an":
+        owner_name = "Nguyễn Văn An (Kỹ thuật)"
+    elif owner_id == "admin":
+        owner_name = "Ban Giám Đốc"
+
+    # 5. Version normalization
+    ver = str(d.get("version") or "1.0").strip()
+    if not ver.startswith("v"):
+        ver = f"v{ver}"
+
+    out = dict(d)
+    out["code"] = code
+    out["filename"] = filename
+    out["file_name"] = filename
+    out["approval_status"] = approval_status
+    out["owner"] = owner_name
+    out["owner_id"] = owner_id
+    out["version"] = ver
+    out["expiry_date"] = expiry_date_str
+    out["expires_at"] = expires_at
+    out["is_expiring_soon"] = is_expiring_soon
+    out["is_expired"] = is_expired
+    out["mime_type"] = d.get("file_type") or "application/pdf"
+    return out
+
+
 def list_documents(
     category: Optional[str] = None,
     department: Optional[str] = None,
@@ -408,8 +472,11 @@ def list_documents(
             params.append(department)
 
         if approval_status and approval_status != "all":
-            query += " AND approval_status = ?"
-            params.append(approval_status)
+            if approval_status in ("pending", "pending_approval"):
+                query += " AND approval_status IN ('pending', 'pending_approval')"
+            else:
+                query += " AND approval_status = ?"
+                params.append(approval_status)
 
         if is_template is not None:
             query += " AND is_template = ?"
@@ -418,8 +485,8 @@ def list_documents(
         if expiring_soon:
             # Hết hạn trong vòng 30 ngày tới
             now = time.time()
-            query += " AND expires_at IS NOT NULL AND expires_at > ? AND expires_at <= ?"
-            params.extend([now - 86400, now + 30 * 86400])
+            query += " AND expires_at IS NOT NULL AND expires_at >= ? AND expires_at <= ?"
+            params.extend([now, now + 30 * 86400])
 
         if linked_entity_type and linked_entity_type != "all":
             query += " AND linked_entity_type = ?"
@@ -431,8 +498,8 @@ def list_documents(
 
         if search:
             s = f"%{search.strip()}%"
-            query += " AND (title LIKE ? OR file_name LIKE ? OR description LIKE ? OR tags_json LIKE ? OR linked_entity_name LIKE ?)"
-            params.extend([s, s, s, s, s])
+            query += " AND (title LIKE ? OR file_name LIKE ? OR id LIKE ? OR description LIKE ? OR tags_json LIKE ? OR linked_entity_name LIKE ?)"
+            params.extend([s, s, s, s, s, s])
 
         count_query = query.replace("SELECT *", "SELECT COUNT(*) as total", 1)
         cur = conn.execute(count_query, params)
@@ -451,7 +518,7 @@ def list_documents(
                 d["tags"] = json.loads(d.get("tags_json") or "[]")
             except Exception:
                 d["tags"] = []
-            docs.append(d)
+            docs.append(_format_document_dict(d))
 
         return {
             "ok": True,
@@ -479,13 +546,25 @@ def get_document(doc_id: str, db_path: Path | str | None = None) -> Optional[Dic
 
         # Lấy versions
         cur_v = conn.execute("SELECT * FROM ops_document_versions WHERE document_id = ? ORDER BY created_at DESC", (doc_id,))
-        doc["versions"] = [dict(v) for v in cur_v.fetchall()]
+        versions = []
+        for v in cur_v.fetchall():
+            vd = dict(v)
+            vd["filename"] = vd.get("file_name")
+            vd["notes"] = vd.get("change_note")
+            versions.append(vd)
+        doc["versions"] = versions
 
         # Lấy activities
         cur_a = conn.execute("SELECT * FROM ops_document_activities WHERE document_id = ? ORDER BY created_at DESC LIMIT 30", (doc_id,))
-        doc["activities"] = [dict(a) for a in cur_a.fetchall()]
+        activities = []
+        for a in cur_a.fetchall():
+            ad = dict(a)
+            ad["actor"] = ad.get("actor_id")
+            ad["details"] = ad.get("note")
+            activities.append(ad)
+        doc["activities"] = activities
 
-        return doc
+        return _format_document_dict(doc)
 
 
 def get_document_file_path(doc_id: str, db_path: Path | str | None = None) -> Optional[Path]:
@@ -493,11 +572,12 @@ def get_document_file_path(doc_id: str, db_path: Path | str | None = None) -> Op
     doc = get_document(doc_id, db_path)
     if not doc:
         return None
-    base = Path(config.STATE_DIR) / "storage" / "documents"
-    fp = Path(doc["file_path"])
-    if fp.is_absolute():
-        return fp
-    return base / fp
+    base = (Path(config.STATE_DIR) / "storage" / "documents").resolve()
+    fp = Path(str(doc.get("file_path") or "").replace("\\", "/").strip("/"))
+    resolved = (base / fp).resolve()
+    if base != resolved and base not in resolved.parents:
+        return None
+    return resolved
 
 
 def create_document(
@@ -734,17 +814,29 @@ def get_stats(db_path: Path | str | None = None) -> Dict[str, Any]:
 
     for conn in get_connection(db_path):
         total_docs = conn.execute("SELECT COUNT(*) as cnt FROM ops_documents").fetchone()["cnt"]
-        waiting_approval = conn.execute("SELECT COUNT(*) as cnt FROM ops_documents WHERE approval_status = 'pending_approval'").fetchone()["cnt"]
-        
-        # Sắp hết hạn trong 30 ngày
+        waiting_approval = conn.execute("SELECT COUNT(*) as cnt FROM ops_documents WHERE approval_status IN ('pending', 'pending_approval')").fetchone()["cnt"]
+
+        # Sắp hết hạn trong 30 ngày (chưa hết hạn)
         expiring_soon = conn.execute("""
         SELECT COUNT(*) as cnt FROM ops_documents
-        WHERE expires_at IS NOT NULL AND expires_at > ? AND expires_at <= ?
-        """, (now - day_secs, now + 30 * day_secs)).fetchone()["cnt"]
+        WHERE expires_at IS NOT NULL AND expires_at >= ? AND expires_at <= ?
+        """, (now, now + 30 * day_secs)).fetchone()["cnt"]
+
+        # Đã hết hạn
+        expired_count = conn.execute("""
+        SELECT COUNT(*) as cnt FROM ops_documents
+        WHERE expires_at IS NOT NULL AND expires_at < ?
+        """, (now,)).fetchone()["cnt"]
+
+        # Hợp đồng thiếu chữ ký
+        missing_signature = conn.execute("""
+        SELECT COUNT(*) as cnt FROM ops_documents
+        WHERE category = 'contract' AND approval_status NOT IN ('signed', 'rejected')
+        """).fetchone()["cnt"]
 
         # Số hợp đồng
         contracts_count = conn.execute("SELECT COUNT(*) as cnt FROM ops_documents WHERE category = 'contract'").fetchone()["cnt"]
-        
+
         # Số SOP
         sop_count = conn.execute("SELECT COUNT(*) as cnt FROM ops_documents WHERE category = 'sop'").fetchone()["cnt"]
 
@@ -755,17 +847,27 @@ def get_stats(db_path: Path | str | None = None) -> Dict[str, Any]:
         cat_cur = conn.execute("SELECT category, COUNT(*) as cnt FROM ops_documents GROUP BY category")
         by_category = {row["category"]: row["cnt"] for row in cat_cur.fetchall()}
 
+        # Thống kê theo status
+        status_cur = conn.execute("SELECT approval_status, COUNT(*) as cnt FROM ops_documents GROUP BY approval_status")
+        by_status = {row["approval_status"]: row["cnt"] for row in status_cur.fetchall()}
+
         # Thống kê theo phòng ban
         dept_cur = conn.execute("SELECT department, COUNT(*) as cnt FROM ops_documents GROUP BY department")
         by_department = {row["department"]: row["cnt"] for row in dept_cur.fetchall()}
 
         return {
+            "total": total_docs,
             "total_documents": total_docs,
+            "pending_approval": waiting_approval,
             "waiting_approval": waiting_approval,
             "expiring_soon": expiring_soon,
+            "expired": expired_count,
+            "missing_signature": missing_signature,
             "contracts_count": contracts_count,
             "sop_count": sop_count,
             "templates_count": templates_count,
             "by_category": by_category,
+            "by_status": by_status,
             "by_department": by_department,
+            "categories_count": len(by_category) or 8,
         }

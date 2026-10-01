@@ -1628,6 +1628,7 @@ export type DocumentCategory =
 export type DocumentApprovalStatus =
   | 'draft'
   | 'pending'
+  | 'pending_approval'
   | 'approved'
   | 'rejected'
   | 'signed'
@@ -1638,10 +1639,12 @@ export interface DocumentVersion {
   document_id: string
   version: string
   filename: string
+  file_name?: string
   file_path: string
   file_size: number
   uploaded_by: string
   notes?: string
+  change_note?: string
   created_at: number
 }
 
@@ -1649,8 +1652,10 @@ export interface DocumentActivity {
   id: string
   document_id: string
   actor: string
+  actor_id?: string
   action: string
   details?: string
+  note?: string
   created_at: number
 }
 
@@ -1661,13 +1666,16 @@ export interface CompanyDocument {
   category: DocumentCategory
   department: string
   owner: string
+  owner_id?: string
   version: string
   approval_status: DocumentApprovalStatus
   expiry_date?: string | null
+  expires_at?: number | null
   permission_level: 'public' | 'internal' | 'confidential' | 'restricted'
   linked_entity_type?: 'customer' | 'order' | 'task' | 'staff' | null
   linked_entity_id?: string | null
   filename: string
+  file_name?: string
   file_path: string
   file_size: number
   mime_type: string

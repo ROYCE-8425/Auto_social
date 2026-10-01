@@ -132,6 +132,18 @@ def test_api_list_and_stats():
     assert stats_data["stats"]["total_documents"] >= 5
 
 
+def test_ops_documents_requires_ops_session(monkeypatch):
+    """API kho tài liệu không được public khi không có ops session."""
+    import ops_rbac
+
+    monkeypatch.setattr(ops_rbac, "get_current_ops_user", lambda request: None)
+    client = TestClient(app, base_url="http://127.0.0.1")
+
+    res = client.get("/ops/documents")
+    assert res.status_code == 401
+    assert res.json()["auth_required"] is True
+
+
 def test_api_upload_multipart_document():
     """6. Kiểm tra API upload multipart file thật và lưu metadata."""
     client = TestClient(app, base_url="http://127.0.0.1")
@@ -165,6 +177,30 @@ def test_api_upload_multipart_document():
     file_res = client.get(f"/ops/documents/{doc['id']}/file")
     assert file_res.status_code == 200
     assert b"Mock Contract Content" in file_res.content
+
+
+def test_upload_filename_is_sanitized_inside_vault():
+    """Tên file upload có path separator phải được lưu an toàn trong Document Vault."""
+    client = TestClient(app, base_url="http://127.0.0.1")
+    files = {
+        "file": ("..\\..\\hop dong/HD TEST.pdf", io.BytesIO(b"%PDF safe name"), "application/pdf")
+    }
+    data = {
+        "title": "Hợp đồng tên file cần làm sạch",
+        "category": "contract",
+        "department": "phap_che",
+    }
+
+    res = client.post("/ops/documents/upload", files=files, data=data)
+    assert res.status_code == 200
+    doc = res.json()["document"]
+    assert "/" not in doc["file_name"]
+    assert "\\" not in doc["file_name"]
+
+    stored_path = ops_documents_store.get_document_file_path(doc["id"])
+    vault_root = ops_documents_store.get_base_storage_dir().resolve()
+    assert stored_path is not None
+    assert vault_root == stored_path or vault_root in stored_path.parents
 
 
 def test_ops_hub_summary_includes_documents():

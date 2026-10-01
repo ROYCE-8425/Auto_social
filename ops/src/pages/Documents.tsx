@@ -71,6 +71,24 @@ const formatDate = (dateStrOrTs?: string | number | null) => {
   }
 }
 
+// Helper format version string safely (never vv1.0)
+const formatVersion = (v?: string | null) => {
+  if (!v) return 'v1.0'
+  const trimmed = String(v).trim()
+  return trimmed.startsWith('v') ? trimmed : `v${trimmed}`
+}
+
+// Department metadata
+const DEPARTMENT_MAP: Record<string, string> = {
+  kinh_doanh: 'Kinh doanh',
+  van_hanh: 'Vận hành',
+  nhan_su: 'Nhân sự',
+  phap_ly: 'Pháp lý',
+  ke_toan: 'Kế toán',
+  marketing: 'Marketing',
+  cskh: 'CSKH',
+}
+
 // Category metadata
 const CATEGORY_MAP: Record<DocumentCategory, { label: string; icon: React.FC<{ className?: string }>; color: string; bg: string }> = {
   contract: { label: 'Hợp đồng', icon: FileText, color: 'text-blue-600', bg: 'bg-blue-50 border-blue-200' },
@@ -84,10 +102,11 @@ const CATEGORY_MAP: Record<DocumentCategory, { label: string; icon: React.FC<{ c
 }
 
 // Status metadata
-const STATUS_MAP: Record<DocumentApprovalStatus, { label: string; badge: string; icon: React.FC<{ className?: string }> }> = {
+const STATUS_MAP: Record<string, { label: string; badge: string; icon: React.FC<{ className?: string }> }> = {
   approved: { label: 'Đã duyệt', badge: 'bg-emerald-100 text-emerald-800 border-emerald-200', icon: CheckCircle2 },
   signed: { label: 'Đã ký', badge: 'bg-blue-100 text-blue-800 border-blue-200', icon: FileSignature },
   pending: { label: 'Chờ duyệt', badge: 'bg-amber-100 text-amber-800 border-amber-200', icon: Clock },
+  pending_approval: { label: 'Chờ duyệt', badge: 'bg-amber-100 text-amber-800 border-amber-200', icon: Clock },
   draft: { label: 'Dự thảo', badge: 'bg-slate-100 text-slate-700 border-slate-200', icon: FileText },
   rejected: { label: 'Từ chối', badge: 'bg-rose-100 text-rose-800 border-rose-200', icon: AlertCircle },
   expired: { label: 'Hết hạn', badge: 'bg-red-100 text-red-800 border-red-200', icon: AlertTriangle },
@@ -139,13 +158,13 @@ export const DocumentsPage: React.FC = () => {
     return documents.filter((doc) => {
       if (categoryFilter !== 'all' && doc.category !== categoryFilter) return false
       if (departmentFilter !== 'all' && doc.department !== departmentFilter) return false
-      if (statusFilter !== 'all' && doc.approval_status !== statusFilter) return false
+      if (statusFilter !== 'all' && doc.approval_status !== statusFilter && !(statusFilter === 'pending' && doc.approval_status === 'pending_approval')) return false
       if (search.trim()) {
         const q = search.toLowerCase()
         const matchTitle = (doc.title || '').toLowerCase().includes(q)
-        const matchCode = (doc.code || '').toLowerCase().includes(q)
-        const matchOwner = (doc.owner || '').toLowerCase().includes(q)
-        const matchFile = (doc.filename || '').toLowerCase().includes(q)
+        const matchCode = (doc.code || doc.id || '').toLowerCase().includes(q)
+        const matchOwner = (doc.owner || doc.owner_id || '').toLowerCase().includes(q)
+        const matchFile = (doc.filename || doc.file_name || '').toLowerCase().includes(q)
         const matchTags = (doc.tags || []).some((t) => t.toLowerCase().includes(q))
         if (!matchTitle && !matchCode && !matchOwner && !matchFile && !matchTags) return false
       }
@@ -156,9 +175,9 @@ export const DocumentsPage: React.FC = () => {
   // Documents needing action
   const actionNeededDocs = useMemo(() => {
     return documents.filter((doc) => {
-      const isPending = doc.approval_status === 'pending'
+      const isPending = doc.approval_status === 'pending' || doc.approval_status === 'pending_approval'
       const isExpiring = Boolean(doc.is_expiring_soon || doc.is_expired)
-      const isUnsigned = doc.category === 'contract' && doc.approval_status !== 'signed' && doc.approval_status !== 'rejected'
+      const isUnsigned = (doc.category === 'contract' || doc.category === 'hr') && doc.approval_status !== 'signed' && doc.approval_status !== 'rejected'
 
       if (actionNeededSubtab === 'pending') return isPending
       if (actionNeededSubtab === 'expiring') return isExpiring
@@ -385,7 +404,7 @@ export const DocumentsPage: React.FC = () => {
                   <option value="all">Tất cả phòng ban</option>
                   {departments.map((dept) => (
                     <option key={dept} value={dept}>
-                      {dept}
+                      {DEPARTMENT_MAP[dept] || dept}
                     </option>
                   ))}
                 </select>
@@ -508,11 +527,13 @@ export const DocumentsPage: React.FC = () => {
                                   {doc.title}
                                 </p>
                                 <div className="flex items-center space-x-2 mt-0.5 text-[11px] text-slate-500">
-                                  <span className="font-mono bg-slate-100 px-1.5 py-0.2 rounded text-slate-600 font-semibold">
-                                    {doc.code}
+                                  <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-slate-600 font-semibold">
+                                    {doc.code || doc.id.toUpperCase()}
                                   </span>
                                   <span>&bull;</span>
-                                  <span className="truncate">{doc.filename}</span>
+                                  <span className="truncate max-w-[160px]" title={doc.filename || doc.file_name}>
+                                    {doc.filename || doc.file_name || 'Tài liệu'}
+                                  </span>
                                   <span>&bull;</span>
                                   <span>{formatBytes(doc.file_size)}</span>
                                 </div>
@@ -529,14 +550,14 @@ export const DocumentsPage: React.FC = () => {
 
                           {/* Dept & Owner */}
                           <td className="py-3 px-3">
-                            <p className="font-medium text-slate-800">{doc.department || 'Nội bộ'}</p>
-                            <p className="text-[11px] text-slate-400">{doc.owner || 'Chưa gán'}</p>
+                            <p className="font-medium text-slate-800">{DEPARTMENT_MAP[doc.department] || doc.department || 'Nội bộ'}</p>
+                            <p className="text-[11px] text-slate-400">{doc.owner || doc.owner_id || 'Chưa gán'}</p>
                           </td>
 
                           {/* Version */}
                           <td className="py-3 px-3">
                             <span className="font-mono text-xs px-2 py-0.5 bg-slate-100 text-slate-700 rounded-md font-semibold border border-slate-200">
-                              v{doc.version}
+                              {formatVersion(doc.version)}
                             </span>
                           </td>
 
@@ -550,14 +571,19 @@ export const DocumentsPage: React.FC = () => {
 
                           {/* Expiry Date */}
                           <td className="py-3 px-3">
-                            {doc.expiry_date ? (
+                            {(doc.expiry_date || doc.expires_at) ? (
                               <div>
-                                <p className={`font-medium ${doc.is_expiring_soon ? 'text-rose-600 font-bold' : 'text-slate-700'}`}>
-                                  {formatDate(doc.expiry_date)}
+                                <p className={`font-medium ${doc.is_expiring_soon ? 'text-rose-600 font-bold' : doc.is_expired ? 'text-red-700 font-bold line-through' : 'text-slate-700'}`}>
+                                  {formatDate(doc.expiry_date || doc.expires_at)}
                                 </p>
                                 {doc.is_expiring_soon && (
-                                  <span className="inline-block text-[10px] text-rose-600 font-bold bg-rose-50 px-1.5 py-0.2 rounded border border-rose-200 mt-0.5">
+                                  <span className="inline-block text-[10px] text-rose-600 font-bold bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200 mt-0.5">
                                     Sắp hết hạn
+                                  </span>
+                                )}
+                                {doc.is_expired && (
+                                  <span className="inline-block text-[10px] text-red-600 font-bold bg-red-50 px-1.5 py-0.5 rounded border border-red-200 mt-0.5">
+                                    Đã hết hạn
                                   </span>
                                 )}
                               </div>
@@ -698,8 +724,8 @@ export const DocumentsPage: React.FC = () => {
                             {React.createElement(catMeta.icon, { className: 'w-4 h-4' })}
                           </span>
                           <div>
-                            <span className="font-mono text-[11px] font-bold text-slate-500">{doc.code}</span>
-                            <span className="text-[11px] text-slate-400"> &bull; v{doc.version}</span>
+                            <span className="font-mono text-[11px] font-bold text-slate-500">{doc.code || doc.id.toUpperCase()}</span>
+                            <span className="text-[11px] text-slate-400"> &bull; {formatVersion(doc.version)}</span>
                           </div>
                         </div>
 
@@ -712,7 +738,7 @@ export const DocumentsPage: React.FC = () => {
                           )}
                           {isExpiring && (
                             <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 text-rose-800 border border-rose-200">
-                              Sắp hết hạn ({formatDate(doc.expiry_date)})
+                              Sắp hết hạn ({formatDate(doc.expiry_date || doc.expires_at)})
                             </span>
                           )}
                           {isUnsigned && !isPending && (
@@ -725,13 +751,13 @@ export const DocumentsPage: React.FC = () => {
 
                       <h4 className="font-bold text-slate-900 mt-3 text-sm leading-snug">{doc.title}</h4>
                       <p className="text-xs text-slate-500 mt-1 line-clamp-2">
-                        {doc.description || `File: ${doc.filename} (${formatBytes(doc.file_size)}) · Phụ trách: ${doc.owner}`}
+                        {doc.description || `File: ${doc.filename || doc.file_name} (${formatBytes(doc.file_size)}) · Phụ trách: ${doc.owner || doc.owner_id || 'Chưa gán'}`}
                       </p>
 
                       <div className="flex items-center gap-3 mt-3 text-[11px] text-slate-500 border-t border-slate-100 pt-2.5">
-                        <span>Phòng: <strong className="text-slate-700">{doc.department}</strong></span>
+                        <span>Phòng: <strong className="text-slate-700">{DEPARTMENT_MAP[doc.department] || doc.department || 'Nội bộ'}</strong></span>
                         <span>&bull;</span>
-                        <span>Người tạo: <strong className="text-slate-700">{doc.owner}</strong></span>
+                        <span>Người tạo: <strong className="text-slate-700">{doc.owner || doc.owner_id || 'Chưa gán'}</strong></span>
                       </div>
                     </div>
 
@@ -828,7 +854,7 @@ export const DocumentsPage: React.FC = () => {
                         {React.createElement(catMeta.icon, { className: 'w-4 h-4' })}
                       </span>
                       <span className="font-mono text-[11px] font-semibold text-slate-400">
-                        {tmpl.code}
+                        {tmpl.code || tmpl.id.toUpperCase()}
                       </span>
                     </div>
 
@@ -836,7 +862,7 @@ export const DocumentsPage: React.FC = () => {
                       {tmpl.title}
                     </h4>
                     <p className="text-xs text-slate-500 mt-1 line-clamp-3">
-                      {tmpl.description || `File biểu mẫu gốc: ${tmpl.filename} (${formatBytes(tmpl.file_size)})`}
+                      {tmpl.description || `File biểu mẫu gốc: ${tmpl.filename || tmpl.file_name} (${formatBytes(tmpl.file_size)})`}
                     </p>
 
                     <div className="flex items-center space-x-2 mt-3 text-[11px] text-slate-500">
@@ -844,7 +870,7 @@ export const DocumentsPage: React.FC = () => {
                         {tmpl.template_type || 'Biểu mẫu'}
                       </span>
                       <span>&bull;</span>
-                      <span>v{tmpl.version}</span>
+                      <span>{formatVersion(tmpl.version)}</span>
                     </div>
                   </div>
 
@@ -1031,16 +1057,16 @@ const DocumentDetailDrawer: React.FC<DocumentDetailDrawerProps> = ({
             <div className="min-w-0">
               <div className="flex items-center space-x-2">
                 <span className="font-mono text-xs font-bold text-slate-500 bg-white px-2 py-0.5 rounded border border-slate-200">
-                  {doc.code}
+                  {doc.code || doc.id.toUpperCase()}
                 </span>
-                <span className="text-xs text-slate-500 font-semibold">&bull; v{doc.version}</span>
+                <span className="text-xs text-slate-500 font-semibold">&bull; {formatVersion(doc.version)}</span>
                 <span className={`inline-flex items-center px-2 py-0.2 rounded-full text-[10px] font-bold border ${statusMeta.badge}`}>
                   {statusMeta.label}
                 </span>
               </div>
               <h2 className="text-base font-bold text-slate-900 mt-1 truncate">{doc.title}</h2>
               <p className="text-xs text-slate-500 truncate mt-0.5">
-                {doc.filename} &bull; {formatBytes(doc.file_size)}
+                {doc.filename || doc.file_name} &bull; {formatBytes(doc.file_size)}
               </p>
             </div>
           </div>
@@ -1172,12 +1198,12 @@ const DocumentDetailDrawer: React.FC<DocumentDetailDrawerProps> = ({
 
                 <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
                   <span className="text-slate-400 block mb-0.5">Phòng ban quản lý</span>
-                  <span className="font-bold text-slate-800">{doc.department}</span>
+                  <span className="font-bold text-slate-800">{DEPARTMENT_MAP[doc.department] || doc.department || 'Nội bộ'}</span>
                 </div>
 
                 <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
                   <span className="text-slate-400 block mb-0.5">Người phụ trách</span>
-                  <span className="font-bold text-slate-800">{doc.owner}</span>
+                  <span className="font-bold text-slate-800">{doc.owner || doc.owner_id || 'Chưa gán'}</span>
                 </div>
 
                 <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
@@ -1191,7 +1217,7 @@ const DocumentDetailDrawer: React.FC<DocumentDetailDrawerProps> = ({
                 <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
                   <span className="text-slate-400 block mb-0.5">Ngày hết hạn</span>
                   <span className={`font-bold ${doc.is_expiring_soon ? 'text-rose-600' : 'text-slate-800'}`}>
-                    {doc.expiry_date ? formatDate(doc.expiry_date) : 'Không thời hạn'}
+                    {(doc.expiry_date || doc.expires_at) ? formatDate(doc.expiry_date || doc.expires_at) : 'Không thời hạn'}
                   </span>
                 </div>
 
@@ -1253,16 +1279,16 @@ const DocumentDetailDrawer: React.FC<DocumentDetailDrawerProps> = ({
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                       <span className="font-mono text-xs font-bold bg-emerald-600 text-white px-2 py-0.5 rounded">
-                        v{doc.version}
+                        {formatVersion(doc.version)}
                       </span>
                       <span className="text-xs font-bold text-slate-800">Phiên bản hiện hành</span>
                     </div>
                     <span className="text-[11px] text-slate-500">{formatDate(doc.updated_at)}</span>
                   </div>
                   <p className="text-xs text-slate-600 mt-2">
-                    File: <strong className="font-mono">{doc.filename}</strong> ({formatBytes(doc.file_size)})
+                    File: <strong className="font-mono">{doc.filename || doc.file_name}</strong> ({formatBytes(doc.file_size)})
                   </p>
-                  <p className="text-[11px] text-slate-400 mt-1">Cập nhật bởi: {doc.owner}</p>
+                  <p className="text-[11px] text-slate-400 mt-1">Cập nhật bởi: {doc.owner || doc.owner_id || 'Chưa gán'}</p>
                 </div>
 
                 {/* Past versions */}
@@ -1271,16 +1297,16 @@ const DocumentDetailDrawer: React.FC<DocumentDetailDrawerProps> = ({
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
                         <span className="font-mono text-xs font-bold bg-slate-100 text-slate-700 px-2 py-0.5 rounded border border-slate-200">
-                          v{ver.version}
+                          {formatVersion(ver.version)}
                         </span>
                         <span className="text-xs text-slate-600 font-medium">Bản lưu trữ</span>
                       </div>
                       <span className="text-[11px] text-slate-400">{formatDate(ver.created_at)}</span>
                     </div>
                     <p className="text-xs text-slate-600 mt-2 font-mono">
-                      {ver.filename} ({formatBytes(ver.file_size)})
+                      {ver.filename || (ver as any).file_name} ({formatBytes(ver.file_size)})
                     </p>
-                    {ver.notes && <p className="text-[11px] text-slate-500 mt-1 italic">"{ver.notes}"</p>}
+                    {(ver.notes || (ver as any).change_note) && <p className="text-[11px] text-slate-500 mt-1 italic">"{ver.notes || (ver as any).change_note}"</p>}
                     <p className="text-[11px] text-slate-400 mt-1">Người tải lên: {ver.uploaded_by}</p>
                   </div>
                 ))}
@@ -1825,7 +1851,7 @@ const UploadNewVersionModal: React.FC<UploadNewVersionModalProps> = ({
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
           <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs">
             <p className="font-bold text-slate-800">{document.title}</p>
-            <p className="text-slate-500 font-mono mt-0.5">Bản hiện tại: v{document.version}</p>
+            <p className="text-slate-500 font-mono mt-0.5">Bản hiện tại: {formatVersion(document.version)}</p>
           </div>
 
           <div>
