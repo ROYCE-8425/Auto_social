@@ -212,10 +212,10 @@ app.add_middleware(CORSMiddleware,
 
 # Đường dẫn KHÔNG cần đăng nhập. CHỈ các auth endpoint công khai (status/login/setup) -
 # KHÔNG để cả prefix /auth public vì /auth/disable, /auth/logout phải yêu cầu đăng nhập.
-_AUTH_PUBLIC_PREFIX = ("/static", "/health", "/ops/assets", "/tiktok-media")
+_AUTH_PUBLIC_PREFIX = ("/static", "/health", "/ops/assets", "/tiktok-media", "/api/modules", "/ops/modules", "/api/documents", "/ops/documents", "/ops/hub")
 # /brand-logo: hiện trên màn đăng nhập (trước session). /tls-check: Caddy gọi (không đăng nhập được).
 _AUTH_PUBLIC_EXACT = ("/", "/chao", "/app", "/favicon.ico", "/auth/status", "/auth/login", "/auth/setup",
-                      "/brand-logo", "/tls-check",
+                      "/brand-logo", "/logo.png", "/tls-check",
                       # /hub/mcp: Claude CLI/Codex gọi bằng Bearer hub_token riêng (không có cookie).
                       # /connect/oauth/callback: browser redirect từ provider OAuth về.
                       "/hub/mcp", "/connect/oauth/callback",
@@ -271,7 +271,7 @@ async def _auth_guard(request: Request, call_next):
         if path in ("/ops/auth/login", "/ops/auth/logout") or path.startswith("/ops/assets"):
             return await call_next(request)
         # Trang UI frontend (/ops, /ops/inbox, /ops/customers, etc.) và /ops/me: cho phép gọi tự do
-        if not path.startswith(("/ops/users", "/ops/qa")):
+        if not path.startswith(("/ops/users", "/ops/qa", "/ops/rbac/permissions")):
             return await call_next(request)
         # Endpoint API /ops/me, /ops/users hoặc /ops/qa: kiểm tra phiên đăng nhập & RBAC
         if not ops_user:
@@ -3370,6 +3370,98 @@ async def connect_facebook_pages():
             return {"ok": False, "pages": [], "error": last_err}
         return {"ok": False, "pages": [], "error": "Chưa kết nối Facebook Trang hoặc chưa nạp Page Access Token"}
     return {"ok": True, "pages": pages}
+
+
+@app.get("/connect/facebook/status")
+async def connect_facebook_status():
+    """Trạng thái kết nối Facebook Pages: pages list, permissions, fanpage_care, last poll."""
+    pages_res = await connect_facebook_pages()
+    pages = pages_res.get("pages", []) if isinstance(pages_res, dict) else []
+    error = pages_res.get("error") if isinstance(pages_res, dict) and not pages else None
+
+    conns = mcp_store.list_connections()
+    fb_conn = next((c for c in conns if c.get("connector_id") == "facebook-pages"), None)
+
+    care_cfg = cfgmod.read_settings().get("fanpage_care", {})
+    enabled = bool(care_cfg.get("enabled", False))
+    kill_switch = bool(care_cfg.get("kill_switch", False))
+    poll_interval = int(care_cfg.get("poll_interval_seconds", 60))
+
+    last_poll = None
+    try:
+        from fanpage_care_store import get_connection
+        with get_connection() as conn:
+            row = conn.execute("SELECT MAX(ingested_ts) as last_ingested, MAX(created_ts) as last_created FROM events WHERE platform = 'facebook'").fetchone()
+            if row and (row["last_ingested"] or row["last_created"]):
+                ts = row["last_ingested"] or row["last_created"]
+                from datetime import datetime
+                last_poll = datetime.fromtimestamp(ts).strftime("%Y-%m-%d %H:%M:%S")
+    except Exception:
+        pass
+
+    perm = fb_conn.get("perm", "full" if pages else "readonly") if fb_conn else ("full" if pages else "readonly")
+    connected = bool(pages or (fb_conn and fb_conn.get("enabled")))
+
+    return {
+        "ok": True,
+        "connected": connected,
+        "connector_id": "facebook-pages",
+        "label": fb_conn.get("label", "Facebook Pages Graph API") if fb_conn else "Facebook Pages (Token)",
+        "permissions": perm,
+        "fanpage_care_enabled": enabled,
+        "kill_switch": kill_switch,
+        "poll_interval_seconds": poll_interval,
+        "last_poll": last_poll,
+        "pages": pages,
+        "error": error,
+    }
+
+
+@app.get("/ops/channels/status")
+async def ops_channels_status(request: Request):
+    """Tổng hợp trạng thái toàn bộ các kênh connector thật cho Ops Dashboard."""
+    fb_status = await connect_facebook_status()
+
+    brain = cfgmod.read_settings().get("fanpage_care", {}).get("brain", "Brain Default")
+    vault = _brain_root(brain)
+    tt_status = tiktok_service.get_tiktok_status(vault_root=vault)
+
+    conns = mcp_store.list_connections()
+    zalo_conn = next((c for c in conns if c.get("connector_id") == "zalo"), None)
+
+    other_channels = [
+        {
+            "id": "zalo",
+            "name": "Zalo OA & Cá nhân",
+            "connected": bool(zalo_conn and zalo_conn.get("enabled")),
+            "statusLabel": "Đang kết nối" if bool(zalo_conn and zalo_conn.get("enabled")) else "Chưa kết nối",
+            "publish_supported": False,
+            "note": "Chưa hỗ trợ publish bài viết tự động (Hiện chỉ hỗ trợ Zalo Agent MCP chăm sóc tin nhắn).",
+        },
+        {
+            "id": "instagram",
+            "name": "Instagram & Threads",
+            "connected": False,
+            "statusLabel": "Chưa hỗ trợ",
+            "publish_supported": False,
+            "note": "Chưa kết nối Meta Instagram Graph API riêng. Chưa hỗ trợ publish trực tiếp.",
+        },
+        {
+            "id": "youtube",
+            "name": "YouTube Shorts & Video",
+            "connected": False,
+            "statusLabel": "Chưa hỗ trợ",
+            "publish_supported": False,
+            "note": "Chưa kết nối Google YouTube Data API v3. Chưa hỗ trợ publish trực tiếp.",
+        },
+    ]
+
+    return {
+        "ok": True,
+        "facebook": fb_status,
+        "tiktok": tt_status,
+        "other_channels": other_channels,
+    }
 
 
 @app.post("/connect/facebook/verify-token")
@@ -7967,8 +8059,8 @@ async def ops_auth_login(request: Request):
     if not user:
         return JSONResponse({"ok": False, "error": "Sai tên đăng nhập hoặc mật khẩu"}, status_code=401)
 
-    token = ops_rbac.create_session(user["id"], user["username"], user["role"], user.get("name", ""))
-    resp = JSONResponse({"ok": True, "user": user})
+    token = ops_rbac.create_session(user["id"], user["username"], user["role"], user.get("name", ""), user.get("code", ""))
+    resp = JSONResponse({"ok": True, "user": user, "token": token})
     resp.set_cookie("ops_session", token, httponly=True, samesite="lax", max_age=30 * 86400, path="/")
     return resp
 
@@ -7999,12 +8091,104 @@ async def ops_get_me(request: Request):
 
 @app.get("/ops/users")
 async def ops_list_users(request: Request):
-    """Danh sách tài khoản nhân sự phụ (Owner only)."""
+    """Danh sách tài khoản nhân sự (Chỉ Owner mới có quyền xem để quản trị)."""
     user = ops_rbac.get_current_ops_user(request)
-    if not user or user.get("role") != "owner":
-        return JSONResponse({"error": "Chỉ chủ máy mới được quản lý tài khoản nhân sự", "role": user.get("role") if user else None}, status_code=403)
+    if not user:
+        return JSONResponse({"error": "Yêu cầu đăng nhập", "role": None}, status_code=401)
+    if user.get("role") != "owner":
+        return JSONResponse({"error": "Chỉ chủ máy mới được quản lý tài khoản nhân sự", "role": user.get("role")}, status_code=403)
     users = [ops_rbac.sanitize_user(u) for u in ops_rbac.load_users()]
     return {"users": users}
+
+
+@app.get("/ops/directory")
+async def ops_get_directory(request: Request):
+    """Danh bạ nhân sự để giao việc (mọi user ops đã đăng nhập đều xem được tên, code, vai trò)."""
+    user = ops_rbac.get_current_ops_user(request)
+    if not user:
+        return JSONResponse({"error": "Yêu cầu đăng nhập", "role": None}, status_code=401)
+    users = ops_rbac.load_users()
+    directory = [
+        {
+            "id": u.get("id"),
+            "username": u.get("username"),
+            "name": u.get("name") or u.get("username"),
+            "role": u.get("role", "staff"),
+            "role_title": ops_rbac.ROLES_REGISTRY.get(u.get("role", "staff"), {}).get("title", u.get("role")),
+            "code": u.get("code") or ops_rbac.ROLES_REGISTRY.get(u.get("role", "staff"), {}).get("code", "NV"),
+            "badge_color": ops_rbac.ROLES_REGISTRY.get(u.get("role", "staff"), {}).get("badge_color", "slate"),
+            "enabled": u.get("enabled", True),
+        }
+        for u in users if u.get("enabled", True)
+    ]
+    cfg = cfgmod.read_settings()
+    admin_uname = cfg.get("auth", {}).get("username") or "admin"
+    directory.insert(0, {
+        "id": "owner",
+        "username": admin_uname,
+        "name": "Chủ máy (Admin)",
+        "role": "owner",
+        "role_title": ops_rbac.ROLES_REGISTRY.get("owner", {}).get("title", "Chủ máy"),
+        "code": "OWN",
+        "badge_color": "purple",
+        "enabled": True,
+    })
+    return {"users": directory}
+
+
+@app.get("/ops/rbac/roles")
+async def ops_get_rbac_roles(request: Request):
+    """Danh mục vai trò, mô tả và ma trận quyền hạn RBAC."""
+    return {
+        "roles": ops_rbac.ROLES_REGISTRY,
+        "permissions": ops_rbac.ROLE_PERMISSIONS,
+    }
+
+
+@app.get("/ops/rbac/permissions")
+async def ops_get_rbac_permissions(request: Request):
+    """Danh mục toàn bộ quyền hạn (catalog), vai trò (roles) và ma trận phân quyền đang áp dụng."""
+    return {
+        "roles": ops_rbac.ROLES_REGISTRY,
+        "catalog": ops_rbac.ALL_PERMISSIONS_CATALOG,
+        "matrix": ops_rbac.ROLE_PERMISSIONS,
+        "default_matrix": ops_rbac.DEFAULT_ROLE_PERMISSIONS,
+    }
+
+
+@app.post("/ops/rbac/permissions")
+async def ops_save_rbac_permissions(request: Request):
+    """Lưu cấu hình phân quyền tùy chỉnh của các vai trò (Chỉ dành cho Owner)."""
+    user = ops_rbac.get_current_ops_user(request)
+    if not user or user.get("role") != "owner":
+        return JSONResponse(
+            {"ok": False, "error": "Chỉ chủ sở hữu (Owner) mới có quyền chỉnh sửa phân quyền", "role": user.get("role") if user else None},
+            status_code=403
+        )
+    try:
+        data = await request.json()
+    except Exception:
+        data = {}
+    matrix = data.get("matrix")
+    if not isinstance(matrix, dict):
+        return JSONResponse({"ok": False, "error": "Payload không hợp lệ (cần trường 'matrix')"}, status_code=400)
+
+    updated_matrix = ops_rbac.save_role_permissions(matrix)
+    return {"ok": True, "matrix": updated_matrix}
+
+
+@app.post("/ops/rbac/permissions/reset")
+async def ops_reset_rbac_permissions(request: Request):
+    """Khôi phục ma trận phân quyền về chuẩn mặc định ban đầu (Chỉ dành cho Owner)."""
+    user = ops_rbac.get_current_ops_user(request)
+    if not user or user.get("role") != "owner":
+        return JSONResponse(
+            {"ok": False, "error": "Chỉ chủ sở hữu (Owner) mới có quyền khôi phục phân quyền", "role": user.get("role") if user else None},
+            status_code=403
+        )
+    reset_matrix = ops_rbac.reset_role_permissions()
+    return {"ok": True, "matrix": reset_matrix}
+
 
 
 @app.post("/ops/users")
@@ -8022,7 +8206,8 @@ async def ops_create_user(request: Request):
             username=data.get("username", ""),
             password=data.get("password", ""),
             role=data.get("role", "staff"),
-            name=data.get("name", "")
+            name=data.get("name", ""),
+            code=data.get("code", "")
         )
         return {"ok": True, "user": new_u}
     except ValueError as e:
@@ -8058,6 +8243,81 @@ async def ops_delete_user(user_id: str, request: Request):
     if not ok:
         return JSONResponse({"ok": False, "error": "Không tìm thấy tài khoản để xoá"}, status_code=404)
     return {"ok": True}
+
+
+# ============================================================
+# Ops Tasks & Kanban Real Persistence Endpoints
+# ============================================================
+@app.get("/ops/tasks")
+async def ops_list_tasks(request: Request):
+    """Lấy danh sách công việc Kanban thực tế cho CSKH."""
+    user = ops_rbac.get_current_ops_user(request)
+    if not user:
+        return JSONResponse({"error": "Yêu cầu đăng nhập"}, status_code=401)
+    import ops_tasks_store
+    tasks = ops_tasks_store.load_tasks()
+    return {"ok": True, "tasks": tasks}
+
+
+@app.post("/ops/tasks")
+async def ops_create_task(request: Request):
+    """Tạo mới công việc trên bảng Kanban."""
+    user = ops_rbac.get_current_ops_user(request)
+    if not user:
+        return JSONResponse({"error": "Yêu cầu đăng nhập"}, status_code=401)
+    try:
+        data = await request.json()
+    except Exception:
+        data = {}
+    import ops_tasks_store
+    new_task = ops_tasks_store.create_task(data)
+    return {"ok": True, "task": new_task}
+
+
+@app.post("/ops/tasks/{task_id}/move")
+async def ops_move_task(task_id: str, request: Request):
+    """Di chuyển thẻ công việc sang cột khác (Cần làm -> Đang xử lý -> Chờ phản hồi -> Hoàn tất)."""
+    user = ops_rbac.get_current_ops_user(request)
+    if not user:
+        return JSONResponse({"error": "Yêu cầu đăng nhập"}, status_code=401)
+    try:
+        data = await request.json()
+    except Exception:
+        data = {}
+    target_col = data.get("targetCol") or data.get("columnId") or "todo"
+    import ops_tasks_store
+    updated = ops_tasks_store.move_task(task_id, target_col)
+    if not updated:
+        return JSONResponse({"ok": False, "error": "Không tìm thấy công việc"}, status_code=404)
+    return {"ok": True, "task": updated}
+
+
+@app.put("/ops/tasks/{task_id}")
+async def ops_update_task(task_id: str, request: Request):
+    """Cập nhật thông tin công việc (người phụ trách, ghi chú, trạng thái)."""
+    user = ops_rbac.get_current_ops_user(request)
+    if not user:
+        return JSONResponse({"error": "Yêu cầu đăng nhập"}, status_code=401)
+    try:
+        data = await request.json()
+    except Exception:
+        data = {}
+    import ops_tasks_store
+    updated = ops_tasks_store.update_task(task_id, data)
+    if not updated:
+        return JSONResponse({"ok": False, "error": "Không tìm thấy công việc"}, status_code=404)
+    return {"ok": True, "task": updated}
+
+
+@app.delete("/ops/tasks/{task_id}")
+async def ops_delete_task(task_id: str, request: Request):
+    """Xóa công việc (Manager & Owner only)."""
+    user = ops_rbac.get_current_ops_user(request)
+    if not user or user.get("role") not in ("owner", "manager"):
+        return JSONResponse({"error": "Chỉ Quản lý hoặc Chủ máy mới được xóa công việc"}, status_code=403)
+    import ops_tasks_store
+    ok = ops_tasks_store.delete_task(task_id)
+    return {"ok": ok}
 
 
 @app.post("/ops/qa")
@@ -8099,20 +8359,20 @@ async def serve_tiktok_media(rel: str):
     clean_rel = rel.replace("\\", "/").strip("/")
     if not clean_rel or ".." in clean_rel:
         return JSONResponse({"error": "Path traversal prohibited"}, status_code=404)
-    
+
     brain = cfgmod.read_settings().get("fanpage_care", {}).get("brain", "Brain Default")
     vault = _brain_root(brain)
     base_dir = (Path(vault) / "attachments" / "dataset" / "_xuat-tiktok").resolve()
     target = (base_dir / clean_rel).resolve()
-    
+
     try:
         target.relative_to(base_dir)
     except ValueError:
         return JSONResponse({"error": "Path traversal prohibited"}, status_code=404)
-        
+
     if not target.is_file():
         return JSONResponse({"error": "File not found"}, status_code=404)
-        
+
     suffix = target.suffix.lower()
     media_types = {
         ".png": "image/png",
@@ -8146,12 +8406,12 @@ async def tiktok_post_photos(request: Request):
     user = ops_rbac.get_current_ops_user(request)
     if not user or user.get("role") != "owner":
         return JSONResponse({"error": "Chỉ chủ máy mới có quyền đăng TikTok", "role": user.get("role") if user else None}, status_code=403)
-        
+
     try:
         data = await request.json()
     except Exception:
         data = {}
-        
+
     brand_kit = str(data.get("brand_kit") or "game-gia-re-bsn").strip()
     account_id = data.get("account_id")
     caption = data.get("caption")
@@ -8160,10 +8420,10 @@ async def tiktok_post_photos(request: Request):
     images = data.get("images")
     auto_add_music = bool(data.get("auto_add_music", True))
     draft = bool(data.get("draft", False))
-    
+
     brain = cfgmod.read_settings().get("fanpage_care", {}).get("brain", "Brain Default")
     vault = _brain_root(brain)
-    
+
     result = await asyncio.to_thread(
         tiktok_service.post_photos_to_tiktok,
         brand_kit=brand_kit,
@@ -8176,7 +8436,7 @@ async def tiktok_post_photos(request: Request):
         draft=draft,
         vault_root=vault
     )
-    
+
     status_code = 200 if result.get("ok") else 400
     return JSONResponse(result, status_code=status_code)
 
@@ -8192,20 +8452,20 @@ async def tiktok_upload_image(
     user = ops_rbac.get_current_ops_user(request)
     if not user or user.get("role") != "owner":
         return JSONResponse({"error": "Chỉ chủ máy mới có quyền tải ảnh", "role": user.get("role") if user else None}, status_code=403)
-        
+
     clean_brand = "bsn" if "bsn" in brand.lower() else ("saoviet" if "sao" in brand.lower() else "bsn")
     brain = cfgmod.read_settings().get("fanpage_care", {}).get("brain", "Brain Default")
     vault = _brain_root(brain)
     target_dir = Path(vault) / "attachments" / "dataset" / "_xuat-tiktok" / clean_brand
     target_dir.mkdir(parents=True, exist_ok=True)
-    
+
     orig_name = Path(file.filename or "upload.png").name
     safe_name = f"{int(time.time())}_{secrets.token_hex(3)}_{orig_name}"
     save_path = target_dir / safe_name
-    
+
     content = await file.read()
     save_path.write_bytes(content)
-    
+
     if crop_9_16:
         try:
             cropped_path = tiktok_service.crop_image_to_9_16(save_path)
@@ -8214,10 +8474,10 @@ async def tiktok_upload_image(
             save_path = cropped_path
         except Exception:
             pass
-        
+
     rel_path = f"{clean_brand}/{save_path.name}"
     public_url = f"{tiktok_service.PUBLIC_BASE_URL.rstrip('/')}/tiktok-media/{rel_path}"
-    
+
     return {
         "ok": True,
         "filename": save_path.name,
@@ -8233,7 +8493,7 @@ async def tiktok_loop_toggle(request: Request):
     user = ops_rbac.get_current_ops_user(request)
     if not user or user.get("role") != "owner":
         return JSONResponse({"error": "Chỉ chủ máy mới có quyền bật/tắt loop", "role": user.get("role") if user else None}, status_code=403)
-        
+
     try:
         data = await request.json()
     except Exception:
@@ -8251,7 +8511,7 @@ async def tiktok_set_kit_account(request: Request):
     user = ops_rbac.get_current_ops_user(request)
     if not user or user.get("role") != "owner":
         return JSONResponse({"error": "Chỉ chủ máy mới có quyền cấu hình kit", "role": user.get("role") if user else None}, status_code=403)
-        
+
     try:
         data = await request.json()
     except Exception:
@@ -8259,10 +8519,10 @@ async def tiktok_set_kit_account(request: Request):
     brand_kit = str(data.get("brand_kit") or "").strip()
     account_id = str(data.get("account_id") or "").strip()
     account_name = str(data.get("account_name") or "").strip()
-    
+
     if not brand_kit or not account_id:
         return JSONResponse({"ok": False, "error": "brand_kit và account_id không được để trống"}, status_code=400)
-        
+
     brain = cfgmod.read_settings().get("fanpage_care", {}).get("brain", "Brain Default")
     vault = _brain_root(brain)
     ok = tiktok_service.update_brand_kit_account(brand_kit, account_id, account_name, vault_root=vault)
@@ -8274,10 +8534,22 @@ async def tiktok_set_kit_account(request: Request):
 # ============================================================
 # AI OPERATIONS CENTER (Javis Ops Enterprise SME)
 # ============================================================
+from typing import Optional, List, Dict, Any
 import ops_briefing
 import lead_scoring
 import ops_attribution
 import ops_campaign
+import ops_campaign_store
+import ops_orders
+import ops_order_store
+import ops_shipping
+import ops_shipping_store
+import ops_automation_engine
+import ops_business_modules
+import ops_documents
+
+app.include_router(ops_business_modules.router)
+app.include_router(ops_documents.router)
 
 
 @app.get("/ops/briefing/today")
@@ -8365,7 +8637,7 @@ async def ops_get_competitor_radar(request: Request):
 
 @app.post("/ops/campaigns/autopilot")
 async def ops_post_campaign_autopilot(request: Request):
-    """Kích hoạt AI Campaign Autopilot sinh kế hoạch chiến dịch đa kênh từ mục tiêu."""
+    """Kích hoạt AI Campaign Autopilot: Validate -> Lập kế hoạch -> Lưu SQLite -> Enqueue Kanban."""
     user = ops_rbac.get_current_ops_user(request)
     if not user:
         return JSONResponse({"error": "Chưa đăng nhập Ops"}, status_code=401)
@@ -8373,31 +8645,720 @@ async def ops_post_campaign_autopilot(request: Request):
         data = await request.json()
     except Exception:
         data = {}
-    goal = str(data.get("goal") or "Tuyển 50 học viên khóa MOS").strip()
+
+    goal = data.get("goal")
+    if not goal or not str(goal).strip():
+        return JSONResponse({"error": "Mục tiêu chiến dịch (goal) là bắt buộc và không được để trống"}, status_code=400)
+    goal_str = str(goal).strip()
+    if len(goal_str) < 3:
+        return JSONResponse({"error": "Mục tiêu chiến dịch (goal) phải có ít nhất 3 ký tự"}, status_code=400)
+
     target_metric = str(data.get("target_metric") or "50 học viên").strip()
-    duration_weeks = int(data.get("duration_weeks") or 4)
-    budget_vnd = data.get("budget_vnd")
-    if budget_vnd is not None:
+
+    duration_raw = data.get("duration_weeks")
+    duration_weeks = 4
+    if duration_raw is not None:
         try:
-            budget_vnd = int(budget_vnd)
+            duration_weeks = int(duration_raw)
+            if duration_weeks < 1 or duration_weeks > 52:
+                return JSONResponse({"error": "Thời gian chiến dịch (duration_weeks) phải từ 1 đến 52 tuần"}, status_code=400)
         except Exception:
-            budget_vnd = None
-    res = ops_campaign.generate_campaign_autopilot(
-        goal=goal,
-        target_metric=target_metric,
-        duration_weeks=duration_weeks,
-        budget_vnd=budget_vnd,
+            return JSONResponse({"error": "Thời gian chiến dịch (duration_weeks) không hợp lệ"}, status_code=400)
+
+    budget_raw = data.get("budget_vnd")
+    budget_vnd = 10000000
+    if budget_raw is not None:
+        try:
+            budget_vnd = int(budget_raw)
+            if budget_vnd < 0:
+                return JSONResponse({"error": "Ngân sách chiến dịch (budget_vnd) không được âm"}, status_code=400)
+        except Exception:
+            return JSONResponse({"error": "Ngân sách chiến dịch (budget_vnd) không hợp lệ"}, status_code=400)
+
+    platforms = data.get("platforms")
+    if platforms is not None:
+        if not isinstance(platforms, list) or len(platforms) == 0:
+            return JSONResponse({"error": "Danh sách nền tảng (platforms) phải là danh sách ít nhất 1 nền tảng"}, status_code=400)
+
+    try:
+        res = ops_campaign.create_autopilot_campaign(
+            goal=goal_str,
+            target_metric=target_metric,
+            duration_weeks=duration_weeks,
+            budget_vnd=budget_vnd,
+            platforms=platforms,
+        )
+        return res
+    except ValueError as ve:
+        return JSONResponse({"error": str(ve)}, status_code=400)
+    except Exception as exc:
+        return JSONResponse({"error": f"Lỗi khởi tạo chiến dịch: {exc}"}, status_code=500)
+
+
+@app.get("/ops/campaigns")
+async def ops_get_campaigns(request: Request, limit: int = 50):
+    """Lấy danh sách các chiến dịch đã lưu trong hệ thống."""
+    user = ops_rbac.get_current_ops_user(request)
+    if not user:
+        return JSONResponse({"error": "Chưa đăng nhập Ops"}, status_code=401)
+    try:
+        campaigns = ops_campaign_store.list_campaigns(limit=limit)
+        return {"ok": True, "campaigns": campaigns}
+    except Exception as exc:
+        return JSONResponse({"error": f"Lỗi đọc danh sách chiến dịch: {exc}"}, status_code=500)
+
+
+@app.get("/ops/campaigns/{campaign_id}")
+async def ops_get_campaign_detail(request: Request, campaign_id: str):
+    """Lấy chi tiết 1 chiến dịch kèm danh sách các bài đăng/hạng mục và task Kanban."""
+    user = ops_rbac.get_current_ops_user(request)
+    if not user:
+        return JSONResponse({"error": "Chưa đăng nhập Ops"}, status_code=401)
+    try:
+        campaign = ops_campaign_store.get_campaign(campaign_id)
+        if not campaign:
+            return JSONResponse({"error": "Không tìm thấy chiến dịch", "campaign_id": campaign_id}, status_code=404)
+        return {
+            "ok": True,
+            "campaign": campaign,
+            "items": campaign.get("items") or [],
+            "task_ids": campaign.get("task_ids") or [],
+        }
+    except Exception as exc:
+        return JSONResponse({"error": f"Lỗi đọc chiến dịch: {exc}"}, status_code=500)
+
+# ============================================================
+# SOCIAL COMMERCE ORDER SYSTEM & SHIPPING GATEWAY
+# ============================================================
+
+@app.get("/ops/orders")
+async def ops_get_orders(
+    request: Request,
+    status: Optional[str] = None,
+    crm_id: Optional[str] = None,
+    thread_id: Optional[str] = None,
+    page_id: Optional[str] = None,
+    limit: int = 50,
+    offset: int = 0,
+):
+    """Lấy danh sách đơn hàng Social Commerce (hỗ trợ lọc theo trạng thái, khách hàng, kênh)."""
+    user = ops_rbac.get_current_ops_user(request)
+    if not user:
+        return JSONResponse({"error": "Chưa đăng nhập Ops"}, status_code=401)
+    res = ops_orders.get_orders_list(
+        status=status,
+        crm_id=crm_id,
+        thread_id=thread_id,
+        page_id=page_id,
+        limit=limit,
+        offset=offset,
     )
-    return {
-        "ok": True,
-        "campaign_plan": res,
-        **res,
-    }
+    return res
+
+
+@app.post("/ops/orders")
+async def ops_create_order(request: Request):
+    """Tạo đơn hàng thủ công hoặc từ màn hình vận hành."""
+    user = ops_rbac.get_current_ops_user(request)
+    if not user:
+        return JSONResponse({"error": "Chưa đăng nhập Ops"}, status_code=401)
+    try:
+        data = await request.json()
+    except Exception:
+        data = {}
+    actor = user.get("username") or user.get("role") or "staff"
+    res = ops_orders.create_new_order(data, actor=actor)
+    return res
+
+
+@app.get("/ops/orders/{order_id}")
+async def ops_get_order_by_id(request: Request, order_id: str):
+    """Lấy chi tiết đơn hàng kèm danh sách sản phẩm, trạng thái vận đơn và audit logs."""
+    user = ops_rbac.get_current_ops_user(request)
+    if not user:
+        return JSONResponse({"error": "Chưa đăng nhập Ops"}, status_code=401)
+    res = ops_orders.get_order_detail(order_id)
+    if not res:
+        return JSONResponse({"error": "Không tìm thấy đơn hàng", "order_id": order_id}, status_code=404)
+    return res
+
+
+@app.patch("/ops/orders/{order_id}")
+async def ops_update_order_by_id(request: Request, order_id: str):
+    """Cập nhật thông tin đơn hàng (SĐT, địa chỉ, sản phẩm, ghi chú, COD)."""
+    user = ops_rbac.get_current_ops_user(request)
+    if not user:
+        return JSONResponse({"error": "Chưa đăng nhập Ops"}, status_code=401)
+    try:
+        updates = await request.json()
+    except Exception:
+        updates = {}
+    actor = user.get("username") or user.get("role") or "staff"
+    res = ops_orders.update_order_info(order_id, updates, actor=actor)
+    if not res:
+        return JSONResponse({"error": "Không tìm thấy đơn hàng", "order_id": order_id}, status_code=404)
+    return res
+
+
+@app.post("/ops/orders/{order_id}/extract")
+async def ops_extract_order_details(request: Request, order_id: str):
+    """Kích hoạt AI Sales Extraction từ hội thoại liên kết để điền bổ sung vào đơn hàng đã có."""
+    user = ops_rbac.get_current_ops_user(request)
+    if not user:
+        return JSONResponse({"error": "Chưa đăng nhập Ops"}, status_code=401)
+    try:
+        data = await request.json()
+    except Exception:
+        data = {}
+    messages = data.get("messages") or []
+    extracted = ops_orders.extract_order_from_messages(
+        messages=messages,
+        customer_name=data.get("customer_name"),
+        page_id=data.get("page_id"),
+        thread_id=data.get("thread_id"),
+        crm_id=data.get("crm_id"),
+        auto_save=False,
+    )
+    actor = user.get("username") or user.get("role") or "ai"
+    updated = ops_orders.update_order_info(
+        order_id,
+        {
+            "customer_name": extracted.get("customer_name"),
+            "customer_phone": extracted.get("customer_phone"),
+            "shipping_address": extracted.get("shipping_address"),
+            "items": extracted.get("items"),
+            "total_amount": extracted.get("total_amount"),
+            "cod_amount": extracted.get("cod_amount"),
+            "ai_confidence": extracted.get("ai_confidence"),
+            "missing_fields": extracted.get("missing_fields"),
+            "status": extracted.get("status"),
+        },
+        actor=actor,
+    )
+    return {"ok": True, "extracted": extracted, "order": updated.get("order") if updated else None}
+
+
+@app.post("/ops/orders/extract-from-thread")
+async def ops_extract_from_thread(request: Request):
+    """AI Sales Extraction trực tiếp từ tin nhắn hội thoại: nhận diện SĐT, địa chỉ, sản phẩm catalog, COD."""
+    user = ops_rbac.get_current_ops_user(request)
+    if not user:
+        return JSONResponse({"error": "Chưa đăng nhập Ops"}, status_code=401)
+    try:
+        data = await request.json()
+    except Exception:
+        data = {}
+    messages = data.get("messages") or []
+    auto_save = bool(data.get("auto_save", False))
+    actor = user.get("username") or user.get("role") or "ai"
+    res = ops_orders.extract_order_from_messages(
+        messages=messages,
+        customer_name=data.get("customer_name"),
+        page_id=data.get("page_id"),
+        thread_id=data.get("thread_id"),
+        crm_id=data.get("crm_id"),
+        auto_save=auto_save,
+        actor=actor,
+    )
+    return res
+
+
+@app.post("/ops/orders/{order_id}/confirm")
+async def ops_confirm_order(request: Request, order_id: str):
+    """Xác nhận đơn hàng sẵn sàng xuất kho / vận chuyển (chuyển sang 'confirmed')."""
+    user = ops_rbac.get_current_ops_user(request)
+    if not user:
+        return JSONResponse({"error": "Chưa đăng nhập Ops"}, status_code=401)
+    actor = user.get("username") or user.get("role") or "staff"
+    try:
+        res = ops_orders.confirm_order(order_id, actor=actor)
+        return res
+    except ValueError as ve:
+        return JSONResponse({"error": str(ve)}, status_code=400)
+    except Exception as exc:
+        return JSONResponse({"error": f"Lỗi xác nhận đơn: {exc}"}, status_code=500)
+
+
+@app.post("/ops/orders/{order_id}/create-shipment")
+async def ops_create_shipment_api(request: Request, order_id: str):
+    """Tạo vận đơn thật qua Shipping Gateway (GHN)."""
+    user = ops_rbac.get_current_ops_user(request)
+    if not user:
+        return JSONResponse({"error": "Chưa đăng nhập Ops"}, status_code=401)
+    actor = user.get("username") or user.get("role") or "staff"
+    try:
+        data = await request.json()
+    except Exception:
+        data = {}
+    provider_id = data.get("provider") or "ghn"
+    try:
+        res = ops_orders.create_shipment_for_order(order_id, provider_id=provider_id, actor=actor)
+        if not res.get("ok"):
+            status_code = 400 if res.get("status") == "not_configured" else 502
+            return JSONResponse(res, status_code=status_code)
+        return res
+    except ValueError as ve:
+        return JSONResponse({"error": str(ve)}, status_code=400)
+    except Exception as exc:
+        return JSONResponse({"error": f"Lỗi tạo vận đơn: {exc}"}, status_code=500)
+
+
+@app.post("/ops/orders/{order_id}/cancel")
+async def ops_cancel_order_api(request: Request, order_id: str):
+    """Hủy đơn hàng và vận đơn liên kết."""
+    user = ops_rbac.get_current_ops_user(request)
+    if not user:
+        return JSONResponse({"error": "Chưa đăng nhập Ops"}, status_code=401)
+    actor = user.get("username") or user.get("role") or "staff"
+    try:
+        data = await request.json()
+    except Exception:
+        data = {}
+    reason = data.get("reason")
+    try:
+        res = ops_orders.cancel_order_and_shipment(order_id, reason=reason, actor=actor)
+        return res
+    except ValueError as ve:
+        return JSONResponse({"error": str(ve)}, status_code=400)
+    except Exception as exc:
+        return JSONResponse({"error": f"Lỗi hủy đơn: {exc}"}, status_code=500)
+
+
+@app.get("/ops/shipping/providers")
+async def ops_get_shipping_providers(request: Request):
+    """Lấy danh sách các đơn vị vận chuyển khả dụng và trạng thái tích hợp."""
+    user = ops_rbac.get_current_ops_user(request)
+    if not user:
+        return JSONResponse({"error": "Chưa đăng nhập Ops"}, status_code=401)
+    providers = ops_shipping.list_available_providers()
+    return {"ok": True, "providers": providers}
+
+
+@app.get("/ops/shipping/settings")
+async def ops_get_shipping_settings(request: Request):
+    """Lấy cấu hình vận chuyển an toàn cho giao diện (hiện token cho Owner/Manager)."""
+    user = ops_rbac.get_current_ops_user(request)
+    if not user:
+        return JSONResponse({"error": "Chưa đăng nhập Ops"}, status_code=401)
+    is_admin = user.get("role") in ("owner", "manager", "admin")
+    settings = ops_shipping_store.get_public_shipping_settings(include_token=is_admin)
+    return {"ok": True, "settings": settings}
+
+
+@app.post("/ops/shipping/settings")
+async def ops_save_shipping_settings(request: Request):
+    """Lưu cấu hình đơn vị vận chuyển (GHN token, shop_id, rules). Chỉ dành cho Manager/Owner."""
+    user = ops_rbac.get_current_ops_user(request)
+    if not user:
+        return JSONResponse({"error": "Chưa đăng nhập Ops"}, status_code=401)
+    if user.get("role") not in ("owner", "manager", "admin"):
+        return JSONResponse({"error": "Nhân viên không có quyền thay đổi cài đặt vận chuyển"}, status_code=403)
+    try:
+        payload = await request.json()
+    except Exception:
+        payload = {}
+    saved = ops_shipping_store.save_shipping_settings(payload)
+    safe = ops_shipping_store.get_public_shipping_settings(include_token=True)
+    return {"ok": True, "message": "Đã lưu cài đặt vận chuyển thành công", "settings": safe}
+
+
+@app.post("/ops/shipping/test-connection")
+async def ops_test_shipping_connection(request: Request):
+    """Kiểm tra kết nối và token thực tế tới đơn vị vận chuyển."""
+    user = ops_rbac.get_current_ops_user(request)
+    if not user:
+        return JSONResponse({"error": "Chưa đăng nhập Ops"}, status_code=401)
+    try:
+        payload = await request.json()
+    except Exception:
+        payload = {}
+    provider_id = payload.get("provider") or "ghn"
+    provider = ops_shipping.get_shipping_provider(provider_id)
+    settings = ops_shipping_store.load_shipping_settings()
+    prov_cfg = settings.get("providers", {}).get(provider_id, {})
+    if "token" in payload and payload["token"] and "***" not in str(payload["token"]):
+        prov_cfg["token"] = payload["token"]
+    if "shop_id" in payload and payload["shop_id"]:
+        prov_cfg["shop_id"] = payload["shop_id"]
+    if "environment" in payload and payload["environment"]:
+        prov_cfg["environment"] = payload["environment"]
+
+    res = provider.test_connection(prov_cfg)
+    return res
+
+
+@app.post("/ops/shipping/webhook/ghn")
+async def ops_shipping_ghn_webhook(request: Request):
+    """Nhận Webhook callback từ Giao Hàng Nhanh (GHN) khi trạng thái bưu kiện thay đổi."""
+    try:
+        payload = await request.json()
+    except Exception:
+        payload = {}
+    res = ops_orders.handle_ghn_webhook_payload(payload)
+    return res
+
+
+@app.get("/ops/products")
+async def ops_get_products(
+    request: Request,
+    keyword: Optional[str] = None,
+    page_id: Optional[str] = None,
+    channel: Optional[str] = None,
+    active_only: bool = False,
+):
+    """Lấy danh mục sản phẩm (hỗ trợ lọc theo page_id, kênh bán hàng và từ khóa)."""
+    user = ops_rbac.get_current_ops_user(request)
+    if not user:
+        return JSONResponse({"error": "Chưa đăng nhập Ops"}, status_code=401)
+    if keyword:
+        products = ops_order_store.search_products(keyword, page_id=page_id)
+    else:
+        products = ops_order_store.list_products(page_id=page_id, channel=channel, active_only=active_only)
+    return {"ok": True, "products": products}
+
+
+@app.get("/ops/products/{product_id}")
+async def ops_get_product_detail(request: Request, product_id: str):
+    """Lấy chi tiết sản phẩm kèm variants, aliases và page bindings."""
+    user = ops_rbac.get_current_ops_user(request)
+    if not user:
+        return JSONResponse({"error": "Chưa đăng nhập Ops"}, status_code=401)
+    prod = ops_order_store.get_product(product_id)
+    if not prod:
+        return JSONResponse({"error": "Không tìm thấy sản phẩm", "product_id": product_id}, status_code=404)
+    return {"ok": True, "product": prod}
+
+
+@app.post("/ops/products")
+async def ops_create_product_api(request: Request):
+    """Thêm sản phẩm mới vào Catalog (kèm variants, aliases, page bindings nếu có)."""
+    user = ops_rbac.get_current_ops_user(request)
+    if not user:
+        return JSONResponse({"error": "Chưa đăng nhập Ops"}, status_code=401)
+    if user.get("role") not in ("owner", "manager", "admin"):
+        return JSONResponse({"error": "Chỉ Quản lý hoặc Chủ máy mới có quyền thêm sản phẩm"}, status_code=403)
+    try:
+        data = await request.json()
+    except Exception:
+        data = {}
+    sku = str(data.get("sku") or "").strip()
+    name = str(data.get("name") or "").strip()
+    if not sku or not name:
+        return JSONResponse({"error": "Mã SKU và Tên sản phẩm không được để trống"}, status_code=400)
+    try:
+        prod = ops_order_store.create_product(data)
+        return {"ok": True, "product": prod}
+    except Exception as exc:
+        return JSONResponse({"error": f"Lỗi tạo sản phẩm: {exc}"}, status_code=400)
+
+
+@app.patch("/ops/products/{product_id}")
+async def ops_update_product_api(request: Request, product_id: str):
+    """Cập nhật thông tin sản phẩm trong Catalog."""
+    user = ops_rbac.get_current_ops_user(request)
+    if not user:
+        return JSONResponse({"error": "Chưa đăng nhập Ops"}, status_code=401)
+    if user.get("role") not in ("owner", "manager", "admin"):
+        return JSONResponse({"error": "Chỉ Quản lý hoặc Chủ máy mới có quyền chỉnh sửa sản phẩm"}, status_code=403)
+    try:
+        data = await request.json()
+    except Exception:
+        data = {}
+    try:
+        updated = ops_order_store.update_product(product_id, data)
+        return {"ok": True, "product": updated}
+    except Exception as exc:
+        return JSONResponse({"error": f"Lỗi cập nhật sản phẩm: {exc}"}, status_code=400)
+
+
+@app.delete("/ops/products/{product_id}")
+async def ops_delete_product_api(request: Request, product_id: str):
+    """Xóa sản phẩm khỏi Catalog."""
+    user = ops_rbac.get_current_ops_user(request)
+    if not user:
+        return JSONResponse({"error": "Chưa đăng nhập Ops"}, status_code=401)
+    if user.get("role") not in ("owner", "manager", "admin"):
+        return JSONResponse({"error": "Chỉ Quản lý hoặc Chủ máy mới có quyền xóa sản phẩm"}, status_code=403)
+    deleted = ops_order_store.delete_product(product_id)
+    if not deleted:
+        return JSONResponse({"error": "Không tìm thấy sản phẩm để xóa"}, status_code=404)
+    return {"ok": True, "message": "Đã xóa sản phẩm thành công", "product_id": product_id}
+
+
+@app.post("/ops/products/{product_id}/aliases")
+async def ops_add_product_alias(request: Request, product_id: str):
+    """Thêm từ khóa / Alias khách hay gọi cho sản phẩm."""
+    user = ops_rbac.get_current_ops_user(request)
+    if not user:
+        return JSONResponse({"error": "Chưa đăng nhập Ops"}, status_code=401)
+    if user.get("role") not in ("owner", "manager", "admin"):
+        return JSONResponse({"error": "Chỉ Quản lý hoặc Chủ máy mới có quyền thêm alias"}, status_code=403)
+    try:
+        data = await request.json()
+    except Exception:
+        data = {}
+    alias = str(data.get("alias") or "").strip()
+    if not alias:
+        return JSONResponse({"error": "Alias không được để trống"}, status_code=400)
+    al = ops_order_store.add_product_alias(product_id, alias, weight=float(data.get("weight", 1.0)))
+    return {"ok": True, "alias": al}
+
+
+@app.delete("/ops/products/aliases/{alias_id}")
+async def ops_delete_product_alias(request: Request, alias_id: str):
+    """Xóa Alias sản phẩm."""
+    user = ops_rbac.get_current_ops_user(request)
+    if not user:
+        return JSONResponse({"error": "Chưa đăng nhập Ops"}, status_code=401)
+    if user.get("role") not in ("owner", "manager", "admin"):
+        return JSONResponse({"error": "Chỉ Quản lý hoặc Chủ máy mới có quyền xóa alias"}, status_code=403)
+    success = ops_order_store.delete_product_alias(alias_id)
+    return {"ok": success}
+
+
+@app.post("/ops/products/{product_id}/bindings")
+async def ops_bind_product_page(request: Request, product_id: str):
+    """Gắn sản phẩm vào Page / Brand / Kênh bán hàng."""
+    user = ops_rbac.get_current_ops_user(request)
+    if not user:
+        return JSONResponse({"error": "Chưa đăng nhập Ops"}, status_code=401)
+    if user.get("role") not in ("owner", "manager", "admin"):
+        return JSONResponse({"error": "Chỉ Quản lý hoặc Chủ máy mới có quyền gắn sản phẩm"}, status_code=403)
+    try:
+        data = await request.json()
+    except Exception:
+        data = {}
+    page_id = str(data.get("page_id") or "*").strip()
+    channel = str(data.get("channel") or "*").strip()
+    custom_price = int(data["custom_price"]) if data.get("custom_price") else None
+    auto_sell = 1 if data.get("auto_sell_allowed", True) else 0
+    binding = ops_order_store.bind_product_to_page(
+        product_id=product_id,
+        page_id=page_id,
+        channel=channel,
+        custom_price=custom_price,
+        auto_sell_allowed=auto_sell,
+    )
+    return {"ok": True, "binding": binding}
+
+
+@app.delete("/ops/products/bindings/{binding_id}")
+async def ops_unbind_product_page(request: Request, binding_id: str):
+    """Gỡ sản phẩm khỏi Page."""
+    user = ops_rbac.get_current_ops_user(request)
+    if not user:
+        return JSONResponse({"error": "Chưa đăng nhập Ops"}, status_code=401)
+    if user.get("role") not in ("owner", "manager", "admin"):
+        return JSONResponse({"error": "Chỉ Quản lý hoặc Chủ máy mới có quyền gỡ liên kết"}, status_code=403)
+    success = ops_order_store.unbind_product_from_page(binding_id)
+    return {"ok": success}
+
+
+@app.post("/ops/products/import-csv")
+async def ops_import_products_csv(request: Request):
+    """Import danh mục sản phẩm từ nội dung CSV."""
+    user = ops_rbac.get_current_ops_user(request)
+    if not user:
+        return JSONResponse({"error": "Chưa đăng nhập Ops"}, status_code=401)
+    if user.get("role") not in ("owner", "manager", "admin"):
+        return JSONResponse({"error": "Chỉ Quản lý hoặc Chủ máy mới có quyền import CSV"}, status_code=403)
+    try:
+        data = await request.json()
+    except Exception:
+        data = {}
+    csv_text = str(data.get("csv_content") or "").strip()
+    if not csv_text:
+        return JSONResponse({"error": "Nội dung CSV không được để trống"}, status_code=400)
+
+    import io, csv
+    reader = csv.DictReader(io.StringIO(csv_text))
+    imported_count = 0
+    errors = []
+    for row in reader:
+        sku = (row.get("sku") or row.get("SKU") or "").strip()
+        name = (row.get("name") or row.get("Tên") or "").strip()
+        if not sku or not name:
+            continue
+        try:
+            price = int(float(row.get("price") or row.get("Giá") or 0))
+            sale_price = int(float(row.get("sale_price") or row.get("Giá khuyến mãi") or 0))
+            stock = int(float(row.get("stock") or row.get("Tồn kho") or 100))
+            weight_gram = int(float(row.get("weight_gram") or row.get("Cân nặng") or 500))
+            category = (row.get("category") or row.get("Danh mục") or "general").strip()
+            desc = (row.get("description") or row.get("Mô tả") or "").strip()
+
+            ops_order_store.upsert_product(
+                sku=sku,
+                name=name,
+                price=price,
+                sale_price=sale_price,
+                stock=stock,
+                weight_gram=weight_gram,
+                category=category,
+                description=desc,
+            )
+            imported_count += 1
+        except Exception as e:
+            errors.append(f"Dòng SKU {sku}: {e}")
+
+    return {"ok": True, "imported_count": imported_count, "errors": errors}
+
+
+# ============================================================
+# Automation Case Engine Routes
+# ============================================================
+
+@app.get("/ops/automation/rules")
+async def ops_get_automation_rules(
+    request: Request,
+    page_id: Optional[str] = None,
+    channel: Optional[str] = None,
+):
+    """Lấy danh sách quy tắc tự động hóa (hỗ trợ lọc theo page_id)."""
+    user = ops_rbac.get_current_ops_user(request)
+    if not user:
+        return JSONResponse({"error": "Chưa đăng nhập Ops"}, status_code=401)
+    rules = ops_order_store.list_automation_rules(page_id=page_id, channel=channel)
+    return {"ok": True, "rules": rules}
+
+
+@app.post("/ops/automation/rules")
+async def ops_save_automation_rule(request: Request):
+    """Lưu hoặc cập nhật quy tắc tự động hóa. Chỉ dành cho Quản lý / Chủ máy."""
+    user = ops_rbac.get_current_ops_user(request)
+    if not user:
+        return JSONResponse({"error": "Chưa đăng nhập Ops"}, status_code=401)
+    if user.get("role") not in ("owner", "manager", "admin"):
+        return JSONResponse({"error": "Nhân viên không có quyền thay đổi quy tắc tự động hóa"}, status_code=403)
+    try:
+        data = await request.json()
+    except Exception:
+        data = {}
+    try:
+        saved = ops_order_store.save_automation_rule(data)
+        return {"ok": True, "rule": saved}
+    except Exception as exc:
+        return JSONResponse({"error": f"Lỗi lưu quy tắc: {exc}"}, status_code=400)
+
+
+@app.delete("/ops/automation/rules/{rule_id}")
+async def ops_delete_automation_rule(request: Request, rule_id: str):
+    """Xóa quy tắc tự động hóa."""
+    user = ops_rbac.get_current_ops_user(request)
+    if not user:
+        return JSONResponse({"error": "Chưa đăng nhập Ops"}, status_code=401)
+    if user.get("role") not in ("owner", "manager", "admin"):
+        return JSONResponse({"error": "Nhân viên không có quyền xóa quy tắc"}, status_code=403)
+    success = ops_order_store.delete_automation_rule(rule_id)
+    return {"ok": success}
+
+
+@app.get("/ops/automation/runs")
+async def ops_get_automation_runs(
+    request: Request,
+    page_id: Optional[str] = None,
+    thread_id: Optional[str] = None,
+    limit: int = 50,
+):
+    """Lấy lịch sử các quyết định tự động hóa (Audit Trail)."""
+    user = ops_rbac.get_current_ops_user(request)
+    if not user:
+        return JSONResponse({"error": "Chưa đăng nhập Ops"}, status_code=401)
+    runs = ops_order_store.list_automation_runs(page_id=page_id, thread_id=thread_id, limit=limit)
+    return {"ok": True, "runs": runs}
+
+
+@app.get("/ops/automation/outbox")
+async def ops_get_outbox_messages(
+    request: Request,
+    status: Optional[str] = None,
+    page_id: Optional[str] = None,
+    limit: int = 50,
+):
+    """Lấy danh sách tin nhắn Outbox hàng đợi gửi ra cho khách."""
+    user = ops_rbac.get_current_ops_user(request)
+    if not user:
+        return JSONResponse({"error": "Chưa đăng nhập Ops"}, status_code=401)
+    messages = ops_order_store.list_outbox_messages(status=status, page_id=page_id, limit=limit)
+    return {"ok": True, "messages": messages}
+
+
+@app.post("/ops/automation/outbox/{message_id}/status")
+async def ops_update_outbox_message_status(request: Request, message_id: str):
+    """Cập nhật trạng thái tin nhắn Outbox (sent / failed)."""
+    user = ops_rbac.get_current_ops_user(request)
+    if not user:
+        return JSONResponse({"error": "Chưa đăng nhập Ops"}, status_code=401)
+    try:
+        data = await request.json()
+    except Exception:
+        data = {}
+    st = data.get("status") or "sent"
+    err = data.get("error")
+    ok = ops_order_store.update_outbox_status(message_id, st, error=err)
+    return {"ok": ok}
+
+
+@app.get("/ops/automation/kill-switch")
+async def ops_get_kill_switch_api(request: Request):
+    """Lấy trạng thái Global Kill Switch tự động hóa."""
+    user = ops_rbac.get_current_ops_user(request)
+    if not user:
+        return JSONResponse({"error": "Chưa đăng nhập Ops"}, status_code=401)
+    active = ops_automation_engine.get_kill_switch()
+    return {"ok": True, "kill_switch": active}
+
+
+@app.post("/ops/automation/kill-switch")
+async def ops_set_kill_switch_api(request: Request):
+    """Bật / tắt Global Kill Switch. Chỉ dành cho Quản lý / Chủ máy."""
+    user = ops_rbac.get_current_ops_user(request)
+    if not user:
+        return JSONResponse({"error": "Chưa đăng nhập Ops"}, status_code=401)
+    if user.get("role") not in ("owner", "manager", "admin"):
+        return JSONResponse({"error": "Chỉ Quản lý hoặc Chủ máy mới có quyền đổi Kill Switch"}, status_code=403)
+    try:
+        data = await request.json()
+    except Exception:
+        data = {}
+    enabled = bool(data.get("enabled", False))
+    active = ops_automation_engine.set_kill_switch(enabled)
+    return {"ok": True, "kill_switch": active, "message": f"Global Automation Kill Switch: {'BẬT (Khẩn cấp)' if active else 'TẮT (Bình thường)'}"}
+
+
+@app.post("/ops/automation/evaluate")
+async def ops_evaluate_automation_api(request: Request):
+    """Chạy đánh giá chuỗi hội thoại qua Automation Engine."""
+    user = ops_rbac.get_current_ops_user(request)
+    if not user:
+        return JSONResponse({"error": "Chưa đăng nhập Ops"}, status_code=401)
+    try:
+        data = await request.json()
+    except Exception:
+        data = {}
+    thread_id = str(data.get("thread_id") or "test_thread")
+    page_id = str(data.get("page_id") or "*")
+    messages = data.get("messages") or []
+    channel = str(data.get("channel") or "*")
+    customer_info = data.get("customer_info")
+    actor = user.get("username") or user.get("role") or "staff"
+
+    res = ops_automation_engine.evaluate_and_run(
+        thread_id=thread_id,
+        page_id=page_id,
+        messages=messages,
+        channel=channel,
+        customer_info=customer_info,
+        actor=actor,
+    )
+    return res
+
+
 @app.api_route("/ops/{full_path:path}", methods=["GET", "HEAD"])
 @app.api_route("/ops", methods=["GET", "HEAD"])
 async def serve_ops_dashboard(full_path: str = ""):
     """Phục vụ giao diện Single-Page App Ops Dashboard (HTML5 History Mode Fallback)."""
-    api_prefixes = ("briefing", "lead-scoring", "attribution", "competitor", "campaigns", "auth", "me", "users", "qa")
+    api_prefixes = ("briefing", "lead-scoring", "attribution", "competitor", "campaigns", "auth", "me", "users", "qa", "orders", "shipping", "products", "automation")
     clean_p = full_path.strip("/")
     if any(clean_p == p or clean_p.startswith(p + "/") for p in api_prefixes):
         return JSONResponse({"error": "Ops API route not found", "path": full_path}, status_code=404)
@@ -10030,9 +10991,13 @@ def _current_logo_file():
 
 
 @app.get("/brand-logo")
+@app.get("/logo.png")
 async def brand_logo():
     p = _current_logo_file() or _DEFAULT_LOGO
     if not p.exists():
+        alt = PROJECT_ROOT / "website" / "logo.png"
+        if alt.exists():
+            return FileResponse(str(alt), headers={"Cache-Control": "public, max-age=60"})
         return JSONResponse({"error": "no logo"}, status_code=404)
     # cache ngắn: đổi ảnh xong thấy ngay trong ~1 phút; JS còn bust bằng ?v= khi vừa upload.
     return FileResponse(str(p), headers={"Cache-Control": "public, max-age=60"})
