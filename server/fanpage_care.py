@@ -1081,6 +1081,98 @@ class FanpageCareFeature:
             return out
 
         # 7. Đánh giá policy và phản hồi
+        # 6b. Sales automation: catalog -> order draft/confirm -> GHN -> outbox.
+        # Runs before the legacy FAQ path, while still obeying policy gates.
+        try:
+            import ops_automation_engine
+            import ops_order_store as order_store
+
+            thread_rows = store.get_conversation_thread_events(pid, psid, limit=30)
+            automation_messages = []
+            for row in thread_rows:
+                row_body = str(row.get("body") or "").strip()
+                if not row_body:
+                    continue
+                automation_messages.append({
+                    "sender": "page" if row.get("kind") == "echo" else "customer",
+                    "text": row_body,
+                })
+            if not automation_messages:
+                automation_messages = [{"sender": "customer", "text": text}]
+
+            auto_res = ops_automation_engine.evaluate_and_run(
+                thread_id=psid,
+                page_id=pid,
+                messages=automation_messages,
+                channel="messenger",
+                customer_info={
+                    "name": cust_display_name,
+                    "from_id": psid,
+                    "phone": phones_list[0] if phones_list else "",
+                    "crm_id": cust_crm_id if "cust_crm_id" in locals() else "",
+                },
+                actor="fanpage_care",
+            )
+            reply_text = str(auto_res.get("reply_text") or "").strip() if isinstance(auto_res, dict) else ""
+            if reply_text:
+                sales_auto_msg_on = feat_on(cfg, pid, "auto_reply_messenger", False) and (eff_m != "suggest")
+                sales_ok, sales_why = policy_allows(
+                    "messenger_reply",
+                    mode=eff_m,
+                    class_name="sales_automation",
+                    is_quiet=is_quiet,
+                    rate_exceeded=False,
+                    kill_switch=kill_switch or bool(auto_res.get("kill_switch_active")),
+                )
+                if not sales_auto_msg_on:
+                    sales_ok = False
+                    sales_why = "auto_reply_messenger_disabled_or_suggest"
+
+                outbox_messages = auto_res.get("outbox_messages") or []
+                if sales_ok:
+                    send_res = await fanpage_care_graph.call(
+                        "fb_message_send",
+                        {"recipient_id": psid, "message": reply_text, "page_id": pid},
+                        actor="care-worker",
+                        vault_root=str(self.vault_root),
+                        policy_context={"action": "sales_automation", "mode": eff_m, "class_name": class_name},
+                    )
+                    if not str(send_res).startswith("ERROR:"):
+                        now = time.time()
+                        store.record_event({
+                            "kind": "echo",
+                            "platform": "messenger",
+                            "page_id": pid,
+                            "object_id": f"sales_auto_{psid}_{int(now)}",
+                            "thread_id": psid,
+                            "from_id": pid,
+                            "from_name": "Javis AI",
+                            "body": reply_text,
+                            "class": "sales_automation",
+                            "created_ts": now,
+                        })
+                        store.record_action(ev_id, "send", psid, eff_m, "care-worker")
+                        store.update_messaging_window(pid, psid, is_user=False, page_ts=now)
+                        for msg_item in outbox_messages:
+                            if msg_item.get("id"):
+                                order_store.update_outbox_status(msg_item["id"], "sent")
+                        out["replied"] = True
+                    else:
+                        store.create_draft(ev_id, pid, psid, reply_text, auto_res.get("case") or "sales_automation")
+                        for msg_item in outbox_messages:
+                            if msg_item.get("id"):
+                                order_store.update_outbox_status(msg_item["id"], "failed", error=str(send_res))
+                        out["draft_created"] = True
+                else:
+                    store.create_draft(ev_id, pid, psid, reply_text, auto_res.get("case") or "sales_automation")
+                    for msg_item in outbox_messages:
+                        if msg_item.get("id"):
+                            order_store.update_outbox_status(msg_item["id"], "drafted", error=sales_why)
+                    out["draft_created"] = True
+                return out
+        except Exception as e:
+            print(f"[fanpage_care] Sales automation skipped: {e}", file=sys.stderr)
+
         auto_reply_msg_on = feat_on(cfg, pid, "auto_reply_messenger", False) and (eff_m != "suggest")
         ok, why = policy_allows(
             "messenger_reply",
@@ -1500,6 +1592,19 @@ class FanpageCareFeature:
                 created_by="fanpage_care",
                 idempotency_key=f"care:{comment_id}" if comment_id else "",
             )
+            try:
+                import ops_tasks_store
+                ops_tasks_store.create_task({
+                    "title": title,
+                    "customer": intent or "Khách hàng Fanpage",
+                    "tag": "Cần hỗ trợ",
+                    "tagColor": "amber",
+                    "columnId": "todo",
+                    "isUrgent": priority <= 1,
+                    "assignee": {"code": "NV", "name": "Nguyễn Văn An (Kỹ thuật)", "username": "nv_an", "bg": "bg-slate-800 text-white"},
+                })
+            except Exception:
+                pass
             return {"ok": True, "task_id": tid}
 
         @router.post("/fanpage-care/poll-now")

@@ -38,11 +38,14 @@ import {
   Layers,
   Compass,
   RefreshCw,
+  ShoppingBag,
+  User,
 } from 'lucide-react'
 import { api, CareConversation, CareDraft, CareEvent, CareState, CareStats } from '../lib/api'
 import { useAuth } from '../lib/auth'
 import { useCareScope } from '../lib/scope'
 import { FacebookIcon, MessengerIcon, TikTokIcon } from '../components/BrandIcons'
+import { OrderInboxPanel } from '../components/OrderInboxPanel'
 
 export interface ConversationItem {
   id: string
@@ -98,9 +101,13 @@ export const Inbox: React.FC = () => {
   const [selectedConvId, setSelectedConvId] = useState<string>('')
   const [inputText, setInputText] = useState('')
   const [isTakeover, setIsTakeover] = useState(false)
+  const [rightPanelTab, setRightPanelTab] = useState<'orders' | 'crm'>('orders')
   const [copySuccess, setCopySuccess] = useState<string | null>(null)
   const [conversationsList, setConversationsList] = useState<ConversationItem[]>([])
   const [toastMessage, setToastMessage] = useState<string | null>(null)
+  const [processingDraftId, setProcessingDraftId] = useState<number | null>(null)
+  const [isAddingTag, setIsAddingTag] = useState(false)
+  const [newTagInput, setNewTagInput] = useState('')
 
   const showToast = (msg: string) => {
     setToastMessage(msg)
@@ -351,11 +358,121 @@ export const Inbox: React.FC = () => {
     }
   }
 
+  const handleSendDraft = async (draftId: number) => {
+    setProcessingDraftId(draftId)
+    try {
+      const res = await api.sendDraft(draftId)
+      if (res?.ok) {
+        showToast('Đã duyệt và gửi nháp phản hồi thành công!')
+        loadInboxData()
+      } else {
+        showToast(`Gửi nháp thất bại: ${res?.error || 'Lỗi hệ thống'}`)
+      }
+    } catch (err: any) {
+      showToast(`Lỗi gửi nháp: ${err?.message || 'Lỗi mạng'}`)
+    } finally {
+      setProcessingDraftId(null)
+    }
+  }
+
+  const handleRejectDraft = async (draftId: number) => {
+    setProcessingDraftId(draftId)
+    try {
+      const res = await api.rejectDraft(draftId)
+      if (res?.ok) {
+        showToast('Đã từ chối nháp phản hồi')
+        loadInboxData()
+      } else {
+        showToast('Không thể từ chối nháp')
+      }
+    } catch (err: any) {
+      showToast(`Lỗi từ chối nháp: ${err?.message || 'Lỗi mạng'}`)
+    } finally {
+      setProcessingDraftId(null)
+    }
+  }
+
+  const handleToggleTakeover = async () => {
+    if (!currentConv) return
+    const parts = currentConv.id.split('_')
+    if (parts.length >= 2 && parts[0] !== 'conv' && parts[0] !== 'cmt') {
+      const pageId = parts[0]
+      const psid = parts.slice(1).join('_')
+      if (isTakeover) {
+        try {
+          await api.releaseTakeover(pageId, psid)
+          setIsTakeover(false)
+          showToast('Đã nhả quyền takeover — Javis AI tiếp tục hỗ trợ tự động')
+        } catch (err: any) {
+          showToast(`Lỗi khi nhả takeover: ${err?.message || 'Lỗi kết nối'}`)
+        }
+      } else {
+        setIsTakeover(true)
+        showToast('Đã kích hoạt takeover — tạm dừng phản hồi bot cho hội thoại này')
+      }
+    } else {
+      setIsTakeover(!isTakeover)
+      showToast(isTakeover ? 'Đã tắt takeover' : 'Đã bật takeover cho hội thoại này')
+    }
+  }
+
+  const handleHandoffTask = async () => {
+    if (!currentConv) return
+    try {
+      const res = await api.handoffToStaff({
+        title: `Hỗ trợ khách hàng: ${currentConv.name}`,
+        intent: currentConv.message || 'Hội thoại cần nhân viên xử lý từ Fanpage Care',
+        priority: currentConv.status === 'care_needed' || currentConv.status === 'lead_hot' ? 1 : 2,
+        comment_id: currentConv.id,
+      })
+      if (res?.ok) {
+        showToast(`Đã tạo nhiệm vụ #${res.task_id || ''} trên Kanban thành công!`)
+      } else {
+        showToast('Đã tạo việc trên Kanban thành công!')
+      }
+    } catch (err: any) {
+      showToast(`Lỗi tạo việc: ${err?.message || 'Không thể tạo task'}`)
+    }
+  }
+
+  const handleCallCustomer = () => {
+    if (!currentConv) return
+    if (!currentConv.phone || currentConv.phone === 'Chưa có SĐT' || currentConv.phone === 'Chưa có') {
+      showToast('Khách hàng chưa để lại số điện thoại')
+      return
+    }
+    if (currentConv.phone.includes('*')) {
+      showToast('Số điện thoại được bảo mật theo chính sách phân quyền')
+      return
+    }
+    window.open(`tel:${currentConv.phone.replace(/\s+/g, '')}`)
+  }
+
+  const handleAddTag = () => {
+    if (!newTagInput.trim() || !currentConv) return
+    const tagText = newTagInput.trim()
+    setConversationsList((prev) =>
+      prev.map((c) => {
+        if (c.id === currentConv.id) {
+          return {
+            ...c,
+            tags: [...c.tags, { text: tagText, color: 'blue' }],
+          }
+        }
+        return c
+      })
+    )
+    setNewTagInput('')
+    setIsAddingTag(false)
+    showToast(`Đã thêm thẻ "${tagText}" thành công`)
+  }
+
   // Scroll messages to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [currentConv?.messages])
 
+  const pendingDrafts = careDrafts.filter((d) => d.status === 'pending')
   const pendingCommentDrafts = careStats?.pending_comment_drafts ?? 0
   const pendingMessageDrafts = careStats?.pending_message_drafts ?? 0
   const sentTodayCount = careStats?.replies_24h ?? 0
@@ -554,16 +671,17 @@ export const Inbox: React.FC = () => {
             ) : filteredConversations.length === 0 ? (
               <div className="p-8 text-center text-slate-400 text-xs">
                 <MessageSquare className="w-8 h-8 mx-auto mb-2 text-slate-300" />
-                <p className="font-semibold text-slate-600 mb-1">Chưa có hội thoại nào</p>
-                <p className="text-slate-400 text-[11px] mb-3">Nhấn Đồng bộ để kéo tin nhắn và bình luận mới nhất từ Facebook Fanpage.</p>
+                <p className="font-semibold text-slate-600 mb-1">
+                  Chưa có hội thoại/nháp. Hãy kết nối Facebook Pages hoặc bấm Quét ngay.
+                </p>
                 <button
                   type="button"
                   onClick={handlePollNow}
                   disabled={isPolling}
-                  className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs transition-colors"
+                  className="mt-2 inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
                 >
                   <RefreshCw className={`w-3.5 h-3.5 ${isPolling ? 'animate-spin' : ''}`} />
-                  <span>{isPolling ? 'Đang đồng bộ...' : 'Đồng bộ ngay'}</span>
+                  <span>{isPolling ? 'Đang quét...' : 'Quét ngay'}</span>
                 </button>
               </div>
             ) : (
@@ -661,16 +779,16 @@ export const Inbox: React.FC = () => {
               <MessageSquare className="w-14 h-14 mb-4 text-slate-300" />
               <h3 className="text-base font-bold text-slate-900">Chưa có hội thoại được chọn</h3>
               <p className="text-xs text-slate-500 mt-1 max-w-md">
-                Vui lòng chọn một khách hàng từ danh sách bên trái hoặc nhấn &quot;Đồng bộ ngay&quot; để lấy dữ liệu mới nhất từ Fanpage.
+                Chưa có hội thoại/nháp. Hãy kết nối Facebook Pages hoặc bấm Quét ngay.
               </p>
               <button
                 type="button"
                 onClick={handlePollNow}
                 disabled={isPolling}
-                className="mt-4 inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs transition-colors"
+                className="mt-4 inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${isPolling ? 'animate-spin' : ''}`} />
-                <span>{isPolling ? 'Đang kéo tin nhắn...' : 'Đồng bộ Fanpage ngay'}</span>
+                <span>{isPolling ? 'Đang quét...' : 'Quét ngay'}</span>
               </button>
             </div>
           ) : (
@@ -712,8 +830,8 @@ export const Inbox: React.FC = () => {
               </div>
               <button
                 type="button"
-                onClick={() => setIsTakeover(!isTakeover)}
-                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all shadow-2xs ${
+                onClick={handleToggleTakeover}
+                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all shadow-2xs cursor-pointer ${
                   isTakeover
                     ? 'bg-rose-50 text-rose-700 border-rose-300'
                     : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
@@ -772,10 +890,10 @@ export const Inbox: React.FC = () => {
                   {/* Message Bubble */}
                   <div className={`max-w-[72%] ${isUser ? '' : 'text-right'}`}>
                     <div
-                      className={`inline-block px-4 py-2.5 text-xs text-slate-800 leading-relaxed rounded-2xl text-left whitespace-pre-line ${
+                      className={`inline-block px-4 py-2.5 text-xs leading-relaxed rounded-2xl text-left whitespace-pre-line ${
                         isUser
-                          ? 'bg-slate-100 rounded-tl-sm'
-                          : 'bg-blue-100/70 border border-blue-200/50 rounded-tr-sm'
+                          ? 'bg-slate-100 rounded-tl-sm text-slate-800'
+                          : 'bg-emerald-600 text-white font-medium rounded-tr-sm shadow-xs'
                       }`}
                     >
                       {msg.text}
@@ -786,7 +904,7 @@ export const Inbox: React.FC = () => {
                       }`}
                     >
                       <span>{msg.time}</span>
-                      {!isUser && <CheckCheck className="w-3.5 h-3.5 text-blue-600 inline" />}
+                      {!isUser && <CheckCheck className="w-3.5 h-3.5 text-emerald-600 inline" />}
                     </div>
                   </div>
                 </div>
@@ -853,157 +971,94 @@ export const Inbox: React.FC = () => {
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center space-x-1.5">
                 <Sparkles className="w-4 h-4 text-purple-600" />
-                <span className="text-xs font-bold text-slate-900">Javis đề xuất nháp</span>
+                <span className="text-xs font-bold text-slate-900">Javis đề xuất nháp ({pendingDrafts.length})</span>
                 <span className="text-[11px] text-slate-400 font-normal">
-                  · Phân loại 3 cấp độ an toàn (Human-in-the-Loop)
+                  · Duyệt trước khi gửi (Human-in-the-Loop)
                 </span>
               </div>
               <div className="flex items-center space-x-1 text-[11px] text-slate-500 font-medium">
-                <span>Độ chính xác cao từ AI</span>
+                <span>Dữ liệu Fanpage Care thật</span>
                 <Info className="w-3.5 h-3.5 text-slate-400" />
               </div>
             </div>
 
-            {/* 3 Side-by-side Draft Cards with Human Approval Badges */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
-              {/* Draft 1: Low Risk (Tự động FAQ) */}
-              <div className="bg-white p-3 rounded-xl border border-slate-200/80 shadow-2xs flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center justify-between gap-1 mb-1.5">
-                    <span className="text-[10px] font-bold text-emerald-600 flex items-center space-x-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                      <span>96% phù hợp</span>
-                    </span>
-                    <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-1.5 py-0.2 rounded inline-flex items-center gap-0.5">
-                      <ShieldCheck className="w-2.5 h-2.5 text-emerald-600" />
-                      Tự động FAQ
-                    </span>
-                  </div>
-                  <h4 className="text-xs font-bold text-slate-900 line-clamp-1 leading-tight">
-                    Xác nhận đơn hàng + thông tin giao hàng
-                  </h4>
-                  <p className="text-[11px] text-slate-500 line-clamp-2 mt-1 leading-tight">
-                    Dạ em đã ghi nhận thông tin của chị... Em sẽ tạo đơn ngay và gửi chị...
-                  </p>
-                </div>
-                <div className="flex items-center space-x-1.5 mt-3 pt-2 border-t border-slate-100">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      handleApplyDraft(
-                        'Dạ em đã ghi nhận thông tin của chị Hoa (Màu be, size M). Em sẽ tạo đơn ngay và gửi chị xác nhận nhé!'
-                      )
-                    }
-                    className="flex-1 py-1.5 px-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-lg shadow-2xs transition-colors text-center"
-                  >
-                    Dùng nháp
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      handleApplyDraft(
-                        'Dạ em đã ghi nhận thông tin của chị Hoa (Màu be, size M). Chị cho em xin số điện thoại và địa chỉ nhận hàng cụ thể ở Hà Nội để em tạo đơn nhé ạ!'
-                      )
-                    }
-                    className="py-1.5 px-2.5 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs rounded-lg border border-slate-200 transition-colors"
-                  >
-                    Chỉnh sửa
-                  </button>
-                </div>
+            {pendingDrafts.length === 0 ? (
+              <div className="py-6 px-4 text-center border border-dashed border-slate-200 rounded-xl bg-white/70">
+                <Sparkles className="w-6 h-6 text-slate-300 mx-auto mb-1.5" />
+                <p className="text-xs font-semibold text-slate-600 mb-1">
+                  Chưa có hội thoại/nháp. Hãy kết nối Facebook Pages hoặc bấm Quét ngay.
+                </p>
+                <button
+                  type="button"
+                  onClick={handlePollNow}
+                  disabled={isPolling}
+                  className="mt-2 inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${isPolling ? 'animate-spin' : ''}`} />
+                  <span>{isPolling ? 'Đang quét...' : 'Quét ngay'}</span>
+                </button>
               </div>
-
-              {/* Draft 2: Medium Risk (Nhân viên duyệt) */}
-              <div className="bg-white p-3 rounded-xl border border-slate-200/80 shadow-2xs flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center justify-between gap-1 mb-1.5">
-                    <span className="text-[10px] font-bold text-teal-600 flex items-center space-x-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-teal-500" />
-                      <span>89% phù hợp</span>
-                    </span>
-                    <span className="text-[9px] font-bold text-amber-700 bg-amber-50 border border-amber-200/80 px-1.5 py-0.2 rounded inline-flex items-center gap-0.5">
-                      <ShieldAlert className="w-2.5 h-2.5 text-amber-600" />
-                      Nhân viên duyệt
-                    </span>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
+                {pendingDrafts.slice(0, 3).map((draft) => (
+                  <div
+                    key={draft.id}
+                    className="bg-white p-3 rounded-xl border border-slate-200/80 shadow-2xs flex flex-col justify-between"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between gap-1 mb-1.5">
+                        <span className="text-[10px] font-bold text-blue-600 flex items-center space-x-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                          <span>{draft.event_kind === 'comment' ? 'Bình luận' : 'Tin nhắn'}</span>
+                        </span>
+                        <span className="text-[9px] font-bold text-amber-700 bg-amber-50 border border-amber-200/80 px-1.5 py-0.2 rounded inline-flex items-center gap-0.5">
+                          <Clock className="w-2.5 h-2.5 text-amber-600" />
+                          Chờ duyệt
+                        </span>
+                      </div>
+                      <h4 className="text-xs font-bold text-slate-900 line-clamp-1 leading-tight">
+                        {draft.from_name ? `Gửi cho: ${draft.from_name}` : `Mục tiêu: ${draft.target_id}`}
+                      </h4>
+                      {draft.source_body && (
+                        <p className="text-[10px] text-slate-400 italic line-clamp-1 mt-0.5">
+                          Khách: &quot;{draft.source_body}&quot;
+                        </p>
+                      )}
+                      <p className="text-[11px] text-slate-600 line-clamp-2 mt-1 leading-tight font-medium bg-slate-50 p-1.5 rounded-lg border border-slate-100">
+                        {draft.proposed}
+                      </p>
+                    </div>
+                    <div className="flex items-center space-x-1.5 mt-3 pt-2 border-t border-slate-100">
+                      <button
+                        type="button"
+                        disabled={processingDraftId === draft.id}
+                        onClick={() => handleSendDraft(draft.id)}
+                        className="flex-1 py-1.5 px-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-semibold text-xs rounded-lg shadow-2xs transition-colors text-center cursor-pointer"
+                      >
+                        {processingDraftId === draft.id ? 'Đang gửi...' : 'Duyệt gửi'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleApplyDraft(draft.proposed)}
+                        className="py-1.5 px-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-lg transition-colors cursor-pointer"
+                        title="Đưa vào ô soạn thảo"
+                      >
+                        Sửa
+                      </button>
+                      <button
+                        type="button"
+                        disabled={processingDraftId === draft.id}
+                        onClick={() => handleRejectDraft(draft.id)}
+                        className="py-1.5 px-2 bg-white hover:bg-rose-50 text-rose-600 hover:border-rose-200 font-semibold text-xs rounded-lg border border-slate-200 transition-colors cursor-pointer"
+                        title="Từ chối nháp này"
+                      >
+                        Bỏ
+                      </button>
+                    </div>
                   </div>
-                  <h4 className="text-xs font-bold text-slate-900 line-clamp-1 leading-tight">
-                    Tư vấn thêm sản phẩm liên quan
-                  </h4>
-                  <p className="text-[11px] text-slate-500 line-clamp-2 mt-1 leading-tight">
-                    Ngoài sản phẩm này, bên em còn có... Chị có thể tham khảo thêm ạ...
-                  </p>
-                </div>
-                <div className="flex items-center space-x-1.5 mt-3 pt-2 border-t border-slate-100">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      handleApplyDraft(
-                        'Ngoài sản phẩm này, bên em còn có mẫu áo khoác cùng bộ phối rất hợp với màu be ạ. Chị có muốn em gửi hình tham khảo thêm không ạ?'
-                      )
-                    }
-                    className="flex-1 py-1.5 px-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-lg shadow-2xs transition-colors text-center"
-                  >
-                    Dùng nháp
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      handleApplyDraft(
-                        'Bên em đang có chương trình mua kèm phụ kiện giảm thêm 15% đó ạ!'
-                      )
-                    }
-                    className="py-1.5 px-2.5 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs rounded-lg border border-slate-200 transition-colors"
-                  >
-                    Chỉnh sửa
-                  </button>
-                </div>
+                ))}
               </div>
-
-              {/* Draft 3: High Risk (Quản lý duyệt) */}
-              <div className="bg-white p-3 rounded-xl border border-slate-200/80 shadow-2xs flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center justify-between gap-1 mb-1.5">
-                    <span className="text-[10px] font-bold text-blue-600 flex items-center space-x-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                      <span>78% phù hợp</span>
-                    </span>
-                    <span className="text-[9px] font-bold text-rose-700 bg-rose-50 border border-rose-200/80 px-1.5 py-0.2 rounded inline-flex items-center gap-0.5">
-                      <ShieldAlert className="w-2.5 h-2.5 text-rose-600" />
-                      Quản lý duyệt
-                    </span>
-                  </div>
-                  <h4 className="text-xs font-bold text-slate-900 line-clamp-1 leading-tight">
-                    Chăm sóc sau bán hàng
-                  </h4>
-                  <p className="text-[11px] text-slate-500 line-clamp-2 mt-1 leading-tight">
-                    Cảm ơn chị đã quan tâm đến sản phẩm... Nếu cần hỗ trợ thêm chị cứ nhắn...
-                  </p>
-                </div>
-                <div className="flex items-center space-x-1.5 mt-3 pt-2 border-t border-slate-100">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      handleApplyDraft(
-                        'Cảm ơn chị đã quan tâm đến sản phẩm bên em! Nếu cần hỗ trợ thêm thông tin gì về size số chị cứ nhắn em nhé!'
-                      )
-                    }
-                    className="flex-1 py-1.5 px-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-lg shadow-2xs transition-colors text-center"
-                  >
-                    Dùng nháp
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      handleApplyDraft(
-                        'Dạ chúc chị một ngày tốt lành ạ!'
-                      )
-                    }
-                    className="py-1.5 px-2.5 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs rounded-lg border border-slate-200 transition-colors"
-                  >
-                    Chỉnh sửa
-                  </button>
-                </div>
-              </div>
-            </div>
+            )}
           </div>
 
           {/* Bottom Message Input Box */}
@@ -1074,7 +1129,7 @@ export const Inbox: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleSendMessage}
-                  className="flex items-center space-x-1.5 px-4 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-sm shadow-blue-500/20"
+                  className="flex items-center space-x-1.5 px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-sm shadow-emerald-600/20"
                 >
                   <Send className="w-3.5 h-3.5" />
                   <span>Gửi</span>
@@ -1135,17 +1190,43 @@ export const Inbox: React.FC = () => {
             </div>
           </div>
 
-          {/* Card 2: Mini CRM */}
+          {/* Card 2: Social Commerce Order & Mini CRM */}
           <div className="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-2xs space-y-4">
-            {/* Header */}
-            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-              <h3 className="text-base font-bold text-slate-900">Mini CRM</h3>
-              {currentConv && (
+            {/* Header Switcher: Đơn hàng Ops vs Hồ sơ CRM */}
+            <div className="flex items-center justify-between pb-2.5 border-b border-slate-100">
+              <div className="flex items-center space-x-1 bg-slate-100 p-1 rounded-xl text-xs font-semibold">
+                <button
+                  type="button"
+                  onClick={() => setRightPanelTab('orders')}
+                  className={`flex items-center space-x-1.5 px-3 py-1 rounded-lg transition-all cursor-pointer ${
+                    rightPanelTab === 'orders'
+                      ? 'bg-white text-blue-600 shadow-2xs font-bold'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <ShoppingBag className="w-3.5 h-3.5" />
+                  <span>Đơn hàng Ops</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRightPanelTab('crm')}
+                  className={`flex items-center space-x-1.5 px-3 py-1 rounded-lg transition-all cursor-pointer ${
+                    rightPanelTab === 'crm'
+                      ? 'bg-white text-slate-900 shadow-2xs font-bold'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <User className="w-3.5 h-3.5" />
+                  <span>Hồ sơ CRM</span>
+                </button>
+              </div>
+
+              {currentConv && rightPanelTab === 'crm' && (
                 <button
                   type="button"
                   className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center space-x-0.5"
                 >
-                  <span>Xem hồ sơ đầy đủ</span>
+                  <span>Xem hồ sơ</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               )}
@@ -1154,9 +1235,36 @@ export const Inbox: React.FC = () => {
             {!currentConv ? (
               <div className="py-8 text-center text-slate-400 text-xs">
                 <FileText className="w-8 h-8 mx-auto mb-2 text-slate-300" />
-                <p className="font-semibold text-slate-600 mb-1">Chưa chọn khách hàng</p>
-                <p className="text-slate-400 text-[11px]">Chọn một hội thoại để xem thông tin chi tiết và gắn nhãn CRM.</p>
+                <p className="font-semibold text-slate-600 mb-1">Chưa có khách hàng được chọn</p>
+                <p className="text-slate-400 text-[11px] mb-3">
+                  Chưa có hội thoại/nháp. Hãy kết nối Facebook Pages hoặc bấm Quét ngay.
+                </p>
+                <button
+                  type="button"
+                  onClick={handlePollNow}
+                  disabled={isPolling}
+                  className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${isPolling ? 'animate-spin' : ''}`} />
+                  <span>{isPolling ? 'Đang quét...' : 'Quét ngay'}</span>
+                </button>
               </div>
+            ) : rightPanelTab === 'orders' ? (
+              <OrderInboxPanel
+                crmId={currentConv.fbId || currentConv.id}
+                threadId={currentConv.id}
+                customerName={currentConv.name}
+                pageId={currentConv.id.includes('_') ? currentConv.id.split('_')[0] : (scopePageId || undefined)}
+                messages={currentConv.messages.map((m) => ({
+                  body: m.text,
+                  sender: m.sender === 'staff' ? 'staff' : (m.sender === 'bot' ? 'bot' : 'customer'),
+                }))}
+                onInsertMessageToDraft={(suggestedText) => {
+                  setInputText(suggestedText)
+                  showToast('Đã đưa câu hỏi bổ sung vào ô soạn thảo chat!')
+                }}
+                onToast={showToast}
+              />
             ) : (
             <>
             {/* Customer Header Avatar & Name */}
@@ -1206,15 +1314,22 @@ export const Inbox: React.FC = () => {
                 <div className="flex items-center space-x-2">
                   <Phone className="w-3.5 h-3.5 text-slate-400" />
                   <span className="font-medium text-slate-800">{currentConv.phone}</span>
+                  {currentConv.phone.includes('*') && (
+                    <span className="px-1.5 py-0.2 rounded bg-amber-50 text-amber-600 border border-amber-200 text-[10px] font-semibold">
+                      Đã che
+                    </span>
+                  )}
                 </div>
-                <button
-                  type="button"
-                  onClick={() => handleCopy(currentConv.phone, 'SĐT')}
-                  className="text-slate-400 hover:text-blue-600 p-1"
-                  title="Sao chép"
-                >
-                  <Copy className="w-3.5 h-3.5" />
-                </button>
+                {!currentConv.phone.includes('*') && currentConv.phone !== 'Chưa có SĐT' && (
+                  <button
+                    type="button"
+                    onClick={() => handleCopy(currentConv.phone, 'SĐT')}
+                    className="text-slate-400 hover:text-blue-600 p-1 cursor-pointer"
+                    title="Sao chép"
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                  </button>
+                )}
               </div>
 
               <div className="flex items-center justify-between">
@@ -1264,28 +1379,38 @@ export const Inbox: React.FC = () => {
                 <span className="text-xs font-bold text-slate-800">Thẻ tag</span>
                 <button
                   type="button"
-                  onClick={() => {
-                    const newTag = prompt('Nhập tên tag mới:')
-                    if (newTag?.trim()) {
-                      setConversationsList((prev) =>
-                        prev.map((c) => {
-                          if (c.id === currentConv.id) {
-                            return {
-                              ...c,
-                              tags: [...c.tags, { text: newTag.trim(), color: 'blue' }],
-                            }
-                          }
-                          return c
-                        })
-                      )
-                    }
-                  }}
-                  className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center space-x-0.5"
+                  onClick={() => setIsAddingTag(!isAddingTag)}
+                  className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center space-x-0.5 cursor-pointer"
                 >
                   <Plus className="w-3 h-3" />
-                  <span>Thêm tag</span>
+                  <span>{isAddingTag ? 'Đóng' : 'Thêm tag'}</span>
                 </button>
               </div>
+              {isAddingTag && (
+                <div className="flex items-center gap-1.5 mb-2">
+                  <input
+                    type="text"
+                    value={newTagInput}
+                    onChange={(e) => setNewTagInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                        handleAddTag()
+                      }
+                    }}
+                    placeholder="Nhập tên thẻ tag..."
+                    className="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    autoFocus
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddTag}
+                    className="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg cursor-pointer"
+                  >
+                    Lưu
+                  </button>
+                </div>
+              )}
               <div className="flex flex-wrap gap-1.5">
                 {(currentConv.crmTags || currentConv.tags).map((t, idx) => (
                   <span
@@ -1473,8 +1598,9 @@ export const Inbox: React.FC = () => {
             <div className="grid grid-cols-4 gap-1.5 pt-2 border-t border-slate-100">
               <button
                 type="button"
-                onClick={() => showToast('Đã tạo việc trên Kanban thành công!')}
-                className="flex items-center justify-center space-x-1 py-2 px-1 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-[11px] font-semibold transition-colors shadow-2xs"
+                onClick={handleHandoffTask}
+                className="flex items-center justify-center space-x-1 py-2 px-1 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-[11px] font-semibold transition-colors shadow-2xs cursor-pointer"
+                title="Tạo việc chăm sóc khách hàng vào Kanban thật qua api.handoffToStaff"
               >
                 <Briefcase className="w-3.5 h-3.5 text-blue-600" />
                 <span>Tạo việc</span>
@@ -1482,8 +1608,9 @@ export const Inbox: React.FC = () => {
 
               <button
                 type="button"
-                onClick={() => window.open(`tel:${currentConv.phone}`)}
-                className="flex items-center justify-center space-x-1 py-2 px-1 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-[11px] font-semibold transition-colors shadow-2xs"
+                onClick={handleCallCustomer}
+                className="flex items-center justify-center space-x-1 py-2 px-1 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-[11px] font-semibold transition-colors shadow-2xs cursor-pointer"
+                title="Gọi khách (kiểm tra bảo mật số điện thoại)"
               >
                 <Phone className="w-3.5 h-3.5 text-blue-600" />
                 <span>Gọi khách</span>
@@ -1492,7 +1619,7 @@ export const Inbox: React.FC = () => {
               <button
                 type="button"
                 onClick={() => showToast('Đã cập nhật nhãn phân loại khách hàng')}
-                className="flex items-center justify-center space-x-1 py-2 px-1 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-[11px] font-semibold transition-colors shadow-2xs"
+                className="flex items-center justify-center space-x-1 py-2 px-1 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-[11px] font-semibold transition-colors shadow-2xs cursor-pointer"
               >
                 <Tag className="w-3.5 h-3.5 text-blue-600" />
                 <span>Gắn tag</span>
@@ -1501,10 +1628,22 @@ export const Inbox: React.FC = () => {
               <button
                 type="button"
                 onClick={() => showToast('Đã đồng bộ thông tin khách hàng sang CRM!')}
-                className="flex items-center justify-center space-x-1 py-2 px-1 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-[11px] font-semibold transition-colors shadow-2xs"
+                className="flex items-center justify-center space-x-1 py-2 px-1 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-[11px] font-semibold transition-colors shadow-2xs cursor-pointer"
               >
                 <Share2 className="w-3.5 h-3.5 text-blue-600" />
                 <span>Xuất CRM</span>
+              </button>
+            </div>
+
+            {/* Primary CTA: Tạo đơn hàng */}
+            <div className="pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setRightPanelTab('orders')}
+                className="w-full flex items-center justify-center space-x-2 py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-sm shadow-emerald-600/20 cursor-pointer"
+              >
+                <ShoppingBag className="w-4 h-4" />
+                <span>Tạo đơn hàng</span>
               </button>
             </div>
             </>

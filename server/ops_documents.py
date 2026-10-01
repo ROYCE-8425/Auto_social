@@ -34,6 +34,14 @@ import ops_rbac
 router = APIRouter(tags=["Company Documents Vault"])
 
 
+def _safe_upload_name(filename: str) -> str:
+    """Chuẩn hóa tên file upload để không chứa path separator/ký tự header nguy hiểm."""
+    raw = (filename or "tai_lieu").replace("\\", "/").split("/")[-1].strip()
+    safe = "".join(ch if (ch.isalnum() or ch in "._-") else "_" for ch in raw)
+    safe = safe.strip("._") or "tai_lieu"
+    return safe[:140]
+
+
 def _get_actor(request: Request) -> str:
     """Lấy danh tính người thao tác từ phiên Ops hoặc Admin."""
     user = ops_rbac.get_current_ops_user(request)
@@ -111,7 +119,7 @@ async def api_upload_document(
 ):
     """Tải lên file tài liệu thực tế và lưu trữ metadata vào CSDL."""
     actor = _get_actor(request)
-    orig_name = file.filename or "tai_lieu"
+    orig_name = _safe_upload_name(file.filename or "tai_lieu")
     ext = Path(orig_name).suffix.lower()
 
     # Tạo thư mục theo năm và category: e.g. storage/documents/2026/contracts/
@@ -121,7 +129,7 @@ async def api_upload_document(
     abs_storage_dir = ops_documents_store.get_base_storage_dir() / storage_sub_dir
     abs_storage_dir.mkdir(parents=True, exist_ok=True)
 
-    safe_name = f"{uuid.uuid4().hex[:10]}_{orig_name.replace(' ', '_')}"
+    safe_name = f"{uuid.uuid4().hex[:10]}_{orig_name}"
     abs_file_path = abs_storage_dir / safe_name
     rel_file_path = str(storage_sub_dir / safe_name).replace("\\", "/")
 
@@ -199,7 +207,10 @@ async def api_download_document_file(doc_id: str, download: bool = Query(False))
         return JSONResponse({"ok": False, "error": "Không tìm thấy hồ sơ tài liệu"}, status_code=404)
 
     rel_path = doc.get("file_path", "").replace("\\", "/").strip("/")
-    abs_path = ops_documents_store.get_base_storage_dir() / rel_path
+    base_dir = ops_documents_store.get_base_storage_dir().resolve()
+    abs_path = (base_dir / rel_path).resolve()
+    if base_dir != abs_path and base_dir not in abs_path.parents:
+        return JSONResponse({"ok": False, "error": "Đường dẫn file không hợp lệ"}, status_code=400)
 
     if not abs_path.is_file():
         return JSONResponse({"ok": False, "error": f"File vật lý không tồn tại trên máy chủ: {rel_path}"}, status_code=404)
@@ -295,14 +306,14 @@ async def api_add_document_version(
     if not doc:
         return JSONResponse({"ok": False, "error": "Tài liệu không tồn tại"}, status_code=404)
 
-    orig_name = file.filename or "tai_lieu"
+    orig_name = _safe_upload_name(file.filename or "tai_lieu")
     year = time.strftime("%Y")
     clean_cat = doc.get("category", "general")
     storage_sub_dir = Path(year) / clean_cat
     abs_storage_dir = ops_documents_store.get_base_storage_dir() / storage_sub_dir
     abs_storage_dir.mkdir(parents=True, exist_ok=True)
 
-    safe_name = f"{uuid.uuid4().hex[:10]}_{orig_name.replace(' ', '_')}"
+    safe_name = f"{uuid.uuid4().hex[:10]}_{orig_name}"
     abs_file_path = abs_storage_dir / safe_name
     rel_file_path = str(storage_sub_dir / safe_name).replace("\\", "/")
 

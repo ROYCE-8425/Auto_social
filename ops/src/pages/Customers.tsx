@@ -30,7 +30,7 @@ import {
   TrendingUp,
   RefreshCw,
 } from 'lucide-react'
-import { api, CareCustomer } from '../lib/api'
+import { api, CareCustomer, CareCustomerDetail } from '../lib/api'
 import { useAuth } from '../lib/auth'
 import { useCareScope } from '../lib/scope'
 import { FacebookIcon, MessengerIcon, TikTokIcon, PlatformPill } from '../components/BrandIcons'
@@ -79,7 +79,13 @@ export const Customers: React.FC = () => {
   const [loading, setLoading] = useState(false)
   const [isPolling, setIsPolling] = useState(false)
   const [pollNotice, setPollNotice] = useState<string | null>(null)
-  const [customerDetail, setCustomerDetail] = useState<any>(null)
+  const [customerDetail, setCustomerDetail] = useState<CareCustomerDetail | null>(null)
+  const [showMergeModal, setShowMergeModal] = useState(false)
+  const [secondaryCrmId, setSecondaryCrmId] = useState('')
+  const [isMerging, setIsMerging] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [isAddingTag, setIsAddingTag] = useState(false)
+  const [newTagInput, setNewTagInput] = useState('')
 
   const loadCustomers = () => {
     setLoading(true)
@@ -156,7 +162,11 @@ export const Customers: React.FC = () => {
           setCustomerDetail(res)
         }
       }).catch(() => {})
+    } else {
+      setCustomerDetail(null)
     }
+    setConfirmDelete(false)
+    setShowMergeModal(false)
   }, [selectedCustomerId])
 
   const handlePollNow = async () => {
@@ -221,6 +231,78 @@ export const Customers: React.FC = () => {
     navigator.clipboard.writeText(text)
     setCopySuccess(label)
     setTimeout(() => setCopySuccess(null), 2000)
+  }
+
+  const handleMergeCustomers = async () => {
+    if (!selectedCustomer || !secondaryCrmId.trim()) return
+    if (secondaryCrmId.trim() === selectedCustomer.id) {
+      showToast('Không thể gộp khách hàng với chính mình', 'error')
+      return
+    }
+    setIsMerging(true)
+    try {
+      const res = await api.mergeCustomers(selectedCustomer.id, secondaryCrmId.trim())
+      if (res?.ok) {
+        showToast(`Đã gộp hồ sơ ${secondaryCrmId.trim()} vào ${selectedCustomer.name} thành công!`, 'success')
+        setShowMergeModal(false)
+        setSecondaryCrmId('')
+        loadCustomers()
+      } else {
+        showToast('Gộp hồ sơ không thành công', 'error')
+      }
+    } catch (err: any) {
+      showToast(`Lỗi gộp hồ sơ: ${err?.message || 'Lỗi mạng'}`, 'error')
+    } finally {
+      setIsMerging(false)
+    }
+  }
+
+  const handleCreateCustomerTask = async () => {
+    if (!selectedCustomer) return
+    try {
+      const res = await api.handoffToStaff({
+        title: `Chăm sóc khách hàng CRM: ${selectedCustomer.name}`,
+        intent: selectedCustomer.notes || selectedCustomer.snippet || 'Theo dõi và chăm sóc khách hàng',
+        priority: selectedCustomer.status === 'Lead nóng' ? 1 : 2,
+        comment_id: selectedCustomer.id,
+      })
+      if (res?.ok) {
+        showToast(`Đã tạo nhiệm vụ #${res.task_id || ''} trên Kanban thành công!`, 'success')
+      } else {
+        showToast(`Đã tạo nhiệm vụ chăm sóc cho ${selectedCustomer.name} trên Kanban`, 'success')
+      }
+    } catch (err: any) {
+      showToast(`Lỗi tạo việc: ${err?.message || 'Lỗi mạng'}`, 'error')
+    }
+  }
+
+  const handleCallCustomer = (phone: string, name: string) => {
+    if (!phone || phone === 'Chưa có SĐT' || phone === 'Chưa có') {
+      showToast(`Khách hàng ${name} chưa để lại số điện thoại`, 'info')
+      return
+    }
+    if (phone.includes('*')) {
+      showToast('Số điện thoại đang được bảo vệ quyền riêng tư theo phân quyền.', 'info')
+      return
+    }
+    window.location.href = `tel:${phone.replace(/\s+/g, '')}`
+  }
+
+  const handleAddTag = () => {
+    if (!newTagInput.trim() || !selectedCustomer) return
+    const tagText = newTagInput.trim()
+    setCustomersList((prev) =>
+      prev.map((c) => {
+        if (c.id === selectedCustomer.id) {
+          const updatedTags = [...(c.tagsList || []), tagText]
+          return { ...c, tagsList: updatedTags }
+        }
+        return c
+      })
+    )
+    setNewTagInput('')
+    setIsAddingTag(false)
+    showToast(`Đã thêm tag "${tagText}" cho ${selectedCustomer.name}`, 'success')
   }
 
 
@@ -481,66 +563,91 @@ export const Customers: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 font-medium">
-                  {filteredCustomers.map((cust) => {
-                    const isSelected = cust.id === selectedCustomer.id
-                    return (
-                      <tr
-                        key={cust.id}
-                        onClick={() => setSelectedCustomerId(cust.id)}
-                        className={`cursor-pointer transition-colors ${
-                          isSelected
-                            ? 'bg-blue-50/80 font-semibold'
-                            : 'hover:bg-slate-50/80'
-                        }`}
-                      >
-                        <td className="py-2.5 px-1" onClick={(e) => e.stopPropagation()}>
-                          <input type="checkbox" className="rounded border-slate-300 text-blue-600" />
-                        </td>
-                        <td className="py-2.5 px-2">
-                          <div className="flex items-center space-x-2">
-                            <img
-                              src={cust.avatar}
-                              alt={cust.name}
-                              className="w-7 h-7 rounded-full object-cover ring-1 ring-slate-200 shrink-0"
-                            />
-                            <div className="truncate max-w-[110px]">
-                              <div className="font-bold text-slate-900 truncate leading-tight">
-                                {cust.name}
-                              </div>
-                              <div className="text-[10px] text-slate-400 truncate">
-                                {cust.snippet}
+                  {filteredCustomers.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="py-12 text-center text-slate-400">
+                        <Users className="w-8 h-8 mx-auto mb-2 text-slate-300" />
+                        <p className="font-semibold text-slate-600 mb-1">
+                          Chưa có hội thoại/nháp. Hãy kết nối Facebook Pages hoặc bấm Quét ngay.
+                        </p>
+                        <button
+                          type="button"
+                          onClick={handlePollNow}
+                          disabled={isPolling}
+                          className="mt-2 inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+                        >
+                          <RefreshCw className={`w-3.5 h-3.5 ${isPolling ? 'animate-spin' : ''}`} />
+                          <span>{isPolling ? 'Đang quét...' : 'Quét ngay'}</span>
+                        </button>
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredCustomers.map((cust) => {
+                      const isSelected = cust.id === selectedCustomer?.id
+                      return (
+                        <tr
+                          key={cust.id}
+                          onClick={() => setSelectedCustomerId(cust.id)}
+                          className={`cursor-pointer transition-colors ${
+                            isSelected
+                              ? 'bg-blue-50/80 font-semibold'
+                              : 'hover:bg-slate-50/80'
+                          }`}
+                        >
+                          <td className="py-2.5 px-1" onClick={(e) => e.stopPropagation()}>
+                            <input type="checkbox" className="rounded border-slate-300 text-blue-600" />
+                          </td>
+                          <td className="py-2.5 px-2">
+                            <div className="flex items-center space-x-2">
+                              <img
+                                src={cust.avatar}
+                                alt={cust.name}
+                                className="w-7 h-7 rounded-full object-cover ring-1 ring-slate-200 shrink-0"
+                              />
+                              <div className="truncate max-w-[110px]">
+                                <div className="font-bold text-slate-900 truncate leading-tight">
+                                  {cust.name}
+                                </div>
+                                <div className="text-[10px] text-slate-400 truncate">
+                                  {cust.snippet}
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        </td>
-                        <td className="py-2.5 px-2 text-slate-700 whitespace-nowrap text-[11px]">
-                          {cust.phone}
-                        </td>
-                        <td className="py-2.5 px-2 whitespace-nowrap">
-                          <span className="inline-flex items-center space-x-1.5 text-[11px] font-medium text-slate-700">
-                            {cust.source === 'Facebook' && <FacebookIcon className="w-3.5 h-3.5 text-[#1877F2]" />}
-                            {cust.source === 'Messenger' && <MessengerIcon className="w-3.5 h-3.5 text-[#0084FF]" />}
-                            {cust.source === 'TikTok' && <TikTokIcon className="w-3.5 h-3.5" colored />}
-                            {cust.source === 'Website' && <Globe className="w-3.5 h-3.5 text-purple-600" />}
-                            <span>{cust.source}</span>
-                          </span>
-                        </td>
-                        <td className="py-2.5 px-2 whitespace-nowrap">
-                          <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${tagColors[cust.tagColor]}`}>
-                            {cust.tag}
-                          </span>
-                        </td>
-                        <td className="py-2.5 px-2 whitespace-nowrap">
-                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${statusBadges[cust.status]}`}>
-                            {cust.status}
-                          </span>
-                        </td>
-                        <td className="py-2.5 px-2 text-[11px] text-slate-400 whitespace-nowrap">
-                          {cust.lastInteraction}
-                        </td>
-                      </tr>
-                    )
-                  })}
+                          </td>
+                          <td className="py-2.5 px-2 text-slate-700 whitespace-nowrap text-[11px]">
+                            <span>{cust.phone}</span>
+                            {cust.phone?.includes('*') && (
+                              <span className="ml-1 px-1 py-0.2 rounded bg-amber-50 text-amber-600 text-[9px] font-semibold border border-amber-100">
+                                Che
+                              </span>
+                            )}
+                          </td>
+                          <td className="py-2.5 px-2 whitespace-nowrap">
+                            <span className="inline-flex items-center space-x-1.5 text-[11px] font-medium text-slate-700">
+                              {cust.source === 'Facebook' && <FacebookIcon className="w-3.5 h-3.5 text-[#1877F2]" />}
+                              {cust.source === 'Messenger' && <MessengerIcon className="w-3.5 h-3.5 text-[#0084FF]" />}
+                              {cust.source === 'TikTok' && <TikTokIcon className="w-3.5 h-3.5" colored />}
+                              {cust.source === 'Website' && <Globe className="w-3.5 h-3.5 text-purple-600" />}
+                              <span>{cust.source}</span>
+                            </span>
+                          </td>
+                          <td className="py-2.5 px-2 whitespace-nowrap">
+                            <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${tagColors[cust.tagColor]}`}>
+                              {cust.tag}
+                            </span>
+                          </td>
+                          <td className="py-2.5 px-2 whitespace-nowrap">
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${statusBadges[cust.status] || 'bg-slate-50 text-slate-700 border border-slate-200'}`}>
+                              {cust.status}
+                            </span>
+                          </td>
+                          <td className="py-2.5 px-2 text-[11px] text-slate-400 whitespace-nowrap">
+                            {cust.lastInteraction}
+                          </td>
+                        </tr>
+                      )
+                    })
+                  )}
                 </tbody>
               </table>
             </div>
@@ -569,9 +676,18 @@ export const Customers: React.FC = () => {
             <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-center p-6 text-slate-400">
               <Users className="w-12 h-12 text-slate-300 mb-3" />
               <h4 className="text-sm font-bold text-slate-700">Chưa có khách hàng</h4>
-              <p className="text-xs text-slate-400 mt-1 max-w-xs">
-                Chọn một khách hàng từ danh sách bên trái hoặc bấm "Đồng bộ Fanpage" để tải dữ liệu.
+              <p className="text-xs text-slate-500 mt-1 max-w-xs">
+                Chưa có hội thoại/nháp. Hãy kết nối Facebook Pages hoặc bấm Quét ngay.
               </p>
+              <button
+                type="button"
+                onClick={handlePollNow}
+                disabled={isPolling}
+                className="mt-4 inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isPolling ? 'animate-spin' : ''}`} />
+                <span>{isPolling ? 'Đang quét...' : 'Quét ngay'}</span>
+              </button>
             </div>
           ) : (
             <>
@@ -579,35 +695,100 @@ export const Customers: React.FC = () => {
               <div className="flex items-center justify-between pb-2 border-b border-slate-100">
                 <h3 className="text-sm font-bold text-slate-900">Hồ sơ khách hàng</h3>
                 <div className="flex items-center space-x-1.5">
+                  {can('merge_crm') && (
+                    <button
+                      type="button"
+                      onClick={() => setShowMergeModal(!showMergeModal)}
+                      className="flex items-center space-x-1 px-2.5 py-1 rounded-lg border border-indigo-200 text-indigo-700 text-xs font-semibold hover:bg-indigo-50 transition-colors cursor-pointer"
+                      title="Gộp hồ sơ khách hàng trùng lặp qua api.mergeCustomers"
+                    >
+                      <Share2 className="w-3 h-3 text-indigo-500" />
+                      <span>{showMergeModal ? 'Đóng' : 'Gộp hồ sơ'}</span>
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={() => showToast(`Đang mở chỉnh sửa hồ sơ ${selectedCustomer.name}`, 'info')}
-                    className="flex items-center space-x-1 px-2.5 py-1 rounded-lg border border-slate-200 text-slate-700 text-xs font-semibold hover:bg-slate-50 transition-colors"
+                    className="flex items-center space-x-1 px-2.5 py-1 rounded-lg border border-slate-200 text-slate-700 text-xs font-semibold hover:bg-slate-50 transition-colors cursor-pointer"
                   >
                     <Pencil className="w-3 h-3 text-slate-400" />
                     <span>Chỉnh sửa</span>
                   </button>
                   {can('delete_crm') && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (confirm(`Bạn có chắc chắn muốn xóa khách hàng ${selectedCustomer.name}?`)) {
-                          api.deleteCustomer(selectedCustomer.id)
-                            .then(() => {
-                              showToast(`Đã xóa khách hàng ${selectedCustomer.name}`, 'success')
-                              loadCustomers()
-                            })
-                            .catch((err) => showToast(err?.message || 'Lỗi khi xóa', 'error'))
-                        }
-                      }}
-                      className="px-2 py-1 rounded-lg border border-rose-200 text-rose-600 text-xs font-semibold hover:bg-rose-50 transition-colors"
-                      title="Xóa khách hàng"
-                    >
-                      Xóa
-                    </button>
+                    confirmDelete ? (
+                      <div className="flex items-center space-x-1">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            api.deleteCustomer(selectedCustomer.id)
+                              .then(() => {
+                                showToast(`Đã xóa khách hàng ${selectedCustomer.name}`, 'success')
+                                setConfirmDelete(false)
+                                loadCustomers()
+                              })
+                              .catch((err) => showToast(err?.message || 'Lỗi khi xóa', 'error'))
+                          }}
+                          className="px-2 py-1 rounded-lg bg-rose-600 text-white text-xs font-semibold hover:bg-rose-700 transition-colors cursor-pointer"
+                        >
+                          Xác nhận
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setConfirmDelete(false)}
+                          className="px-2 py-1 rounded-lg border border-slate-200 text-slate-600 text-xs font-semibold hover:bg-slate-50 transition-colors cursor-pointer"
+                        >
+                          Hủy
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setConfirmDelete(true)}
+                        className="px-2 py-1 rounded-lg border border-rose-200 text-rose-600 text-xs font-semibold hover:bg-rose-50 transition-colors cursor-pointer"
+                        title="Xóa khách hàng"
+                      >
+                        Xóa
+                      </button>
+                    )
                   )}
                 </div>
               </div>
+
+              {/* Merge Drawer / Form */}
+              {showMergeModal && (
+                <div className="p-3 bg-indigo-50/70 border border-indigo-200 rounded-xl space-y-2 animate-fade-in">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-indigo-900">Gộp hồ sơ vào {selectedCustomer.name}</span>
+                    <button
+                      type="button"
+                      onClick={() => setShowMergeModal(false)}
+                      className="text-slate-400 hover:text-slate-600 text-xs font-bold cursor-pointer"
+                    >
+                      ×
+                    </button>
+                  </div>
+                  <p className="text-[11px] text-indigo-700 leading-snug">
+                    Nhập mã CRM phụ (Secondary CRM ID) cần gộp vào khách hàng chính này. Toàn bộ định danh và lịch sử sẽ được chuyển sang {selectedCustomer.id}.
+                  </p>
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      type="text"
+                      value={secondaryCrmId}
+                      onChange={(e) => setSecondaryCrmId(e.target.value)}
+                      placeholder="Nhập CRM ID phụ (ví dụ: c_123456)..."
+                      className="flex-1 bg-white border border-indigo-200 rounded-lg px-2.5 py-1 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    />
+                    <button
+                      type="button"
+                      disabled={isMerging || !secondaryCrmId.trim()}
+                      onClick={handleMergeCustomers}
+                      className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer whitespace-nowrap"
+                    >
+                      {isMerging ? 'Đang gộp...' : 'Gộp ngay'}
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {/* Customer Avatar & Hero */}
               <div className="flex items-center space-x-3">
@@ -651,12 +832,18 @@ export const Customers: React.FC = () => {
                     <Phone className="w-3.5 h-3.5 text-slate-400" />
                     <span className="text-slate-500">SĐT:</span>
                     <span className="font-semibold text-slate-900">{selectedCustomer.phone}</span>
+                    {selectedCustomer.phone?.includes('*') && (
+                      <span className="px-1.5 py-0.2 rounded bg-amber-50 text-amber-600 border border-amber-200 text-[10px] font-semibold">
+                        Đã che
+                      </span>
+                    )}
                   </div>
-                  {selectedCustomer.phone && selectedCustomer.phone !== 'Chưa có SĐT' && (
+                  {selectedCustomer.phone && selectedCustomer.phone !== 'Chưa có SĐT' && !selectedCustomer.phone.includes('*') && (
                     <button
                       type="button"
                       onClick={() => handleCopy(selectedCustomer.phone, 'SĐT')}
-                      className="text-slate-400 hover:text-blue-600 p-1"
+                      className="text-slate-400 hover:text-blue-600 p-1 cursor-pointer"
+                      title="Sao chép SĐT"
                     >
                       <Copy className="w-3.5 h-3.5" />
                     </button>
@@ -690,19 +877,88 @@ export const Customers: React.FC = () => {
                   </div>
                 </div>
 
+                {/* Real Care Customer Details: Behavior & Identities & Markdown */}
+                {customerDetail?.behavior && (
+                  <div className="pt-2 border-t border-slate-100">
+                    <span className="text-slate-500 font-medium block mb-1 text-[11px]">Hành vi tương tác (Fanpage Care):</span>
+                    <div className="grid grid-cols-2 gap-1.5 text-[11px]">
+                      <div className="bg-slate-50 p-2 rounded-xl border border-slate-100">
+                        <span className="text-slate-400 block text-[10px]">Giai đoạn</span>
+                        <span className="font-bold text-slate-800 capitalize">{customerDetail.behavior.stage || 'Lead'}</span>
+                      </div>
+                      <div className="bg-slate-50 p-2 rounded-xl border border-slate-100">
+                        <span className="text-slate-400 block text-[10px]">Tương tác</span>
+                        <span className="font-bold text-slate-800">
+                          {customerDetail.behavior.message_count || 0} tin nhắn · {customerDetail.behavior.comment_count || 0} bình luận
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {customerDetail?.identities && customerDetail.identities.length > 0 && (
+                  <div className="pt-2 border-t border-slate-100">
+                    <span className="text-slate-500 font-medium block mb-1.5 text-[11px]">Định danh liên kết ({customerDetail.identities.length}):</span>
+                    <div className="space-y-1">
+                      {customerDetail.identities.map((idObj: any, i: number) => (
+                        <div key={i} className="flex items-center justify-between text-[11px] bg-slate-50 px-2 py-1 rounded-lg border border-slate-100">
+                          <span className="font-mono text-slate-600 truncate max-w-[180px]">
+                            {idObj.kind}: {idObj.ext_id}
+                          </span>
+                          <span className="text-[10px] text-slate-400">Page {idObj.page_id}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {customerDetail?.markdown && (
+                  <div className="pt-2 border-t border-slate-100">
+                    <span className="text-slate-500 font-medium block mb-1 text-[11px]">Hồ sơ Vault Markdown:</span>
+                    <div className="bg-slate-50 p-2 rounded-xl border border-slate-100 text-[10px] font-mono text-slate-700 whitespace-pre-wrap max-h-32 overflow-y-auto">
+                      {customerDetail.markdown}
+                    </div>
+                  </div>
+                )}
+
                 {/* Tags */}
                 <div className="pt-2">
                   <div className="flex items-center justify-between mb-1.5">
                     <span className="text-slate-500 font-medium">Tag khách hàng:</span>
                     <button
                       type="button"
-                      onClick={() => showToast(`Đang phân loại tag AI cho ${selectedCustomer.name}`, 'info')}
-                      className="text-blue-600 font-semibold text-[11px] hover:text-blue-700 flex items-center space-x-0.5"
+                      onClick={() => setIsAddingTag(!isAddingTag)}
+                      className="text-blue-600 font-semibold text-[11px] hover:text-blue-700 flex items-center space-x-0.5 cursor-pointer"
                     >
                       <Plus className="w-3 h-3" />
-                      <span>Thêm tag</span>
+                      <span>{isAddingTag ? 'Đóng' : 'Thêm tag'}</span>
                     </button>
                   </div>
+                  {isAddingTag && (
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <input
+                        type="text"
+                        value={newTagInput}
+                        onChange={(e) => setNewTagInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault()
+                            handleAddTag()
+                          }
+                        }}
+                        placeholder="Nhập tên tag mới..."
+                        className="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        autoFocus
+                      />
+                      <button
+                        type="button"
+                        onClick={handleAddTag}
+                        className="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg cursor-pointer"
+                      >
+                        Lưu
+                      </button>
+                    </div>
+                  )}
                   <div className="flex flex-wrap gap-1.5">
                     {(selectedCustomer.tagsList || ['Fanpage']).map((tg) => (
                       <span
@@ -720,14 +976,9 @@ export const Customers: React.FC = () => {
               <div className="grid grid-cols-4 gap-1.5 pt-2 border-t border-slate-100">
                 <button
                   type="button"
-                  onClick={() => {
-                    if (selectedCustomer.phone && selectedCustomer.phone !== 'Chưa có SĐT' && selectedCustomer.phone !== 'Chưa có') {
-                      window.location.href = `tel:${selectedCustomer.phone.replace(/\s+/g, '')}`
-                    } else {
-                      showToast('Khách hàng chưa để lại số điện thoại.', 'info')
-                    }
-                  }}
+                  onClick={() => handleCallCustomer(selectedCustomer.phone, selectedCustomer.name)}
                   className="flex items-center justify-center space-x-1 py-2 px-1 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold shadow-sm transition-colors cursor-pointer"
+                  title="Gọi khách (kiểm tra bảo mật SĐT)"
                 >
                   <Phone className="w-3.5 h-3.5" />
                   <span>Gọi khách</span>
@@ -738,26 +989,25 @@ export const Customers: React.FC = () => {
                     window.location.hash = 'inbox'
                   }}
                   className="flex items-center justify-center space-x-1 py-2 px-1 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-[11px] font-semibold transition-colors shadow-2xs cursor-pointer"
+                  title="Mở tin nhắn hội thoại tại Inbox"
                 >
                   <MessageCircle className="w-3.5 h-3.5 text-blue-600" />
                   <span>Nhắn tin</span>
                 </button>
                 <button
                   type="button"
-                  onClick={() => {
-                    showToast(`Đã tạo nhiệm vụ chăm sóc cho ${selectedCustomer.name} trên Kanban`, 'success')
-                  }}
+                  onClick={handleCreateCustomerTask}
                   className="flex items-center justify-center space-x-1 py-2 px-1 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-[11px] font-semibold transition-colors shadow-2xs cursor-pointer"
+                  title="Tạo việc chăm sóc khách hàng vào Kanban qua api.handoffToStaff"
                 >
                   <CheckSquare className="w-3.5 h-3.5 text-blue-600" />
                   <span>Tạo việc</span>
                 </button>
                 <button
                   type="button"
-                  onClick={() => {
-                    showToast(`Hồ sơ ${selectedCustomer.name} được phân loại tự động bởi AI.`, 'info')
-                  }}
+                  onClick={() => setIsAddingTag(true)}
                   className="flex items-center justify-center space-x-1 py-2 px-1 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-[11px] font-semibold transition-colors shadow-2xs cursor-pointer"
+                  title="Gắn tag phân loại khách hàng"
                 >
                   <Tag className="w-3.5 h-3.5 text-blue-600" />
                   <span>Gắn tag</span>
@@ -1036,11 +1286,7 @@ export const Customers: React.FC = () => {
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation()
-                        if (item.phone && item.phone !== 'Chưa có SĐT' && item.phone !== 'Chưa có') {
-                          window.location.href = `tel:${item.phone.replace(/\s+/g, '')}`
-                        } else {
-                          showToast(`Khách hàng ${item.name} chưa để lại số điện thoại`, 'info')
-                        }
+                        handleCallCustomer(item.phone, item.name)
                       }}
                       className="p-1 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors cursor-pointer"
                       title="Gọi khách"

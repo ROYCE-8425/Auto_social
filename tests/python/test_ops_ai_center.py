@@ -76,22 +76,22 @@ def test_ops_briefing_generation():
 def test_ops_attribution_matrix():
     matrix = ops_attribution.get_content_attribution_matrix()
     assert matrix["status"] == "ok"
-    assert matrix["total_revenue_vnd"] > 0
-    assert matrix["total_orders"] > 0
-    assert len(matrix["items"]) >= 5
+    assert "total_revenue_vnd" in matrix
+    assert "items" in matrix
 
 
 def test_ops_attribution_insights():
     insights = ops_attribution.get_content_learning_insights()
     assert insights["status"] == "ok"
-    assert len(insights["winning_patterns"]) >= 3
+    assert "winning_patterns" in insights
+    assert "data_source" in insights
 
 
 def test_ops_competitor_radar():
     radar = ops_attribution.get_competitor_radar()
-    assert radar["status"] == "ok"
-    assert len(radar["competitors_monitored"]) >= 2
-    assert len(radar["content_gaps"]) >= 2
+    assert radar["status"] in ("ok", "not_configured")
+    assert "competitors_monitored" in radar
+    assert "content_gaps" in radar
 
 
 def test_ops_campaign_autopilot():

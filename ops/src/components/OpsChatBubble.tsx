@@ -264,7 +264,7 @@ export const OpsChatBubble: React.FC = () => {
             })}
 
             {loading && (
-              <div className="flex items-center space-x-2 text-slate-500 bg-white border border-slate-200 rounded-2xl rounded-bl-xs px-3.5 py-2.5 max-w-[70%]">
+              <div className="flex items-center space-x-2 text-slate-500 bg-white border border-slate-200 rounded-2xl rounded-bl-xs px-3.5 py-2.5 max-w-[68%]">
                 <div className="flex space-x-1">
                   <div className="w-1.5 h-1.5 rounded-full bg-saoviet-500 animate-bounce" />
                   <div

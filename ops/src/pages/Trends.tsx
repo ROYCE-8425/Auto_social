@@ -137,160 +137,30 @@ export const Trends: React.FC = () => {
     )
   }
 
-  // Fallback attribution data
+  // Attribution data
   const attrSummary = attribution?.summary || {
-    total_views: 48200,
-    total_inboxes: 1240,
-    total_leads: 382,
-    total_orders: 146,
-    total_revenue_vnd: 365000000,
-    top_converting_platform: 'TikTok Video',
+    total_views: 0,
+    total_inboxes: 0,
+    total_leads: 0,
+    total_orders: 0,
+    total_revenue_vnd: 0,
+    top_converting_platform: 'Chưa có',
   }
-  const attrItems = attribution?.items || [
-    {
-      post_id: 'post_01',
-      title: '5 bí quyết tự động hóa phễu bán hàng SME',
-      platform: 'tiktok',
-      posted_at: '2026-04-18',
-      views: 18500,
-      inboxes: 420,
-      leads: 135,
-      orders: 54,
-      revenue_vnd: 135000000,
-      conversion_rate: 12.8,
-      status: 'winning',
-    },
-    {
-      post_id: 'post_02',
-      title: 'So sánh chi phí thuê nhân sự trực chat vs Javis AI',
-      platform: 'tiktok',
-      posted_at: '2026-04-15',
-      views: 14200,
-      inboxes: 310,
-      leads: 98,
-      orders: 38,
-      revenue_vnd: 95000000,
-      conversion_rate: 12.2,
-      status: 'winning',
-    },
-    {
-      post_id: 'post_03',
-      title: 'Case study: Xưởng may tăng 3.2 lần đơn nhờ cứu lead tự động',
-      platform: 'facebook',
-      posted_at: '2026-04-12',
-      views: 9200,
-      inboxes: 280,
-      leads: 82,
-      orders: 31,
-      revenue_vnd: 77500000,
-      conversion_rate: 11.0,
-      status: 'active',
-    },
-    {
-      post_id: 'post_04',
-      title: 'Checklist 10 bước chuẩn bị mở chiến dịch bán hàng cuối tháng',
-      platform: 'facebook',
-      posted_at: '2026-04-09',
-      views: 6300,
-      inboxes: 230,
-      leads: 67,
-      orders: 23,
-      revenue_vnd: 57500000,
-      conversion_rate: 10.0,
-      status: 'active',
-    },
-  ]
+  const attrItems = attribution?.items || []
 
-  // Fallback insights data
-  const winningPatterns = insights?.winning_patterns || [
-    {
-      hook_type: 'Nỗi đau / Vấn đề nhức nhối',
-      sample_opening: 'Mất 40% doanh thu chỉ vì nhân viên phản hồi khách chậm 15 phút?',
-      avg_conversion_rate: 12.8,
-      avg_revenue_vnd: 135000000,
-      recommendation: 'Tập trung vào lãng phí chi phí cơ hội của SME khi mất khách.',
-    },
-    {
-      hook_type: 'So sánh trực quan / Đối chiếu chi phí',
-      sample_opening: 'Chi 15 triệu thuê 2 ca trực hay đầu tư AI Operations Center?',
-      avg_conversion_rate: 12.2,
-      avg_revenue_vnd: 95000000,
-      recommendation: 'Dùng bảng biểu hoặc video thực tế so sánh hiệu suất trực ca.',
-    },
-    {
-      hook_type: 'Bằng chứng thực tế / Case Study số liệu',
-      sample_opening: 'Chủ shop xưởng may Hải Phòng đã cứu 48 đơn hàng mỗi tuần như thế nào?',
-      avg_conversion_rate: 11.0,
-      avg_revenue_vnd: 77500000,
-      recommendation: 'Nêu rõ ngành nghề cụ thể và mức tăng trưởng doanh số đạt được.',
-    },
-  ]
+  // Insights data
+  const winningPatterns = insights?.winning_patterns || []
   const timingRec = insights?.timing_recommendation || {
-    best_days: ['Thứ 3', 'Thứ 5', 'Thứ 7'],
-    best_hours: ['11:30 - 13:00', '19:30 - 21:30'],
-    rationale: 'Chủ doanh nghiệp và khách mua hàng SME tương tác cao nhất giờ nghỉ trưa và sau giờ làm.',
+    best_days: [],
+    best_hours: [],
+    rationale: 'Chưa đủ dữ liệu bài đăng và chuyển đổi thực tế để phân tích khung giờ vàng.',
   }
-  const replicateList = insights?.content_to_replicate || [
-    'Video quay màn hình Javis tự động phân loại Lead Nóng và gửi báo cáo Telegram lúc 8h sáng.',
-    'Bài viết mổ xẻ 3 kịch bản cứu khách sau 24h im lặng giúp kéo lại doanh thu.',
-    'Infographic so sánh quy trình xử lý đơn hàng thủ công vs tự động bằng AI.',
-  ]
+  const replicateList = insights?.content_to_replicate || []
 
-  // Fallback competitor radar
-  const competitors = radar?.competitors || [
-    {
-      name: 'DoanhNghiepTech',
-      platform: 'TikTok / Fanpage',
-      followers_est: 45000,
-      top_topics: ['Tool đăng bài hàng loạt', 'Phần mềm gửi tin nhắn'],
-      weakness: 'Chỉ spam tin nhắn, không có tính năng chấm điểm lead hay cứu khách tự động.',
-      recent_angle: 'Tập trung khoe số lượng bài đăng thay vì đo lường đơn hàng thực tế.',
-    },
-    {
-      name: 'SmartBiz SME',
-      platform: 'Facebook',
-      followers_est: 28000,
-      top_topics: ['Khóa học bán hàng online', 'Chatbot cơ bản'],
-      weakness: 'Chatbot kịch bản cứng nhắc, trả lời sai khiến khách bực mình.',
-      recent_angle: 'Quảng cáo bán gói đào tạo offline.',
-    },
-    {
-      name: 'AutoSales Pro',
-      platform: 'TikTok',
-      followers_est: 32000,
-      top_topics: ['Kịch bản chốt sale', 'Livestream'],
-      weakness: 'Không có hệ thống báo cáo doanh thu quy về từng nội dung (Attribution).',
-      recent_angle: 'Chia sẻ mẹo quay video ngắn.',
-    },
-  ]
-  const contentGaps = radar?.content_gap_analysis || [
-    {
-      topic: 'Đo lường từ bài đăng tới doanh thu thực tế (Attribution)',
-      competitor_coverage: 'Chưa có đối thủ nào làm chuyên sâu',
-      our_status: 'Thế mạnh độc quyền của Javis',
-      recommended_action: 'Làm chuỗi video hướng dẫn xem báo cáo doanh thu theo từng video.',
-      potential_reach: 'Rất cao (Khách hàng SME đang rất cần minh bạch ROI)',
-    },
-    {
-      topic: 'Ký ức khách hàng 360 độ xuyên kênh (Omnichannel Memory)',
-      competitor_coverage: 'Đối thủ chỉ xử lý đơn kênh rời rạc',
-      our_status: 'Đã hoàn thiện',
-      recommended_action: 'Tạo video demo khách chat TikTok nhưng nhân viên nhận diện được trên Messenger.',
-      potential_reach: 'Cao',
-    },
-    {
-      topic: 'Báo cáo điều hành sáng 8h00 gửi sếp qua Telegram/Zalo',
-      competitor_coverage: 'Đối thủ bắt người dùng đăng nhập web mới xem được số',
-      our_status: 'Đã hoàn thiện',
-      recommended_action: 'Quảng bá tính năng rảnh tay: Sáng thức dậy mở Telegram là có đủ số liệu.',
-      potential_reach: 'Cực cao cho đối tượng chủ doanh nghiệp bận rộn',
-    },
-  ]
-  const counterHooks = radar?.actionable_counter_hooks || [
-    'Đăng 100 bài mỗi ngày để làm gì nếu không biết bài nào mang về đơn hàng thực tế?',
-    'Đừng để chatbot trả lời ngô nghê làm mất khách sỉ tiềm năng — Đây là cách AI chấm điểm Lead tự động.',
-    'Nhân viên quên gọi lại khách sau 2 giờ? Xem Sèo Trum tự động phân loại và báo động ngay.',
-  ]
+  // Competitor radar
+  const competitors = radar?.competitors || (radar as any)?.competitors_monitored || []
+  const contentGaps = radar?.content_gap_analysis || (radar as any)?.content_gaps || []
+  const counterHooks = radar?.actionable_counter_hooks || []
 
   // Calculate ops stats
   const totalTokens = usage?.kpi?.tokens ?? usage?.total_tokens ?? 0
@@ -448,37 +318,51 @@ export const Trends: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 font-medium">
-                  {attrItems.map((item) => (
-                    <tr key={item.post_id} className="hover:bg-slate-50/80 transition-colors">
-                      <td className="py-3.5 px-4 font-bold text-slate-900 max-w-xs">
-                        <div className="line-clamp-1">{item.title}</div>
-                        <span className="text-[10px] text-slate-400 font-normal">Đăng ngày: {item.posted_at}</span>
-                      </td>
-                      <td className="py-3.5 px-4">
-                        <PlatformPill platform={item.platform} />
-                      </td>
-                      <td className="py-3.5 px-4 text-right font-mono font-semibold text-slate-700">
-                        {item.views.toLocaleString()}
-                      </td>
-                      <td className="py-3.5 px-4 text-right font-mono font-semibold text-blue-600">
-                        {item.inboxes}
-                      </td>
-                      <td className="py-3.5 px-4 text-right font-mono font-semibold text-amber-600">
-                        {item.leads}
-                      </td>
-                      <td className="py-3.5 px-4 text-right font-mono font-bold text-emerald-600">
-                        {item.orders}
-                      </td>
-                      <td className="py-3.5 px-4 text-right font-mono font-black text-slate-900">
-                        {item.revenue_vnd.toLocaleString('vi-VN')} đ
-                      </td>
-                      <td className="py-3.5 px-4 text-right">
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                          {item.conversion_rate}%
-                        </span>
+                  {attrItems.length === 0 ? (
+                    <tr>
+                      <td colSpan={8} className="py-12 text-center text-slate-400">
+                        <BarChart2 className="w-8 h-8 mx-auto mb-2 text-slate-300" />
+                        <p className="font-semibold text-slate-600 mb-1">
+                          Chưa có dữ liệu bài viết chuyển đổi (Attribution).
+                        </p>
+                        <p className="text-xs text-slate-400">
+                          Hệ thống sẽ tự động đo lường khi có bài đăng phát sinh tương tác và đơn hàng từ phễu.
+                        </p>
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    attrItems.map((item) => (
+                      <tr key={item.post_id || (item as any).id} className="hover:bg-slate-50/80 transition-colors">
+                        <td className="py-3.5 px-4 font-bold text-slate-900 max-w-xs">
+                          <div className="line-clamp-1">{item.title}</div>
+                          <span className="text-[10px] text-slate-400 font-normal">Đăng ngày: {item.posted_at || 'Mới đây'}</span>
+                        </td>
+                        <td className="py-3.5 px-4">
+                          <PlatformPill platform={item.platform} />
+                        </td>
+                        <td className="py-3.5 px-4 text-right font-mono font-semibold text-slate-700">
+                          {(item.views || 0).toLocaleString()}
+                        </td>
+                        <td className="py-3.5 px-4 text-right font-mono font-semibold text-blue-600">
+                          {item.inboxes || 0}
+                        </td>
+                        <td className="py-3.5 px-4 text-right font-mono font-semibold text-amber-600">
+                          {item.leads || 0}
+                        </td>
+                        <td className="py-3.5 px-4 text-right font-mono font-bold text-emerald-600">
+                          {item.orders || 0}
+                        </td>
+                        <td className="py-3.5 px-4 text-right font-mono font-black text-slate-900">
+                          {(item.revenue_vnd || 0).toLocaleString('vi-VN')} đ
+                        </td>
+                        <td className="py-3.5 px-4 text-right">
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            {item.conversion_rate || 0}%
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -499,35 +383,43 @@ export const Trends: React.FC = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {winningPatterns.map((pat, idx) => (
-                <div key={idx} className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 flex flex-col justify-between space-y-3">
-                  <div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-full">
-                        {pat.hook_type}
-                      </span>
-                      <span className="text-xs font-black text-emerald-600">
-                        {pat.avg_conversion_rate}% CR
-                      </span>
+            {winningPatterns.length === 0 ? (
+              <div className="p-8 rounded-xl bg-slate-50 border border-dashed border-slate-200 text-center">
+                <p className="text-xs text-slate-500">Chưa đủ dữ liệu bài đăng và đơn hàng để trích xuất mẫu Hook bán chạy.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {winningPatterns.map((pat, idx) => (
+                  <div key={idx} className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 flex flex-col justify-between space-y-3">
+                    <div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-full">
+                          {pat.hook_type}
+                        </span>
+                        <span className="text-xs font-black text-emerald-600">
+                          {pat.avg_conversion_rate}% CR
+                        </span>
+                      </div>
+
+                      {pat.pattern_example && (
+                        <div className="mt-2.5 p-2.5 rounded-lg bg-white border border-slate-200/70 text-xs font-semibold text-slate-800 italic">
+                          &quot;{pat.pattern_example}&quot;
+                        </div>
+                      )}
+
+                      <p className="text-[11px] text-slate-500 mt-2 leading-relaxed">
+                        {pat.recommendation}
+                      </p>
                     </div>
 
-                    <div className="mt-2.5 p-2.5 rounded-lg bg-white border border-slate-200/70 text-xs font-semibold text-slate-800 italic">
-                      &quot;{pat.sample_opening}&quot;
+                    <div className="pt-2 border-t border-slate-200/60 text-xs flex items-center justify-between text-slate-600">
+                      <span>Doanh thu trung bình:</span>
+                      <strong className="text-slate-900 font-mono">{(pat.avg_revenue_vnd || 0).toLocaleString('vi-VN')} đ</strong>
                     </div>
-
-                    <p className="text-[11px] text-slate-500 mt-2 leading-relaxed">
-                      {pat.recommendation}
-                    </p>
                   </div>
-
-                  <div className="pt-2 border-t border-slate-200/60 text-xs flex items-center justify-between text-slate-600">
-                    <span>Doanh thu trung bình:</span>
-                    <strong className="text-slate-900 font-mono">{pat.avg_revenue_vnd.toLocaleString('vi-VN')} đ</strong>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Timing Recommendations & Content To Replicate */}
@@ -542,29 +434,36 @@ export const Trends: React.FC = () => {
                 </div>
               </div>
 
-              <div className="p-4 rounded-xl bg-blue-50/50 border border-blue-100 space-y-2.5">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-600 font-medium">Ngày tốt nhất trong tuần:</span>
-                  <div className="flex items-center gap-1">
-                    {timingRec.best_days.map((d) => (
-                      <span key={d} className="px-2 py-0.5 rounded bg-blue-600 text-white font-bold text-[11px]">
-                        {d}
-                      </span>
-                    ))}
-                  </div>
+              {!insights?.timing_recommendation || (timingRec.best_days.length === 0 && timingRec.best_hours.length === 0) ? (
+                <div className="p-6 rounded-xl bg-slate-50 border border-dashed border-slate-200 text-center space-y-1">
+                  <p className="text-xs font-semibold text-slate-700">Chưa đủ dữ liệu phân tích khung giờ</p>
+                  <p className="text-[11px] text-slate-500">{timingRec.rationale}</p>
                 </div>
-
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-600 font-medium">Khung giờ vàng:</span>
-                  <div className="flex items-center gap-1 font-mono font-bold text-slate-900">
-                    {timingRec.best_hours.join(' & ')}
+              ) : (
+                <div className="p-4 rounded-xl bg-blue-50/50 border border-blue-100 space-y-2.5">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-slate-600 font-medium">Ngày tốt nhất trong tuần:</span>
+                    <div className="flex items-center gap-1">
+                      {timingRec.best_days.map((d) => (
+                        <span key={d} className="px-2 py-0.5 rounded bg-blue-600 text-white font-bold text-[11px]">
+                          {d}
+                        </span>
+                      ))}
+                    </div>
                   </div>
-                </div>
 
-                <p className="text-[11px] text-slate-600 pt-1 border-t border-blue-100/80 leading-relaxed italic">
-                  {timingRec.rationale}
-                </p>
-              </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-slate-600 font-medium">Khung giờ vàng:</span>
+                    <div className="flex items-center gap-1 font-mono font-bold text-slate-900">
+                      {timingRec.best_hours.join(' & ')}
+                    </div>
+                  </div>
+
+                  <p className="text-[11px] text-slate-600 pt-1 border-t border-blue-100/80 leading-relaxed italic">
+                    {timingRec.rationale}
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Content To Replicate */}
@@ -594,43 +493,53 @@ export const Trends: React.FC = () => {
       {activeTab === 'radar' && (
         <div className="space-y-6 animate-fade-in">
           {/* Competitor Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {competitors.map((comp) => (
-              <div key={comp.name} className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs flex flex-col justify-between space-y-3">
-                <div>
-                  <div className="flex items-center justify-between">
-                    <h4 className="font-bold text-slate-900 text-sm">{comp.name}</h4>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-600">
-                      {comp.platform}
+          {competitors.length === 0 ? (
+            <div className="bg-white rounded-2xl border border-dashed border-slate-300 p-8 text-center space-y-2">
+              <RadarIcon className="w-10 h-10 text-slate-300 mx-auto" />
+              <h4 className="text-sm font-bold text-slate-700">Chưa cấu hình Crawler đối thủ tự động</h4>
+              <p className="text-xs text-slate-500 max-w-md mx-auto">
+                {(radar as any)?.message || 'Tính năng rada đối thủ yêu cầu kết nối crawler thị trường hoặc thiết lập danh sách theo dõi trang đối thủ cạnh tranh.'}
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {competitors.map((comp: any) => (
+                <div key={comp.name} className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-2xs flex flex-col justify-between space-y-3">
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-bold text-slate-900 text-sm">{comp.name}</h4>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-600">
+                        {comp.platform}
+                      </span>
+                    </div>
+                    <span className="text-[11px] text-slate-400 font-medium">
+                      Ước tính theo dõi: {(comp.followers_est || 0).toLocaleString()}
                     </span>
-                  </div>
-                  <span className="text-[11px] text-slate-400 font-medium">
-                    Ước tính theo dõi: {comp.followers_est.toLocaleString()}
-                  </span>
 
-                  <div className="mt-3 space-y-1.5">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-                      Chủ đề thường khai thác:
-                    </span>
-                    <div className="flex flex-wrap gap-1">
-                      {comp.top_topics.map((tp) => (
-                        <span key={tp} className="px-2 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-700">
-                          {tp}
-                        </span>
-                      ))}
+                    <div className="mt-3 space-y-1.5">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                        Chủ đề thường khai thác:
+                      </span>
+                      <div className="flex flex-wrap gap-1">
+                        {(comp.top_topics || []).map((tp: any) => (
+                          <span key={tp} className="px-2 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-700">
+                            {tp}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="mt-3 p-2.5 rounded-xl bg-rose-50/60 border border-rose-100 text-xs text-rose-800">
+                      <span className="font-bold block text-[10px] uppercase tracking-wider text-rose-600 mb-0.5">
+                        Điểm yếu có thể khai thác:
+                      </span>
+                      <p className="leading-snug">{comp.weakness}</p>
                     </div>
                   </div>
-
-                  <div className="mt-3 p-2.5 rounded-xl bg-rose-50/60 border border-rose-100 text-xs text-rose-800">
-                    <span className="font-bold block text-[10px] uppercase tracking-wider text-rose-600 mb-0.5">
-                      Điểm yếu có thể khai thác:
-                    </span>
-                    <p className="leading-snug">{comp.weakness}</p>
-                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
 
           {/* Content Gap Analysis Table */}
           <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs overflow-hidden">
@@ -653,15 +562,23 @@ export const Trends: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 font-medium">
-                  {contentGaps.map((gap, idx) => (
-                    <tr key={idx} className="hover:bg-slate-50/80 transition-colors">
-                      <td className="py-3 px-4 font-bold text-slate-900 max-w-xs">{gap.topic}</td>
-                      <td className="py-3 px-4 text-slate-500">{gap.competitor_coverage}</td>
-                      <td className="py-3 px-4 font-semibold text-indigo-600">{gap.our_status}</td>
-                      <td className="py-3 px-4 text-slate-700">{gap.recommended_action}</td>
-                      <td className="py-3 px-4 text-right font-bold text-emerald-600">{gap.potential_reach}</td>
+                  {contentGaps.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="py-8 text-center text-slate-400">
+                        Chưa có phân tích khoảng trống nội dung từ đối thủ.
+                      </td>
                     </tr>
-                  ))}
+                  ) : (
+                    contentGaps.map((gap: any, idx: number) => (
+                      <tr key={idx} className="hover:bg-slate-50/80 transition-colors">
+                        <td className="py-3 px-4 font-bold text-slate-900 max-w-xs">{gap.topic}</td>
+                        <td className="py-3 px-4 text-slate-500">{gap.competitor_coverage}</td>
+                        <td className="py-3 px-4 font-semibold text-indigo-600">{gap.our_status}</td>
+                        <td className="py-3 px-4 text-slate-700">{gap.recommended_action}</td>
+                        <td className="py-3 px-4 text-right font-bold text-emerald-600">{gap.potential_reach}</td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -677,13 +594,19 @@ export const Trends: React.FC = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
-              {counterHooks.map((hook, idx) => (
-                <div key={idx} className="p-3.5 rounded-xl bg-slate-800/80 border border-indigo-800/60 text-xs font-semibold text-slate-200 leading-snug">
-                  &quot;{hook}&quot;
-                </div>
-              ))}
-            </div>
+            {counterHooks.length === 0 ? (
+              <div className="p-4 rounded-xl bg-slate-800/50 border border-slate-700/60 text-center">
+                <p className="text-xs text-slate-400">Chưa có kịch bản phản công khi chưa kết nối crawler đối thủ.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
+                {counterHooks.map((hook, idx) => (
+                  <div key={idx} className="p-3.5 rounded-xl bg-slate-800/80 border border-indigo-800/60 text-xs font-semibold text-slate-200 leading-snug">
+                    &quot;{hook}&quot;
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}

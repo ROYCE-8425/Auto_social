@@ -1,0 +1,40 @@
+{
+  "default_provider": "ghn",
+  "providers": {
+    "ghn": {
+      "name": "Giao Hàng Nhanh (GHN Express)",
+      "enabled": true,
+      "token": "test_token_123",
+      "shop_id": "test_shop_123",
+      "client_id": "2536353",
+      "environment": "sandbox",
+      "pickup_address": {
+        "name": "Royce Shop",
+        "phone": "0989819057",
+        "address": "Số 10 Phố Chùa Láng",
+        "ward_code": "1A0101",
+        "district_id": 1442,
+        "province_name": "Hà Nội"
+      }
+    },
+    "ghtk": {
+      "name": "Giao Hàng Tiết Kiệm (GHTK)",
+      "enabled": false,
+      "status": "coming_soon",
+      "token": ""
+    },
+    "viettel_post": {
+      "name": "Viettel Post",
+      "enabled": false,
+      "status": "coming_soon",
+      "token": ""
+    }
+  },
+  "automation": {
+    "auto_create_shipment": true,
+    "min_confidence": 0.85,
+    "require_sku_match": true,
+    "max_cod_amount": 5000000,
+    "kill_switch": false
+  }
+}

@@ -82,8 +82,14 @@ def main():
         ("server/ops_business_modules.py", f"{REMOTE_ROOT}/server/ops_business_modules.py"),
         ("server/ops_documents_store.py", f"{REMOTE_ROOT}/server/ops_documents_store.py"),
         ("server/ops_documents.py", f"{REMOTE_ROOT}/server/ops_documents.py"),
+        ("server/ops_qa.py", f"{REMOTE_ROOT}/server/ops_qa.py"),
         ("server/web_security.py", f"{REMOTE_ROOT}/server/web_security.py"),
         ("scripts/seed_mock_ghn_orders.py", f"{REMOTE_ROOT}/scripts/seed_mock_ghn_orders.py"),
+        ("brains/Brain Default/memory/MEMORY.md", f"{REMOTE_ROOT}/brains/Brain Default/memory/MEMORY.md"),
+        ("brains/Brain Default/memory/facts/ops_documents_vault.md", f"{REMOTE_ROOT}/brains/Brain Default/memory/facts/ops_documents_vault.md"),
+        ("brains/Brain Default/memory/facts/ops_business_catalog.md", f"{REMOTE_ROOT}/brains/Brain Default/memory/facts/ops_business_catalog.md"),
+        ("brains/Brain Default/memory/facts/ops_shipping_and_operations.md", f"{REMOTE_ROOT}/brains/Brain Default/memory/facts/ops_shipping_and_operations.md"),
+        ("tests/python/test_ops_qa.py", f"{REMOTE_ROOT}/tests/python/test_ops_qa.py"),
         ("docs/dev/2026-09-30-rbac-multi-role-architecture.md", f"{REMOTE_ROOT}/docs/dev/2026-09-30-rbac-multi-role-architecture.md"),
     ]
 
@@ -92,6 +98,11 @@ def main():
             upload_file(sftp, local_f, remote_f)
         else:
             print(f"Warning: {local_f} does not exist locally")
+
+    # Upload system/plugins/ops-tools
+    if os.path.exists("system/plugins/ops-tools"):
+        print("Uploading system/plugins/ops-tools...")
+        upload_dir_recursive(sftp, "system/plugins/ops-tools", f"{REMOTE_ROOT}/system/plugins/ops-tools")
 
     # Upload website/assets if exists
     if os.path.exists("website/assets"):
@@ -110,6 +121,7 @@ def main():
 
     sftp.close()
     print("All files transferred successfully.")
+
 
     # Seed mock GHN orders on VPS
     print("Seeding mock GHN orders on VPS...")

@@ -58,6 +58,8 @@ server/*.sqlite3*
 server/tg_brain.json
 server/update_state.json
 server/logs/
+server/storage/
+
 server/brain-trash/
 server/tmp/
 .dataset_cache.json
@@ -110,7 +112,10 @@ server/md_*.json
 
 # Thư mục brains: Quản lý agent, skills, brand-kits, templates, workflows
 # Chỉ bỏ qua bộ nhớ phiên chạy, cache, database sqlite và output tạm
-brains/*/memory/
+brains/*/memory/*
+!brains/*/memory/MEMORY.md
+!brains/*/memory/facts/
+!brains/*/memory/facts/**
 brains/*/05 - Data Cache/
 brains/*/*.md
 !brains/*/CLAUDE.md
