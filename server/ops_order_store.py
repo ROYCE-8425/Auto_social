@@ -1525,6 +1525,17 @@ def get_shipment_by_tracking(tracking_code: str, db_path: Path | str | None = No
     return None
 
 
+def list_shipments(order_id: Optional[str] = None, limit: int = 50, db_path: Path | str | None = None) -> List[dict]:
+    init_db(db_path)
+    for conn in get_connection(db_path):
+        if order_id:
+            cur = conn.execute("SELECT * FROM ops_shipments WHERE order_id = ? ORDER BY created_at DESC LIMIT ?", (order_id, limit))
+        else:
+            cur = conn.execute("SELECT * FROM ops_shipments ORDER BY created_at DESC LIMIT ?", (limit,))
+        return [dict(r) for r in cur.fetchall()]
+    return []
+
+
 def update_shipment_status(
     shipment_id: str,
     new_status: str,

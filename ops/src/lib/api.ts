@@ -577,6 +577,13 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ channel }),
     }),
+  getExecutiveReport: (period: string = 'today') =>
+    request<ExecutiveReport>(`/ops/reports/executive?period=${encodeURIComponent(period)}`),
+  sendExecutiveReport: (channel: string = 'telegram', period: string = 'today') =>
+    request<{ ok: boolean; message: string; preview: string }>('/ops/reports/executive/send', {
+      method: 'POST',
+      body: JSON.stringify({ channel, period }),
+    }),
   evaluateLeadScore: (data: EvaluateLeadPayload) =>
     request<LeadScoreResult>('/ops/lead-scoring/evaluate', {
       method: 'POST',
@@ -1090,6 +1097,81 @@ export interface DailyBriefing {
     warnings: string[]
   }
   telegram_ready_text: string
+}
+
+export interface ExecutiveReportFact {
+  icon: string
+  title: string
+  value: string
+  desc: string
+  source: string
+}
+
+export interface ExecutiveReportSignal {
+  badge: string
+  title: string
+  desc: string
+  urgency: string
+}
+
+export interface ExecutiveReportInference {
+  type: 'bottleneck' | 'opportunity' | 'risk' | string
+  title: string
+  analysis: string
+  impact: string
+}
+
+export interface ExecutiveReportAction {
+  id: string
+  priority: string
+  color: string
+  title: string
+  desc: string
+  route: string
+  button_text: string
+}
+
+export interface ExecutiveReport {
+  ok: boolean
+  status: string
+  generated_at: string
+  today_str: string
+  hour_str: string
+  period: string
+  summary: {
+    health_score: number
+    health_tier: 'excellent' | 'good' | 'warning' | 'critical' | string
+    health_label: string
+    health_badge_color: string
+    ai_note: string
+    total_revenue_vnd: number
+    total_orders: number
+    total_customers: number
+    total_events: number
+    conversion_lead_to_order: number
+    phone_ratio: number
+    pending_drafts: number
+    valid_shipments: number
+  }
+  deep_dive: {
+    facts: ExecutiveReportFact[]
+    signals: ExecutiveReportSignal[]
+    inferences: ExecutiveReportInference[]
+    actions: ExecutiveReportAction[]
+  }
+  cskh_evaluation: {
+    bot_automation_rate: number
+    avg_response_time_seconds: number
+    human_intervention_needed: number
+    satisfaction_rating: string
+    bot_status: string
+    bot_status_label: string
+    remarks: string
+  }
+  order_status_distribution: Record<string, number>
+  top_products: Array<{ name: string; quantity: number; revenue_vnd: number }>
+  urgent_hot_leads: any[]
+  formatted_text: string
 }
 
 export interface EvaluateLeadPayload {

@@ -8651,6 +8651,7 @@ async def tiktok_set_kit_account(request: Request):
 # ============================================================
 from typing import Optional, List, Dict, Any
 import ops_briefing
+import ops_report
 import lead_scoring
 import ops_attribution
 import ops_campaign
@@ -8689,6 +8690,32 @@ async def ops_send_daily_briefing(request: Request):
         data = {}
     channel = str(data.get("channel") or "telegram").strip().lower()
     res = ops_briefing.send_briefing_to_owner(channel=channel)
+    return res
+
+
+@app.get("/ops/reports/executive")
+async def ops_get_executive_report(request: Request, period: str = "today", brand: Optional[str] = None):
+    """Lấy báo cáo nhận xét điều hành AI của Javis (Executive Strategic Audit Report)."""
+    user = ops_rbac.get_current_ops_user(request)
+    if not user:
+        return JSONResponse({"error": "Chưa đăng nhập Ops"}, status_code=401)
+    report = ops_report.generate_executive_report(period=period, brand=brand)
+    return report
+
+
+@app.post("/ops/reports/executive/send")
+async def ops_send_executive_report(request: Request):
+    """Gửi báo cáo nhận xét điều hành Javis AI tới Telegram/Zalo của Sếp."""
+    user = ops_rbac.get_current_ops_user(request)
+    if not user or user.get("role") not in ("owner", "admin"):
+        return JSONResponse({"error": "Chỉ Quản lý hoặc Chủ máy mới có quyền gửi báo cáo điều hành"}, status_code=403)
+    try:
+        data = await request.json()
+    except Exception:
+        data = {}
+    channel = str(data.get("channel") or "telegram").strip().lower()
+    period = str(data.get("period") or "today").strip().lower()
+    res = ops_report.send_executive_report_to_owner(channel=channel, period=period)
     return res
 
 
@@ -9492,7 +9519,7 @@ async def ops_evaluate_automation_api(request: Request):
 @app.api_route("/ops", methods=["GET", "HEAD"])
 async def serve_ops_dashboard(full_path: str = ""):
     """Phục vụ giao diện Single-Page App Ops Dashboard (HTML5 History Mode Fallback)."""
-    api_prefixes = ("briefing", "lead-scoring", "attribution", "competitor", "campaigns", "auth", "me", "users", "qa", "orders", "shipping", "products", "automation")
+    api_prefixes = ("briefing", "reports", "lead-scoring", "attribution", "competitor", "campaigns", "auth", "me", "users", "qa", "orders", "shipping", "products", "automation")
     clean_p = full_path.strip("/")
     if any(clean_p == p or clean_p.startswith(p + "/") for p in api_prefixes):
         return JSONResponse({"error": "Ops API route not found", "path": full_path}, status_code=404)
