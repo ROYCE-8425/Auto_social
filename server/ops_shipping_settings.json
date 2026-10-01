@@ -4,10 +4,10 @@
     "ghn": {
       "name": "Giao Hàng Nhanh (GHN Express)",
       "enabled": true,
-      "token": "06e9b639-bbdf-11f1-b944-42faa0331861",
-      "shop_id": "225822",
-      "client_id": "2536353",
-      "environment": "sandbox",
+      "token": "b2a9b566-6c0a-45dc-adb2-ecd3cc8acf01",
+      "shop_id": "6697115",
+      "client_id": "5551097",
+      "environment": "production",
       "pickup_address": {
         "name": "Royce Shop",
         "phone": "0989819057",
