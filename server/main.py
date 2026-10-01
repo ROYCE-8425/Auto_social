@@ -3380,9 +3380,96 @@ async def connect_facebook_pages():
     return {"ok": True, "pages": pages}
 
 
+_FB_POSTS_CACHE = {"ts": 0, "posts": []}
+
+
+async def fetch_facebook_recent_posts(limit_per_page: int = 5, force: bool = False):
+    """Lấy danh sách bài đăng thực tế mới nhất từ các Fanpage đã kết nối qua Graph API."""
+    import time
+    now = time.time()
+    if not force and now - _FB_POSTS_CACHE.get("ts", 0) < 60 and _FB_POSTS_CACHE.get("posts"):
+        return _FB_POSTS_CACHE["posts"]
+
+    import json
+    import httpx
+    from pathlib import Path
+
+    repo = Path(__file__).resolve().parents[1]
+    default_brain = repo / "brains" / "Brain Default"
+    tok_file = default_brain / "Javis" / "page_tokens.json"
+    if not tok_file.is_file():
+        tok_file = repo / "brains" / "Brain Default" / "Javis" / "page_tokens.json"
+
+    tokens = {}
+    if tok_file.is_file():
+        try:
+            tokens = json.loads(tok_file.read_text(encoding="utf-8"))
+        except Exception:
+            pass
+
+    all_posts = []
+    if tokens:
+        async with httpx.AsyncClient(timeout=10) as client:
+            for pid, pinfo in tokens.items():
+                tok = pinfo.get("access_token")
+                pname = pinfo.get("name") or f"Page {pid}"
+                brand = "bsn" if "bsn" in pname.lower() or "game" in pname.lower() else "saoviet"
+                if not tok:
+                    continue
+                try:
+                    res = await client.get(
+                        f"https://graph.facebook.com/v25.0/{pid}/feed",
+                        params={
+                            "fields": "id,message,story,created_time,permalink_url,attachments{media_type,type}",
+                            "limit": limit_per_page,
+                            "access_token": tok
+                        }
+                    )
+                    if res.status_code == 200:
+                        data = res.json().get("data", [])
+                        for item in data:
+                            post_id = item.get("id")
+                            msg = (item.get("message") or item.get("story") or "").strip()
+                            created_time = item.get("created_time")
+                            permalink = item.get("permalink_url") or f"https://www.facebook.com/{post_id}"
+
+                            fmt = "Bài viết kèm ảnh"
+                            att = item.get("attachments", {}).get("data", [])
+                            if att:
+                                mtype = str(att[0].get("media_type") or att[0].get("type") or "").lower()
+                                if "album" in mtype:
+                                    fmt = "Album ảnh"
+                                elif "video" in mtype:
+                                    fmt = "Video"
+                                elif "photo" in mtype:
+                                    fmt = "Ảnh đơn"
+
+                            all_posts.append({
+                                "id": post_id,
+                                "page_id": str(pid),
+                                "page_name": pname,
+                                "brand": brand,
+                                "channel": "facebook",
+                                "caption": msg,
+                                "created_time": created_time,
+                                "datetime": created_time[:19].replace("T", " ") if created_time else "",
+                                "permalink_url": permalink,
+                                "status": "published",
+                                "format": fmt,
+                            })
+                except Exception:
+                    pass
+
+    all_posts.sort(key=lambda x: str(x.get("created_time") or ""), reverse=True)
+    if all_posts:
+        _FB_POSTS_CACHE["ts"] = now
+        _FB_POSTS_CACHE["posts"] = all_posts
+    return all_posts
+
+
 @app.get("/connect/facebook/status")
 async def connect_facebook_status():
-    """Trạng thái kết nối Facebook Pages: pages list, permissions, fanpage_care, last poll."""
+    """Trạng thái kết nối Facebook Pages: pages list, permissions, fanpage_care, last poll, recent posts."""
     pages_res = await connect_facebook_pages()
     pages = pages_res.get("pages", []) if isinstance(pages_res, dict) else []
     error = pages_res.get("error") if isinstance(pages_res, dict) and not pages else None
@@ -3410,19 +3497,35 @@ async def connect_facebook_status():
     perm = fb_conn.get("perm", "full" if pages else "readonly") if fb_conn else ("full" if pages else "readonly")
     connected = bool(pages or (fb_conn and fb_conn.get("enabled")))
 
+    fb_posts = []
+    if pages:
+        try:
+            fb_posts = await fetch_facebook_recent_posts(limit_per_page=5)
+        except Exception:
+            pass
+
     return {
         "ok": True,
         "connected": connected,
         "connector_id": "facebook-pages",
-        "label": fb_conn.get("label", "Facebook Pages Graph API") if fb_conn else "Facebook Pages (Token)",
+        "label": fb_conn.get("label", "Facebook Pages Graph API") if fb_conn else ("Game Giá Rẻ BSN & Royce Shop" if len(pages) > 1 else (pages[0]["name"] if pages else "Facebook Pages")),
         "permissions": perm,
         "fanpage_care_enabled": enabled,
         "kill_switch": kill_switch,
         "poll_interval_seconds": poll_interval,
         "last_poll": last_poll,
         "pages": pages,
+        "recent_posts": fb_posts,
+        "publishing_ready": bool(pages),
         "error": error,
     }
+
+
+@app.get("/connect/facebook/posts")
+async def connect_facebook_posts(limit: int = 10):
+    """Danh sách bài viết đã xuất bản thực tế từ các Fanpage Facebook đã kết nối."""
+    posts = await fetch_facebook_recent_posts(limit_per_page=max(1, limit))
+    return {"ok": True, "posts": posts, "count": len(posts)}
 
 
 @app.get("/ops/channels/status")

@@ -559,6 +559,8 @@ export const api = {
 
   // Social Channels Connectors Status (Facebook, TikTok, Zalo, Instagram, YouTube)
   getFacebookStatus: () => request<FacebookStatusResponse>('/connect/facebook/status'),
+  getFacebookPosts: (limit = 10) =>
+    request<{ ok: boolean; posts: FacebookPostItem[]; count: number }>(`/connect/facebook/posts?limit=${limit}`),
   getChannelsStatus: () => request<ChannelsStatusResponse>('/ops/channels/status'),
 
   // Q&A ca làm việc Javis Ops (Internal staff shift assistant)
@@ -1010,6 +1012,20 @@ export interface FacebookPageItem {
   source?: string
 }
 
+export interface FacebookPostItem {
+  id: string
+  page_id: string
+  page_name: string
+  brand: string
+  channel: 'facebook'
+  caption: string
+  created_time: string
+  datetime: string
+  permalink_url: string
+  status: string
+  format: string
+}
+
 export interface FacebookStatusResponse {
   ok: boolean
   connected: boolean
@@ -1021,6 +1037,8 @@ export interface FacebookStatusResponse {
   poll_interval_seconds: number
   last_poll: string | null
   pages: FacebookPageItem[]
+  recent_posts?: FacebookPostItem[]
+  publishing_ready?: boolean
   error?: string
 }
 
