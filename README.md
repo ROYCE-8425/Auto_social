@@ -62,11 +62,14 @@ Hệ thống phân tách rành mạch không gian trải nghiệm theo đúng va
 └───────────────────┴──────────────────────────┴─────────────────────────┘
 ```
 
-| Cửa | Đường dẫn | Người dùng | Chức năng chính |
-|---|---|---|---|
-| **Trang chủ** | `/` | Khách truy cập, đối tác | Landing Page hiện đại giới thiệu tính năng, kiến trúc, bảng so sánh và bảng giá tự host |
-| **Vận hành** | `/ops` | Nhân viên CSKH & Quản lý | Không gian làm việc hằng ngày: Duyệt nháp trả lời, quản lý khách hàng CRM, theo dõi lịch đăng đa kênh, bảng việc Kanban |
-| **Buồng lái** | `/app` | Chủ máy (Owner) | Cấu hình bộ não AI, kết nối MCP, Second Brain Markdown, thanh điều hướng gom thành **7 nhóm** chức năng |
+| Cửa | Đường dẫn | Người dùng | Chức năng chính | Trải nghiệm trực tiếp |
+|---|---|---|---|---|
+| **Trang chủ** | `/` | Khách truy cập, đối tác | Landing Page hiện đại giới thiệu tính năng, kiến trúc, bảng so sánh và bảng giá tự host | [https://trannhuy.online](https://trannhuy.online) |
+| **Vận hành** | `/ops` | Nhân viên CSKH & Quản lý | Không gian làm việc hằng ngày: Duyệt nháp trả lời, quản lý khách hàng CRM, theo dõi lịch đăng đa kênh, bảng việc Kanban, Báo cáo nhận xét Javis | [https://trannhuy.online/ops](https://trannhuy.online/ops) |
+| **Buồng lái** | `/app` | Chủ máy (Owner) | Cấu hình bộ não AI, kết nối MCP, Second Brain Markdown, thanh điều hướng gom thành **7 nhóm** chức năng | [https://trannhuy.online/app](https://trannhuy.online/app) |
+
+> [!TIP]
+> **Ghi chú về mã nguồn mở & Build Artifacts:** Thư mục `ops/dist/` được tích hợp sẵn nhằm hỗ trợ người dùng tự host triển khai tức thì (*zero-build deployment*) mà không bắt buộc phải cài đặt Node.js/npm. Các nhà phát triển có thể tự build lại toàn bộ từ mã nguồn gốc bất kỳ lúc nào bằng lệnh `make build` hoặc `npm run build`. Chi tiết quy trình đóng gói xem tại [docs/RELEASE_PROCESS.md](docs/RELEASE_PROCESS.md) và [docs/OPEN_SOURCE_HEALTH.md](docs/OPEN_SOURCE_HEALTH.md).
 
 ---
 
@@ -252,8 +255,11 @@ Xem chi tiết điều khoản cấp phép tại [LICENSE](LICENSE) và [NOTICE.
 
 - Hướng dẫn đóng góp: [CONTRIBUTING.md](CONTRIBUTING.md)
 - Báo cáo bảo mật riêng tư: [SECURITY.md](SECURITY.md)
+- Kênh hỗ trợ & báo lỗi: [SUPPORT.md](SUPPORT.md)
 - Quy tắc ứng xử: [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
 - Danh sách ghi công: [AUTHORS.md](AUTHORS.md)
+- Báo cáo sức khỏe mã nguồn mở: [docs/OPEN_SOURCE_HEALTH.md](docs/OPEN_SOURCE_HEALTH.md)
+- Quy trình phát hành: [docs/RELEASE_PROCESS.md](docs/RELEASE_PROCESS.md)
 
 ---
 

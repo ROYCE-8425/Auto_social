@@ -7,6 +7,7 @@ Use this checklist before publishing, releasing, demoing, or submitting Sèo Tru
 - [ ] `LICENSE` is present and keeps the MIT notice for both upstream Javis OS and Sèo Trum extensions.
 - [ ] `NOTICE.md` clearly states that the project is built on Javis OS and lists the new Sèo Trum business layer.
 - [ ] `README.md` links to `LICENSE`, `NOTICE.md`, `CONTRIBUTING.md`, `SECURITY.md`, and `CODE_OF_CONDUCT.md`.
+- [ ] `README.md` links to `SUPPORT.md`, `docs/RELEASE_PROCESS.md`, and `docs/OPEN_SOURCE_HEALTH.md`.
 - [ ] The project is not described as written fully from scratch if upstream Javis OS code is still present.
 
 ## Secrets and Private Data
@@ -21,6 +22,7 @@ Use this checklist before publishing, releasing, demoing, or submitting Sèo Tru
 - [ ] Backend tests relevant to the changed area have run.
 - [ ] `ops` builds successfully when frontend files changed.
 - [ ] Docker instructions still match the current compose files.
+- [ ] `make install`, `make build`, and `make test` still match the documented local workflow.
 - [ ] Public landing page, `/ops`, and `/app` responsibilities are described correctly.
 
 ## Community Hygiene
@@ -28,4 +30,6 @@ Use this checklist before publishing, releasing, demoing, or submitting Sèo Tru
 - [ ] Issue templates warn users not to paste secrets.
 - [ ] Pull request template asks contributors to confirm secret checks.
 - [ ] `SECURITY.md` explains private vulnerability reporting.
+- [ ] `SUPPORT.md` explains where to ask questions, report bugs, request features, and avoid leaking secrets.
+- [ ] `docs/RELEASE_PROCESS.md` describes versioning, tagging, and release artifacts.
 - [ ] `CONTRIBUTING.md` explains the fork and PR workflow.

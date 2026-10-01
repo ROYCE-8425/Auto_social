@@ -60,11 +60,14 @@ For Small and Medium Enterprises (SMEs), social media is the commercial lifebloo
 └───────────────────┴──────────────────────────┴─────────────────────────┘
 ```
 
-| Portal | URL Route | Target Users | Primary Purpose |
-|---|---|---|---|
-| **Public Landing** | `/` | General public & partners | High-conversion presentation of features, architecture, comparison table, and self-hosted benefits |
-| **Operations Hub** | `/ops` | Support Staff & Managers | Daily workspace: Draft review, customer CRM, multi-channel schedule, and Kanban operations board |
-| **System Cockpit** | `/app` | Machine Owner | AI runtime setup, MCP integrations, Markdown Second Brain, navigation rail with **7 groups** |
+| Portal | URL Route | Target Users | Primary Purpose | Live Demo |
+|---|---|---|---|---|
+| **Public Landing** | `/` | General public & partners | High-conversion presentation of features, architecture, comparison table, and self-hosted benefits | [https://trannhuy.online](https://trannhuy.online) |
+| **Operations Hub** | `/ops` | Support Staff & Managers | Daily workspace: Draft review, customer CRM, multi-channel schedule, Kanban board, Javis Executive Report | [https://trannhuy.online/ops](https://trannhuy.online/ops) |
+| **System Cockpit** | `/app` | Machine Owner | AI runtime setup, MCP integrations, Markdown Second Brain, navigation rail with **7 groups** | [https://trannhuy.online/app](https://trannhuy.online/app) |
+
+> [!TIP]
+> **Open-Source Note & Build Artifacts:** The `ops/dist/` directory is bundled to allow lightweight self-hosted and low-resource Docker environments to deploy immediately (*zero-build deployment*) without requiring Node.js/npm. Developers can rebuild completely from source at any time with `make build` or `cd ops && npm run build`. See [docs/RELEASE_PROCESS.md](docs/RELEASE_PROCESS.md) and [docs/OPEN_SOURCE_HEALTH.md](docs/OPEN_SOURCE_HEALTH.md).
 
 ---
 
@@ -222,8 +225,11 @@ See [LICENSE](LICENSE) and [NOTICE.md](NOTICE.md) for full legal text.
 
 - Contribution guide: [CONTRIBUTING.md](CONTRIBUTING.md)
 - Private security reporting: [SECURITY.md](SECURITY.md)
+- Support and issue triage: [SUPPORT.md](SUPPORT.md)
 - Code of conduct: [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
 - Credits: [AUTHORS.md](AUTHORS.md)
+- Open-source health report: [docs/OPEN_SOURCE_HEALTH.md](docs/OPEN_SOURCE_HEALTH.md)
+- Release process: [docs/RELEASE_PROCESS.md](docs/RELEASE_PROCESS.md)
 
 ---
 
