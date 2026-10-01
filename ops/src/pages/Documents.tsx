@@ -243,14 +243,14 @@ export const DocumentsPage: React.FC = () => {
       {/* 2. Stat Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {/* Total Docs */}
-        <div className="bg-white p-4.5 rounded-2xl border border-slate-200/80 shadow-2xs flex items-center justify-between">
-          <div>
-            <p className="text-xs font-medium text-slate-500">Tổng tài liệu lưu trữ</p>
-            <p className="text-2xl font-black text-slate-900 mt-1">{stats?.total ?? documents.length}</p>
-            <p className="text-[11px] text-slate-400 mt-0.5">Trong {stats?.categories_count || 8} danh mục chuẩn</p>
+        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between min-h-[116px] transition-all">
+          <div className="min-w-0 pr-3">
+            <p className="text-xs font-semibold text-slate-500 truncate pb-0.5">Tổng tài liệu lưu trữ</p>
+            <p className="text-2xl font-black text-slate-900 my-1 leading-none">{stats?.total ?? documents.length}</p>
+            <p className="text-xs text-slate-400 truncate pt-0.5">Trong {stats?.categories_count || 8} danh mục chuẩn</p>
           </div>
-          <div className="w-11 h-11 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center">
-            <FolderLock className="w-5 h-5" />
+          <div className="w-12 h-12 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center shrink-0">
+            <FolderLock className="w-6 h-6" />
           </div>
         </div>
 
@@ -260,18 +260,18 @@ export const DocumentsPage: React.FC = () => {
             setActiveTab('action_needed')
             setActionNeededSubtab('pending')
           }}
-          className="bg-white p-4.5 rounded-2xl border border-amber-200/80 shadow-2xs flex items-center justify-between cursor-pointer hover:border-amber-400 transition-all group"
+          className="bg-white p-5 rounded-2xl border border-amber-200 shadow-sm flex items-center justify-between cursor-pointer hover:border-amber-400 hover:shadow-md transition-all group min-h-[116px]"
         >
-          <div>
-            <p className="text-xs font-semibold text-amber-600 flex items-center gap-1.5">
-              <Clock className="w-3.5 h-3.5" />
+          <div className="min-w-0 pr-3">
+            <p className="text-xs font-semibold text-amber-700 flex items-center gap-1.5 truncate pb-0.5">
+              <Clock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
               Chờ phê duyệt
             </p>
-            <p className="text-2xl font-black text-amber-700 mt-1">{stats?.pending_approval ?? 0}</p>
-            <p className="text-[11px] text-amber-500 mt-0.5 group-hover:underline">Bấm để duyệt ngay &rarr;</p>
+            <p className="text-2xl font-black text-amber-700 my-1 leading-none">{stats?.pending_approval ?? 0}</p>
+            <p className="text-xs text-amber-600 font-medium group-hover:underline truncate pt-0.5">Bấm để duyệt ngay &rarr;</p>
           </div>
-          <div className="w-11 h-11 rounded-xl bg-amber-50 text-amber-600 border border-amber-200 flex items-center justify-center group-hover:scale-105 transition-transform">
-            <FileClock className="w-5 h-5" />
+          <div className="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 border border-amber-200 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+            <FileClock className="w-6 h-6" />
           </div>
         </div>
 
@@ -281,18 +281,18 @@ export const DocumentsPage: React.FC = () => {
             setActiveTab('action_needed')
             setActionNeededSubtab('expiring')
           }}
-          className="bg-white p-4.5 rounded-2xl border border-rose-200/80 shadow-2xs flex items-center justify-between cursor-pointer hover:border-rose-400 transition-all group"
+          className="bg-white p-5 rounded-2xl border border-rose-200 shadow-sm flex items-center justify-between cursor-pointer hover:border-rose-400 hover:shadow-md transition-all group min-h-[116px]"
         >
-          <div>
-            <p className="text-xs font-semibold text-rose-600 flex items-center gap-1.5">
-              <AlertTriangle className="w-3.5 h-3.5" />
+          <div className="min-w-0 pr-3">
+            <p className="text-xs font-semibold text-rose-700 flex items-center gap-1.5 truncate pb-0.5">
+              <AlertTriangle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
               Sắp hết hạn (30 ngày)
             </p>
-            <p className="text-2xl font-black text-rose-700 mt-1">{stats?.expiring_soon ?? 0}</p>
-            <p className="text-[11px] text-rose-500 mt-0.5 group-hover:underline">Cần gia hạn hợp đồng &rarr;</p>
+            <p className="text-2xl font-black text-rose-700 my-1 leading-none">{stats?.expiring_soon ?? 0}</p>
+            <p className="text-xs text-rose-600 font-medium group-hover:underline truncate pt-0.5">Cần gia hạn hợp đồng &rarr;</p>
           </div>
-          <div className="w-11 h-11 rounded-xl bg-rose-50 text-rose-600 border border-rose-200 flex items-center justify-center group-hover:scale-105 transition-transform">
-            <Calendar className="w-5 h-5" />
+          <div className="w-12 h-12 rounded-xl bg-rose-50 text-rose-600 border border-rose-200 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+            <Calendar className="w-6 h-6" />
           </div>
         </div>
 
@@ -302,18 +302,18 @@ export const DocumentsPage: React.FC = () => {
             setActiveTab('action_needed')
             setActionNeededSubtab('unsigned')
           }}
-          className="bg-white p-4.5 rounded-2xl border border-blue-200/80 shadow-2xs flex items-center justify-between cursor-pointer hover:border-blue-400 transition-all group"
+          className="bg-white p-5 rounded-2xl border border-blue-200 shadow-sm flex items-center justify-between cursor-pointer hover:border-blue-400 hover:shadow-md transition-all group min-h-[116px]"
         >
-          <div>
-            <p className="text-xs font-semibold text-blue-600 flex items-center gap-1.5">
-              <FileSignature className="w-3.5 h-3.5" />
+          <div className="min-w-0 pr-3">
+            <p className="text-xs font-semibold text-blue-700 flex items-center gap-1.5 truncate pb-0.5">
+              <FileSignature className="w-3.5 h-3.5 text-blue-600 shrink-0" />
               Chờ ký & Đóng dấu
             </p>
-            <p className="text-2xl font-black text-blue-700 mt-1">{stats?.missing_signature ?? 0}</p>
-            <p className="text-[11px] text-blue-500 mt-0.5 group-hover:underline">Ký số trực tiếp &rarr;</p>
+            <p className="text-2xl font-black text-blue-700 my-1 leading-none">{stats?.missing_signature ?? 0}</p>
+            <p className="text-xs text-blue-600 font-medium group-hover:underline truncate pt-0.5">Ký số trực tiếp &rarr;</p>
           </div>
-          <div className="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 border border-blue-200 flex items-center justify-center group-hover:scale-105 transition-transform">
-            <FileCheck className="w-5 h-5" />
+          <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 border border-blue-200 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+            <FileCheck className="w-6 h-6" />
           </div>
         </div>
       </div>
