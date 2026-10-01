@@ -387,19 +387,19 @@ def list_products(
     init_db(db_path)
     for conn in get_connection(db_path):
         if page_id:
-            # Query strictly bound products for this page
+            # Query strictly bound products for this page, or fallback to global products if no binding
             p_sql = """
-                SELECT DISTINCT p.*, b.custom_price, b.auto_sell_allowed, b.id as binding_id
+                SELECT DISTINCT p.*, b.custom_price, COALESCE(b.auto_sell_allowed, p.auto_sell_enabled) as auto_sell_allowed, b.id as binding_id
                 FROM ops_products p
-                JOIN ops_product_page_bindings b ON p.id = b.product_id
-                WHERE (b.page_id = ? OR b.page_id = '*')
+                LEFT JOIN ops_product_page_bindings b ON p.id = b.product_id AND (b.page_id = ? OR b.page_id = '*')
+                WHERE (b.id IS NOT NULL OR NOT EXISTS (SELECT 1 FROM ops_product_page_bindings b2 WHERE b2.product_id = p.id))
             """
             params: list[Any] = [str(page_id).strip()]
             if channel and channel != "*":
-                p_sql += " AND (b.channel = ? OR b.channel = '*')"
+                p_sql += " AND (b.channel = ? OR b.channel = '*' OR b.channel IS NULL)"
                 params.append(channel.strip().lower())
             if active_only:
-                p_sql += " AND p.is_active = 1 AND b.auto_sell_allowed = 1"
+                p_sql += " AND p.is_active = 1 AND COALESCE(b.auto_sell_allowed, p.auto_sell_enabled, 1) = 1"
             p_sql += " ORDER BY p.category, p.price DESC"
             cur = conn.execute(p_sql, tuple(params))
         else:
