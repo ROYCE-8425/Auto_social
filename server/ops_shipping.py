@@ -138,8 +138,8 @@ class GHNProvider(BaseShippingProvider):
 
         # Trích xuất quận/huyện đích từ order
         addr = order_data.get("shipping_address_obj") or {}
-        to_district = int(addr.get("district_id") or 1442)
-        to_ward = str(addr.get("ward_code") or "1A0101")
+        to_district = int(addr.get("district_id") or 1444)
+        to_ward = str(addr.get("ward_code") or "90795")
 
         payload = {
             "service_type_id": 2,  # Chuẩn
@@ -231,8 +231,8 @@ class GHNProvider(BaseShippingProvider):
             "to_name": to_name,
             "to_phone": to_phone,
             "to_address": full_addr or "Địa chỉ giao hàng",
-            "to_ward_code": str(addr.get("ward_code") or "1A0101"),
-            "to_district_id": int(addr.get("district_id") or 1442),
+            "to_ward_code": str(addr.get("ward_code") or "90795"),
+            "to_district_id": int(addr.get("district_id") or 1444),
             "cod_amount": cod_amount,
             "content": f"Đơn hàng #{order_data.get('id')}",
             "weight": 500,

@@ -4,17 +4,17 @@
     "ghn": {
       "name": "Giao Hàng Nhanh (GHN Express)",
       "enabled": true,
-      "token": "test_token_123",
-      "shop_id": "test_shop_123",
+      "token": "06e9b639-bbdf-11f1-b944-42faa0331861",
+      "shop_id": "225822",
       "client_id": "2536353",
       "environment": "sandbox",
       "pickup_address": {
         "name": "Royce Shop",
         "phone": "0989819057",
-        "address": "Số 10 Phố Chùa Láng",
-        "ward_code": "1A0101",
+        "address": "Phạm Ngũ Lão, Quận 1",
+        "ward_code": "20109",
         "district_id": 1442,
-        "province_name": "Hà Nội"
+        "province_name": "Hồ Chí Minh"
       }
     },
     "ghtk": {
