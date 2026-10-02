@@ -36,6 +36,8 @@ server/.hub_token
 server/.setup_token
 # Token API của CLI: file chứa bản BĂM + tên token, vẫn là bí mật vận hành, không vào repo.
 server/.api_tokens.json
+*page_tokens.local.json
+page_tokens.json
 server/auth_audit.jsonl*
 server/.oauth_mcp.json
 server/mcp_audit.jsonl*

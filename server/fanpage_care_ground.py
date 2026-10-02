@@ -268,19 +268,21 @@ def render_template(
         return None
 
     brand = str(clean_kit.get("brand") or "").strip().lower()
-    page_name = clean_kit.get("name") or ("Game Giá Rẻ BSN" if brand == "bsn" else "Trung tâm")
+    page_name = clean_kit.get("name") or ("Game Giá Rẻ BSN" if brand == "bsn" else ("Royce Shop" if brand == "royce" else "Trung tâm"))
     hotline = clean_kit.get("hotline") or ""
     addr = address_short(clean_kit)
-    course_or_nganh = course_hint or ("Game" if brand == "bsn" else "Tin học")
+    course_or_nganh = course_hint or ("Game" if brand == "bsn" else ("Sản phẩm" if brand == "royce" else "Tin học"))
 
     # Với intent hoc_phi/gia_game: nếu kit KHÔNG có template riêng -> mới quote tự động từ get_course_fee
     kit_override = parse_templates_markdown(str(clean_kit.get("md") or "")) if clean_kit.get("md") else {}
-    if key in ("hoc_phi", "gia_game") and key not in kit_override:
+    if key in ("hoc_phi", "gia_game", "gia_san_pham") and key not in kit_override:
         fee = get_course_fee(course_hint, clean_kit, vault_root=vault_root)
         if fee:
             # Có số trong file: quote đúng số
             if brand == "bsn":
                 tpl = f"Dạ giá {course_or_nganh} tại {page_name} là {fee}. Bạn inbox shop hoặc liên hệ Hotline/Zalo {hotline} để nhận link tải và hỗ trợ kích hoạt ngay nhé ạ."
+            elif brand == "royce":
+                tpl = f"Dạ giá {course_or_nganh} tại {page_name} đang có ưu đãi là {fee}. Anh/chị inbox shop hoặc liên hệ Hotline/Zalo {hotline} để shop gửi hình ảnh và tư vấn chi tiết nhé ạ."
             else:
                 tpl = f"Dạ học phí {course_or_nganh} tại cơ sở {page_name} là {fee}. Anh/chị inbox hoặc liên hệ Hotline/Zalo {hotline} để nhận lịch học chi tiết nhé ạ."
             return _one_line(tpl)

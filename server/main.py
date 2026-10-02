@@ -3327,20 +3327,21 @@ async def _get_facebook_pages():
         repo = Path(__file__).resolve().parents[1]
         default_brain = repo / "brains" / "Brain Default"
         roots = [default_brain, repo] if default_brain.is_dir() else [repo]
-        for r in roots:
-            tok_file = r / "Javis" / "page_tokens.json"
-            if tok_file.is_file():
+        for extra_tok in ("/root/page_tokens.local.json", "/root/page_tokens.json", "/root/page_tokens.backup.json"):
+            p_extra = Path(extra_tok)
+            if p_extra.is_file():
                 try:
                     import json
-                    tdata = json.loads(tok_file.read_text(encoding="utf-8"))
+                    tdata = json.loads(p_extra.read_text(encoding="utf-8"))
                     if isinstance(tdata, dict):
                         for pid, info in tdata.items():
                             if isinstance(info, dict) and info.get("access_token"):
-                                pid_str = str(pid)
-                                pname = info.get("name") or f"Page {pid_str}"
-                                if pid_str == "988656934325292" or "sao việt" in pname.lower() or "sao viet" in pname.lower():
-                                    pname = "Royce Shop"
-                                if pid_str not in by_id:
+                                tok_str = str(info["access_token"]).strip()
+                                if "YOUR_" not in tok_str and "..." not in tok_str and len(tok_str) >= 30:
+                                    pid_str = str(pid)
+                                    pname = info.get("name") or f"Page {pid_str}"
+                                    if pid_str == "988656934325292":
+                                        pname = "Royce Shop"
                                     by_id[pid_str] = {
                                         "id": pid_str,
                                         "name": pname,
@@ -3349,11 +3350,40 @@ async def _get_facebook_pages():
                                         "has_token": True,
                                         "source": "manual_token"
                                     }
-                                else:
-                                    by_id[pid_str]["name"] = pname
-                                    by_id[pid_str]["has_token"] = True
                 except Exception:
                     pass
+
+        for r in roots:
+            for f_name in ("page_tokens.local.json", "page_tokens.json"):
+                for tok_file in (r / "Javis" / f_name, r / f_name):
+                    if tok_file.is_file():
+                        try:
+                            import json
+                            tdata = json.loads(tok_file.read_text(encoding="utf-8"))
+                            if isinstance(tdata, dict):
+                                for pid, info in tdata.items():
+                                    if isinstance(info, dict) and info.get("access_token"):
+                                        tok_str = str(info["access_token"]).strip()
+                                        if "YOUR_" in tok_str or "..." in tok_str or len(tok_str) < 30:
+                                            continue
+                                        pid_str = str(pid)
+                                        pname = info.get("name") or f"Page {pid_str}"
+                                        if pid_str == "988656934325292" or "sao việt" in pname.lower() or "sao viet" in pname.lower():
+                                            pname = "Royce Shop"
+                                        if pid_str not in by_id or f_name == "page_tokens.local.json":
+                                            by_id[pid_str] = {
+                                                "id": pid_str,
+                                                "name": pname,
+                                                "category": "Community",
+                                                "connected": True,
+                                                "has_token": True,
+                                                "source": "manual_token"
+                                            }
+                                        else:
+                                            by_id[pid_str]["name"] = pname
+                                            by_id[pid_str]["has_token"] = True
+                        except Exception:
+                            pass
             bk_dir = r / "wiki" / "brand-kits"
             if bk_dir.is_dir():
                 import re

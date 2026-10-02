@@ -93,6 +93,7 @@ async def test_inbound_message_auto_replies_greeting(monkeypatch, tmp_path):
 
     vault = tmp_path / "vault"
     kits = vault / "wiki" / "brand-kits"
+    kits.mkdir(parents=True, exist_ok=True)
     bsn_src = ROOT / "brains" / "Brain Default" / "wiki" / "brand-kits" / "game-gia-re-bsn.md"
     kit_content = bsn_src.read_text(encoding="utf-8") if bsn_src.is_file() else (
         "# Kit: Game Giá Rẻ BSN\n"

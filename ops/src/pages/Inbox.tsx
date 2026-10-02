@@ -611,15 +611,22 @@ export const Inbox: React.FC = () => {
         source_body: currentConv.message,
       }
     }
-    const psid = currentConv.id.includes('_')
+    const currentConvPageId = (currentConv as any).page_id || (currentConv as any).pageId || (currentConv.id.includes('_') && !currentConv.id.startsWith('cmt_') ? currentConv.id.split('_')[0] : null)
+    const psid = currentConv.id.includes('_') && !currentConv.id.startsWith('cmt_')
       ? currentConv.id.split('_').slice(1).join('_')
       : currentConv.fbId
-    const found = pendingDrafts.find(
-      (d) =>
+    const found = pendingDrafts.find((d) => {
+      // Bắt buộc phải cùng Trang/Fanpage nếu có page_id
+      if (d.page_id && currentConvPageId && String(d.page_id) !== String(currentConvPageId)) {
+        return false
+      }
+      return (
         (d.target_id && (d.target_id === psid || d.target_id === currentConv.fbId)) ||
         (d.from_id && (d.from_id === psid || d.from_id === currentConv.fbId)) ||
-        (d.from_name && currentConv.name && d.from_name.toLowerCase().trim() === currentConv.name.toLowerCase().trim())
-    )
+        (Boolean(d.page_id && currentConvPageId && String(d.page_id) === String(currentConvPageId)) &&
+          Boolean(d.from_name && currentConv.name && d.from_name.toLowerCase().trim() === currentConv.name.toLowerCase().trim()))
+      )
+    })
     return found || null
   }, [currentConv, pendingDrafts])
 

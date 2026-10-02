@@ -277,14 +277,18 @@ def link_identity(
 
 
 def resolve_brand(page_id: str | None, brand_hint: str | None = None) -> str:
-    """Xác định thương hiệu (bsn hoặc saoviet) dựa trên page_id hoặc hint."""
+    """Xác định thương hiệu (bsn, royce hoặc saoviet) dựa trên page_id hoặc hint."""
     if brand_hint:
         b = str(brand_hint).strip().lower()
+        if b in ("royce", "royceshop"):
+            return "royce"
         if b in ("bsn", "saoviet"):
             return b
     pid = str(page_id or "").strip()
     if pid == "343562028848465":
         return "bsn"
+    if pid == "988656934325292":
+        return "royce"
     return "saoviet"
 
 

@@ -52,11 +52,14 @@ class ParsedBrandKit:
 def detect_brand_from_kit(kit_name_or_stem: str) -> str:
     """Suy luận brand từ tên file hoặc slug.
     game-gia-re-bsn -> 'bsn'
+    royce-shop -> 'royce'
     còn lại -> 'saoviet'
     """
     stem = Path(kit_name_or_stem).stem.lower().strip()
     if "bsn" in stem or "game" in stem:
         return "bsn"
+    if "royce" in stem:
+        return "royce"
     return "saoviet"
 
 

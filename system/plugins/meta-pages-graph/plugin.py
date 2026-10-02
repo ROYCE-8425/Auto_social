@@ -295,24 +295,51 @@ def _manual_pages(cctx=None):
         except Exception:
             pass
 
-    for r in roots:
-        # Quét file Javis/page_tokens.json
-        tok_file = r / "Javis" / "page_tokens.json"
-        if tok_file.is_file():
+    # Quét thêm các vị trí an toàn ngoài repo (tránh bị git reset ghi đè)
+    for extra_tok in ("/root/page_tokens.local.json", "/root/page_tokens.json", "/root/page_tokens.backup.json"):
+        p_extra = Path(extra_tok)
+        if p_extra.is_file():
             try:
-                data = json.loads(tok_file.read_text(encoding="utf-8"))
+                data = json.loads(p_extra.read_text(encoding="utf-8"))
                 if isinstance(data, dict):
                     for pid, info in data.items():
                         if isinstance(info, dict) and info.get("access_token"):
-                            pages[str(pid)] = {
-                                "id": str(pid),
-                                "name": info.get("name") or f"Page {pid}",
-                                "access_token": str(info["access_token"]).strip(),
-                                "category": "Community",
-                                "tasks": ["MANAGE", "CREATE_CONTENT", "MODERATE"]
-                            }
+                            tok_str = str(info["access_token"]).strip()
+                            if "YOUR_" not in tok_str and "..." not in tok_str and len(tok_str) >= 30:
+                                pages[str(pid)] = {
+                                    "id": str(pid),
+                                    "name": info.get("name") or f"Page {pid}",
+                                    "access_token": tok_str,
+                                    "category": "Community",
+                                    "tasks": ["MANAGE", "CREATE_CONTENT", "MODERATE"]
+                                }
             except Exception:
                 pass
+
+    for r in roots:
+        # Quét file Javis/page_tokens.local.json rồi mới tới page_tokens.json
+        for f_name in ("page_tokens.local.json", "page_tokens.json"):
+            for tok_file in (r / "Javis" / f_name, r / f_name):
+                if tok_file.is_file():
+                    try:
+                        data = json.loads(tok_file.read_text(encoding="utf-8"))
+                        if isinstance(data, dict):
+                            for pid, info in data.items():
+                                if isinstance(info, dict) and info.get("access_token"):
+                                    tok_str = str(info["access_token"]).strip()
+                                    # Bỏ qua token mẫu/placeholder chưa điền
+                                    if "YOUR_" in tok_str or "..." in tok_str or len(tok_str) < 30:
+                                        continue
+                                    if str(pid) not in pages or f_name == "page_tokens.local.json":
+                                        pages[str(pid)] = {
+                                            "id": str(pid),
+                                            "name": info.get("name") or f"Page {pid}",
+                                            "access_token": tok_str,
+                                            "category": "Community",
+                                            "tasks": ["MANAGE", "CREATE_CONTENT", "MODERATE"]
+                                        }
+                    except Exception:
+                        pass
         # Quét wiki/brand-kits/*.md
         bk_dir = r / "wiki" / "brand-kits"
         if bk_dir.is_dir():
@@ -324,11 +351,14 @@ def _manual_pages(cctx=None):
                     pid = _kit_field(md, "Page ID", "page_id", "ID Fanpage", "ID Trang")
                     tok = _kit_field(md, "Access Token", "access_token", "Page Token", "Token")
                     if pid and tok and str(pid) not in pages:
+                        tok_str = str(tok).strip()
+                        if "YOUR_" in tok_str or "..." in tok_str or len(tok_str) < 30:
+                            continue
                         name = _kit_field(md, "Tên Fanpage") or p.stem
                         pages[str(pid)] = {
                             "id": str(pid),
                             "name": name,
-                            "access_token": str(tok).strip(),
+                            "access_token": tok_str,
                             "category": "Community",
                             "tasks": ["MANAGE", "CREATE_CONTENT", "MODERATE"]
                         }
@@ -394,9 +424,20 @@ async def _get(path, params, token):
 async def _post(path, data, token):
     import httpx
     try:
+        # Tự động gửi application/json nếu payload chứa dict/list lồng nhau (như recipient: {id: ...})
+        has_nested = any(isinstance(v, (dict, list)) for v in (data or {}).values())
         async with httpx.AsyncClient(timeout=30) as c:
-            r = await c.post(f"{GRAPH}/{str(path).lstrip('/')}",
-                             data={**(data or {}), "access_token": token})
+            if has_nested:
+                r = await c.post(
+                    f"{GRAPH}/{str(path).lstrip('/')}",
+                    params={"access_token": token},
+                    json=data or {},
+                )
+            else:
+                r = await c.post(
+                    f"{GRAPH}/{str(path).lstrip('/')}",
+                    data={**(data or {}), "access_token": token},
+                )
         try:
             return r.json()
         except Exception:

@@ -246,11 +246,15 @@ def classify_comment(
     b_norm = (brand or "saoviet").strip().lower()
     if "bsn" in b_norm or "game" in b_norm:
         b_norm = "bsn"
+    elif "royce" in b_norm:
+        b_norm = "royce"
     else:
         b_norm = "saoviet"
 
     if b_norm == "bsn":
         course_hints = detect_bsn_hints(folded)
+    elif b_norm == "royce":
+        course_hints = []
     else:
         course_hints = detect_course_hints(folded)
 
@@ -356,6 +360,52 @@ def classify_comment(
             return _res("faq", "chao_hoi", 0.9, ["bsn_faq:chao_hoi"])
 
         return _res("ambiguous", None, 0.5, ["bsn:unmatched_rule"])
+
+    # =========================================================================
+    # PACK 2B: BRAND ROYCE (Royce Shop — Trang sức & Công nghệ & E-Commerce)
+    # =========================================================================
+    if b_norm == "royce":
+        # 1. Lead: Có ý định mua, hỏi mẫu, chốt đơn, gửi SĐT / địa chỉ
+        royce_lead = ["mua", "dat hang", "dat mua", "lay cai", "lay mau", "chot don", "ship", "gui minh", "gui mau", "bao gia", "tu van minh", "tu van em", "can mua", "con hang", "xem mau"]
+        for kw in royce_lead:
+            if kw in folded:
+                return _res("lead", None, 0.9, [f"royce_lead:{kw}"])
+
+        # 2. FAQ: Giá sản phẩm
+        royce_price = ["gia", "bao nhieu", "nhieu tien", "gia sao", "co bot", "uu dai", "khuyen mai", "bao gia"]
+        if any(k in folded for k in royce_price):
+            return _res("faq", "gia_san_pham", 0.9, ["royce_faq:gia_san_pham"])
+
+        # 3. FAQ: Bảo hành & Đổi trả
+        royce_warranty = ["bao hanh", "doi tra", "doi hang", "chuan tuoi", "giay to", "kiem dinh"]
+        if any(k in folded for k in royce_warranty):
+            return _res("faq", "bao_hanh", 0.9, ["royce_faq:bao_hanh"])
+
+        # 4. FAQ: Địa chỉ / Cửa hàng
+        royce_addr = ["dia chi", "o dau", "shop o dau", "cua hang", "den xem"]
+        if any(k in folded for k in royce_addr):
+            return _res("faq", "dia_chi", 0.9, ["royce_faq:dia_chi"])
+
+        # 5. FAQ: Giao hàng
+        royce_ship = ["ship cod", "phi ship", "giao hang", "bao lau nhan", "kiem tra hang"]
+        if any(k in folded for k in royce_ship):
+            return _res("faq", "giao_hang", 0.9, ["royce_faq:giao_hang"])
+
+        # 6. Zalo
+        if wants_zalo:
+            return _res("faq", "zalo", 0.9, ["royce_faq:zalo"])
+
+        # 7. Khen
+        is_q = is_question_text(raw_text, folded)
+        if not is_q and (any(k in folded for k in PRAISE_KEYWORDS) or any(em in raw_text for em in PRAISE_EMOJIS)):
+            return _res("khen", None, 0.85, ["praise_kw_or_emoji"])
+
+        # 8. Chào hỏi
+        words = set(folded.split())
+        if words.intersection({"hi", "hello", "helo"}) or any(k in folded for k in GREETING_KEYWORDS):
+            return _res("faq", "chao_hoi", 0.9, ["royce_faq:chao_hoi"])
+
+        return _res("ambiguous", None, 0.5, ["royce:unmatched_rule"])
 
     # =========================================================================
     # PACK 3: SAO VIỆT TIKTOK (saoviet_tt: Bio lead / 1 cơ sở / Online)
