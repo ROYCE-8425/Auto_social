@@ -7,6 +7,7 @@ Tokens are stored securely in settings file and masked on read for UI/client.
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 from typing import Any, Dict, Optional
 
@@ -56,10 +57,62 @@ DEFAULT_SETTINGS: Dict[str, Any] = {
 }
 
 
+def _env_bool(name: str) -> Optional[bool]:
+    raw = os.getenv(name)
+    if raw is None:
+        return None
+    return raw.strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _apply_env_overrides(settings: Dict[str, Any]) -> Dict[str, Any]:
+    """Overlay runtime-only shipping credentials without committing secrets."""
+    ghn = settings.setdefault("providers", {}).setdefault("ghn", {})
+    env_map = {
+        "GHN_TOKEN": "token",
+        "GHN_SHOP_ID": "shop_id",
+        "GHN_CLIENT_ID": "client_id",
+        "GHN_ENVIRONMENT": "environment",
+    }
+    for env_name, key in env_map.items():
+        value = os.getenv(env_name)
+        if value:
+            ghn[key] = value.strip()
+
+    pickup = ghn.setdefault("pickup_address", {})
+    pickup_map = {
+        "GHN_PICKUP_NAME": "name",
+        "GHN_PICKUP_PHONE": "phone",
+        "GHN_PICKUP_ADDRESS": "address",
+        "GHN_PICKUP_WARD_CODE": "ward_code",
+        "GHN_PICKUP_PROVINCE_NAME": "province_name",
+    }
+    for env_name, key in pickup_map.items():
+        value = os.getenv(env_name)
+        if value:
+            pickup[key] = value.strip()
+    district_id = os.getenv("GHN_PICKUP_DISTRICT_ID")
+    if district_id:
+        try:
+            pickup["district_id"] = int(district_id)
+        except ValueError:
+            pickup["district_id"] = district_id.strip()
+
+    if ghn.get("token") and ghn.get("shop_id"):
+        ghn["enabled"] = True
+
+    auto_create = _env_bool("OPS_AUTO_CREATE_SHIPMENT")
+    if auto_create is not None:
+        settings.setdefault("automation", {})["auto_create_shipment"] = auto_create
+    kill_switch = _env_bool("OPS_SHIPPING_KILL_SWITCH")
+    if kill_switch is not None:
+        settings.setdefault("automation", {})["kill_switch"] = kill_switch
+    return settings
+
+
 def load_shipping_settings(settings_path: Path | str | None = None) -> Dict[str, Any]:
     p = Path(settings_path or DEFAULT_SETTINGS_PATH)
     if not p.is_file():
-        return json.loads(json.dumps(DEFAULT_SETTINGS))
+        return _apply_env_overrides(json.loads(json.dumps(DEFAULT_SETTINGS)))
     try:
         data = json.loads(p.read_text(encoding="utf-8"))
         merged = json.loads(json.dumps(DEFAULT_SETTINGS))
@@ -73,9 +126,9 @@ def load_shipping_settings(settings_path: Path | str | None = None) -> Dict[str,
                     merged["providers"][k] = v
         if "automation" in data and isinstance(data["automation"], dict):
             merged["automation"].update(data["automation"])
-        return merged
+        return _apply_env_overrides(merged)
     except Exception:
-        return json.loads(json.dumps(DEFAULT_SETTINGS))
+        return _apply_env_overrides(json.loads(json.dumps(DEFAULT_SETTINGS)))
 
 
 def save_shipping_settings(settings: Dict[str, Any], settings_path: Path | str | None = None) -> Dict[str, Any]:

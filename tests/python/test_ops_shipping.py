@@ -37,6 +37,25 @@ def setup_shipping_env(monkeypatch):
         }
 
 
+def test_shipping_settings_can_be_configured_from_env(monkeypatch):
+    monkeypatch.setenv("GHN_TOKEN", "test-ghn-token")
+    monkeypatch.setenv("GHN_SHOP_ID", "123456")
+    monkeypatch.setenv("GHN_CLIENT_ID", "client-abc")
+    monkeypatch.setenv("GHN_ENVIRONMENT", "sandbox")
+    monkeypatch.setenv("GHN_PICKUP_DISTRICT_ID", "1442")
+    monkeypatch.setenv("OPS_AUTO_CREATE_SHIPMENT", "true")
+
+    settings = ops_shipping_store.load_shipping_settings()
+    ghn = settings["providers"]["ghn"]
+
+    assert ghn["enabled"] is True
+    assert ghn["token"] == "test-ghn-token"
+    assert ghn["shop_id"] == "123456"
+    assert ghn["client_id"] == "client-abc"
+    assert ghn["pickup_address"]["district_id"] == 1442
+    assert settings["automation"]["auto_create_shipment"] is True
+
+
 def test_ghn_not_configured_does_not_call_real_api():
     """1. Khi GHN chưa cấu hình Token / ShopId thì không gọi API thật mà báo lỗi not_configured."""
     order = ops_order_store.create_order(

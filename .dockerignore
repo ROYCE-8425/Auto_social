@@ -54,6 +54,8 @@ server/loop_config.json
 server/learn_config.json
 server/metrics_cache.json
 server/plugins.json
+server/ops_shipping_settings.json
+server/ops_shipping_settings.local.json
 server/plugins/
 server/plugin-data/
 server/connector-home/

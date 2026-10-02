@@ -71,7 +71,7 @@ export const OpsChatBubble: React.FC = () => {
 
   const scopeLabel = React.useMemo(() => {
     if (scope === 'brand') {
-      return scopeBrand === 'bsn' ? 'Game Giá Rẻ BSN' : 'Royce Shop / Sao Việt'
+      return scopeBrand === 'bsn' ? 'Game Giá Rẻ BSN' : 'Royce Shop'
     }
     if (scope === 'page' && scopePageId) {
       const p = eligiblePages.find((item) => (item.page_id || item.id) === scopePageId)

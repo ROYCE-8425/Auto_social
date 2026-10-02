@@ -362,7 +362,7 @@ def get_or_create_customer(
     else:
         existing = None
 
-    default_campus = campus or ("Game Giá Rẻ BSN" if effective_brand == "bsn" else "Tin học Sao Việt")
+    default_campus = campus or ("Game Giá Rẻ BSN" if effective_brand == "bsn" else "Royce Shop")
 
     if not existing:
         is_new = True
@@ -581,7 +581,7 @@ def backfill_customers_from_events(db_path: Path | str | None = None, days: int 
 
         found_phones = phone_regex.findall(body)
         brand = "bsn" if pid == "343562028848465" else "saoviet"
-        campus = "Game Giá Rẻ BSN" if brand == "bsn" else "Tin học Sao Việt"
+        campus = "Game Giá Rẻ BSN" if brand == "bsn" else "Royce Shop"
 
         is_comment = kind == "comment"
         c_from_id = from_id if is_comment else None

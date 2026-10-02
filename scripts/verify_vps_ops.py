@@ -1,10 +1,11 @@
 import urllib.request
 import json
 import sys
+import os
 
 sys.stdout.reconfigure(encoding='utf-8')
 
-base_url = "http://180.93.37.8:7777"
+base_url = os.getenv("SEOTRUM_OPS_BASE_URL", "http://127.0.0.1:7777").rstrip("/")
 
 # 1. Login as nv_an (Kỹ thuật viên)
 req = urllib.request.Request(

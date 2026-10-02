@@ -210,6 +210,8 @@ node_modules/
 ops/node_modules/
 server/ops_users.json
 server/ops_sessions.json
+server/ops_shipping_settings.json
+server/ops_shipping_settings.local.json
 tmp-video-review/
 
 # Credentials & SQLite

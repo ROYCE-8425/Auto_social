@@ -104,7 +104,7 @@ def host_kieu_local(h: str) -> bool:
 
 def _compute_hosts() -> set:
     hosts = set(_LOCALHOST)
-    hosts.update({"trannhuy.online", "180.93.37.8"})
+    hosts.update({"trannhuy.online"})
     try:
         dom = ((cfgmod.read_settings().get("domain") or {}).get("custom") or "").strip().lower()
         dom = host_only(dom)

@@ -1,0 +1,40 @@
+{
+  "default_provider": "ghn",
+  "providers": {
+    "ghn": {
+      "name": "Giao Hang Nhanh (GHN Express)",
+      "enabled": false,
+      "token": "",
+      "shop_id": "",
+      "client_id": "",
+      "environment": "sandbox",
+      "pickup_address": {
+        "name": "Seo Trum Ops Warehouse",
+        "phone": "0900000000",
+        "address": "Demo pickup address",
+        "ward_code": "",
+        "district_id": 0,
+        "province_name": ""
+      }
+    },
+    "ghtk": {
+      "name": "Giao Hang Tiet Kiem (GHTK)",
+      "enabled": false,
+      "status": "coming_soon",
+      "token": ""
+    },
+    "viettel_post": {
+      "name": "Viettel Post",
+      "enabled": false,
+      "status": "coming_soon",
+      "token": ""
+    }
+  },
+  "automation": {
+    "auto_create_shipment": false,
+    "min_confidence": 0.85,
+    "require_sku_match": true,
+    "max_cod_amount": 5000000,
+    "kill_switch": false
+  }
+}

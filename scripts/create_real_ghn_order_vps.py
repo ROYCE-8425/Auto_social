@@ -1,27 +1,33 @@
-import sys
-import json
+import os
 import paramiko
+
+VPS_HOST = os.getenv("SEOTRUM_VPS_HOST")
+VPS_PORT = int(os.getenv("SEOTRUM_VPS_PORT", "22"))
+VPS_USER = os.getenv("SEOTRUM_VPS_USER", "root")
+VPS_PASS = os.getenv("SEOTRUM_VPS_PASSWORD")
+
+if not VPS_HOST or not VPS_PASS:
+    raise SystemExit("Set SEOTRUM_VPS_HOST and SEOTRUM_VPS_PASSWORD before running this script.")
 
 ssh = paramiko.SSHClient()
 ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-ssh.connect('180.93.37.8', port=22, username='root', password='wh8bCLxIAitPOfIB', timeout=15)
+ssh.connect(VPS_HOST, port=VPS_PORT, username=VPS_USER, password=VPS_PASS, timeout=15)
 
 remote_script = """
 import sys
 sys.path.insert(0, 'server')
 import ops_order_store
 import ops_orders
-import json
 
 order = ops_order_store.create_order(
-    customer_name='Trần Minh Tuấn (Test Webhook GHN)',
-    customer_phone='0989819057',
-    shipping_address='72 Thành Thái, Phường Võ Thị Sáu, Quận 3, TP.HCM',
+    customer_name='GHN Sandbox Customer',
+    customer_phone='0900000000',
+    shipping_address='Demo shipping address',
     items=[{
-        'name': 'Bàn phím cơ Silent Office Bluetooth',
-        'sku': 'SKU-KEY-04',
+        'name': 'Sandbox product',
+        'sku': 'SKU-SANDBOX-01',
         'quantity': 1,
-        'price': 850000
+        'price': 100000
     }],
     status='confirmed',
     source='ghn_real_test'
@@ -39,16 +45,19 @@ else:
 """
 
 sftp = ssh.open_sftp()
-with sftp.file('/root/Auto_social/run_ghn_create.py', 'w') as f:
-    f.write(remote_script)
-sftp.close()
+try:
+    with sftp.file("/root/Auto_social/run_ghn_create.py", "w") as f:
+        f.write(remote_script)
+finally:
+    sftp.close()
 
-stdin, stdout, stderr = ssh.exec_command('cd /root/Auto_social && /root/Auto_social/.venv/bin/python run_ghn_create.py')
-out = stdout.read().decode('utf-8')
-err = stderr.read().decode('utf-8')
-print("OUT:\n" + out)
-if err:
-    print("ERR:\n" + err)
-
-ssh.exec_command('rm -f /root/Auto_social/run_ghn_create.py')
-ssh.close()
+try:
+    stdin, stdout, stderr = ssh.exec_command("cd /root/Auto_social && /root/Auto_social/.venv/bin/python run_ghn_create.py")
+    out = stdout.read().decode("utf-8", errors="replace")
+    err = stderr.read().decode("utf-8", errors="replace")
+    print("OUT:\n" + out)
+    if err:
+        print("ERR:\n" + err)
+finally:
+    ssh.exec_command("rm -f /root/Auto_social/run_ghn_create.py")
+    ssh.close()

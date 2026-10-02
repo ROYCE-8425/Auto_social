@@ -155,9 +155,9 @@ def _resolve_scope_pages(
         filtered = [p for p in eligible_pages if p["brand"] == "bsn"]
         return (filtered or eligible_pages), "Game Giá Rẻ BSN"
 
-    if scope_str in ("saoviet", "tin-hoc", "tinhoc"):
-        filtered = [p for p in eligible_pages if p["brand"] == "saoviet"]
-        return (filtered or eligible_pages), "Tin Học Sao Việt"
+    if scope_str in ("saoviet", "tin-hoc", "tinhoc", "royce", "royceshop"):
+        filtered = [p for p in eligible_pages if p["brand"] in ("saoviet", "royce", "royceshop")]
+        return (filtered or eligible_pages), "Royce Shop"
 
     # Match theo page_id cụ thể
     filtered = [p for p in eligible_pages if p["page_id"] == scope_str]

@@ -4,7 +4,7 @@
 | --- | --- |
 | **Trạng thái** | Plan cho Gemini implement (không đổi policy Care) |
 | **Ngày** | 2026-09-16 |
-| **Ảnh hiện trạng** | VPS `http://180.93.37.8:7777` — Care tắt, Facebook báo `readonly`, bảng trống |
+| **Ảnh hiện trạng** | Live demo `https://trannhuy.online` — Care tắt, Facebook báo `readonly`, bảng trống |
 | **Phạm vi** | `dashboard/fanpage-care.js`, `dashboard/console.css`, cache bump `index.html`, **một** sửa backend: đọc perm Facebook đúng chỗ |
 
 ---

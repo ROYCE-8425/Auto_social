@@ -146,7 +146,7 @@ theo_doi = subprocess.run(["git", "ls-files"], cwd=ROOT, capture_output=True, te
 xau = [f for f in theo_doi.split("\n")
        if f.endswith((".secret_key", ".hub_token", "conversations.db"))
        or f in ("server/mcp_servers.json", ".env", "settings.json", "server/settings.json")
-       or (f.endswith("/settings.json") and not f.endswith("ops_shipping_settings.json"))]
+       or f.endswith("/settings.json")]
 check("không file bí mật nào đang bị git theo dõi" + (f" ({xau})" if xau else ""), not xau)
 
 # ---------------------------------------------------------------- 6. Mã nguồn cần thiết KHÔNG bị loại

@@ -269,7 +269,7 @@
   2. **An toàn thương hiệu:** Con người làm chủ công nghệ, không phó mặc cho AI.
   3. **Hiệu quả tức thì:** Tiết kiệm hàng chục triệu chi phí nhân sự và bản quyền phần mềm mỗi tháng.
 - **Trải nghiệm trực tiếp:**
-  - 🌐 **Live Demo Hệ thống:** `http://180.93.37.8/ops` (Tài khoản CSKH: `staff_cskh` / `cskh123456`)
+  - 🌐 **Live Demo Hệ thống:** `https://trannhuy.online/ops` (tài khoản demo cấp riêng khi chấm)
   - 📂 **Mã nguồn GitHub:** `https://github.com/ROYCE-8425/Auto_social`
   - 💬 **Liên hệ & Hợp tác phát triển:** ROYCE-8425
 - **Lời cảm ơn:** *"Xin chân thành cảm ơn Ban giám khảo và toàn thể hội thi đã chú ý lắng nghe!"*

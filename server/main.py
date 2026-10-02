@@ -3308,9 +3308,12 @@ async def _get_facebook_pages():
                     for p in (d.get("data") or []):
                         pid = str(p.get("id") or "")
                         if pid:
+                            pname = p.get("name") or ""
+                            if pid == "988656934325292" or "sao việt" in pname.lower() or "sao viet" in pname.lower():
+                                pname = "Royce Shop"
                             by_id[pid] = {
                                 "id": pid,
-                                "name": p.get("name") or "",
+                                "name": pname,
                                 "category": p.get("category") or "",
                                 "connected": True,
                                 "source": "oauth"
@@ -3334,16 +3337,20 @@ async def _get_facebook_pages():
                         for pid, info in tdata.items():
                             if isinstance(info, dict) and info.get("access_token"):
                                 pid_str = str(pid)
+                                pname = info.get("name") or f"Page {pid_str}"
+                                if pid_str == "988656934325292" or "sao việt" in pname.lower() or "sao viet" in pname.lower():
+                                    pname = "Royce Shop"
                                 if pid_str not in by_id:
                                     by_id[pid_str] = {
                                         "id": pid_str,
-                                        "name": info.get("name") or f"Page {pid_str}",
+                                        "name": pname,
                                         "category": "Community",
                                         "connected": True,
                                         "has_token": True,
                                         "source": "manual_token"
                                     }
                                 else:
+                                    by_id[pid_str]["name"] = pname
                                     by_id[pid_str]["has_token"] = True
                 except Exception:
                     pass

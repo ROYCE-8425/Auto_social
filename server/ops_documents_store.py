@@ -122,7 +122,7 @@ def _seed_initial_documents(conn: sqlite3.Connection) -> None:
     sample_docs = [
         {
             "id": "doc_hd_01",
-            "title": "Hợp đồng Dịch vụ Đào tạo Tin học Doanh nghiệp - Công ty CP Sao Việt",
+            "title": "Hợp đồng Cung cấp Dịch vụ Vận hành & Phân phối - Công ty TNHH Royce Shop",
             "file_name": "HD-DT-2026-001.pdf",
             "rel_path": "2026/contracts/HD-DT-2026-001.pdf",
             "category": "contract",

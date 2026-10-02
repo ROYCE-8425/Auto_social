@@ -123,7 +123,7 @@ export const ModuleOperationalWorkspace: React.FC<ModuleOperationalWorkspaceProp
         due_at: '',
         payload: {
           contract_number: `HD-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`,
-          party_a: 'Công ty Cổ phần Sao Việt',
+          party_a: 'Công ty TNHH Royce Shop',
           party_b: '',
           contract_value: 50000000,
           contract_type: 'Hợp đồng dịch vụ',

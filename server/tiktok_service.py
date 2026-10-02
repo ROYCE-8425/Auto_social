@@ -413,7 +413,7 @@ def post_photos_to_tiktok(
     kit_data = parse_tiktok_kit(kit_path) if kit_path.is_file() else None
     if not kit_data:
         kit_data = {
-            "name": "Game Giá Rẻ BSN" if "bsn" in target_kit.lower() else "Sao Việt",
+            "name": "Game Giá Rẻ BSN" if "bsn" in target_kit.lower() else "Royce Shop",
             "brand": "bsn" if "bsn" in target_kit.lower() else "saoviet",
             "account_id": account_id or "6aa3ba9df4c58f3c57921507",
             "username": "@seotrum",
